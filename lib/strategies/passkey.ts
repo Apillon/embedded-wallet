@@ -46,14 +46,15 @@ class PasskeyStrategy implements AuthStrategy {
         throw new Error('No username');
       }
 
-      const hashedUsername = await getHashedUsername(authData.username);
+      const hashedUsername =
+        authData.hashedUsername || (await getHashedUsername(authData.username));
 
       if (!hashedUsername) {
         throw new Error('Could not hash username');
       }
 
       const personalization = await WAC.personalization();
-      const credentialIds = await WAC.credentialIdsByUsername(hashedUsername.toString());
+      const credentialIds = await WAC.credentialIdsByUsername(hashedUsername as any);
 
       /**
        * Request passKey from user

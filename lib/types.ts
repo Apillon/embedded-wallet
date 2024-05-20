@@ -10,6 +10,7 @@ export type WebauthnContract = TypedContract<typeof wacAbi>;
 export type AuthData = {
   username: string;
   password?: string;
+  hashedUsername?: Buffer | undefined;
 };
 
 export type RegisterData = {

@@ -1,9 +1,10 @@
 import { ethers } from 'ethers';
 import { AuthData, RegisterData, WebauthnContract } from './types';
 import * as sapphire from '@oasisprotocol/sapphire-paratime';
-import { AccountManagerAbi } from './abi';
+import { AccountAbi, AccountManagerAbi } from './abi';
 import PasswordStrategy from './strategies/password';
 import PasskeyStrategy from './strategies/passkey';
+import { getHashedUsername } from './utils';
 
 class OasisAppWallet {
   sapphireProvider = undefined as ethers.JsonRpcProvider | undefined;
@@ -67,7 +68,10 @@ class OasisAppWallet {
         nonce as any,
         gasPrice as any
       );
+
       const tx = await this.sapphireProvider.send('eth_sendRawTransaction', [signedTx]);
+
+      console.log('TX sent');
 
       // eslint-disable-next-line no-constant-condition
       while (true) {
@@ -77,6 +81,62 @@ class OasisAppWallet {
           break;
         }
         await new Promise(f => setTimeout(f, 500));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async login(strategy: 'password' | 'passkey', authData: AuthData) {
+    if (!this.sapphireProvider || !this.webauthnContract || !authData.username) {
+      return;
+    }
+
+    const RANDOM_STRING = '0x000000000000000000000000000000000000000000000000000000000000DEAD';
+
+    try {
+      const hashedUsername = await getHashedUsername(authData.username);
+
+      const AC = new ethers.Interface(AccountAbi);
+      const data = AC.encodeFunctionData('sign', [RANDOM_STRING]);
+
+      let loginData = undefined as string | undefined;
+
+      if (strategy === 'password') {
+        loginData = await new PasswordStrategy().getProxyResponse(this.webauthnContract, data, {
+          ...authData,
+          hashedUsername,
+        });
+      } else if (strategy === 'passkey') {
+        loginData = await new PasskeyStrategy().getProxyResponse(this.webauthnContract, data, {
+          ...authData,
+          hashedUsername,
+        });
+      }
+
+      if (!loginData) {
+        throw new Error('Login: no proxy data');
+      }
+
+      const [[r, s, v]] = AC.decodeFunctionResult('sign', loginData).toArray();
+
+      const recoveredPublicKey = ethers.recoverAddress(RANDOM_STRING, {
+        r,
+        s,
+        v,
+      });
+
+      /**
+       * Get public key for username from account manager contract
+       */
+      const contractRes = await this.webauthnContract.getAccount(hashedUsername as any);
+
+      /**
+       * Login success return account address
+       */
+      if (contractRes.length > 1 && recoveredPublicKey === contractRes[1]) {
+        console.log('LEGGED in');
+        return recoveredPublicKey;
       }
     } catch (e) {
       console.error(e);

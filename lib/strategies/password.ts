@@ -63,7 +63,7 @@ class PasswordStrategy implements AuthStrategy {
         [ethers.encodeBytes32String(authData.password), data]
       );
 
-      return await WAC.proxyViewPassword(hashedUsername.toString(), digest, data);
+      return await WAC.proxyViewPassword(hashedUsername as any, digest, data);
     } catch (e) {
       console.error(e);
     }
