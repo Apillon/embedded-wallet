@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { AuthData, RegisterData, WebauthnContract } from './types';
+import { AuthData, AuthStrategyName, RegisterData, UserInfo, WebauthnContract } from './types';
 import * as sapphire from '@oasisprotocol/sapphire-paratime';
 import { AccountAbi, AccountManagerAbi } from './abi';
 import PasswordStrategy from './strategies/password';
@@ -10,6 +10,7 @@ class OasisAppWallet {
   sapphireProvider = undefined as ethers.JsonRpcProvider | undefined;
   webauthnContract = undefined as WebauthnContract | undefined;
   abiCoder = ethers.AbiCoder.defaultAbiCoder();
+  user = undefined as UserInfo | undefined;
 
   constructor() {
     this.initialize();
@@ -29,7 +30,7 @@ class OasisAppWallet {
     ) as unknown as WebauthnContract;
   }
 
-  async register(strategy: 'password' | 'passkey', authData: AuthData) {
+  async register(strategy: AuthStrategyName, authData: AuthData) {
     if (!this.sapphireProvider || !this.webauthnContract) {
       return;
     }
@@ -76,18 +77,18 @@ class OasisAppWallet {
       // eslint-disable-next-line no-constant-condition
       while (true) {
         const tr = await this.sapphireProvider.getTransactionReceipt(tx);
+
         if (tr) {
-          console.log(tr);
-          break;
+          return await this.saveUser(authData.username, strategy);
         }
-        await new Promise(f => setTimeout(f, 500));
+        await new Promise(f => setTimeout(f, 1000));
       }
     } catch (e) {
       console.error(e);
     }
   }
 
-  async login(strategy: 'password' | 'passkey', authData: AuthData) {
+  async login(strategy: AuthStrategyName, authData: AuthData) {
     if (!this.sapphireProvider || !this.webauthnContract || !authData.username) {
       return;
     }
@@ -135,8 +136,46 @@ class OasisAppWallet {
        * Login success return account address
        */
       if (contractRes.length > 1 && recoveredPublicKey === contractRes[1]) {
-        console.log('LEGGED in');
-        return recoveredPublicKey;
+        return await this.saveUser(authData.username, strategy);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async saveUser(username: string, strategy: AuthStrategyName = 'passkey') {
+    const addresses = await this.getAccountAddress(username);
+
+    if (addresses) {
+      this.user = {
+        username,
+        strategy,
+        ...addresses,
+      };
+
+      /**
+       * @TODO Save to localStorage e.g.
+       */
+
+      return this.user;
+    }
+  }
+
+  async getAccountAddress(username: string) {
+    if (!this.sapphireProvider || !this.webauthnContract || !username) {
+      return;
+    }
+
+    try {
+      const hashedUsername = await getHashedUsername(username);
+
+      const userData = await this.webauthnContract.getAccount(hashedUsername as any);
+
+      if (Array.isArray(userData) && userData.length > 1) {
+        return {
+          publicAddress: userData[1],
+          accountContractAddress: userData[0],
+        };
       }
     } catch (e) {
       console.error(e);

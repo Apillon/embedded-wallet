@@ -41,10 +41,11 @@ export default function App() {
 
       <form
         className="flex gap-4 items-center mb-4"
-        onSubmit={ev => {
+        onSubmit={async ev => {
           ev.preventDefault();
           const wallet = getOasisAppWallet();
-          wallet?.register('password', { username: name, password });
+          await wallet?.register('password', { username: name, password });
+          console.log(wallet?.user);
         }}
       >
         <h2>Register password</h2>
@@ -61,10 +62,11 @@ export default function App() {
 
       <form
         className="flex gap-4 items-center mb-4"
-        onSubmit={ev => {
+        onSubmit={async ev => {
           ev.preventDefault();
           const wallet = getOasisAppWallet();
-          wallet?.login('password', { username: name, password });
+          await wallet?.login('password', { username: name, password });
+          console.log(wallet?.user);
         }}
       >
         <h2>Login password</h2>
@@ -78,6 +80,17 @@ export default function App() {
 
         <button type="submit">Test</button>
       </form>
+
+      <p>
+        <button
+          onClick={() => {
+            const wallet = getOasisAppWallet();
+            wallet?.getAccountAddress(name);
+          }}
+        >
+          Get account
+        </button>
+      </p>
     </>
   );
 }

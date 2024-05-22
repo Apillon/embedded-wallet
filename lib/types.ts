@@ -35,3 +35,12 @@ export interface AuthStrategy {
     authData: AuthData
   ): Promise<ethers.BytesLike | undefined>;
 }
+
+export type AuthStrategyName = 'password' | 'passkey';
+
+export type UserInfo = {
+  username: string;
+  strategy: AuthStrategyName;
+  publicAddress: string | ethers.Addressable;
+  accountContractAddress: string | ethers.Addressable;
+};
