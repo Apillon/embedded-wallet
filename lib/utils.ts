@@ -1,7 +1,8 @@
 import { ethers } from 'ethers';
 import OasisAppWallet from '.';
-import { WindowId } from './constants';
+import { SapphireMainnet, SapphireTestnet, WindowId } from './constants';
 import { pbkdf2Sync } from 'pbkdf2';
+import { AppParams } from './types';
 
 declare global {
   interface Window {
@@ -9,9 +10,9 @@ declare global {
   }
 }
 
-export function initializeOnWindow() {
+export function initializeOnWindow(params?: AppParams) {
   if (typeof window !== 'undefined') {
-    window[WindowId] = new OasisAppWallet();
+    window[WindowId] = new OasisAppWallet(params);
   }
 }
 
@@ -33,4 +34,8 @@ export async function getHashedUsername(name = '') {
   if (salt) {
     return pbkdf2Sync(name, ethers.toBeArray(salt), 100_000, 32, 'sha256');
   }
+}
+
+export function chainIdIsSapphire(id: number) {
+  return [SapphireTestnet, SapphireMainnet].includes(id);
 }

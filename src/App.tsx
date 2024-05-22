@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { getOasisAppWallet, initializeOnWindow } from '../lib/utils';
+import { ethers } from 'ethers';
 
-initializeOnWindow();
+initializeOnWindow({ rpcUrls: { 1287: 'https://rpc.testnet.moonbeam.network' } });
 
 export default function App() {
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
+  const [amount, setAmount] = useState('');
+  const [address, setAddress] = useState('');
 
   return (
     <>
@@ -29,7 +32,7 @@ export default function App() {
         onSubmit={ev => {
           ev.preventDefault();
           const wallet = getOasisAppWallet();
-          wallet?.login('passkey', { username: name });
+          wallet?.authenticate('passkey', { username: name });
         }}
       >
         <h2>Login passkey</h2>
@@ -45,7 +48,6 @@ export default function App() {
           ev.preventDefault();
           const wallet = getOasisAppWallet();
           await wallet?.register('password', { username: name, password });
-          console.log(wallet?.user);
         }}
       >
         <h2>Register password</h2>
@@ -65,8 +67,7 @@ export default function App() {
         onSubmit={async ev => {
           ev.preventDefault();
           const wallet = getOasisAppWallet();
-          await wallet?.login('password', { username: name, password });
-          console.log(wallet?.user);
+          await wallet?.authenticate('password', { username: name, password });
         }}
       >
         <h2>Login password</h2>
@@ -91,6 +92,65 @@ export default function App() {
           Get account
         </button>
       </p>
+
+      <form
+        className="flex gap-4 items-center mb-4"
+        onSubmit={async ev => {
+          ev.preventDefault();
+          const wallet = getOasisAppWallet();
+          await wallet?.sendPlainTransaction({
+            strategy: 'passkey',
+            authData: {
+              username: name,
+            },
+            tx: {
+              to: address,
+              data: '0x',
+              gasLimit: 1_000_000,
+              value: ethers.parseEther(amount),
+              nonce: 0,
+              chainId: 23295,
+              gasPrice: 100_000_000_000,
+            },
+          });
+        }}
+      >
+        <h2>Send token</h2>
+
+        <input
+          value={address}
+          placeholder="Receiver Address"
+          onChange={ev => setAddress(ev.target.value)}
+        />
+
+        <input value={amount} placeholder="Amount" onChange={ev => setAmount(ev.target.value)} />
+
+        <button type="submit">Test</button>
+
+        <button
+          type="button"
+          onClick={async () => {
+            const wallet = getOasisAppWallet();
+            await wallet?.sendPlainTransaction({
+              strategy: 'passkey',
+              authData: {
+                username: name,
+              },
+              tx: {
+                to: address,
+                data: '0x',
+                gasLimit: 1_000_000,
+                value: ethers.parseEther(amount),
+                nonce: 1,
+                chainId: 1287,
+                gasPrice: 100_000_000_000,
+              },
+            });
+          }}
+        >
+          Test crosschain
+        </button>
+      </form>
     </>
   );
 }
