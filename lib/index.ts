@@ -204,6 +204,42 @@ class OasisAppWallet {
   // #endregion
 
   // #region Transactions
+  /**
+   * @TODO Might be wrong/useless
+   */
+  async signMessage(params: {
+    strategy: AuthStrategyName;
+    authData: AuthData;
+    message: ethers.BytesLike | string;
+  }) {
+    if (!this.sapphireProvider) {
+      console.error('Sapphire provider not initialized');
+      return;
+    }
+
+    if (typeof params.message === 'string') {
+      params.message = ethers.encodeBytes32String(params.message);
+    }
+
+    try {
+      const AC = new ethers.Interface(AccountAbi);
+      const data = AC.encodeFunctionData('sign', [params.message]);
+
+      /**
+       * Authenticate user and sign message
+       */
+      const res = await this.getProxyForStrategy(params.strategy, data, params.authData);
+
+      if (res) {
+        const [signed] = AC.decodeFunctionResult('sign', res).toArray();
+        console.log(signed);
+        return signed;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
   async sendPlainTransaction(params: {
     strategy: AuthStrategyName;
     authData: AuthData;
@@ -229,8 +265,6 @@ class OasisAppWallet {
     try {
       const AC = new ethers.Interface(AccountAbi);
       const data = AC.encodeFunctionData('signEIP155', [params.tx]);
-
-      console.log(params.tx);
 
       /**
        * Authenticate user and sign transaction
@@ -273,6 +307,9 @@ class OasisAppWallet {
           txHash = await ethProvider.send('eth_sendRawTransaction', [signedTx]);
         }
 
+        /**
+         * @TODO Return txHash, leave receipt waiting to client
+         */
         const receipt = await this.waitForTxReceipt(txHash, ethProvider);
 
         console.log(receipt);
@@ -283,6 +320,17 @@ class OasisAppWallet {
       console.error(e);
     }
   }
+
+  // async getContractInterface(params: {
+  //   address: string;
+  //   abi: ethers.Interface | ethers.InterfaceAbi;
+  // }) {
+  //   const c = new ethers.Contract(
+  //     params.address,
+  //     params.abi,
+  //     new ethers.VoidSigner(ethers.ZeroAddress, this.sapphireProvider)
+  //   );
+  // }
   // #endregion
 
   // #region Helpers

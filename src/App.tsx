@@ -82,7 +82,7 @@ export default function App() {
         <button type="submit">Test</button>
       </form>
 
-      <p>
+      <p className="my-4">
         <button
           onClick={() => {
             const wallet = getOasisAppWallet();
@@ -151,6 +151,44 @@ export default function App() {
           Test crosschain
         </button>
       </form>
+
+      <p className="my-4">
+        <button
+          onClick={() => {
+            const wallet = getOasisAppWallet();
+            wallet?.signMessage({
+              strategy: 'passkey',
+              authData: {
+                username: name,
+              },
+              message: 'Test message 1234',
+            });
+          }}
+        >
+          Sign message
+        </button>
+      </p>
+
+      {/* <p className="my-4">
+        <button
+          onClick={async () => {
+            const contract = new ethers.Contract('0xb1058eD01451B947A836dA3609f88C91804D0663', ERC20Abi);
+            const wallet = getOasisAppWallet();
+
+            const tx = await contract.balanceOf.populateTransaction('0x700cebAA997ecAd7B0797f8f359C621604Cce6Bf');
+
+            tx.chainId = 1287n;
+
+            wallet?.sendPlainTransaction({
+              strategy: 'passkey',
+              authData: { username: name },
+              tx
+            })
+          }}
+        >
+          Contract method
+        </button>
+      </p> */}
     </>
   );
 }
