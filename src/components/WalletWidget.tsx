@@ -1,6 +1,8 @@
-import { Description, Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
+import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react';
 import { WalletProvider, useWalletContext } from '../contexts/wallet.context';
 import { useState } from 'react';
+import WalletAuth from './WalletAuth';
+import WalletMain from './WalletMain';
 
 export default function WalletWidget() {
   return (
@@ -30,24 +32,47 @@ function WidgetButton() {
 }
 
 function WidgetModal({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (to: boolean) => void }) {
+  const { state } = useWalletContext();
+
+  const loggedIn = state.username && state.address;
+
   return (
     <>
-      <Dialog open={isOpen} onClose={() => setIsOpen(false)} className="relative z-50">
-        <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
-          <DialogPanel className="max-w-lg space-y-4 border bg-white p-12">
-            <DialogTitle className="font-bold">Deactivate account</DialogTitle>
-            <Description>This will permanently deactivate your account</Description>
-            <p>
-              Are you sure you want to deactivate your account? All of your data will be permanently
-              removed.
-            </p>
-            <div className="flex gap-4">
-              <button onClick={() => setIsOpen(false)}>Cancel</button>
-              <button onClick={() => setIsOpen(false)}>Deactivate</button>
+      <Transition show={isOpen}>
+        <Dialog open={isOpen} onClose={() => setIsOpen(false)} className="relative z-50">
+          <TransitionChild
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black/50" aria-hidden="true" />
+          </TransitionChild>
+
+          <TransitionChild
+            enter="ease-out duration-300"
+            enterFrom="opacity-0 scale-95"
+            enterTo="opacity-100 scale-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100 scale-100"
+            leaveTo="opacity-0 scale-95"
+          >
+            <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
+              <DialogPanel className="relative max-w-lg space-y-4 border bg-black p-12 rounded-lg">
+                <button className="absolute top-2 right-2" onClick={() => setIsOpen(false)}>
+                  x
+                </button>
+
+                {!loggedIn && <WalletAuth />}
+
+                {!!loggedIn && <WalletMain />}
+              </DialogPanel>
             </div>
-          </DialogPanel>
-        </div>
-      </Dialog>
+          </TransitionChild>
+        </Dialog>
+      </Transition>
     </>
   );
 }

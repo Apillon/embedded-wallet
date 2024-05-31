@@ -1,18 +1,26 @@
-import { ReactNode, createContext, useContext, useReducer } from 'react';
+import { ReactNode, createContext, useContext, useEffect, useReducer, useRef } from 'react';
 import { AuthStrategyName } from '../../lib/types';
+import { WebStorageKeys } from '../../lib/constants';
 
 const initialState = () => ({
   username: '',
   address: '',
+  balance: '',
   authStrategy: 'passkey' as AuthStrategyName,
 });
 
 type ContextState = ReturnType<typeof initialState>;
 
-type ContextActions = {
-  type: 'setValue';
-  payload: { key: keyof ReturnType<typeof initialState>; value: any };
-};
+type ContextActions =
+  | {
+      type: 'setValue';
+      payload: { key: keyof ReturnType<typeof initialState>; value: any };
+    }
+  | {
+      type: 'setState';
+      payload: Partial<ReturnType<typeof initialState>>;
+    }
+  | { type: 'reset' };
 
 function reducer(state: ContextState, action: ContextActions) {
   switch (action.type) {
@@ -21,8 +29,15 @@ function reducer(state: ContextState, action: ContextActions) {
         ...state,
         [action.payload.key]: action.payload.value,
       };
+    case 'setState':
+      return {
+        ...state,
+        ...action.payload,
+      };
+    case 'reset':
+      return initialState();
     default:
-      throw new Error('Unhandled action type.' + action?.type);
+      throw new Error('Unhandled action type.' + JSON.stringify(action));
   }
 }
 
@@ -32,6 +47,42 @@ const WalletContext = createContext<
 
 function WalletProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState());
+  const initialized = useRef(false);
+
+  /**
+   * Store changed state to localStorage
+   */
+  useEffect(() => {
+    if (initialized.current) {
+      /**
+       * Exclude some state variables from being saved
+       */
+      // const {
+      //   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      //   address,
+      //   ...save
+      // } = state;
+
+      localStorage.setItem(WebStorageKeys.WALLET_CONTEXT, JSON.stringify(state));
+    }
+  }, [state]);
+
+  /**
+   * Initialize state from localStorage
+   */
+  useEffect(() => {
+    const stored = localStorage.getItem(WebStorageKeys.WALLET_CONTEXT);
+
+    if (stored) {
+      try {
+        dispatch({ type: 'setState', payload: JSON.parse(stored) });
+      } catch (e) {
+        console.error('Cant parse global state localStorage', e);
+      }
+    }
+
+    setTimeout(() => (initialized.current = true), 10);
+  }, []);
 
   return (
     <WalletContext.Provider

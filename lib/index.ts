@@ -46,13 +46,11 @@ class OasisAppWallet {
    */
   async register(strategy: AuthStrategyName, authData: AuthData) {
     if (!this.sapphireProvider) {
-      console.error('Sapphire provider not initialized');
-      return;
+      throw new Error('Sapphire provider not initialized');
     }
 
     if (!this.webauthnContract) {
-      console.error('Account manager contract not initialized');
-      return;
+      throw new Error('Account manager contract not initialized');
     }
 
     try {
@@ -108,18 +106,15 @@ class OasisAppWallet {
    */
   async authenticate(strategy: AuthStrategyName, authData: AuthData) {
     if (!this.sapphireProvider) {
-      console.error('Sapphire provider not initialized');
-      return;
+      throw new Error('Sapphire provider not initialized');
     }
 
     if (!this.webauthnContract) {
-      console.error('Account manager contract not initialized');
-      return;
+      throw new Error('Account manager contract not initialized');
     }
 
     if (!authData.username) {
-      console.error('No username');
-      return;
+      throw new Error('No username');
     }
 
     const RANDOM_STRING = '0x000000000000000000000000000000000000000000000000000000000000DEAD';
@@ -172,18 +167,15 @@ class OasisAppWallet {
    */
   async getAccountAddress(username: string) {
     if (!this.sapphireProvider) {
-      console.error('Sapphire provider not initialized');
-      return;
+      throw new Error('Sapphire provider not initialized');
     }
 
     if (!this.webauthnContract) {
-      console.error('Account manager contract not initialized');
-      return;
+      throw new Error('Account manager contract not initialized');
     }
 
     if (!username) {
-      console.error('No username');
-      return;
+      throw new Error('No username');
     }
 
     try {
@@ -201,6 +193,21 @@ class OasisAppWallet {
       console.error(e);
     }
   }
+
+  async getAccountBalance(address: string, chainId?: number) {
+    if (!chainId || chainIdIsSapphire(chainId)) {
+      return ethers.formatEther((await this.sapphireProvider?.getBalance(address)) || 0n);
+    }
+
+    if (!this.rpcUrls[chainId]) {
+      return '0';
+    }
+
+    const ethProvider =
+      this.rpcProviders[chainId] || new ethers.JsonRpcProvider(this.rpcUrls[chainId]);
+
+    return ethers.formatEther(await ethProvider.getBalance(address));
+  }
   // #endregion
 
   // #region Transactions
@@ -213,8 +220,7 @@ class OasisAppWallet {
     message: ethers.BytesLike | string;
   }) {
     if (!this.sapphireProvider) {
-      console.error('Sapphire provider not initialized');
-      return;
+      throw new Error('Sapphire provider not initialized');
     }
 
     if (typeof params.message === 'string') {
@@ -248,11 +254,9 @@ class OasisAppWallet {
     const chainId = params?.tx?.chainId ? +params.tx.chainId.toString() || 0 : 0;
 
     if (chainId && !chainIdIsSapphire(chainId) && !this.rpcUrls[chainId]) {
-      console.error('No RPC url configured for selected chainId');
-      return;
+      throw new Error('No RPC url configured for selected chainId');
     } else if (!chainId && !!this.defaultChainId && !this.rpcUrls[this.defaultChainId]) {
-      console.error('No RPC url configured for default chainId');
-      return;
+      throw new Error('No RPC url configured for default chainId');
     }
 
     /**
@@ -285,8 +289,7 @@ class OasisAppWallet {
            * On sapphire network, use sapphire provider
            */
           if (!this.sapphireProvider) {
-            console.error('Sapphire provider not initialized');
-            return;
+            throw new Error('Sapphire provider not initialized');
           }
 
           txHash = await this.sapphireProvider.send('eth_sendRawTransaction', [signedTx]);
@@ -300,8 +303,7 @@ class OasisAppWallet {
           this.rpcProviders[chainId] = ethProvider;
 
           if (!ethProvider) {
-            console.error('Cross chain provider not initialized');
-            return;
+            throw new Error('Cross chain provider not initialized');
           }
 
           txHash = await ethProvider.send('eth_sendRawTransaction', [signedTx]);
@@ -339,7 +341,7 @@ class OasisAppWallet {
    */
   async getProxyForStrategy(strategy: AuthStrategyName, data: any, authData: AuthData) {
     if (!this.webauthnContract) {
-      return;
+      throw new Error('Account manager contract not initialized');
     }
 
     if (strategy === 'password') {
@@ -354,8 +356,7 @@ class OasisAppWallet {
    */
   async waitForTxReceipt(txHash: string, provider?: ethers.JsonRpcProvider) {
     if (!provider || !this.sapphireProvider) {
-      console.error('Sapphire provider not initialized');
-      return;
+      throw new Error('Sapphire provider not initialized');
     }
 
     const maxRetries = 60;
