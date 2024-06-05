@@ -7,7 +7,7 @@ const wacAbi = parseAbi(AccountManagerAbi);
 
 export type WebauthnContract = TypedContract<typeof wacAbi>;
 
-export type AppParams = { defaultChainId?: number; rpcUrls?: { [chainId: number]: string } };
+export type AppParams = { defaultNetworkId?: number; rpcUrls?: { [networkId: number]: string } };
 
 export type AuthData = {
   username: string;

@@ -16,6 +16,7 @@ declare global {
 export function initializeOnWindow(params?: AppParams) {
   if (typeof window !== 'undefined') {
     window[WindowId] = new OasisAppWallet(params);
+    return window[WindowId];
   }
 }
 
@@ -39,6 +40,6 @@ export async function getHashedUsername(name = '') {
   }
 }
 
-export function chainIdIsSapphire(id: number) {
+export function networkIdIsSapphire(id: number) {
   return [SapphireTestnet, SapphireMainnet].includes(id);
 }

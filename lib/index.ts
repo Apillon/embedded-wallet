@@ -12,7 +12,7 @@ import * as sapphire from '@oasisprotocol/sapphire-paratime';
 import { AccountAbi, AccountManagerAbi } from './abi';
 import PasswordStrategy from './strategies/password';
 import PasskeyStrategy from './strategies/passkey';
-import { chainIdIsSapphire, getHashedUsername } from './utils';
+import { networkIdIsSapphire, getHashedUsername } from './utils';
 import mitt, { Emitter } from 'mitt';
 
 class OasisAppWallet {
@@ -21,9 +21,9 @@ class OasisAppWallet {
   abiCoder = ethers.AbiCoder.defaultAbiCoder();
   events: Emitter<Events>;
 
-  defaultChainId = 0;
-  rpcUrls = {} as { [chainId: number]: string };
-  rpcProviders = {} as { [chainId: number]: ethers.JsonRpcProvider };
+  defaultNetworkId = 0;
+  rpcUrls = {} as { [networkId: number]: string };
+  rpcProviders = {} as { [networkId: number]: ethers.JsonRpcProvider };
 
   /**
    * Prepare sapphire provider and account manager (WebAuthn) contract.
@@ -42,7 +42,7 @@ class OasisAppWallet {
       new ethers.VoidSigner(ethers.ZeroAddress, this.sapphireProvider)
     ) as unknown as WebauthnContract;
 
-    this.defaultChainId = params?.defaultChainId || this.defaultChainId;
+    this.defaultNetworkId = params?.defaultNetworkId || this.defaultNetworkId;
     this.rpcUrls = params?.rpcUrls || this.rpcUrls;
 
     this.events = mitt<Events>();
@@ -203,17 +203,17 @@ class OasisAppWallet {
     }
   }
 
-  async getAccountBalance(address: string, chainId?: number) {
-    if (!chainId || chainIdIsSapphire(chainId)) {
+  async getAccountBalance(address: string, networkId = this.defaultNetworkId) {
+    if (!networkId || networkIdIsSapphire(networkId)) {
       return ethers.formatEther((await this.sapphireProvider?.getBalance(address)) || 0n);
     }
 
-    if (!this.rpcUrls[chainId]) {
+    if (!this.rpcUrls[networkId]) {
       return '0';
     }
 
     const ethProvider =
-      this.rpcProviders[chainId] || new ethers.JsonRpcProvider(this.rpcUrls[chainId]);
+      this.rpcProviders[networkId] || new ethers.JsonRpcProvider(this.rpcUrls[networkId]);
 
     return ethers.formatEther(await ethProvider.getBalance(address));
   }
@@ -258,17 +258,17 @@ class OasisAppWallet {
   async sendPlainTransaction(params: PlainTransactionParams) {
     const chainId = params?.tx?.chainId ? +params.tx.chainId.toString() || 0 : 0;
 
-    if (chainId && !chainIdIsSapphire(chainId) && !this.rpcUrls[chainId]) {
+    if (chainId && !networkIdIsSapphire(chainId) && !this.rpcUrls[chainId]) {
       throw new Error('No RPC url configured for selected chainId');
-    } else if (!chainId && !!this.defaultChainId && !this.rpcUrls[this.defaultChainId]) {
+    } else if (!chainId && !!this.defaultNetworkId && !this.rpcUrls[this.defaultNetworkId]) {
       throw new Error('No RPC url configured for default chainId');
     }
 
     /**
      * If no chain specified use default from app params
      */
-    if (!chainId && !!this.defaultChainId) {
-      params.tx.chainId = this.defaultChainId;
+    if (!chainId && !!this.defaultNetworkId) {
+      params.tx.chainId = this.defaultNetworkId;
     }
 
     /**
@@ -309,7 +309,7 @@ class OasisAppWallet {
         /**
          * Broadcast transaction
          */
-        if (params.tx.chainId && !!chainIdIsSapphire(+params.tx.chainId.toString())) {
+        if (params.tx.chainId && !!networkIdIsSapphire(+params.tx.chainId.toString())) {
           /**
            * On sapphire network, use sapphire provider
            */
@@ -402,6 +402,12 @@ class OasisAppWallet {
       }
 
       await new Promise(f => setTimeout(f, 1000));
+    }
+  }
+
+  setDefaultNetworkId(networkId: number) {
+    if (this.rpcUrls[networkId]) {
+      this.defaultNetworkId = networkId;
     }
   }
   // #endregion

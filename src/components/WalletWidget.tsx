@@ -1,38 +1,19 @@
 import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react';
-import { WalletProvider, useWalletContext } from '../contexts/wallet.context';
+import { Network, WalletProvider, useWalletContext } from '../contexts/wallet.context';
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import WalletAuth from './WalletAuth';
 import WalletMain from './WalletMain';
 import { ethers } from 'ethers';
 import WalletApprove from './WalletApprove';
-import OasisAppWallet from '../../lib';
-import { getOasisAppWallet } from '../../lib/utils';
 import { Events } from '../../lib/types';
 
 function Wallet() {
-  const { state } = useWalletContext();
+  const { state, wallet } = useWalletContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [txToConfirm, setTxToConfirm] = useState<ethers.TransactionLike>();
-  const [wallet, setWallet] = useState<OasisAppWallet>();
   const approveParams = useRef<Events['txApprove']>();
 
   const loggedIn = state.username && state.address;
-
-  useEffect(() => {
-    function initWallet() {
-      const w = getOasisAppWallet();
-
-      if (w) {
-        setWallet(w);
-      } else {
-        setTimeout(() => {
-          initWallet();
-        }, 2500);
-      }
-    }
-
-    initWallet();
-  }, []);
 
   useEffect(() => {
     const onTxApproveEvent = (params: Events['txApprove']) => {
@@ -143,9 +124,15 @@ function Modal({
   );
 }
 
-export default function WalletWidget() {
+export default function WalletWidget({
+  networks,
+  defaultNetworkId = 0,
+}: {
+  networks?: Network[];
+  defaultNetworkId?: number;
+}) {
   return (
-    <WalletProvider>
+    <WalletProvider networks={networks} defaultNetworkId={defaultNetworkId}>
       <Wallet />
     </WalletProvider>
   );

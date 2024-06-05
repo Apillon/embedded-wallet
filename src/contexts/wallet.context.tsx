@@ -1,12 +1,17 @@
-import { ReactNode, createContext, useContext, useEffect, useReducer, useRef } from 'react';
+import { ReactNode, createContext, useContext, useEffect, useReducer, useState } from 'react';
 import { AuthStrategyName } from '../../lib/types';
 import { WebStorageKeys } from '../../lib/constants';
+import OasisAppWallet from '../../lib';
+import { initializeOnWindow } from '../../lib/utils';
 
-const initialState = () => ({
+export type Network = { name: string; id: number; rpcUrl: string };
+
+const initialState = (defaultNetworkId = 0) => ({
   username: '',
   address: '',
   balance: '',
   authStrategy: 'passkey' as AuthStrategyName,
+  networkId: defaultNetworkId,
 });
 
 type ContextState = ReturnType<typeof initialState>;
@@ -45,18 +50,35 @@ function reducer(state: ContextState, action: ContextActions) {
 }
 
 const WalletContext = createContext<
-  { state: ContextState; dispatch: (action: ContextActions) => void } | undefined
+  | {
+      state: ContextState;
+      dispatch: (action: ContextActions) => void;
+      networks: Network[];
+      wallet?: OasisAppWallet;
+      setWallet: (wallet: OasisAppWallet) => void;
+      reloadUserBalance: (walletRef?: OasisAppWallet) => void;
+    }
+  | undefined
 >(undefined);
 
-function WalletProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, initialState());
-  const initialized = useRef(false);
+function WalletProvider({
+  children,
+  networks = [],
+  defaultNetworkId = 0,
+}: {
+  children: ReactNode;
+  networks?: Network[];
+  defaultNetworkId?: number;
+}) {
+  const [state, dispatch] = useReducer(reducer, initialState(defaultNetworkId));
+  const [initialized, setInitialized] = useState(false);
+  const [wallet, setWallet] = useState<OasisAppWallet>();
 
   /**
    * Store changed state to localStorage
    */
   useEffect(() => {
-    if (initialized.current) {
+    if (initialized) {
       /**
        * Exclude some state variables from being saved
        */
@@ -78,20 +100,67 @@ function WalletProvider({ children }: { children: ReactNode }) {
 
     if (stored) {
       try {
-        dispatch({ type: 'setState', payload: JSON.parse(stored) });
+        const restored = JSON.parse(stored);
+        dispatch({ type: 'setState', payload: restored });
       } catch (e) {
         console.error('Cant parse global state localStorage', e);
       }
     }
 
-    setTimeout(() => (initialized.current = true), 10);
+    setTimeout(() => setInitialized(true), 10);
   }, []);
+
+  /**
+   * Initialize Oasis Wallet App SDK
+   */
+  useEffect(() => {
+    if (initialized) {
+      let w = undefined as OasisAppWallet | undefined;
+
+      if (networks) {
+        w = initializeOnWindow({
+          rpcUrls: networks.reduce((acc, x) => {
+            acc[x.id] = x.rpcUrl;
+            return acc;
+          }, {} as { [networkId: number]: string }),
+          defaultNetworkId: state.networkId || defaultNetworkId,
+        });
+      } else {
+        w = initializeOnWindow();
+      }
+
+      if (w) {
+        setWallet(w);
+        reloadUserBalance(w);
+      }
+    }
+  }, [networks, defaultNetworkId, initialized]);
+
+  /**
+   * Reload balance if user "logged in"
+   */
+  async function reloadUserBalance(walletRef?: OasisAppWallet) {
+    const w = walletRef || wallet;
+
+    if (w && state.address) {
+      try {
+        const balance = await w?.getAccountBalance(state.address);
+        dispatch({ type: 'setValue', payload: { key: 'balance', value: balance } });
+      } catch (e) {
+        console.error('Reloading balance', e);
+      }
+    }
+  }
 
   return (
     <WalletContext.Provider
       value={{
         state,
         dispatch,
+        networks,
+        wallet,
+        setWallet,
+        reloadUserBalance,
       }}
     >
       {children}
