@@ -1,31 +1,35 @@
 import { ethers } from 'ethers';
-import { AppParams, AuthData, AuthStrategyName, RegisterData, WebauthnContract } from './types';
+import {
+  AppParams,
+  AuthData,
+  AuthStrategyName,
+  Events,
+  PlainTransactionParams,
+  RegisterData,
+  WebauthnContract,
+} from './types';
 import * as sapphire from '@oasisprotocol/sapphire-paratime';
 import { AccountAbi, AccountManagerAbi } from './abi';
 import PasswordStrategy from './strategies/password';
 import PasskeyStrategy from './strategies/passkey';
 import { chainIdIsSapphire, getHashedUsername } from './utils';
+import mitt, { Emitter } from 'mitt';
 
 class OasisAppWallet {
-  sapphireProvider = undefined as ethers.JsonRpcProvider | undefined;
-  webauthnContract = undefined as WebauthnContract | undefined;
+  sapphireProvider: ethers.JsonRpcProvider;
+  webauthnContract: WebauthnContract;
   abiCoder = ethers.AbiCoder.defaultAbiCoder();
+  events: Emitter<Events>;
 
   defaultChainId = 0;
   rpcUrls = {} as { [chainId: number]: string };
   rpcProviders = {} as { [chainId: number]: ethers.JsonRpcProvider };
 
-  constructor(params?: AppParams) {
-    this.initialize();
-
-    this.defaultChainId = params?.defaultChainId || this.defaultChainId;
-    this.rpcUrls = params?.rpcUrls || this.rpcUrls;
-  }
-
   /**
-   * Prepare sapphire provider and account manager (WebAuthn) contract
+   * Prepare sapphire provider and account manager (WebAuthn) contract.
+   * Prepare data for available chains
    */
-  initialize() {
+  constructor(params?: AppParams) {
     const ethSaphProvider = new ethers.JsonRpcProvider('https://testnet.sapphire.oasis.dev');
 
     this.sapphireProvider = sapphire.wrap(ethSaphProvider);
@@ -37,6 +41,11 @@ class OasisAppWallet {
       AccountManagerAbi,
       new ethers.VoidSigner(ethers.ZeroAddress, this.sapphireProvider)
     ) as unknown as WebauthnContract;
+
+    this.defaultChainId = params?.defaultChainId || this.defaultChainId;
+    this.rpcUrls = params?.rpcUrls || this.rpcUrls;
+
+    this.events = mitt<Events>();
   }
 
   // #region Auth utils
@@ -246,11 +255,7 @@ class OasisAppWallet {
     }
   }
 
-  async sendPlainTransaction(params: {
-    strategy: AuthStrategyName;
-    authData: AuthData;
-    tx: ethers.TransactionLike;
-  }) {
+  async sendPlainTransaction(params: PlainTransactionParams) {
     const chainId = params?.tx?.chainId ? +params.tx.chainId.toString() || 0 : 0;
 
     if (chainId && !chainIdIsSapphire(chainId) && !this.rpcUrls[chainId]) {
@@ -265,6 +270,26 @@ class OasisAppWallet {
     if (!chainId && !!this.defaultChainId) {
       params.tx.chainId = this.defaultChainId;
     }
+
+    /**
+     * Emit 'txApprove' if confirmation is needed.
+     * Handle confirmation in UI part of app (call this method again w/o `mustConfirm`).
+     */
+    if (params.mustConfirm) {
+      this.events.emit('txApprove', { plain: { ...params, mustConfirm: false } });
+      return;
+    }
+
+    /**
+     * Get nonce if none provided
+     */
+    if (!params.tx.nonce) {
+      params.tx.nonce = await this.sapphireProvider.getTransactionCount(
+        await this.webauthnContract.gaspayingAddress()
+      );
+    }
+
+    console.log(params.tx.nonce);
 
     try {
       const AC = new ethers.Interface(AccountAbi);

@@ -46,3 +46,14 @@ export type UserInfo = {
   publicAddress: string | ethers.Addressable;
   accountContractAddress: string | ethers.Addressable;
 };
+
+export type PlainTransactionParams = {
+  strategy: AuthStrategyName;
+  authData: AuthData;
+  tx: ethers.TransactionLike;
+  mustConfirm?: boolean;
+};
+
+export type Events = {
+  txApprove: { plain?: PlainTransactionParams };
+};

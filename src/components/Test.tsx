@@ -106,10 +106,10 @@ export default function Test() {
               data: '0x',
               gasLimit: 1_000_000,
               value: ethers.parseEther(amount),
-              nonce: 0,
               chainId: 23295,
               gasPrice: 100_000_000_000,
             },
+            mustConfirm: true,
           });
         }}
       >
@@ -139,10 +139,10 @@ export default function Test() {
                 data: '0x',
                 gasLimit: 1_000_000,
                 value: ethers.parseEther(amount),
-                nonce: 1,
                 chainId: 1287,
                 gasPrice: 100_000_000_000,
               },
+              mustConfirm: true,
             });
           }}
         >

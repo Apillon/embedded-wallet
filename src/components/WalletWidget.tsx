@@ -1,41 +1,109 @@
 import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react';
 import { WalletProvider, useWalletContext } from '../contexts/wallet.context';
-import { useState } from 'react';
+import { ReactNode, useEffect, useRef, useState } from 'react';
 import WalletAuth from './WalletAuth';
 import WalletMain from './WalletMain';
+import { ethers } from 'ethers';
+import WalletApprove from './WalletApprove';
+import OasisAppWallet from '../../lib';
+import { getOasisAppWallet } from '../../lib/utils';
+import { Events } from '../../lib/types';
 
-export default function WalletWidget() {
-  return (
-    <WalletProvider>
-      <div>
-        <WidgetButton />
-      </div>
-    </WalletProvider>
-  );
-}
-
-function WidgetButton() {
+function Wallet() {
   const { state } = useWalletContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [txToConfirm, setTxToConfirm] = useState<ethers.TransactionLike>();
+  const [wallet, setWallet] = useState<OasisAppWallet>();
+  const approveParams = useRef<Events['txApprove']>();
 
   const loggedIn = state.username && state.address;
 
+  useEffect(() => {
+    function initWallet() {
+      const w = getOasisAppWallet();
+
+      if (w) {
+        setWallet(w);
+      } else {
+        setTimeout(() => {
+          initWallet();
+        }, 2500);
+      }
+    }
+
+    initWallet();
+  }, []);
+
+  useEffect(() => {
+    const onTxApproveEvent = (params: Events['txApprove']) => {
+      if (params.plain) {
+        setTxToConfirm(params.plain?.tx);
+        approveParams.current = params;
+        setIsModalOpen(true);
+      }
+    };
+
+    if (wallet) {
+      wallet.events.on('txApprove', onTxApproveEvent);
+    }
+
+    return () => {
+      if (wallet) {
+        wallet.events.off('txApprove', onTxApproveEvent);
+      }
+    };
+  }, [wallet]);
+
+  let modalContent = <></>;
+
+  if (txToConfirm) {
+    modalContent = (
+      <WalletApprove
+        tx={txToConfirm}
+        onApprove={async () => {
+          if (approveParams.current) {
+            if (approveParams.current.plain) {
+              await wallet?.sendPlainTransaction(approveParams.current.plain);
+            }
+          }
+
+          setIsModalOpen(false);
+          setTxToConfirm(undefined);
+        }}
+        onDecline={() => {
+          setIsModalOpen(false);
+          setTxToConfirm(undefined);
+        }}
+      />
+    );
+  } else if (loggedIn) {
+    modalContent = <WalletMain />;
+  } else {
+    modalContent = <WalletAuth />;
+  }
+
   return (
-    <>
-      <WidgetModal isOpen={isModalOpen} setIsOpen={setIsModalOpen} />
+    <div>
+      <Modal isOpen={isModalOpen} setIsOpen={setIsModalOpen}>
+        {modalContent}
+      </Modal>
 
       <button onClick={() => setIsModalOpen(true)}>
         {loggedIn ? 'Open wallet' : 'Sign in now'}
       </button>
-    </>
+    </div>
   );
 }
 
-function WidgetModal({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (to: boolean) => void }) {
-  const { state } = useWalletContext();
-
-  const loggedIn = state.username && state.address;
-
+function Modal({
+  children,
+  isOpen,
+  setIsOpen,
+}: {
+  children: ReactNode;
+  isOpen: boolean;
+  setIsOpen: (to: boolean) => void;
+}) {
   return (
     <>
       <Transition show={isOpen}>
@@ -65,14 +133,20 @@ function WidgetModal({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (to: b
                   x
                 </button>
 
-                {!loggedIn && <WalletAuth />}
-
-                {!!loggedIn && <WalletMain />}
+                {children}
               </DialogPanel>
             </div>
           </TransitionChild>
         </Dialog>
       </Transition>
     </>
+  );
+}
+
+export default function WalletWidget() {
+  return (
+    <WalletProvider>
+      <Wallet />
+    </WalletProvider>
   );
 }

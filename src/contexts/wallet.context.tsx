@@ -11,6 +11,9 @@ const initialState = () => ({
 
 type ContextState = ReturnType<typeof initialState>;
 
+/**
+ * State actions/reducer
+ */
 type ContextActions =
   | {
       type: 'setValue';

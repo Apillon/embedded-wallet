@@ -10,6 +10,9 @@ declare global {
   }
 }
 
+/**
+ * Global wallet object.
+ */
 export function initializeOnWindow(params?: AppParams) {
   if (typeof window !== 'undefined') {
     window[WindowId] = new OasisAppWallet(params);
