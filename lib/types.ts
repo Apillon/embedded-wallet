@@ -54,6 +54,15 @@ export type PlainTransactionParams = {
   mustConfirm?: boolean;
 };
 
+export type SignMessageParams = {
+  strategy: AuthStrategyName;
+  authData: AuthData;
+  message: ethers.BytesLike | string;
+  mustConfirm?: boolean;
+  data?: string;
+};
+
 export type Events = {
+  signatureRequest: SignMessageParams;
   txApprove: { plain?: PlainTransactionParams };
 };

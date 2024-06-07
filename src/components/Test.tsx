@@ -160,6 +160,7 @@ export default function Test() {
                 username: name,
               },
               message: 'Test message 1234',
+              mustConfirm: true,
             });
           }}
         >

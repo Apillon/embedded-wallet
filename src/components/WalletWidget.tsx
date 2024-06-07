@@ -11,7 +11,9 @@ function Wallet() {
   const { state, wallet } = useWalletContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [txToConfirm, setTxToConfirm] = useState<ethers.TransactionLike>();
-  const approveParams = useRef<Events['txApprove']>();
+  const [messageToSign, setMessageToSign] = useState('');
+  const approveParams =
+    useRef<Partial<Events['txApprove'] & { signature: Events['signatureRequest'] }>>();
 
   const loggedIn = state.username && state.address;
 
@@ -24,36 +26,49 @@ function Wallet() {
       }
     };
 
+    const onSignatureRequestEvent = (params: Events['signatureRequest']) => {
+      setMessageToSign(params.message as string);
+      approveParams.current = { signature: params };
+      setIsModalOpen(true);
+    };
+
     if (wallet) {
       wallet.events.on('txApprove', onTxApproveEvent);
+      wallet.events.on('signatureRequest', onSignatureRequestEvent);
     }
 
     return () => {
       if (wallet) {
         wallet.events.off('txApprove', onTxApproveEvent);
+        wallet.events.off('signatureRequest', onSignatureRequestEvent);
       }
     };
   }, [wallet]);
 
   let modalContent = <></>;
 
-  if (txToConfirm) {
+  if (!!txToConfirm || !!messageToSign) {
     modalContent = (
       <WalletApprove
         tx={txToConfirm}
+        signMessage={messageToSign}
         onApprove={async () => {
           if (approveParams.current) {
-            if (approveParams.current.plain) {
+            if (approveParams.current.signature) {
+              await wallet?.signMessage(approveParams.current.signature);
+            } else if (approveParams.current.plain) {
               await wallet?.sendPlainTransaction(approveParams.current.plain);
             }
           }
 
           setIsModalOpen(false);
           setTxToConfirm(undefined);
+          setMessageToSign('');
         }}
         onDecline={() => {
           setIsModalOpen(false);
           setTxToConfirm(undefined);
+          setMessageToSign('');
         }}
       />
     );

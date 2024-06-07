@@ -6,6 +6,7 @@ import {
   Events,
   PlainTransactionParams,
   RegisterData,
+  SignMessageParams,
   WebauthnContract,
 } from './types';
 import * as sapphire from '@oasisprotocol/sapphire-paratime';
@@ -220,25 +221,38 @@ class OasisAppWallet {
   // #endregion
 
   // #region Transactions
-  /**
-   * @TODO Might be wrong/useless
-   */
-  async signMessage(params: {
-    strategy: AuthStrategyName;
-    authData: AuthData;
-    message: ethers.BytesLike | string;
-  }) {
+  async signMessage(params: SignMessageParams) {
     if (!this.sapphireProvider) {
       throw new Error('Sapphire provider not initialized');
     }
 
-    if (typeof params.message === 'string') {
-      params.message = ethers.encodeBytes32String(params.message);
-    }
-
     try {
       const AC = new ethers.Interface(AccountAbi);
-      const data = AC.encodeFunctionData('sign', [params.message]);
+
+      let data = params.data || '';
+      const originalMessage = params.message;
+
+      if (!data || params.mustConfirm) {
+        if (typeof params.message === 'string') {
+          params.message = ethers.encodeBytes32String(params.message);
+        }
+
+        data = AC.encodeFunctionData('sign', [params.message]);
+
+        /**
+         * Emit 'signatureRequest' if confirmation is needed.
+         * Handle confirmation in UI part of app (call this method again w/o `mustConfirm`).
+         */
+        if (params.mustConfirm) {
+          this.events.emit('signatureRequest', {
+            ...params,
+            data,
+            message: originalMessage,
+            mustConfirm: false,
+          });
+          return;
+        }
+      }
 
       /**
        * Authenticate user and sign message

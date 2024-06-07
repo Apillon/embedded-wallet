@@ -2,10 +2,16 @@ import { ethers } from 'ethers';
 
 export default function WalletApprove({
   tx,
+  signMessage,
+  approveText = 'Approve',
+  declineText = 'Reject',
   onApprove,
   onDecline,
 }: {
-  tx: ethers.TransactionLike;
+  tx?: ethers.TransactionLike;
+  signMessage?: string;
+  approveText?: string;
+  declineText?: string;
   onApprove: () => void;
   onDecline: () => void;
 }) {
@@ -13,16 +19,25 @@ export default function WalletApprove({
     <>
       <p>test</p>
       <hr />
-      <pre>
-        {JSON.stringify(
-          tx,
-          (_, value) => (typeof value === 'bigint' ? value.toString() : value),
-          2
-        )}
-      </pre>
+      {!!signMessage && (
+        <p>
+          You are signing:
+          <br />
+          {signMessage}
+        </p>
+      )}
+      {!!tx && (
+        <pre>
+          {JSON.stringify(
+            tx,
+            (_, value) => (typeof value === 'bigint' ? value.toString() : value),
+            2
+          )}
+        </pre>
+      )}
       <hr />
-      <button onClick={onApprove}>Approve tx</button>
-      <button onClick={onDecline}>Decline</button>
+      <button onClick={onApprove}>{approveText}</button>
+      <button onClick={onDecline}>{declineText}</button>
     </>
   );
 }
