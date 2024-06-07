@@ -57,7 +57,16 @@ function Wallet() {
             if (approveParams.current.signature) {
               await wallet?.signMessage(approveParams.current.signature);
             } else if (approveParams.current.plain) {
-              await wallet?.sendPlainTransaction(approveParams.current.plain);
+              const res = await wallet?.signPlainTransaction(approveParams.current.plain);
+              if (res) {
+                const { signedTxData, chainId } = res;
+                const res2 = await wallet?.broadcastTransaction(signedTxData, chainId);
+                if (res2) {
+                  const receipt = await wallet?.waitForTxReceipt(res2.txHash, res2.ethProvider);
+                  console.log(receipt);
+                  return receipt;
+                }
+              }
             }
           }
 

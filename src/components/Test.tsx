@@ -96,7 +96,7 @@ export default function Test() {
         onSubmit={async ev => {
           ev.preventDefault();
           const wallet = getOasisAppWallet();
-          await wallet?.sendPlainTransaction({
+          await wallet?.signPlainTransaction({
             strategy: 'passkey',
             authData: {
               username: name,
@@ -129,7 +129,7 @@ export default function Test() {
           type="button"
           onClick={async () => {
             const wallet = getOasisAppWallet();
-            await wallet?.sendPlainTransaction({
+            await wallet?.signPlainTransaction({
               strategy: 'passkey',
               authData: {
                 username: name,

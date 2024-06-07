@@ -269,7 +269,11 @@ class OasisAppWallet {
     }
   }
 
-  async sendPlainTransaction(params: PlainTransactionParams) {
+  /**
+   * Authenticate with selected auth strategy through sapphire "Account Manager",
+   * then return signed tx data and chainId of tx.
+   */
+  async signPlainTransaction(params: PlainTransactionParams) {
     const chainId = params?.tx?.chainId ? +params.tx.chainId.toString() || 0 : 0;
 
     if (chainId && !networkIdIsSapphire(chainId) && !this.rpcUrls[chainId]) {
@@ -303,8 +307,6 @@ class OasisAppWallet {
       );
     }
 
-    console.log(params.tx.nonce);
-
     try {
       const AC = new ethers.Interface(AccountAbi);
       const data = AC.encodeFunctionData('signEIP155', [params.tx]);
@@ -315,51 +317,61 @@ class OasisAppWallet {
       const res = await this.getProxyForStrategy(params.strategy, data, params.authData);
 
       if (res) {
-        const [signedTx] = AC.decodeFunctionResult('signEIP155', res).toArray();
+        const [signedTxData] = AC.decodeFunctionResult('signEIP155', res).toArray();
 
-        let txHash = '';
-        let ethProvider = undefined as ethers.JsonRpcProvider | undefined;
-
-        /**
-         * Broadcast transaction
-         */
-        if (params.tx.chainId && !!networkIdIsSapphire(+params.tx.chainId.toString())) {
-          /**
-           * On sapphire network, use sapphire provider
-           */
-          if (!this.sapphireProvider) {
-            throw new Error('Sapphire provider not initialized');
-          }
-
-          txHash = await this.sapphireProvider.send('eth_sendRawTransaction', [signedTx]);
-        } else {
-          /**
-           * On another network, use a provider for that chain
-           */
-          ethProvider =
-            this.rpcProviders[chainId] || new ethers.JsonRpcProvider(this.rpcUrls[chainId]);
-
-          this.rpcProviders[chainId] = ethProvider;
-
-          if (!ethProvider) {
-            throw new Error('Cross chain provider not initialized');
-          }
-
-          txHash = await ethProvider.send('eth_sendRawTransaction', [signedTx]);
-        }
-
-        /**
-         * @TODO Return txHash, leave receipt waiting to client
-         */
-        const receipt = await this.waitForTxReceipt(txHash, ethProvider);
-
-        console.log(receipt);
-
-        return receipt;
+        return {
+          signedTxData,
+          chainId,
+        };
       }
     } catch (e) {
       console.error(e);
     }
+  }
+
+  /**
+   * Send raw transaction data to network.
+   * If chainId is provided, the transaction is sent to that network (cross-chain).
+   */
+  async broadcastTransaction(signedTxData: ethers.BytesLike, chainId?: number) {
+    let txHash = '';
+    let ethProvider = undefined as ethers.JsonRpcProvider | undefined;
+
+    /**
+     * Broadcast transaction
+     */
+    if (!chainId || (chainId && !!networkIdIsSapphire(+chainId.toString()))) {
+      /**
+       * On sapphire network, use sapphire provider
+       */
+      if (!this.sapphireProvider) {
+        throw new Error('Sapphire provider not initialized');
+      }
+
+      txHash = await this.sapphireProvider.send('eth_sendRawTransaction', [signedTxData]);
+    } else {
+      /**
+       * On another network, use a provider for that chain
+       */
+      ethProvider = this.rpcProviders[chainId] || new ethers.JsonRpcProvider(this.rpcUrls[chainId]);
+
+      this.rpcProviders[chainId] = ethProvider;
+
+      if (!ethProvider) {
+        throw new Error('Cross chain provider not initialized');
+      }
+
+      txHash = await ethProvider.send('eth_sendRawTransaction', [signedTxData]);
+    }
+
+    // const receipt = await this.waitForTxReceipt(txHash, ethProvider);
+    // console.log(receipt);
+    // return receipt;
+
+    return {
+      txHash,
+      ethProvider,
+    };
   }
 
   // async getContractInterface(params: {
