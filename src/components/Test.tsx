@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { getOasisAppWallet } from '../../lib/utils';
 import { ethers } from 'ethers';
+import { ERC20Abi } from '../../lib/abi';
 
 export default function Test() {
   const [name, setName] = useState('');
@@ -96,7 +97,7 @@ export default function Test() {
         onSubmit={async ev => {
           ev.preventDefault();
           const wallet = getOasisAppWallet();
-          await wallet?.signPlainTransaction({
+          const res = await wallet?.signPlainTransaction({
             strategy: 'passkey',
             authData: {
               username: name,
@@ -111,6 +112,11 @@ export default function Test() {
             },
             mustConfirm: true,
           });
+
+          if (res) {
+            const txHash = await wallet?.broadcastTransaction(res.signedTxData, res.chainId);
+            console.log(txHash);
+          }
         }}
       >
         <h2>Send token</h2>
@@ -129,7 +135,7 @@ export default function Test() {
           type="button"
           onClick={async () => {
             const wallet = getOasisAppWallet();
-            await wallet?.signPlainTransaction({
+            const res = await wallet?.signPlainTransaction({
               strategy: 'passkey',
               authData: {
                 username: name,
@@ -144,6 +150,11 @@ export default function Test() {
               },
               mustConfirm: true,
             });
+
+            if (res) {
+              const txHash = await wallet?.broadcastTransaction(res.signedTxData, res.chainId);
+              console.log(txHash);
+            }
           }}
         >
           Test crosschain
@@ -188,6 +199,68 @@ export default function Test() {
           Contract method
         </button>
       </p> */}
+
+      <form
+        className="flex gap-4 items-center mb-4"
+        onSubmit={async ev => {
+          ev.preventDefault();
+          const wallet = getOasisAppWallet();
+          const res = await wallet?.contractRead({
+            contractAbi: ERC20Abi,
+            contractAddress: '0xb1058eD01451B947A836dA3609f88C91804D0663',
+            contractFunctionName: 'balanceOf',
+            contractFunctionValues: [address],
+            chainId: 1287,
+          });
+
+          if (res) {
+            const txHash = await wallet?.broadcastTransaction(res.txData, res.chainId);
+            console.log(txHash);
+          }
+        }}
+      >
+        <h2>Contract function -- balanceOf (read)</h2>
+
+        <input value={address} placeholder="Address" onChange={ev => setAddress(ev.target.value)} />
+
+        <button type="submit">Test</button>
+      </form>
+
+      <form
+        className="flex gap-4 items-center mb-4"
+        onSubmit={async ev => {
+          ev.preventDefault();
+          const wallet = getOasisAppWallet();
+          const res = await wallet?.signContractWriteTransaction({
+            strategy: 'passkey',
+            authData: {
+              username: name,
+            },
+            contractAbi: ERC20Abi,
+            contractAddress: '0xb1058eD01451B947A836dA3609f88C91804D0663',
+            contractFunctionName: 'transfer',
+            contractFunctionValues: [address, ethers.parseEther(amount)],
+            chainId: 1287,
+          });
+
+          if (res) {
+            const txHash = await wallet?.broadcastTransaction(res.signedTxData, res.chainId);
+            console.log(txHash);
+          }
+        }}
+      >
+        <h2>Contract function -- Transfer (write)</h2>
+
+        <input
+          value={address}
+          placeholder="Receiver Address"
+          onChange={ev => setAddress(ev.target.value)}
+        />
+
+        <input value={amount} placeholder="Amount" onChange={ev => setAmount(ev.target.value)} />
+
+        <button type="submit">Test</button>
+      </form>
     </>
   );
 }

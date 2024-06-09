@@ -3,6 +3,8 @@ import {
   AppParams,
   AuthData,
   AuthStrategyName,
+  ContractReadParams,
+  ContractWriteParams,
   Events,
   PlainTransactionParams,
   RegisterData,
@@ -15,6 +17,7 @@ import PasswordStrategy from './strategies/password';
 import PasskeyStrategy from './strategies/passkey';
 import { networkIdIsSapphire, getHashedUsername } from './utils';
 import mitt, { Emitter } from 'mitt';
+import { VoidSigner } from 'ethers';
 
 class OasisAppWallet {
   sapphireProvider: ethers.JsonRpcProvider;
@@ -195,8 +198,8 @@ class OasisAppWallet {
 
       if (Array.isArray(userData) && userData.length > 1) {
         return {
-          publicAddress: userData[1],
-          accountContractAddress: userData[0],
+          publicAddress: userData[1] as string,
+          accountContractAddress: userData[0] as string,
         };
       }
     } catch (e) {
@@ -274,20 +277,10 @@ class OasisAppWallet {
    * then return signed tx data and chainId of tx.
    */
   async signPlainTransaction(params: PlainTransactionParams) {
-    const chainId = params?.tx?.chainId ? +params.tx.chainId.toString() || 0 : 0;
-
-    if (chainId && !networkIdIsSapphire(chainId) && !this.rpcUrls[chainId]) {
-      throw new Error('No RPC url configured for selected chainId');
-    } else if (!chainId && !!this.defaultNetworkId && !this.rpcUrls[this.defaultNetworkId]) {
-      throw new Error('No RPC url configured for default chainId');
-    }
-
-    /**
-     * If no chain specified use default from app params
-     */
-    if (!chainId && !!this.defaultNetworkId) {
-      params.tx.chainId = this.defaultNetworkId;
-    }
+    const chainId = this.validateChainId(
+      params?.tx?.chainId ? +params.tx.chainId.toString() || 0 : 0
+    );
+    params.tx.chainId = chainId;
 
     /**
      * Emit 'txApprove' if confirmation is needed.
@@ -374,16 +367,118 @@ class OasisAppWallet {
     };
   }
 
-  // async getContractInterface(params: {
-  //   address: string;
-  //   abi: ethers.Interface | ethers.InterfaceAbi;
-  // }) {
-  //   const c = new ethers.Contract(
-  //     params.address,
-  //     params.abi,
-  //     new ethers.VoidSigner(ethers.ZeroAddress, this.sapphireProvider)
-  //   );
-  // }
+  async signContractWriteTransaction(params: ContractWriteParams) {
+    const chainId = this.validateChainId(params.chainId);
+
+    const accountAddresses = await this.getAccountAddress(params.authData.username);
+
+    if (!accountAddresses?.publicAddress) {
+      throw new Error(`Couldn't get account address`);
+    }
+
+    /**
+     * Emit 'txApprove' if confirmation is needed.
+     * Handle confirmation in UI part of app (call this method again w/o `mustConfirm`).
+     */
+    if (params.mustConfirm) {
+      this.events.emit('txApprove', { contractWrite: { ...params, mustConfirm: false } });
+      return;
+    }
+
+    try {
+      /**
+       * Encode contract data and prepare plain transaction
+       */
+      const contractInterface = new ethers.Interface(params.contractAbi);
+
+      const contractData = contractInterface.encodeFunctionData(
+        params.contractFunctionName,
+        params.contractFunctionValues
+      );
+
+      let tx = await new VoidSigner(
+        accountAddresses.publicAddress,
+        this.sapphireProvider
+      ).populateTransaction({
+        from: accountAddresses.publicAddress,
+        to: params.contractAddress,
+        gasLimit: 1_000_000,
+        value: 0,
+        data: contractData,
+        chainId,
+      });
+
+      /**
+       * Stringify bigint values
+       */
+      tx = Object.entries(tx).reduce((acc, [key, value]) => {
+        if (typeof value === 'bigint') {
+          (acc as any)[key] = value.toString();
+        }
+        return acc;
+      }, tx);
+
+      const AC = new ethers.Interface(AccountAbi);
+      const data = AC.encodeFunctionData('signEIP155', [tx]);
+
+      const res = await this.getProxyForStrategy(params.strategy, data, params.authData);
+
+      if (res) {
+        const [signedTxData] = AC.decodeFunctionResult('signEIP155', res).toArray();
+
+        return {
+          signedTxData,
+          chainId,
+        };
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async contractRead(params: ContractReadParams) {
+    const chainId = this.validateChainId(params.chainId);
+
+    try {
+      /**
+       * Encode contract data and prepare plain transaction
+       */
+      const contractInterface = new ethers.Interface(params.contractAbi);
+
+      const contractData = contractInterface.encodeFunctionData(
+        params.contractFunctionName,
+        params.contractFunctionValues
+      );
+
+      let tx = await new ethers.VoidSigner(
+        ethers.ZeroAddress,
+        this.sapphireProvider
+      ).populateTransaction({
+        to: params.contractAddress,
+        gasLimit: 1_000_000,
+        value: 0,
+        data: contractData,
+        chainId,
+      });
+
+      /**
+       * Stringify bigint values
+       */
+      tx = Object.entries(tx).reduce((acc, [key, value]) => {
+        if (typeof value === 'bigint') {
+          (acc as any)[key] = value.toString();
+        }
+        return acc;
+      }, tx);
+
+      return {
+        txData: ethers.Transaction.from(tx).serialized,
+        chainId,
+      };
+    } catch (e) {
+      console.error(e);
+    }
+  }
   // #endregion
 
   // #region Helpers
@@ -435,6 +530,26 @@ class OasisAppWallet {
     if (this.rpcUrls[networkId]) {
       this.defaultNetworkId = networkId;
     }
+  }
+
+  /**
+   * Check if rpc is configured for desired network ID.
+   */
+  validateChainId(chainId?: number) {
+    if (chainId && !networkIdIsSapphire(chainId) && !this.rpcUrls[chainId]) {
+      throw new Error('No RPC url configured for selected chainId');
+    } else if (!chainId && !!this.defaultNetworkId && !this.rpcUrls[this.defaultNetworkId]) {
+      throw new Error('No RPC url configured for default chainId');
+    }
+
+    /**
+     * If no chain specified use default from app params
+     */
+    if (!chainId && !!this.defaultNetworkId) {
+      chainId = this.defaultNetworkId;
+    }
+
+    return chainId;
   }
   // #endregion
 }

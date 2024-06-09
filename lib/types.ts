@@ -62,7 +62,21 @@ export type SignMessageParams = {
   data?: string;
 };
 
+export type ContractReadParams = {
+  contractAbi: ethers.InterfaceAbi;
+  contractFunctionName: string;
+  contractFunctionValues?: any[];
+  contractAddress: string;
+  chainId?: number;
+};
+
+export type ContractWriteParams = {
+  strategy: AuthStrategyName;
+  authData: AuthData;
+  mustConfirm?: boolean;
+} & ContractReadParams;
+
 export type Events = {
   signatureRequest: SignMessageParams;
-  txApprove: { plain?: PlainTransactionParams };
+  txApprove: { plain?: PlainTransactionParams; contractWrite?: ContractWriteParams };
 };
