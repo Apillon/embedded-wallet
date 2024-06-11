@@ -1,105 +1,66 @@
 import { useState } from 'react';
 import { getOasisAppWallet } from '../../lib/utils';
 import { useWalletContext } from '../contexts/wallet.context';
+import Btn from './Btn';
 
-export default function WalletAuth({
-  initialMode = 'signin',
-}: {
-  initialMode?: 'signin' | 'signup';
-}) {
+export default function WalletAuth() {
   const { dispatch } = useWalletContext();
 
   const [username, setUsername] = useState('');
-  const [mode, setMode] = useState<'signin' | 'signup'>(initialMode);
+  const [loading, setLoading] = useState(false);
 
   return (
     <div>
-      {mode === 'signin' && (
-        <div>
-          <h2>Sign in</h2>
+      <h2>Sign in or Sign up</h2>
 
-          <form
-            onSubmit={async ev => {
-              ev.preventDefault();
+      <form
+        onSubmit={async ev => {
+          ev.preventDefault();
 
-              const wallet = getOasisAppWallet();
+          if (!username) {
+            return;
+          }
 
-              try {
-                const address = await wallet?.authenticate('passkey', { username });
+          const wallet = getOasisAppWallet();
 
-                if (address) {
-                  const balance = await wallet?.getAccountBalance(address.publicAddress as string);
+          setLoading(true);
 
-                  dispatch({
-                    type: 'setState',
-                    payload: {
-                      address: address.publicAddress as string,
-                      username,
-                      balance,
-                      authStrategy: 'passkey',
-                    },
-                  });
-                }
-              } catch (e) {
-                console.error(e);
-              }
-            }}
-          >
-            <input
-              placeholder="Username"
-              value={username}
-              onChange={ev => setUsername(ev.target.value)}
-            />
+          try {
+            const address = (await wallet?.userExists(username))
+              ? await wallet?.authenticate('passkey', { username })
+              : await wallet?.register('passkey', { username });
 
-            <button type="submit">Sign in</button>
-          </form>
-          <button onClick={() => setMode('signup')}>Sign up</button>
-        </div>
-      )}
+            if (address) {
+              const balance = await wallet?.getAccountBalance(address.publicAddress as string);
 
-      {mode === 'signup' && (
-        <div>
-          <h2>Sign up</h2>
+              dispatch({
+                type: 'setState',
+                payload: {
+                  address: address.publicAddress as string,
+                  username,
+                  balance,
+                  authStrategy: 'passkey',
+                },
+              });
+            }
+          } catch (e) {
+            console.error(e);
+          }
 
-          <form
-            onSubmit={async ev => {
-              ev.preventDefault();
+          setLoading(false);
+        }}
+      >
+        <input
+          placeholder="your e-mail@email.com"
+          value={username}
+          className="w-full mb-8"
+          onChange={ev => setUsername(ev.target.value)}
+        />
 
-              const wallet = getOasisAppWallet();
-
-              try {
-                const address = await wallet?.register('passkey', { username });
-
-                if (address) {
-                  const balance = await wallet?.getAccountBalance(address.publicAddress as string);
-
-                  dispatch({
-                    type: 'setState',
-                    payload: {
-                      address: address.publicAddress as string,
-                      username,
-                      balance,
-                      authStrategy: 'passkey',
-                    },
-                  });
-                }
-              } catch (e) {
-                console.error(e);
-              }
-            }}
-          >
-            <input
-              placeholder="Username"
-              value={username}
-              onChange={ev => setUsername(ev.target.value)}
-            />
-
-            <button type="submit">Sign up</button>
-          </form>
-
-          <button onClick={() => setMode('signin')}>Sign in</button>
-        </div>
-      )}
+        <Btn type="submit" loading={loading} className="w-full">
+          Continue
+        </Btn>
+      </form>
     </div>
   );
 }

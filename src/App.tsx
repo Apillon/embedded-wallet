@@ -1,4 +1,3 @@
-import Test from './components/Test';
 import WalletWidget from './components/WalletWidget';
 
 export default function App() {
@@ -28,10 +27,6 @@ export default function App() {
           },
         ]}
       />
-
-      <hr className="my-12" />
-
-      <Test />
     </div>
   );
 }

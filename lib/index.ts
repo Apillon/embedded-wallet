@@ -65,6 +65,31 @@ class OasisAppWallet {
 
   // #region Auth utils
   /**
+   * Check if `username` is already registered on accountManager
+   */
+  async userExists(username: string) {
+    if (!this.sapphireProvider) {
+      throw new Error('Sapphire provider not initialized');
+    }
+
+    if (!this.accountManagerContract) {
+      throw new Error('Account manager contract not initialized');
+    }
+
+    try {
+      const res = await this.accountManagerContract.userExists(
+        (await getHashedUsername(username)) as any
+      );
+
+      return res;
+    } catch (e) {
+      console.error(e);
+    }
+
+    return false;
+  }
+
+  /**
    * Create new "wallet" for username.
    * Creates a new contract for each account on sapphire network.
    */

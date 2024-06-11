@@ -7,6 +7,7 @@ import { ethers } from 'ethers';
 import WalletApprove from './WalletApprove';
 import { Events } from '../../lib/types';
 import { TransactionsProvider, useTransactionsContext } from '../contexts/transactions.context';
+import Btn from './Btn';
 
 function Wallet() {
   const { state, wallet } = useWalletContext();
@@ -105,9 +106,9 @@ function Wallet() {
         {modalContent}
       </Modal>
 
-      <button onClick={() => setIsModalOpen(true)}>
+      <Btn id="oaw-wallet-widget-btn" onClick={() => setIsModalOpen(true)}>
         {loggedIn ? 'Open wallet' : 'Sign in now'}
-      </button>
+      </Btn>
     </div>
   );
 }
@@ -124,7 +125,12 @@ function Modal({
   return (
     <>
       <Transition show={isOpen}>
-        <Dialog open={isOpen} onClose={() => setIsOpen(false)} className="relative z-50">
+        <Dialog
+          id="oaw-wallet-widget"
+          open={isOpen}
+          className="relative z-50"
+          onClose={() => setIsOpen(false)}
+        >
           <TransitionChild
             enter="ease-out duration-300"
             enterFrom="opacity-0"
@@ -145,9 +151,22 @@ function Modal({
             leaveTo="opacity-0 scale-95"
           >
             <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
-              <DialogPanel className="relative max-w-lg space-y-4 border bg-black p-12 rounded-lg">
+              <DialogPanel className="relative max-w-lg w-full min-h-[600px] bg-dark p-8 sm:p-16 border border-brightdark text-offwhite">
                 <button className="absolute top-2 right-2" onClick={() => setIsOpen(false)}>
-                  x
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      clipRule="evenodd"
+                      d="M12 10.6569L6.34317 5L4.92896 6.41421L10.5858 12.0711L4.92898 17.7279L6.3432 19.1421L12 13.4853L17.6569 19.1421L19.0711 17.7279L13.4143 12.0711L19.0711 6.41421L17.6569 5L12 10.6569Z"
+                      fill="#9C9C95"
+                    />
+                  </svg>
                 </button>
 
                 {children}
