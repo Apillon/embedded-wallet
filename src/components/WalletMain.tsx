@@ -1,5 +1,6 @@
 import { useWalletContext } from '../contexts/wallet.context';
 import WalletNetworkSelect from './WalletNetworkSelect';
+import WalletTransactions from './WalletTransactions';
 
 export default function WalletMain() {
   const { state, dispatch } = useWalletContext();
@@ -13,6 +14,10 @@ export default function WalletMain() {
       <hr className="my-3" />
 
       <WalletNetworkSelect />
+
+      <hr className="my-3" />
+
+      <WalletTransactions />
 
       <hr className="my-3" />
 

@@ -4,4 +4,5 @@ export const SapphireTestnet = 23295;
 
 export const WebStorageKeys = {
   WALLET_CONTEXT: 'oaw_context',
+  TRANSACTIONS_CONTEXT: 'oaw_transactions',
 };

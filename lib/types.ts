@@ -7,7 +7,14 @@ const wacAbi = parseAbi(AccountManagerAbi);
 
 export type WebauthnContract = TypedContract<typeof wacAbi>;
 
-export type AppParams = { defaultNetworkId?: number; rpcUrls?: { [networkId: number]: string } };
+export type NetworkConfig = { [networkId: number]: { rpcUrl: string; explorerUrl: string } };
+
+export type AppParams = {
+  accountManagerAddress?: string;
+  sapphireUrl?: string;
+  defaultNetworkId?: number;
+  networkConfig?: NetworkConfig;
+};
 
 export type AuthData = {
   username: string;
@@ -76,7 +83,19 @@ export type ContractWriteParams = {
   mustConfirm?: boolean;
 } & ContractReadParams;
 
+export type TransactionItem = {
+  hash: string;
+  label: string;
+  rawData: any;
+  owner: string;
+  status: 'pending' | 'confirmed' | 'failed';
+  chainId: number;
+  explorerUrl: string;
+  createdAt: number; // timestamp
+};
+
 export type Events = {
   signatureRequest: SignMessageParams;
   txApprove: { plain?: PlainTransactionParams; contractWrite?: ContractWriteParams };
+  transactionSubmitted: TransactionItem;
 };

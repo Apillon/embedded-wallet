@@ -1,10 +1,10 @@
 import { ReactNode, createContext, useContext, useEffect, useReducer, useState } from 'react';
-import { AuthStrategyName } from '../../lib/types';
+import { AuthStrategyName, NetworkConfig } from '../../lib/types';
 import { WebStorageKeys } from '../../lib/constants';
 import OasisAppWallet from '../../lib';
 import { initializeOnWindow } from '../../lib/utils';
 
-export type Network = { name: string; id: number; rpcUrl: string };
+export type Network = { name: string; id: number; rpcUrl: string; explorerUrl: string };
 
 const initialState = (defaultNetworkId = 0) => ({
   username: '',
@@ -65,10 +65,14 @@ function WalletProvider({
   children,
   networks = [],
   defaultNetworkId = 0,
+  sapphireUrl,
+  accountManagerAddress,
 }: {
   children: ReactNode;
   networks?: Network[];
   defaultNetworkId?: number;
+  sapphireUrl?: string;
+  accountManagerAddress?: string;
 }) {
   const [state, dispatch] = useReducer(reducer, initialState(defaultNetworkId));
   const [initialized, setInitialized] = useState(false);
@@ -119,11 +123,16 @@ function WalletProvider({
 
       if (networks) {
         w = initializeOnWindow({
-          rpcUrls: networks.reduce((acc, x) => {
-            acc[x.id] = x.rpcUrl;
-            return acc;
-          }, {} as { [networkId: number]: string }),
+          sapphireUrl,
+          accountManagerAddress,
           defaultNetworkId: state.networkId || defaultNetworkId,
+          networkConfig: networks.reduce((acc, x) => {
+            acc[x.id] = {
+              rpcUrl: x.rpcUrl,
+              explorerUrl: x.explorerUrl,
+            };
+            return acc;
+          }, {} as NetworkConfig),
         });
       } else {
         w = initializeOnWindow();
@@ -132,6 +141,7 @@ function WalletProvider({
       if (w) {
         setWallet(w);
         reloadUserBalance(w);
+        w.lastAccountAddress = state.address || '';
       }
     }
   }, [networks, defaultNetworkId, initialized]);

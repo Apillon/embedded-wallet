@@ -28,26 +28,37 @@ class OasisAppWallet {
   defaultNetworkId = 0;
   rpcUrls = {} as { [networkId: number]: string };
   rpcProviders = {} as { [networkId: number]: ethers.JsonRpcProvider };
+  explorerUrls = {
+    23294: 'https://explorer.oasis.io/mainnet/sapphire',
+    23295: 'https://explorer.oasis.io/testnet/sapphire',
+  } as { [networkId: number]: string };
+  lastAccountAddress = '';
 
   /**
    * Prepare sapphire provider and account manager (WebAuthn) contract.
    * Prepare data for available chains
    */
   constructor(params?: AppParams) {
-    const ethSaphProvider = new ethers.JsonRpcProvider('https://testnet.sapphire.oasis.dev');
+    const ethSaphProvider = new ethers.JsonRpcProvider(
+      params?.sapphireUrl || 'https://testnet.sapphire.oasis.dev'
+    );
 
     this.sapphireProvider = sapphire.wrap(ethSaphProvider);
 
     this.accountManagerContract = new ethers.Contract(
-      // 0x5C357DaFfe6b1016C0c9A5607367E8f47765D4bC,
-      '0x921E78602E8584389FacEF9cF578Ba8790bb060f',
-      // "0xa4a2472F3fe6ad4e04C89C11Af6A42c27335B8a6",
+      params?.accountManagerAddress || '0x5C357DaFfe6b1016C0c9A5607367E8f47765D4bC',
       AccountManagerAbi,
       new ethers.VoidSigner(ethers.ZeroAddress, this.sapphireProvider)
     ) as unknown as WebauthnContract;
 
     this.defaultNetworkId = params?.defaultNetworkId || this.defaultNetworkId;
-    this.rpcUrls = params?.rpcUrls || this.rpcUrls;
+
+    if (params?.networkConfig) {
+      for (const k in params.networkConfig) {
+        this.rpcUrls[k] = params.networkConfig[k].rpcUrl;
+        this.explorerUrls[k] = params.networkConfig[k].explorerUrl;
+      }
+    }
 
     this.events = mitt<Events>();
   }
@@ -197,6 +208,8 @@ class OasisAppWallet {
       const userData = await this.accountManagerContract.getAccount(hashedUsername as any);
 
       if (Array.isArray(userData) && userData.length > 1) {
+        this.lastAccountAddress = userData[1] as string;
+
         return {
           publicAddress: userData[1] as string,
           accountContractAddress: userData[0] as string,
@@ -326,12 +339,29 @@ class OasisAppWallet {
    * Send raw transaction data to network.
    * If chainId is provided, the transaction is sent to that network (cross-chain).
    */
-  async broadcastTransaction(signedTxData: ethers.BytesLike, chainId?: number) {
+  async broadcastTransaction(
+    signedTxData: ethers.BytesLike,
+    chainId?: number,
+    label = 'Transaction'
+  ) {
     /**
      * Broadcast transaction
      */
     const ethProvider = this.getRpcProviderForChainId(chainId);
     const txHash = await ethProvider.send('eth_sendRawTransaction', [signedTxData]);
+
+    this.events.emit('transactionSubmitted', {
+      hash: txHash,
+      label,
+      rawData: signedTxData,
+      owner: this.lastAccountAddress || 'none',
+      status: 'pending',
+      chainId: chainId || this.defaultNetworkId,
+      explorerUrl: this.explorerUrls[chainId || this.defaultNetworkId]
+        ? `${this.explorerUrls[chainId || this.defaultNetworkId]}/tx/${txHash}`
+        : '',
+      createdAt: Date.now(),
+    });
 
     return {
       txHash,

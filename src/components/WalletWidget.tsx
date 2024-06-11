@@ -6,9 +6,12 @@ import WalletMain from './WalletMain';
 import { ethers } from 'ethers';
 import WalletApprove from './WalletApprove';
 import { Events } from '../../lib/types';
+import { TransactionsProvider, useTransactionsContext } from '../contexts/transactions.context';
 
 function Wallet() {
   const { state, wallet } = useWalletContext();
+  const { dispatch: dispatchTx } = useTransactionsContext();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [txToConfirm, setTxToConfirm] = useState<ethers.TransactionLike>();
   const [messageToSign, setMessageToSign] = useState('');
@@ -17,6 +20,9 @@ function Wallet() {
 
   const loggedIn = state.username && state.address;
 
+  /**
+   * Handle wallet SDK Events
+   */
   useEffect(() => {
     const onTxApproveEvent = (params: Events['txApprove']) => {
       if (params.plain) {
@@ -32,15 +38,21 @@ function Wallet() {
       setIsModalOpen(true);
     };
 
+    const onTransactionSubmittedEvent = (params: Events['transactionSubmitted']) => {
+      dispatchTx({ type: 'addTx', payload: params });
+    };
+
     if (wallet) {
       wallet.events.on('txApprove', onTxApproveEvent);
       wallet.events.on('signatureRequest', onSignatureRequestEvent);
+      wallet.events.on('transactionSubmitted', onTransactionSubmittedEvent);
     }
 
     return () => {
       if (wallet) {
         wallet.events.off('txApprove', onTxApproveEvent);
         wallet.events.off('signatureRequest', onSignatureRequestEvent);
+        wallet.events.off('transactionSubmitted', onTransactionSubmittedEvent);
       }
     };
   }, [wallet]);
@@ -149,15 +161,26 @@ function Modal({
 }
 
 export default function WalletWidget({
-  networks,
+  accountManagerAddress,
+  sapphireUrl,
   defaultNetworkId = 0,
+  networks,
 }: {
-  networks?: Network[];
+  accountManagerAddress?: string;
+  sapphireUrl?: string;
   defaultNetworkId?: number;
+  networks?: Network[];
 }) {
   return (
-    <WalletProvider networks={networks} defaultNetworkId={defaultNetworkId}>
-      <Wallet />
+    <WalletProvider
+      accountManagerAddress={accountManagerAddress}
+      sapphireUrl={sapphireUrl}
+      networks={networks}
+      defaultNetworkId={defaultNetworkId}
+    >
+      <TransactionsProvider>
+        <Wallet />
+      </TransactionsProvider>
     </WalletProvider>
   );
 }
