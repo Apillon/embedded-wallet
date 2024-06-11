@@ -4,10 +4,10 @@ import { ethers } from 'ethers';
 import { ERC20Abi } from '../../lib/abi';
 
 export default function Test() {
-  const [name, setName] = useState('');
+  const [name, setName] = useState('qw');
   const [password, setPassword] = useState('');
-  const [amount, setAmount] = useState('');
-  const [address, setAddress] = useState('');
+  const [amount, setAmount] = useState('0.005');
+  const [address, setAddress] = useState('0x700cebAA997ecAd7B0797f8f359C621604Cce6Bf');
 
   return (
     <>
@@ -213,10 +213,12 @@ export default function Test() {
             chainId: 1287,
           });
 
-          if (res) {
-            const txHash = await wallet?.broadcastTransaction(res.txData, res.chainId);
-            console.log(txHash);
-          }
+          console.log(res);
+
+          // if (res) {
+          //   const txHash = await wallet?.broadcastTransaction(res.txData, res.chainId);
+          //   console.log(txHash);
+          // }
         }}
       >
         <h2>Contract function -- balanceOf (read)</h2>
@@ -242,6 +244,8 @@ export default function Test() {
             contractFunctionValues: [address, ethers.parseEther(amount)],
             chainId: 1287,
           });
+
+          console.log(res);
 
           if (res) {
             const txHash = await wallet?.broadcastTransaction(res.signedTxData, res.chainId);

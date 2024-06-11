@@ -327,44 +327,20 @@ class OasisAppWallet {
    * If chainId is provided, the transaction is sent to that network (cross-chain).
    */
   async broadcastTransaction(signedTxData: ethers.BytesLike, chainId?: number) {
-    let txHash = '';
-    let ethProvider = undefined as ethers.JsonRpcProvider | undefined;
-
     /**
      * Broadcast transaction
      */
-    if (!chainId || (chainId && !!networkIdIsSapphire(+chainId.toString()))) {
-      /**
-       * On sapphire network, use sapphire provider
-       */
-      if (!this.sapphireProvider) {
-        throw new Error('Sapphire provider not initialized');
-      }
-
-      txHash = await this.sapphireProvider.send('eth_sendRawTransaction', [signedTxData]);
-    } else {
-      /**
-       * On another network, use a provider for that chain
-       */
-      ethProvider = this.rpcProviders[chainId] || new ethers.JsonRpcProvider(this.rpcUrls[chainId]);
-
-      this.rpcProviders[chainId] = ethProvider;
-
-      if (!ethProvider) {
-        throw new Error('Cross chain provider not initialized');
-      }
-
-      txHash = await ethProvider.send('eth_sendRawTransaction', [signedTxData]);
-    }
-
-    // const receipt = await this.waitForTxReceipt(txHash, ethProvider);
-    // console.log(receipt);
-    // return receipt;
+    const ethProvider = this.getRpcProviderForChainId(chainId);
+    const txHash = await ethProvider.send('eth_sendRawTransaction', [signedTxData]);
 
     return {
       txHash,
       ethProvider,
     };
+
+    // const receipt = await this.waitForTxReceipt(txHash, ethProvider);
+    // console.log(receipt);
+    // return receipt;
   }
 
   async signContractWriteTransaction(params: ContractWriteParams) {
@@ -396,27 +372,28 @@ class OasisAppWallet {
         params.contractFunctionValues
       );
 
-      let tx = await new VoidSigner(
+      const tx = await new VoidSigner(
         accountAddresses.publicAddress,
-        this.sapphireProvider
+        this.getRpcProviderForChainId(chainId)
       ).populateTransaction({
         from: accountAddresses.publicAddress,
         to: params.contractAddress,
         gasLimit: 1_000_000,
         value: 0,
         data: contractData,
-        chainId,
       });
+
+      tx.gasPrice = 20_000_000_000; // 20 gwei
 
       /**
        * Stringify bigint values
        */
-      tx = Object.entries(tx).reduce((acc, [key, value]) => {
-        if (typeof value === 'bigint') {
-          (acc as any)[key] = value.toString();
-        }
-        return acc;
-      }, tx);
+      // tx = Object.entries(tx).reduce((acc, [key, value]) => {
+      //   if (typeof value === 'bigint') {
+      //     (acc as any)[key] = value.toString();
+      //   }
+      //   return acc;
+      // }, tx);
 
       const AC = new ethers.Interface(AccountAbi);
       const data = AC.encodeFunctionData('signEIP155', [tx]);
@@ -438,43 +415,60 @@ class OasisAppWallet {
 
   async contractRead(params: ContractReadParams) {
     const chainId = this.validateChainId(params.chainId);
+    const ethProvider = this.getRpcProviderForChainId(chainId);
 
     try {
       /**
        * Encode contract data and prepare plain transaction
        */
-      const contractInterface = new ethers.Interface(params.contractAbi);
+      const contract = new ethers.Contract(params.contractAddress, params.contractAbi, ethProvider);
 
-      const contractData = contractInterface.encodeFunctionData(
-        params.contractFunctionName,
-        params.contractFunctionValues
-      );
+      if (params.contractFunctionValues) {
+        return await contract[params.contractFunctionName](...params.contractFunctionValues);
+      } else {
+        return await contract[params.contractFunctionName]();
+      }
 
-      let tx = await new ethers.VoidSigner(
-        ethers.ZeroAddress,
-        this.sapphireProvider
-      ).populateTransaction({
-        to: params.contractAddress,
-        gasLimit: 1_000_000,
-        value: 0,
-        data: contractData,
-        chainId,
-      });
+      // const contractData = contractInterface.encodeFunctionData(
+      //   params.contractFunctionName,
+      //   params.contractFunctionValues
+      // );
+
+      // let tx = params.contractFunctionValues
+      //   ? await contract[params.contractFunctionName].populateTransaction(
+      //       ...params.contractFunctionValues
+      //     )
+      //   : await contract[params.contractFunctionName].populateTransaction();
+
+      // tx.gasLimit = 1_000_000n;
+      // tx.chainId = BigInt(chainId!);
+      // await new ethers.VoidSigner(
+      //   ethers.ZeroAddress,
+      //   this.getRpcProviderForChainId(chainId)
+      // ).populateTransaction({
+      //   to: params.contractAddress,
+      //   gasLimit: 1_000_000,
+      //   value: 0,
+      //   data: contractData,
+      //   chainId,
+      // });
+
+      // console.log(ethers.Transaction.from(tx).unsignedSerialized);
 
       /**
        * Stringify bigint values
        */
-      tx = Object.entries(tx).reduce((acc, [key, value]) => {
-        if (typeof value === 'bigint') {
-          (acc as any)[key] = value.toString();
-        }
-        return acc;
-      }, tx);
+      // tx = Object.entries(tx).reduce((acc, [key, value]) => {
+      //   if (typeof value === 'bigint') {
+      //     (acc as any)[key] = value.toString();
+      //   }
+      //   return acc;
+      // }, tx);
 
-      return {
-        txData: ethers.Transaction.from(tx).serialized,
-        chainId,
-      };
+      // return {
+      //   txData: ethers.Transaction.from(tx).unsignedSerialized,
+      //   chainId,
+      // };
     } catch (e) {
       console.error(e);
     }
@@ -550,6 +544,37 @@ class OasisAppWallet {
     }
 
     return chainId;
+  }
+
+  /**
+   * Get provider object for chainId.
+   * If no chainId specified, use sapphire network rpc.
+   */
+  getRpcProviderForChainId(chainId?: number) {
+    if (!chainId || (chainId && !!networkIdIsSapphire(+chainId.toString()))) {
+      /**
+       * On sapphire network, use sapphire provider
+       */
+      if (!this.sapphireProvider) {
+        throw new Error('Sapphire provider not initialized');
+      }
+
+      return this.sapphireProvider;
+    } else {
+      /**
+       * On another network, use a provider for that chain
+       */
+      const ethProvider =
+        this.rpcProviders[chainId] || new ethers.JsonRpcProvider(this.rpcUrls[chainId]);
+
+      this.rpcProviders[chainId] = ethProvider;
+
+      if (!ethProvider) {
+        throw new Error('Cross chain provider not initialized');
+      }
+
+      return ethProvider;
+    }
   }
   // #endregion
 }
