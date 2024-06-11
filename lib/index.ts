@@ -21,7 +21,7 @@ import { VoidSigner } from 'ethers';
 
 class OasisAppWallet {
   sapphireProvider: ethers.JsonRpcProvider;
-  webauthnContract: WebauthnContract;
+  accountManagerContract: WebauthnContract;
   abiCoder = ethers.AbiCoder.defaultAbiCoder();
   events: Emitter<Events>;
 
@@ -38,7 +38,7 @@ class OasisAppWallet {
 
     this.sapphireProvider = sapphire.wrap(ethSaphProvider);
 
-    this.webauthnContract = new ethers.Contract(
+    this.accountManagerContract = new ethers.Contract(
       // 0x5C357DaFfe6b1016C0c9A5607367E8f47765D4bC,
       '0x921E78602E8584389FacEF9cF578Ba8790bb060f',
       // "0xa4a2472F3fe6ad4e04C89C11Af6A42c27335B8a6",
@@ -62,7 +62,7 @@ class OasisAppWallet {
       throw new Error('Sapphire provider not initialized');
     }
 
-    if (!this.webauthnContract) {
+    if (!this.accountManagerContract) {
       throw new Error('Account manager contract not initialized');
     }
 
@@ -95,10 +95,10 @@ class OasisAppWallet {
 
       const gasPrice = (await this.sapphireProvider.getFeeData()).gasPrice;
       const nonce = await this.sapphireProvider.getTransactionCount(
-        await this.webauthnContract.gaspayingAddress()
+        await this.accountManagerContract.gaspayingAddress()
       );
 
-      const signedTx = await this.webauthnContract.generateGaslessTx(
+      const signedTx = await this.accountManagerContract.generateGaslessTx(
         gaslessData,
         nonce as any,
         gasPrice as any
@@ -122,7 +122,7 @@ class OasisAppWallet {
       throw new Error('Sapphire provider not initialized');
     }
 
-    if (!this.webauthnContract) {
+    if (!this.accountManagerContract) {
       throw new Error('Account manager contract not initialized');
     }
 
@@ -160,7 +160,7 @@ class OasisAppWallet {
       /**
        * Get public key for username from account manager contract
        */
-      const contractRes = await this.webauthnContract.getAccount(hashedUsername as any);
+      const contractRes = await this.accountManagerContract.getAccount(hashedUsername as any);
 
       /**
        * If keys match -> Auth success, return account addresses
@@ -183,7 +183,7 @@ class OasisAppWallet {
       throw new Error('Sapphire provider not initialized');
     }
 
-    if (!this.webauthnContract) {
+    if (!this.accountManagerContract) {
       throw new Error('Account manager contract not initialized');
     }
 
@@ -194,7 +194,7 @@ class OasisAppWallet {
     try {
       const hashedUsername = await getHashedUsername(username);
 
-      const userData = await this.webauthnContract.getAccount(hashedUsername as any);
+      const userData = await this.accountManagerContract.getAccount(hashedUsername as any);
 
       if (Array.isArray(userData) && userData.length > 1) {
         return {
@@ -296,7 +296,7 @@ class OasisAppWallet {
      */
     if (!params.tx.nonce) {
       params.tx.nonce = await this.sapphireProvider.getTransactionCount(
-        await this.webauthnContract.gaspayingAddress()
+        await this.accountManagerContract.gaspayingAddress()
       );
     }
 
@@ -343,7 +343,10 @@ class OasisAppWallet {
     // return receipt;
   }
 
-  async signContractWriteTransaction(params: ContractWriteParams) {
+  /**
+   * Get signed tx for making a contract write call.
+   */
+  async signContractWrite(params: ContractWriteParams) {
     const chainId = this.validateChainId(params.chainId);
 
     const accountAddresses = await this.getAccountAddress(params.authData.username);
@@ -363,7 +366,7 @@ class OasisAppWallet {
 
     try {
       /**
-       * Encode contract data and prepare plain transaction
+       * Encode contract data
        */
       const contractInterface = new ethers.Interface(params.contractAbi);
 
@@ -372,6 +375,9 @@ class OasisAppWallet {
         params.contractFunctionValues
       );
 
+      /**
+       * Prepare transaction
+       */
       const tx = await new VoidSigner(
         accountAddresses.publicAddress,
         this.getRpcProviderForChainId(chainId)
@@ -382,22 +388,13 @@ class OasisAppWallet {
         value: 0,
         data: contractData,
       });
-
       tx.gasPrice = 20_000_000_000; // 20 gwei
 
       /**
-       * Stringify bigint values
+       * Encode tx data and authenticate it with selected auth strategy through sapphire "Account Manager"
        */
-      // tx = Object.entries(tx).reduce((acc, [key, value]) => {
-      //   if (typeof value === 'bigint') {
-      //     (acc as any)[key] = value.toString();
-      //   }
-      //   return acc;
-      // }, tx);
-
       const AC = new ethers.Interface(AccountAbi);
       const data = AC.encodeFunctionData('signEIP155', [tx]);
-
       const res = await this.getProxyForStrategy(params.strategy, data, params.authData);
 
       if (res) {
@@ -413,14 +410,15 @@ class OasisAppWallet {
     }
   }
 
+  /**
+   * Get result of contract read.
+   * Utility function, this has nothing to do with Oasis.
+   */
   async contractRead(params: ContractReadParams) {
     const chainId = this.validateChainId(params.chainId);
     const ethProvider = this.getRpcProviderForChainId(chainId);
 
     try {
-      /**
-       * Encode contract data and prepare plain transaction
-       */
       const contract = new ethers.Contract(params.contractAddress, params.contractAbi, ethProvider);
 
       if (params.contractFunctionValues) {
@@ -428,47 +426,6 @@ class OasisAppWallet {
       } else {
         return await contract[params.contractFunctionName]();
       }
-
-      // const contractData = contractInterface.encodeFunctionData(
-      //   params.contractFunctionName,
-      //   params.contractFunctionValues
-      // );
-
-      // let tx = params.contractFunctionValues
-      //   ? await contract[params.contractFunctionName].populateTransaction(
-      //       ...params.contractFunctionValues
-      //     )
-      //   : await contract[params.contractFunctionName].populateTransaction();
-
-      // tx.gasLimit = 1_000_000n;
-      // tx.chainId = BigInt(chainId!);
-      // await new ethers.VoidSigner(
-      //   ethers.ZeroAddress,
-      //   this.getRpcProviderForChainId(chainId)
-      // ).populateTransaction({
-      //   to: params.contractAddress,
-      //   gasLimit: 1_000_000,
-      //   value: 0,
-      //   data: contractData,
-      //   chainId,
-      // });
-
-      // console.log(ethers.Transaction.from(tx).unsignedSerialized);
-
-      /**
-       * Stringify bigint values
-       */
-      // tx = Object.entries(tx).reduce((acc, [key, value]) => {
-      //   if (typeof value === 'bigint') {
-      //     (acc as any)[key] = value.toString();
-      //   }
-      //   return acc;
-      // }, tx);
-
-      // return {
-      //   txData: ethers.Transaction.from(tx).unsignedSerialized,
-      //   chainId,
-      // };
     } catch (e) {
       console.error(e);
     }
@@ -480,14 +437,22 @@ class OasisAppWallet {
    * Helper for triggering different auth strategies
    */
   async getProxyForStrategy(strategy: AuthStrategyName, data: any, authData: AuthData) {
-    if (!this.webauthnContract) {
+    if (!this.accountManagerContract) {
       throw new Error('Account manager contract not initialized');
     }
 
     if (strategy === 'password') {
-      return await new PasswordStrategy().getProxyResponse(this.webauthnContract, data, authData);
+      return await new PasswordStrategy().getProxyResponse(
+        this.accountManagerContract,
+        data,
+        authData
+      );
     } else if (strategy === 'passkey') {
-      return await new PasskeyStrategy().getProxyResponse(this.webauthnContract, data, authData);
+      return await new PasskeyStrategy().getProxyResponse(
+        this.accountManagerContract,
+        data,
+        authData
+      );
     }
   }
 

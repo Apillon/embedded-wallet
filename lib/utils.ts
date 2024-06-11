@@ -33,7 +33,7 @@ export function getOasisAppWallet() {
 export async function getHashedUsername(name = '') {
   const oaw = getOasisAppWallet();
 
-  const salt = await oaw?.webauthnContract?.salt();
+  const salt = await oaw?.accountManagerContract?.salt();
 
   if (salt) {
     return pbkdf2Sync(name, ethers.toBeArray(salt), 100_000, 32, 'sha256');
