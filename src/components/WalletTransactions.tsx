@@ -46,7 +46,12 @@ function Transaction({ tx }: { tx: TransactionItem }) {
   return (
     <div className="rounded-md bg-offwhite/5 px-2 py-1">
       <div className="flex justify-between items-center">
-        <span className="font-bold text-sm">{tx.label}</span>
+        <span className="font-bold text-sm">
+          <a href={tx.explorerUrl || '#'} target="_blank" title="View on explorer">
+            {tx.label}
+            &nbsp; &#8599;
+          </a>
+        </span>
 
         <span
           className={clsx('text-sm', {
