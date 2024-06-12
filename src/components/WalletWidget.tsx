@@ -151,7 +151,7 @@ function Modal({
             leaveTo="opacity-0 scale-95"
           >
             <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
-              <DialogPanel className="relative max-w-lg w-full min-h-[600px] bg-dark p-8 sm:p-16 border border-brightdark text-offwhite">
+              <DialogPanel className="relative max-w-lg w-full min-h-[600px] bg-dark p-8 sm:py-16 sm:px-12 border border-brightdark text-offwhite">
                 <button className="absolute top-2 right-2" onClick={() => setIsOpen(false)}>
                   <svg
                     width="24"

@@ -515,7 +515,7 @@ class OasisAppWallet {
    * Helper for waiting for tx receipt
    */
   async waitForTxReceipt(txHash: string, provider?: ethers.JsonRpcProvider) {
-    if (!provider || !this.sapphireProvider) {
+    if (!provider && !this.sapphireProvider) {
       throw new Error('Sapphire provider not initialized');
     }
 

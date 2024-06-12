@@ -125,7 +125,11 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (accountAddress && Object.keys(state.txs[accountAddress]).length) {
+    if (
+      accountAddress &&
+      state.txs[accountAddress] &&
+      Object.keys(state.txs[accountAddress]).length
+    ) {
       for (const h of Object.keys(state.txs[accountAddress])) {
         checkTransaction(h);
       }

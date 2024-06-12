@@ -4,7 +4,7 @@ export default function App() {
   return (
     <div>
       <WalletWidget
-        accountManagerAddress="0x921E78602E8584389FacEF9cF578Ba8790bb060f"
+        accountManagerAddress="0x5C357DaFfe6b1016C0c9A5607367E8f47765D4bC"
         defaultNetworkId={1287}
         networks={[
           {
