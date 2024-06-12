@@ -158,6 +158,10 @@ function WalletProvider({
       try {
         const balance = await w?.getAccountBalance(state.address);
         dispatch({ type: 'setValue', payload: { key: 'balance', value: balance } });
+        console.log(
+          'Native Oasis Sapphire balance:',
+          await w.getAccountBalance(state.address, 23295)
+        );
       } catch (e) {
         console.error('Reloading balance', e);
       }

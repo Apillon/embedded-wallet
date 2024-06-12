@@ -329,8 +329,8 @@ class OasisAppWallet {
      * Get nonce if none provided
      */
     if (!params.tx.nonce) {
-      params.tx.nonce = await this.sapphireProvider.getTransactionCount(
-        await this.accountManagerContract.gaspayingAddress()
+      params.tx.nonce = await this.getRpcProviderForChainId(chainId).getTransactionCount(
+        this.lastAccountAddress
       );
     }
 

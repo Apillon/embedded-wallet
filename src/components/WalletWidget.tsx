@@ -74,6 +74,15 @@ function Wallet() {
     };
   }, [wallet]);
 
+  /**
+   * Reset approve screen if closed
+   */
+  useEffect(() => {
+    if (!isModalOpen && (!!txToConfirm || !!messageToSign || !!contractFunctionData)) {
+      closeApproveScreen();
+    }
+  }, [isModalOpen]);
+
   function closeApproveScreen() {
     setIsModalOpen(false);
     setTxToConfirm(undefined);

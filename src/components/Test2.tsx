@@ -19,7 +19,7 @@ export default function Test2() {
 
   return (
     <div className="text-offwhite">
-      <p className="my-4 flex gap-4">
+      <p className="my-4 flex gap-4 flex-wrap">
         <input
           type="text"
           value={message}
@@ -45,7 +45,7 @@ export default function Test2() {
       <hr className="my-6 text-black" />
 
       <form
-        className="my-4 flex items-start gap-4"
+        className="my-4 flex items-start gap-4 flex-wrap"
         onSubmit={async ev => {
           ev.preventDefault();
           const wallet = getOasisAppWallet();
