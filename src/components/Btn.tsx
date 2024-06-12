@@ -55,7 +55,13 @@ const Btn = forwardRef<HTMLAnchorElement, Props>(
 
     const btnContent = (
       <>
-        {!!loading && <Spinner color="#141721" />} {!loading && props.children}
+        {!!loading && (
+          <>
+            &nbsp;
+            <Spinner color="#141721" />
+          </>
+        )}{' '}
+        {!loading && props.children}
       </>
     );
 

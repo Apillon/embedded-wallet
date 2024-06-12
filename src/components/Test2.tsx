@@ -76,10 +76,6 @@ export default function Test2() {
         />
 
         <div className="flex flex-col gap-4">
-          <button type="submit" className={btnClass}>
-            ERC20 Transfer
-          </button>
-
           <button
             type="button"
             className={btnClass}
@@ -122,6 +118,10 @@ export default function Test2() {
             }}
           >
             Cross-chain Transfer
+          </button>
+
+          <button type="submit" className={btnClass}>
+            ERC20 Transfer
           </button>
         </div>
       </form>

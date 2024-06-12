@@ -2,10 +2,12 @@ export default function Spinner({
   size = 36,
   width = 2,
   color = 'currentColor',
+  className,
 }: {
   size?: number;
   width?: number;
   color?: string;
+  className?: string;
 }) {
   return (
     <svg
@@ -20,6 +22,7 @@ export default function Spinner({
         left: '50%',
       }}
       viewBox="0 0 50 50"
+      className={className}
     >
       <circle
         cx="25"
