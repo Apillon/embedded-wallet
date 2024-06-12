@@ -295,6 +295,10 @@ class OasisAppWallet {
         }
       }
 
+      if (!params.authData) {
+        throw new Error('Authentication data not provided');
+      }
+
       /**
        * Authenticate user and sign message
        */
@@ -404,19 +408,24 @@ class OasisAppWallet {
   async signContractWrite(params: ContractWriteParams) {
     const chainId = this.validateChainId(params.chainId);
 
-    const accountAddresses = await this.getAccountAddress(params.authData.username);
-
-    if (!accountAddresses?.publicAddress) {
-      throw new Error(`Couldn't get account address`);
-    }
-
     /**
      * Emit 'txApprove' if confirmation is needed.
      * Handle confirmation in UI part of app (call this method again w/o `mustConfirm`).
      */
     if (params.mustConfirm) {
+      console.log('trigger event');
       this.events.emit('txApprove', { contractWrite: { ...params, mustConfirm: false } });
       return;
+    }
+
+    if (!params.authData) {
+      throw new Error('Authentication data not provided');
+    }
+
+    const accountAddresses = await this.getAccountAddress(params.authData.username);
+
+    if (!accountAddresses?.publicAddress) {
+      throw new Error(`Couldn't get account address`);
     }
 
     try {

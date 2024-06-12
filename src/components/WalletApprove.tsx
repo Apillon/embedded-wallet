@@ -1,8 +1,15 @@
 import { ethers } from 'ethers';
+import { ContractReadParams } from '../../lib/types';
+
+export type DisplayedContractParams = Pick<
+  ContractReadParams,
+  'chainId' | 'contractAddress' | 'contractFunctionName' | 'contractFunctionValues'
+>;
 
 export default function WalletApprove({
   tx,
   signMessage,
+  contractFunctionData,
   approveText = 'Approve',
   declineText = 'Reject',
   onApprove,
@@ -10,6 +17,7 @@ export default function WalletApprove({
 }: {
   tx?: ethers.TransactionLike;
   signMessage?: string;
+  contractFunctionData?: DisplayedContractParams;
   approveText?: string;
   declineText?: string;
   onApprove: () => void;
@@ -30,6 +38,15 @@ export default function WalletApprove({
         <pre>
           {JSON.stringify(
             tx,
+            (_, value) => (typeof value === 'bigint' ? value.toString() : value),
+            2
+          )}
+        </pre>
+      )}
+      {!!contractFunctionData && (
+        <pre>
+          {JSON.stringify(
+            contractFunctionData,
             (_, value) => (typeof value === 'bigint' ? value.toString() : value),
             2
           )}

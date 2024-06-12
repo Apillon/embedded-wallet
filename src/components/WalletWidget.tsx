@@ -4,7 +4,7 @@ import { ReactNode, useEffect, useRef, useState } from 'react';
 import WalletAuth from './WalletAuth';
 import WalletMain from './WalletMain';
 import { ethers } from 'ethers';
-import WalletApprove from './WalletApprove';
+import WalletApprove, { DisplayedContractParams } from './WalletApprove';
 import { Events } from '../../lib/types';
 import { TransactionsProvider, useTransactionsContext } from '../contexts/transactions.context';
 import Btn from './Btn';
@@ -15,7 +15,9 @@ function Wallet() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [txToConfirm, setTxToConfirm] = useState<ethers.TransactionLike>();
+  const [contractFunctionData, setContractFunctionData] = useState<DisplayedContractParams>();
   const [messageToSign, setMessageToSign] = useState('');
+
   const approveParams =
     useRef<Partial<Events['txApprove'] & { signature: Events['signatureRequest'] }>>();
 
@@ -28,6 +30,14 @@ function Wallet() {
     const onTxApproveEvent = (params: Events['txApprove']) => {
       if (params.plain) {
         setTxToConfirm(params.plain?.tx);
+        approveParams.current = params;
+        setIsModalOpen(true);
+      } else if (params.contractWrite) {
+        setContractFunctionData({
+          contractAddress: params.contractWrite.contractAddress,
+          contractFunctionName: params.contractWrite.contractFunctionName,
+          contractFunctionValues: params.contractWrite.contractFunctionValues,
+        });
         approveParams.current = params;
         setIsModalOpen(true);
       }
@@ -60,17 +70,24 @@ function Wallet() {
 
   let modalContent = <></>;
 
-  if (!!txToConfirm || !!messageToSign) {
+  if (!!txToConfirm || !!messageToSign || !!contractFunctionData) {
     modalContent = (
       <WalletApprove
         tx={txToConfirm}
         signMessage={messageToSign}
+        contractFunctionData={contractFunctionData}
         onApprove={async () => {
           if (approveParams.current) {
             if (approveParams.current.signature) {
-              await wallet?.signMessage(approveParams.current.signature);
+              await wallet?.signMessage({
+                ...approveParams.current.signature,
+                authData: { username: state.username },
+              });
             } else if (approveParams.current.plain) {
-              const res = await wallet?.signPlainTransaction(approveParams.current.plain);
+              const res = await wallet?.signPlainTransaction({
+                ...approveParams.current.plain,
+                authData: { username: state.username },
+              });
               if (res) {
                 const { signedTxData, chainId } = res;
                 const res2 = await wallet?.broadcastTransaction(signedTxData, chainId);
@@ -80,11 +97,22 @@ function Wallet() {
                   return receipt;
                 }
               }
+            } else if (approveParams.current.contractWrite) {
+              const res = await wallet?.signContractWrite({
+                ...approveParams.current.contractWrite,
+                authData: { username: state.username },
+              });
+              if (res) {
+                const { signedTxData, chainId } = res;
+                const res2 = await wallet?.broadcastTransaction(signedTxData, chainId);
+                console.log(res2);
+              }
             }
           }
 
           setIsModalOpen(false);
           setTxToConfirm(undefined);
+          setContractFunctionData(undefined);
           setMessageToSign('');
         }}
         onDecline={() => {
