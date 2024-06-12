@@ -17,7 +17,11 @@
 
 #oaw-wallet-widget {
   h2 {
-    @apply font-bold text-3xl mb-6;
+    @apply font-bold text-3xl;
+  }
+
+  h3 {
+    @apply font-bold text-xl;
   }
 
   input {
@@ -27,6 +31,10 @@
 
 #oaw-wallet-widget input::placeholder {
   @apply text-lightgrey;
+}
+
+#oaw-wallet-widget ::selection {
+  @apply text-blue bg-yellow/25;
 }
 
 @keyframes rotate {

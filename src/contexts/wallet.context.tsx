@@ -54,6 +54,7 @@ const WalletContext = createContext<
       state: ContextState;
       dispatch: (action: ContextActions) => void;
       networks: Network[];
+      networksById: { [networkId: number]: Network };
       wallet?: OasisAppWallet;
       setWallet: (wallet: OasisAppWallet) => void;
       reloadUserBalance: (walletRef?: OasisAppWallet) => void;
@@ -168,6 +169,10 @@ function WalletProvider({
         state,
         dispatch,
         networks,
+        networksById: networks.reduce((acc, x) => {
+          acc[x.id] = x;
+          return acc;
+        }, {} as { [networkId: number]: Network }),
         wallet,
         setWallet,
         reloadUserBalance,

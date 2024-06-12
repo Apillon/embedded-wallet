@@ -103,7 +103,7 @@ export default function WalletAuth() {
 
   return (
     <div>
-      <h2>Sign in or Sign up</h2>
+      <h2 className="mb-6">Sign in or Sign up</h2>
 
       <form onSubmit={ev => onAuth(ev)}>
         <input

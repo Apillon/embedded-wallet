@@ -8,7 +8,7 @@ type Props = {
   className?: string;
   blank?: boolean; // render as <a> with target="_blank"
   self?: boolean; // render as <a> with target="_self"
-  variant?: 'primary';
+  variant?: 'primary' | 'secondary';
   minWidth?: string;
   minHeight?: string;
   paddingClass?: string;
@@ -41,11 +41,12 @@ const Btn = forwardRef<HTMLAnchorElement, Props>(
     const btnClass = clsx(
       paddingClass,
       className,
-      'relative rounded-lg text-sm font-bold border-b-[4px] border-b-yellow border-t-yellow border-t-[4px]',
+      'relative rounded-lg text-sm font-bold border-b-[4px] border-t-[4px]',
       {
-        'transition-all hover:border-b-blue/50 hover:translate-y-[-2px] focus:translate-y-px focus:border-b-yellow':
+        'transition-all hover:border-b-blue/50 hover:translate-y-[-2px] focus:translate-y-px focus:border-b-yellow/50':
           !loading && !disabled,
-        'bg-yellow text-dark font-bold': variant === 'primary',
+        'bg-yellow text-dark border-b-yellow border-t-yellow': variant === 'primary',
+        'bg-lightdark text-offwhite border-b-lightdark border-t-lightdark': variant === 'secondary',
         'opacity-60': disabled,
       }
     );
