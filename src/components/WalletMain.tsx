@@ -42,8 +42,8 @@ export default function WalletMain() {
           <Actions className="mb-6" />
 
           {/* Transactions */}
-          <div className="mb-12">
-            <h3>Transactions</h3>
+          <div className="mb-8">
+            <h3 className="mb-2">Transactions</h3>
             <WalletTransactions />
           </div>
 
