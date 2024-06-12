@@ -379,22 +379,25 @@ class OasisAppWallet {
     const ethProvider = this.getRpcProviderForChainId(chainId);
     const txHash = await ethProvider.send('eth_sendRawTransaction', [signedTxData]);
 
-    this.events.emit('transactionSubmitted', {
+    const txItem = {
       hash: txHash,
       label,
       rawData: signedTxData,
       owner: this.lastAccountAddress || 'none',
-      status: 'pending',
+      status: 'pending' as const,
       chainId: chainId || this.defaultNetworkId,
       explorerUrl: this.explorerUrls[chainId || this.defaultNetworkId]
         ? `${this.explorerUrls[chainId || this.defaultNetworkId]}/tx/${txHash}`
         : '',
       createdAt: Date.now(),
-    });
+    };
+
+    this.events.emit('transactionSubmitted', txItem);
 
     return {
       txHash,
       ethProvider,
+      txItem,
     };
 
     // const receipt = await this.waitForTxReceipt(txHash, ethProvider);
@@ -413,7 +416,6 @@ class OasisAppWallet {
      * Handle confirmation in UI part of app (call this method again w/o `mustConfirm`).
      */
     if (params.mustConfirm) {
-      console.log('trigger event');
       this.events.emit('txApprove', { contractWrite: { ...params, mustConfirm: false } });
       return;
     }

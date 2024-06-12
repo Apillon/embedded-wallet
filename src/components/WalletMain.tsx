@@ -14,22 +14,24 @@ export default function WalletMain() {
   return (
     <div>
       {/* Selected network + trigger change screen to network select */}
-      {!!state.networkId && !!networksById[state.networkId] && (
-        <div className="text-center -mt-4 sm:-mt-8 mb-4">
-          <div className="inline-block">
-            <p>{networksById[state.networkId].name}</p>
+      <div className="text-center -mt-4 sm:-mt-8 mb-4">
+        <div className="inline-block">
+          <p>
+            {!!state.networkId && !!networksById[state.networkId]
+              ? networksById[state.networkId].name
+              : 'No network'}
+          </p>
 
-            <p>
-              <button
-                className="text-sm"
-                onClick={() => setScreen(screen === 'main' ? 'networks' : 'main')}
-              >
-                {screen === 'main' ? 'Change' : 'Back'}
-              </button>
-            </p>
-          </div>
+          <p>
+            <button
+              className="text-sm"
+              onClick={() => setScreen(screen === 'main' ? 'networks' : 'main')}
+            >
+              {screen === 'main' ? 'Change' : 'Back'}
+            </button>
+          </p>
         </div>
-      )}
+      </div>
 
       {screen === 'main' && (
         <div>

@@ -43,7 +43,7 @@ function reducer(state: ContextState, action: ContextActions) {
         ...action.payload,
       };
     case 'reset':
-      return initialState();
+      return initialState(state.networkId);
     default:
       throw new Error('Unhandled action type.' + JSON.stringify(action));
   }
@@ -55,6 +55,7 @@ const WalletContext = createContext<
       dispatch: (action: ContextActions) => void;
       networks: Network[];
       networksById: { [networkId: number]: Network };
+      defaultNetworkId: number;
       wallet?: OasisAppWallet;
       setWallet: (wallet: OasisAppWallet) => void;
       reloadUserBalance: (walletRef?: OasisAppWallet) => void;
@@ -173,6 +174,7 @@ function WalletProvider({
           acc[x.id] = x;
           return acc;
         }, {} as { [networkId: number]: Network }),
+        defaultNetworkId: defaultNetworkId || 0,
         wallet,
         setWallet,
         reloadUserBalance,

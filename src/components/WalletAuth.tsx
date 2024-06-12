@@ -5,7 +5,7 @@ import Btn from './Btn';
 import { AuthStrategyName } from '../../lib/types';
 
 export default function WalletAuth() {
-  const { dispatch } = useWalletContext();
+  const { dispatch, defaultNetworkId } = useWalletContext();
 
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
@@ -72,6 +72,7 @@ export default function WalletAuth() {
         username,
         balance,
         authStrategy,
+        networkId: defaultNetworkId || undefined,
       },
     });
   }
