@@ -56,7 +56,7 @@ export type UserInfo = {
 
 export type PlainTransactionParams = {
   strategy: AuthStrategyName;
-  authData: AuthData;
+  authData?: AuthData;
   tx: ethers.TransactionLike;
   mustConfirm?: boolean;
 };

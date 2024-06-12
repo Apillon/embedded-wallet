@@ -322,7 +322,17 @@ class OasisAppWallet {
     const chainId = this.validateChainId(
       params?.tx?.chainId ? +params.tx.chainId.toString() || 0 : 0
     );
+
     params.tx.chainId = chainId;
+
+    /**
+     * Get nonce if none provided
+     */
+    if (!params.tx.nonce) {
+      params.tx.nonce = await this.sapphireProvider.getTransactionCount(
+        await this.accountManagerContract.gaspayingAddress()
+      );
+    }
 
     /**
      * Emit 'txApprove' if confirmation is needed.
@@ -333,13 +343,8 @@ class OasisAppWallet {
       return;
     }
 
-    /**
-     * Get nonce if none provided
-     */
-    if (!params.tx.nonce) {
-      params.tx.nonce = await this.sapphireProvider.getTransactionCount(
-        await this.accountManagerContract.gaspayingAddress()
-      );
+    if (!params.authData) {
+      throw new Error('Authentication data not provided');
     }
 
     try {

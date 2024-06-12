@@ -42,8 +42,10 @@ export default function Test2() {
         </button>
       </p>
 
+      <hr className="my-6 text-black" />
+
       <form
-        className="my-4 flex items-center gap-4"
+        className="my-4 flex items-start gap-4"
         onSubmit={async ev => {
           ev.preventDefault();
           const wallet = getOasisAppWallet();
@@ -73,9 +75,55 @@ export default function Test2() {
           onChange={ev => setAmount(ev.target.value)}
         />
 
-        <button type="submit" className={btnClass}>
-          ERC20 Transfer
-        </button>
+        <div className="flex flex-col gap-4">
+          <button type="submit" className={btnClass}>
+            ERC20 Transfer
+          </button>
+
+          <button
+            type="button"
+            className={btnClass}
+            onClick={async () => {
+              const wallet = getOasisAppWallet();
+              await wallet?.signPlainTransaction({
+                mustConfirm: true,
+                strategy: 'passkey',
+                tx: {
+                  to: address,
+                  data: '0x',
+                  gasLimit: 1_000_000,
+                  value: ethers.parseEther(amount),
+                  chainId: 23295, // 1287,
+                  gasPrice: 100_000_000_000,
+                },
+              });
+            }}
+          >
+            Plain Transfer
+          </button>
+
+          <button
+            type="button"
+            className={btnClass}
+            onClick={async () => {
+              const wallet = getOasisAppWallet();
+              await wallet?.signPlainTransaction({
+                mustConfirm: true,
+                strategy: 'passkey',
+                tx: {
+                  to: address,
+                  data: '0x',
+                  gasLimit: 1_000_000,
+                  value: ethers.parseEther(amount),
+                  chainId: 1287,
+                  gasPrice: 100_000_000_000,
+                },
+              });
+            }}
+          >
+            Cross-chain Transfer
+          </button>
+        </div>
       </form>
     </div>
   );

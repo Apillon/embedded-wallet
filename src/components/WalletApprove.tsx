@@ -1,5 +1,8 @@
 import { ethers } from 'ethers';
 import { ContractReadParams } from '../../lib/types';
+import Btn from './Btn';
+import { useState } from 'react';
+import { useWalletContext } from '../contexts/wallet.context';
 
 export type DisplayedContractParams = Pick<
   ContractReadParams,
@@ -20,41 +23,89 @@ export default function WalletApprove({
   contractFunctionData?: DisplayedContractParams;
   approveText?: string;
   declineText?: string;
-  onApprove: () => void;
+  loading?: boolean;
+  onApprove: () => Promise<void>;
   onDecline: () => void;
 }) {
+  const { networksById } = useWalletContext();
+
+  const [loading, setLoading] = useState(false);
+
+  const preClass = 'bg-offwhite/25 p-3 whitespace-pre-wrap break-all rounded-sm';
+
   return (
     <>
-      <p>test</p>
-      <hr />
+      {/* Sign Message */}
       {!!signMessage && (
-        <p>
-          You are signing:
-          <br />
-          {signMessage}
-        </p>
+        <div>
+          <h2 className="mb-6">Sign Message</h2>
+
+          <p>
+            You are signing:
+            <br />
+            {signMessage}
+          </p>
+        </div>
       )}
+
+      {/* Approve plain TX */}
       {!!tx && (
-        <pre>
-          {JSON.stringify(
-            tx,
-            (_, value) => (typeof value === 'bigint' ? value.toString() : value),
-            2
-          )}
-        </pre>
+        <div>
+          <h2 className="mb-6">Approve Transaction</h2>
+
+          <pre className={preClass}>
+            {JSON.stringify(
+              tx,
+              (_, value) => (typeof value === 'bigint' ? value.toString() : value),
+              2
+            )}
+          </pre>
+        </div>
       )}
+
+      {/* Approve contract TX */}
       {!!contractFunctionData && (
-        <pre>
-          {JSON.stringify(
-            contractFunctionData,
-            (_, value) => (typeof value === 'bigint' ? value.toString() : value),
-            2
+        <div>
+          <h2 className="mb-6">Approve Contract Transaction</h2>
+
+          {!!contractFunctionData.chainId && !!networksById[contractFunctionData.chainId] && (
+            <p>Chain: {networksById[contractFunctionData.chainId].name}</p>
           )}
-        </pre>
+
+          <p className="my-3 break-all">Contract address: {contractFunctionData.contractAddress}</p>
+
+          <p className="my-3 break-all">
+            Contract function: {contractFunctionData.contractFunctionName}
+          </p>
+
+          <div className="my-3">
+            <pre className={preClass}>
+              {JSON.stringify(
+                contractFunctionData.contractFunctionValues,
+                (_, value) => (typeof value === 'bigint' ? value.toString() : value),
+                2
+              )}
+            </pre>
+          </div>
+        </div>
       )}
-      <hr />
-      <button onClick={onApprove}>{approveText}</button>
-      <button onClick={onDecline}>{declineText}</button>
+
+      <div className="mt-12 flex gap-4">
+        <Btn
+          loading={loading}
+          className="w-full"
+          onClick={async () => {
+            setLoading(true);
+            await onApprove();
+            setLoading(false);
+          }}
+        >
+          {approveText}
+        </Btn>
+        <Btn variant="secondary" disabled={loading} className="w-full" onClick={onDecline}>
+          {declineText}
+        </Btn>
+      </div>
     </>
   );
 }

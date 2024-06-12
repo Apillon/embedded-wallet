@@ -39,6 +39,7 @@ function Wallet() {
         setIsModalOpen(true);
       } else if (params.contractWrite) {
         setContractFunctionData({
+          chainId: params.contractWrite.chainId,
           contractAddress: params.contractWrite.contractAddress,
           contractFunctionName: params.contractWrite.contractFunctionName,
           contractFunctionValues: params.contractWrite.contractFunctionValues,
@@ -96,7 +97,7 @@ function Wallet() {
           <h2 className="mb-6">{approvedData.title}</h2>
 
           {!!approvedData.explorerUrl && (
-            <p className="my-3">
+            <p className="mb-6">
               <Btn variant="secondary" href={approvedData.explorerUrl} blank>
                 View on explorer
               </Btn>
@@ -120,44 +121,48 @@ function Wallet() {
           contractFunctionData={contractFunctionData}
           onApprove={async () => {
             if (approveParams.current) {
-              if (approveParams.current.signature) {
-                await wallet?.signMessage({
-                  ...approveParams.current.signature,
-                  authData: { username: state.username },
-                });
-
-                closeApproveScreen();
-              } else if (approveParams.current.plain) {
-                const res = await wallet?.signPlainTransaction({
-                  ...approveParams.current.plain,
-                  authData: { username: state.username },
-                });
-                if (res) {
-                  const { signedTxData, chainId } = res;
-                  const res2 = await wallet?.broadcastTransaction(signedTxData, chainId);
-
-                  setApprovedData({
-                    title: 'Transaction submitted',
-                    explorerUrl: res2?.txItem.explorerUrl || '',
-                    txHash: res2?.txHash || '',
+              try {
+                if (approveParams.current.signature) {
+                  await wallet?.signMessage({
+                    ...approveParams.current.signature,
+                    authData: { username: state.username },
                   });
-                }
-              } else if (approveParams.current.contractWrite) {
-                const res = await wallet?.signContractWrite({
-                  ...approveParams.current.contractWrite,
-                  authData: { username: state.username },
-                });
 
-                if (res) {
-                  const { signedTxData, chainId } = res;
-                  const res2 = await wallet?.broadcastTransaction(signedTxData, chainId);
-
-                  setApprovedData({
-                    title: 'Transaction submitted',
-                    explorerUrl: res2?.txItem.explorerUrl || '',
-                    txHash: res2?.txHash || '',
+                  closeApproveScreen();
+                } else if (approveParams.current.plain) {
+                  const res = await wallet?.signPlainTransaction({
+                    ...approveParams.current.plain,
+                    authData: { username: state.username },
                   });
+                  if (res) {
+                    const { signedTxData, chainId } = res;
+                    const res2 = await wallet?.broadcastTransaction(signedTxData, chainId);
+
+                    setApprovedData({
+                      title: 'Transaction submitted',
+                      explorerUrl: res2?.txItem.explorerUrl || '',
+                      txHash: res2?.txHash || '',
+                    });
+                  }
+                } else if (approveParams.current.contractWrite) {
+                  const res = await wallet?.signContractWrite({
+                    ...approveParams.current.contractWrite,
+                    authData: { username: state.username },
+                  });
+
+                  if (res) {
+                    const { signedTxData, chainId } = res;
+                    const res2 = await wallet?.broadcastTransaction(signedTxData, chainId);
+
+                    setApprovedData({
+                      title: 'Transaction submitted',
+                      explorerUrl: res2?.txItem.explorerUrl || '',
+                      txHash: res2?.txHash || '',
+                    });
+                  }
                 }
+              } catch (e) {
+                console.error(e);
               }
             }
           }}
@@ -219,27 +224,29 @@ function Modal({
             leaveFrom="opacity-100 scale-100"
             leaveTo="opacity-0 scale-95"
           >
-            <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
-              <DialogPanel className="relative max-w-lg w-full min-h-[600px] bg-dark p-8 sm:py-16 sm:px-12 border border-brightdark text-offwhite">
-                <button className="absolute top-2 right-2" onClick={() => setIsOpen(false)}>
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      clipRule="evenodd"
-                      d="M12 10.6569L6.34317 5L4.92896 6.41421L10.5858 12.0711L4.92898 17.7279L6.3432 19.1421L12 13.4853L17.6569 19.1421L19.0711 17.7279L13.4143 12.0711L19.0711 6.41421L17.6569 5L12 10.6569Z"
-                      fill="#9C9C95"
-                    />
-                  </svg>
-                </button>
+            <div className="fixed inset-0 w-screen overflow-y-auto p-4">
+              <div className="flex items-center justify-center min-h-full">
+                <DialogPanel className="relative max-w-lg w-full min-h-[600px] bg-dark p-8 sm:py-16 sm:px-12 border border-brightdark text-offwhite">
+                  <button className="absolute top-2 right-2" onClick={() => setIsOpen(false)}>
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        clipRule="evenodd"
+                        d="M12 10.6569L6.34317 5L4.92896 6.41421L10.5858 12.0711L4.92898 17.7279L6.3432 19.1421L12 13.4853L17.6569 19.1421L19.0711 17.7279L13.4143 12.0711L19.0711 6.41421L17.6569 5L12 10.6569Z"
+                        fill="#9C9C95"
+                      />
+                    </svg>
+                  </button>
 
-                {children}
-              </DialogPanel>
+                  {children}
+                </DialogPanel>
+              </div>
             </div>
           </TransitionChild>
         </Dialog>
