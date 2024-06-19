@@ -59,6 +59,7 @@ export type PlainTransactionParams = {
   authData?: AuthData;
   tx: ethers.TransactionLike;
   mustConfirm?: boolean;
+  resolve?: (result: { signedTxData: any; chainId?: number }) => void;
 };
 
 export type SignMessageParams = {
@@ -82,6 +83,7 @@ export type ContractWriteParams = {
   strategy: AuthStrategyName;
   authData?: AuthData;
   mustConfirm?: boolean;
+  resolve?: (result: { signedTxData: any; chainId?: number }) => void;
 } & ContractReadParams;
 
 export type TransactionItem = {

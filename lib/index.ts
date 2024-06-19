@@ -372,8 +372,9 @@ class OasisAppWallet {
      * Handle confirmation in UI part of app (call this method again w/o `mustConfirm`).
      */
     if (params.mustConfirm) {
-      this.events.emit('txApprove', { plain: { ...params, mustConfirm: false } });
-      return;
+      return await new Promise(resolve => {
+        this.events.emit('txApprove', { plain: { ...params, mustConfirm: false, resolve } });
+      });
     }
 
     if (!params.authData) {
@@ -391,6 +392,13 @@ class OasisAppWallet {
 
       if (res) {
         const [signedTxData] = AC.decodeFunctionResult('signEIP155', res).toArray();
+
+        if (params.resolve) {
+          params.resolve({
+            signedTxData,
+            chainId,
+          });
+        }
 
         return {
           signedTxData,
@@ -454,8 +462,11 @@ class OasisAppWallet {
      * Handle confirmation in UI part of app (call this method again w/o `mustConfirm`).
      */
     if (params.mustConfirm) {
-      this.events.emit('txApprove', { contractWrite: { ...params, mustConfirm: false } });
-      return;
+      return await new Promise(resolve => {
+        this.events.emit('txApprove', {
+          contractWrite: { ...params, mustConfirm: false, resolve },
+        });
+      });
     }
 
     if (!params.authData) {
@@ -503,6 +514,13 @@ class OasisAppWallet {
 
       if (res) {
         const [signedTxData] = AC.decodeFunctionResult('signEIP155', res).toArray();
+
+        if (params.resolve) {
+          params.resolve({
+            signedTxData,
+            chainId,
+          });
+        }
 
         return {
           signedTxData,
