@@ -10,6 +10,7 @@ export const AccountManagerAbi = [
   'function encryptedTx(bytes32 nonce, bytes ciphertext)',
   'function gaspayingAddress() view returns (address)',
   'function generateGaslessTx(bytes in_data, uint64 nonce, uint256 gasPrice) view returns (bytes out_data)',
+  // 'function generateGaslessTx(bytes in_data, uint64 nonce, uint256 gasPrice, uint64 gasLimit, uint256 timestamp, bytes signature) view returns (bytes out_data)',
   'function getAccount(bytes32 in_username) view returns (address account, address keypairAddress)',
   'function manageCredential((bytes32 credentialIdHashed, (bytes authenticatorData, (uint8 t, string k, string v)[] clientDataTokens, uint256 sigR, uint256 sigS) resp, bytes data) args)',
   'function manageCredentialPassword((bytes32 digest, bytes data) args)',

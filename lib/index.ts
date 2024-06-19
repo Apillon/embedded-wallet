@@ -17,7 +17,6 @@ import PasswordStrategy from './strategies/password';
 import PasskeyStrategy from './strategies/passkey';
 import { networkIdIsSapphire, getHashedUsername } from './utils';
 import mitt, { Emitter } from 'mitt';
-import { VoidSigner } from 'ethers';
 
 class OasisAppWallet {
   sapphireProvider: ethers.JsonRpcProvider;
@@ -134,10 +133,30 @@ class OasisAppWallet {
         await this.accountManagerContract.gaspayingAddress()
       );
 
+      /**
+       * @TODO Get signature from backend.
+       * 1st request: GET {{Apillon API url}}/oasis/session-token
+       * 2nd request: POST {{Apillon API url}}/oasis/signature
+       *    {
+       *      token: get from 1st request,
+       *      data: gaslessData
+       *    }
+       * Use the signature for the signedTx.
+       *
+       * @TODO @Vinko 2nd request should return gasLimit & timestamp as well?
+       */
+
+      // if (!signature) {
+      //   throw new Error('Cannot get dataHash signature');
+      // }
+
       const signedTx = await this.accountManagerContract.generateGaslessTx(
         gaslessData,
         nonce as any,
         gasPrice as any
+        // gasLimit as any, // gas limit
+        // timestamp as any,
+        // signature
       );
 
       const txHash = await this.sapphireProvider.send('eth_sendRawTransaction', [signedTx]);
@@ -281,17 +300,19 @@ class OasisAppWallet {
         data = AC.encodeFunctionData('sign', [params.message]);
 
         /**
-         * Emit 'signatureRequest' if confirmation is needed.
+         * Emits 'signatureRequest' if confirmation is needed.
          * Handle confirmation in UI part of app (call this method again w/o `mustConfirm`).
          */
         if (params.mustConfirm) {
-          this.events.emit('signatureRequest', {
-            ...params,
-            data,
-            message: originalMessage,
-            mustConfirm: false,
+          return await new Promise(resolve => {
+            this.events.emit('signatureRequest', {
+              ...params,
+              data,
+              message: originalMessage,
+              mustConfirm: false,
+              resolve,
+            });
           });
-          return;
         }
       }
 
@@ -305,9 +326,21 @@ class OasisAppWallet {
       const res = await this.getProxyForStrategy(params.strategy, data, params.authData);
 
       if (res) {
-        const [signed] = AC.decodeFunctionResult('sign', res).toArray();
-        console.log(signed);
-        return signed;
+        const [signedRSV] = AC.decodeFunctionResult('sign', res).toArray();
+
+        if (Array.isArray(signedRSV) && signedRSV.length > 2) {
+          const signedMsg = ethers.Signature.from({
+            r: signedRSV[0],
+            s: signedRSV[1],
+            v: signedRSV[2],
+          }).serialized;
+
+          if (params.resolve) {
+            params.resolve(signedMsg);
+          }
+
+          return signedMsg;
+        }
       }
     } catch (e) {
       console.error(e);
@@ -449,7 +482,7 @@ class OasisAppWallet {
       /**
        * Prepare transaction
        */
-      const tx = await new VoidSigner(
+      const tx = await new ethers.VoidSigner(
         accountAddresses.publicAddress,
         this.getRpcProviderForChainId(chainId)
       ).populateTransaction({

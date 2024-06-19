@@ -29,13 +29,14 @@ export default function Test2() {
 
         <button
           className={btnClass}
-          onClick={() => {
+          onClick={async () => {
             const wallet = getOasisAppWallet();
-            wallet?.signMessage({
+            const msg = await wallet?.signMessage({
               mustConfirm: true,
               strategy: 'passkey',
               message,
             });
+            console.log(msg);
           }}
         >
           Sign message

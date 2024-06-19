@@ -67,6 +67,7 @@ export type SignMessageParams = {
   message: ethers.BytesLike | string;
   mustConfirm?: boolean;
   data?: string;
+  resolve?: (value: string) => void;
 };
 
 export type ContractReadParams = {
