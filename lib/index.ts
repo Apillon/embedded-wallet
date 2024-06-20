@@ -31,7 +31,14 @@ class OasisAppWallet {
     23294: 'https://explorer.oasis.io/mainnet/sapphire',
     23295: 'https://explorer.oasis.io/testnet/sapphire',
   } as { [networkId: number]: string };
+
+  /**
+   * @TODO refac to object
+   */
+  lastAccountUsername = '';
+  lastAccountStrategy = 'passkey' as AuthStrategyName;
   lastAccountAddress = '';
+  lastAccountContractAddress = '';
 
   /**
    * Prepare sapphire provider and account manager (WebAuthn) contract.
@@ -161,6 +168,9 @@ class OasisAppWallet {
 
       const txHash = await this.sapphireProvider.send('eth_sendRawTransaction', [signedTx]);
 
+      this.lastAccountStrategy = strategy;
+      this.lastAccountUsername = authData.username;
+
       if (await this.waitForTxReceipt(txHash)) {
         return await this.getAccountAddress(authData.username);
       }
@@ -217,6 +227,9 @@ class OasisAppWallet {
        */
       const contractRes = await this.accountManagerContract.getAccount(hashedUsername as any);
 
+      this.lastAccountStrategy = strategy;
+      this.lastAccountUsername = authData.username;
+
       /**
        * If keys match -> Auth success, return account addresses
        */
@@ -233,7 +246,7 @@ class OasisAppWallet {
    * - Public EVM address
    * - Account contract address (deployed on sapphire)
    */
-  async getAccountAddress(username: string) {
+  async getAccountAddress(username?: string) {
     if (!this.sapphireProvider) {
       throw new Error('Sapphire provider not initialized');
     }
@@ -243,6 +256,13 @@ class OasisAppWallet {
     }
 
     if (!username) {
+      if (this.lastAccountAddress) {
+        return {
+          publicAddress: this.lastAccountAddress,
+          accountContractAddress: this.lastAccountContractAddress,
+        };
+      }
+
       throw new Error('No username');
     }
 
@@ -253,6 +273,7 @@ class OasisAppWallet {
 
       if (Array.isArray(userData) && userData.length > 1) {
         this.lastAccountAddress = userData[1] as string;
+        this.lastAccountContractAddress = userData[0] as string;
 
         return {
           publicAddress: userData[1] as string,
@@ -277,6 +298,18 @@ class OasisAppWallet {
       this.rpcProviders[networkId] || new ethers.JsonRpcProvider(this.rpcUrls[networkId]);
 
     return ethers.formatEther(await ethProvider.getBalance(address));
+  }
+
+  setAccount(params: {
+    username: string;
+    strategy: AuthStrategyName;
+    address: string;
+    contractAddress: string;
+  }) {
+    this.lastAccountUsername = params.username;
+    this.lastAccountStrategy = params.strategy;
+    this.lastAccountAddress = params.address;
+    this.lastAccountContractAddress = params.contractAddress;
   }
   // #endregion
 
@@ -304,7 +337,7 @@ class OasisAppWallet {
          * Handle confirmation in UI part of app (call this method again w/o `mustConfirm`).
          */
         if (params.mustConfirm) {
-          return await new Promise(resolve => {
+          return await new Promise<string>(resolve => {
             this.events.emit('signatureRequest', {
               ...params,
               data,
@@ -372,7 +405,10 @@ class OasisAppWallet {
      * Handle confirmation in UI part of app (call this method again w/o `mustConfirm`).
      */
     if (params.mustConfirm) {
-      return await new Promise(resolve => {
+      return await new Promise<{
+        signedTxData: string;
+        chainId?: number;
+      }>(resolve => {
         this.events.emit('txApprove', { plain: { ...params, mustConfirm: false, resolve } });
       });
     }

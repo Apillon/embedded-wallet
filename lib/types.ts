@@ -57,7 +57,7 @@ export type UserInfo = {
 export type PlainTransactionParams = {
   strategy: AuthStrategyName;
   authData?: AuthData;
-  tx: ethers.TransactionLike;
+  tx: ethers.TransactionLike<ethers.AddressLike>;
   mustConfirm?: boolean;
   resolve?: (result: { signedTxData: any; chainId?: number }) => void;
 };

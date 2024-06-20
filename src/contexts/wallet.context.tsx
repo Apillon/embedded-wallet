@@ -9,6 +9,7 @@ export type Network = { name: string; id: number; rpcUrl: string; explorerUrl: s
 const initialState = (defaultNetworkId = 0) => ({
   username: '',
   address: '',
+  contractAddress: '',
   balance: '',
   authStrategy: 'passkey' as AuthStrategyName,
   networkId: defaultNetworkId,
@@ -143,7 +144,13 @@ function WalletProvider({
       if (w) {
         setWallet(w);
         reloadUserBalance(w);
-        w.lastAccountAddress = state.address || '';
+
+        w.setAccount({
+          username: state.username,
+          strategy: state.authStrategy,
+          address: state.address,
+          contractAddress: state.contractAddress,
+        });
       }
     }
   }, [networks, defaultNetworkId, initialized]);
