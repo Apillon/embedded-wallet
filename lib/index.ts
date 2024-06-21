@@ -401,6 +401,22 @@ class OasisAppWallet {
     }
 
     /**
+     * Add tx params needed for write tx
+     */
+    if (params.tx.type === 2) {
+      if (!params.tx.gasPrice) {
+        /**
+         * @TODO Calculate this?
+         */
+        params.tx.gasPrice = 20_000_000_000;
+      }
+
+      if (!params.tx.value) {
+        params.tx.value = 0n;
+      }
+    }
+
+    /**
      * Emit 'txApprove' if confirmation is needed.
      * Handle confirmation in UI part of app (call this method again w/o `mustConfirm`).
      */
@@ -498,7 +514,10 @@ class OasisAppWallet {
      * Handle confirmation in UI part of app (call this method again w/o `mustConfirm`).
      */
     if (params.mustConfirm) {
-      return await new Promise(resolve => {
+      return await new Promise<{
+        signedTxData: string;
+        chainId?: number;
+      }>(resolve => {
         this.events.emit('txApprove', {
           contractWrite: { ...params, mustConfirm: false, resolve },
         });

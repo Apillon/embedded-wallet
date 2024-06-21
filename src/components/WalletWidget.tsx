@@ -9,12 +9,20 @@ import { Events } from '../../lib/types';
 import { TransactionsProvider, useTransactionsContext } from '../contexts/transactions.context';
 import Btn from './Btn';
 
-function Wallet() {
+type AppProps = {
+  accountManagerAddress?: string;
+  sapphireUrl?: string;
+  defaultNetworkId?: number;
+  networks?: Network[];
+  disableAutoBroadcastAfterSign?: boolean;
+};
+
+function Wallet({ disableAutoBroadcastAfterSign = false }: AppProps) {
   const { state, wallet } = useWalletContext();
   const { dispatch: dispatchTx } = useTransactionsContext();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [txToConfirm, setTxToConfirm] = useState<ethers.TransactionLike>();
+  const [txToConfirm, setTxToConfirm] = useState<ethers.TransactionLike<ethers.AddressLike>>();
   const [contractFunctionData, setContractFunctionData] = useState<DisplayedContractParams>();
   const [messageToSign, setMessageToSign] = useState('');
   const [approvedData, setApprovedData] = useState({
@@ -143,7 +151,10 @@ function Wallet() {
                     ...approveParams.current.plain,
                     authData: { username: state.username },
                   });
-                  if (res) {
+
+                  if (disableAutoBroadcastAfterSign) {
+                    closeApproveScreen();
+                  } else if (res) {
                     const { signedTxData, chainId } = res;
                     const res2 = await wallet?.broadcastTransaction(signedTxData, chainId);
 
@@ -159,7 +170,9 @@ function Wallet() {
                     authData: { username: state.username },
                   });
 
-                  if (res) {
+                  if (disableAutoBroadcastAfterSign) {
+                    closeApproveScreen();
+                  } else if (res) {
                     const { signedTxData, chainId } = res;
                     const res2 = await wallet?.broadcastTransaction(signedTxData, chainId);
 
@@ -264,26 +277,11 @@ function Modal({
   );
 }
 
-export default function WalletWidget({
-  accountManagerAddress,
-  sapphireUrl,
-  defaultNetworkId = 0,
-  networks,
-}: {
-  accountManagerAddress?: string;
-  sapphireUrl?: string;
-  defaultNetworkId?: number;
-  networks?: Network[];
-}) {
+export default function WalletWidget(props: AppProps) {
   return (
-    <WalletProvider
-      accountManagerAddress={accountManagerAddress}
-      sapphireUrl={sapphireUrl}
-      networks={networks}
-      defaultNetworkId={defaultNetworkId}
-    >
+    <WalletProvider {...props}>
       <TransactionsProvider>
-        <Wallet />
+        <Wallet {...props} />
       </TransactionsProvider>
     </WalletProvider>
   );

@@ -18,7 +18,7 @@ export default function WalletApprove({
   onApprove,
   onDecline,
 }: {
-  tx?: ethers.TransactionLike;
+  tx?: ethers.TransactionLike<ethers.AddressLike>;
   signMessage?: string;
   contractFunctionData?: DisplayedContractParams;
   approveText?: string;
