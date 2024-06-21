@@ -121,10 +121,10 @@ function WalletProvider({
    * Initialize Oasis Wallet App SDK
    */
   useEffect(() => {
-    if (initialized) {
+    if (initialized && !wallet) {
       let w = undefined as OasisAppWallet | undefined;
 
-      if (networks) {
+      if (networks && networks.length) {
         w = initializeOnWindow({
           sapphireUrl,
           accountManagerAddress,
