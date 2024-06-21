@@ -2,12 +2,56 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/png" href="/oasis-logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Oasis App Wallet</title>
   </head>
-  <body style="background-color: #06080F;">
-    <div id="root" style="max-width: 1280px; margin: 0 auto; padding: 2rem;"></div>
-    <script type="module" src="/src/main.tsx"></script>
+  <body style="background-color: #06080F; padding: 2rem;">
+    <!-- <div id="root" style="max-width: 1280px; margin: 0 auto;"></div> -->
+    <!-- <script type="module" src="/src/tests/testMain.tsx"></script> -->
+
+    <button id="sign" style="background:white;">Sign message</button>
+    <br/>
+
+    <script type="module">
+      import { getOasisAppWallet } from './dist/sdk';
+      import { initializeApp } from './dist/ui';
+      import './dist/style.css';
+
+      initializeApp({
+        accountManagerAddress: "0x5C357DaFfe6b1016C0c9A5607367E8f47765D4bC",
+        defaultNetworkId: 1287,
+        networks: [
+          {
+            name: 'Moonbeam Testnet',
+            id: 1287,
+            rpcUrl: 'https://rpc.testnet.moonbeam.network',
+            explorerUrl: 'https://moonbase.moonscan.io',
+          },
+          {
+            name: 'Celo Alfajores Testnet',
+            id: 44787,
+            rpcUrl: 'https://alfajores-forno.celo-testnet.org',
+            explorerUrl: 'https://explorer.celo.org/alfajores',
+          },
+          {
+            name: 'Amoy',
+            id: 80002,
+            rpcUrl: 'https://rpc-amoy.polygon.technology',
+            explorerUrl: 'https://www.oklink.com/amoy',
+          },
+        ],
+      });
+
+      document.getElementById('sign').addEventListener('click', () => {
+        const w = getOasisAppWallet();
+        w.signMessage({
+          strategy: 'passkey',
+          authData: { username: w.lastAccountUsername },
+          message: 'Test message from module',
+          mustConfirm: true,
+        });
+      });
+    </script>
   </body>
 </html>

@@ -1,3 +1,7 @@
+/**
+ * @src https://github.com/oasisprotocol/demo-authzn/blob/main/backend/src/webauthn.ts
+ */
+
 import { CBOR } from 'cbor-redux';
 import * as asn1js from 'asn1js';
 import { keccak256, toBigInt } from 'ethers';
@@ -20,20 +24,18 @@ interface RawCOSEPublicKey {
   '-3': Uint8Array | undefined;
 }
 
-interface COSEPublicKey_EC {
+type COSEPublicKey_EC = {
   kty: number;
   alg: number;
   crv: number;
   x: bigint;
   y: bigint;
-}
-
-type COSEPublicKey = COSEPublicKey_EC;
+};
 
 /**
  * Decode a COSE public key into dict (Containing: kty, alg, crv, etc.)
  */
-function COSEPublicKey_decode(buf: ArrayBufferLike): COSEPublicKey {
+function COSEPublicKey_decode(buf: ArrayBufferLike): COSEPublicKey_EC {
   const cpk = CBOR.decode<RawCOSEPublicKey>(buf);
 
   const kty = cpk[1];
@@ -67,7 +69,7 @@ function COSEPublicKey_decode(buf: ArrayBufferLike): COSEPublicKey {
 interface AttestedCredentialData {
   aaguid: Uint8Array;
   credentialId: Uint8Array;
-  credentialPublicKey: COSEPublicKey;
+  credentialPublicKey: COSEPublicKey_EC;
 }
 
 interface AuthenticatorData {

@@ -1,6 +1,6 @@
-import WalletWidget from './components/WalletWidget';
-import Test2 from './components/Test2';
-import Test3 from './components/Test3';
+import WalletWidget from '../components/WalletWidget';
+import Test2 from './Test2';
+import Test3 from './Test3';
 
 export default function App() {
   return (

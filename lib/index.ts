@@ -721,4 +721,5 @@ class OasisAppWallet {
   // #endregion
 }
 
+export { OasisAppWallet };
 export default OasisAppWallet;

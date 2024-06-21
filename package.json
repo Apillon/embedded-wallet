@@ -9,6 +9,16 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
+  "exports": {
+    ".": {
+      "import": "./dist/sdk.js",
+      "require": "./dist/sdk.umd.cjs"
+    },
+    "./ui": {
+      "import": "./dist/ui.js",
+      "require": "./dist/ui.umd.cjs"
+    }
+  },
   "dependencies": {
     "@headlessui/react": "^2.0.4",
     "@noble/curves": "^1.4.0",
@@ -44,6 +54,7 @@
     "tailwindcss": "^3.4.3",
     "typescript": "^5.2.2",
     "vite": "^5.2.0",
+    "vite-plugin-dts": "^3.9.1",
     "vite-plugin-node-polyfills": "^0.21.0"
   }
 }

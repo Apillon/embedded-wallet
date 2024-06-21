@@ -2,7 +2,7 @@ import OasisEthersSigner from '../../lib/adapters/ethers';
 import { getOasisAppWallet } from '../../lib/utils';
 import { ethers } from 'ethers';
 import { ERC20Abi } from '../../lib/abi';
-import Btn from './Btn';
+import Btn from '../components/Btn';
 
 export default function Test3() {
   async function testEthers() {
