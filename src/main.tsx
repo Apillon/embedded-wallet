@@ -4,17 +4,26 @@ import { AppParams } from '../lib/types';
 import WalletWidget from './components/WalletWidget';
 import './index.css';
 
-export function initializeApp(options: AppParams) {
+export function initializeApp(activatorSelector: string, options: AppParams) {
   if (typeof document === 'undefined') {
     console.error('Cannot initialize oasis wallet app UI');
     return;
   }
 
-  const el = document.createElement('div');
-  el.id = 'oasis-app-wallet';
-  document.body.appendChild(el);
+  let selectedEl = null as HTMLElement | null;
 
-  ReactDOM.createRoot(el).render(
+  if (activatorSelector) {
+    selectedEl = document.querySelector(activatorSelector);
+  }
+
+  if (!selectedEl) {
+    selectedEl = document.createElement('div');
+    selectedEl.id = 'oasis-app-wallet';
+  }
+
+  document.body.appendChild(selectedEl);
+
+  ReactDOM.createRoot(selectedEl).render(
     <React.StrictMode>
       <WalletWidget {...options} />
     </React.StrictMode>
