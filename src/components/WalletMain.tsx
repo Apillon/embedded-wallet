@@ -1,13 +1,25 @@
-import { useState } from 'react';
-import { useWalletContext } from '../contexts/wallet.context';
+import { useMemo, useState } from 'react';
+import { WalletScreens, useWalletContext } from '../contexts/wallet.context';
 import { shortHash } from '../lib/helpers';
 import Btn from './Btn';
-import clsx from 'clsx';
 import WalletNetworkSelect from './WalletNetworkSelect';
 import WalletTransactions from './WalletTransactions';
+import WalletTokens from './WalletTokens';
+import { TokensProvider } from '../contexts/tokens.context';
 
 export default function WalletMain() {
-  const { state, dispatch, networksById } = useWalletContext();
+  const { state, dispatch, networksById, setScreen } = useWalletContext();
+
+  const back = useMemo<{ key: WalletScreens; label: string }>(() => {
+    if (state.walletScreen === 'main') {
+      return { key: 'networks', label: 'Change' };
+    }
+
+    if (state.walletScreen === 'selectToken') {
+      return { key: 'sendToken', label: 'Back' };
+    }
+    return { key: 'main', label: 'Back' };
+  }, [state.walletScreen]);
 
   return (
     <div>
@@ -21,19 +33,8 @@ export default function WalletMain() {
           </p>
 
           <p>
-            <button
-              className="text-sm"
-              onClick={() =>
-                dispatch({
-                  type: 'setValue',
-                  payload: {
-                    key: 'walletScreen',
-                    value: state.walletScreen === 'main' ? 'networks' : 'main',
-                  },
-                })
-              }
-            >
-              {state.walletScreen === 'main' ? 'Change' : 'Back'}
+            <button className="text-sm" onClick={() => setScreen(back.key)}>
+              {back.label}
             </button>
           </p>
         </div>
@@ -45,7 +46,15 @@ export default function WalletMain() {
           <AccountInfo className="mb-6" />
 
           {/* Actions: send/receive */}
-          <Actions className="mb-6" />
+          <div className="flex gap-4 mb-6">
+            <Btn minWidth="0" className="w-full" onClick={() => setScreen('sendToken')}>
+              Send
+            </Btn>
+
+            <Btn minWidth="0" className="w-full" onClick={() => setScreen('receiveToken')}>
+              Receive
+            </Btn>
+          </div>
 
           {/* Transactions */}
           <div className="mb-8">
@@ -62,6 +71,14 @@ export default function WalletMain() {
       {state.walletScreen === 'networks' && (
         <div>
           <WalletNetworkSelect />
+        </div>
+      )}
+
+      {['sendToken', 'selectToken', 'receiveToken'].includes(state.walletScreen) && (
+        <div>
+          <TokensProvider>
+            <WalletTokens />
+          </TokensProvider>
         </div>
       )}
     </div>
@@ -98,22 +115,6 @@ function AccountInfo({ className }: { className: string }) {
       </p>
 
       <p>{state.balance} ETH</p>
-    </div>
-  );
-}
-
-function Actions({ className }: { className: string }) {
-  return (
-    <div className={clsx('flex gap-4', className)}>
-      <Btn minWidth="0" className="w-full">
-        Send
-      </Btn>
-      <Btn minWidth="0" className="w-full">
-        Receive
-      </Btn>
-      <Btn disabled minWidth="0" className="w-full">
-        Buy
-      </Btn>
     </div>
   );
 }

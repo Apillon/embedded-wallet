@@ -18,7 +18,7 @@ type AppProps = {
 };
 
 function Wallet({ disableAutoBroadcastAfterSign = false }: AppProps) {
-  const { state, wallet, dispatch: dispatchWallet } = useWalletContext();
+  const { state, wallet, setScreen } = useWalletContext();
   const { dispatch: dispatchTx } = useTransactionsContext();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -92,13 +92,7 @@ function Wallet({ disableAutoBroadcastAfterSign = false }: AppProps) {
       }
 
       if (state.walletScreen !== 'main') {
-        dispatchWallet({
-          type: 'setValue',
-          payload: {
-            key: 'walletScreen',
-            value: 'main',
-          },
-        });
+        setScreen('main');
       }
     }
   }, [isModalOpen]);

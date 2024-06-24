@@ -6,6 +6,14 @@ import { initializeOnWindow } from '../../lib/utils';
 
 export type Network = { name: string; id: number; rpcUrl: string; explorerUrl: string };
 
+export type WalletScreens =
+  | 'main'
+  | 'networks'
+  | 'transactions'
+  | 'sendToken'
+  | 'selectToken'
+  | 'receiveToken';
+
 const initialState = (defaultNetworkId = 0) => ({
   username: '',
   address: '',
@@ -13,7 +21,7 @@ const initialState = (defaultNetworkId = 0) => ({
   balance: '',
   authStrategy: 'passkey' as AuthStrategyName,
   networkId: defaultNetworkId,
-  walletScreen: 'main' as 'main' | 'networks' | 'transactions',
+  walletScreen: 'main' as WalletScreens,
 });
 
 type ContextState = ReturnType<typeof initialState>;
@@ -61,6 +69,7 @@ const WalletContext = createContext<
       wallet?: OasisAppWallet;
       setWallet: (wallet: OasisAppWallet) => void;
       reloadUserBalance: (walletRef?: OasisAppWallet) => void;
+      setScreen: (screen: WalletScreens) => void;
     }
   | undefined
 >(undefined);
@@ -190,6 +199,8 @@ function WalletProvider({
         wallet,
         setWallet,
         reloadUserBalance,
+        setScreen: (s: WalletScreens) =>
+          dispatch({ type: 'setValue', payload: { key: 'walletScreen', value: s } }),
       }}
     >
       {children}

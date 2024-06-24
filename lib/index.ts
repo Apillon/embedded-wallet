@@ -285,9 +285,9 @@ class OasisAppWallet {
     }
   }
 
-  async getAccountBalance(address: string, networkId = this.defaultNetworkId) {
+  async getAccountBalance(address: string, networkId = this.defaultNetworkId, decimals = 18) {
     if (!networkId || networkIdIsSapphire(networkId)) {
-      return ethers.formatEther((await this.sapphireProvider?.getBalance(address)) || 0n);
+      return ethers.formatUnits((await this.sapphireProvider?.getBalance(address)) || 0n, decimals);
     }
 
     if (!this.rpcUrls[networkId]) {
@@ -297,7 +297,7 @@ class OasisAppWallet {
     const ethProvider =
       this.rpcProviders[networkId] || new ethers.JsonRpcProvider(this.rpcUrls[networkId]);
 
-    return ethers.formatEther(await ethProvider.getBalance(address));
+    return ethers.formatUnits(await ethProvider.getBalance(address), decimals);
   }
 
   setAccount(params: {
@@ -356,7 +356,11 @@ class OasisAppWallet {
       /**
        * Authenticate user and sign message
        */
-      const res = await this.getProxyForStrategy(params.strategy, data, params.authData);
+      const res = await this.getProxyForStrategy(
+        params.strategy || this.lastAccountStrategy,
+        data,
+        params.authData
+      );
 
       if (res) {
         const [signedRSV] = AC.decodeFunctionResult('sign', res).toArray();
@@ -565,7 +569,11 @@ class OasisAppWallet {
        */
       const AC = new ethers.Interface(AccountAbi);
       const data = AC.encodeFunctionData('signEIP155', [tx]);
-      const res = await this.getProxyForStrategy(params.strategy, data, params.authData);
+      const res = await this.getProxyForStrategy(
+        params.strategy || this.lastAccountStrategy,
+        data,
+        params.authData
+      );
 
       if (res) {
         const [signedTxData] = AC.decodeFunctionResult('signEIP155', res).toArray();

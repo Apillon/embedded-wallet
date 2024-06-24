@@ -2,7 +2,7 @@ import { useWalletContext } from '../contexts/wallet.context';
 import Btn from './Btn';
 
 export default function WalletNetworkSelect() {
-  const { state, dispatch, networks, wallet, reloadUserBalance } = useWalletContext();
+  const { state, dispatch, networks, wallet, reloadUserBalance, setScreen } = useWalletContext();
 
   if (!Array.isArray(networks) || !networks.length) {
     return <></>;
@@ -12,21 +12,25 @@ export default function WalletNetworkSelect() {
     dispatch({ type: 'setValue', payload: { key: 'networkId', value: networkId } });
     wallet?.setDefaultNetworkId(networkId);
     reloadUserBalance();
-    dispatch({ type: 'setValue', payload: { key: 'walletScreen', value: 'main' } });
+    setScreen('main');
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      {networks.map(network => (
-        <Btn
-          key={network.id}
-          variant="secondary"
-          disabled={network.id === state.networkId}
-          onClick={() => selectNetwork(network.id)}
-        >
-          {network.name}
-        </Btn>
-      ))}
+    <div>
+      <h2 className="mb-4">Select network</h2>
+
+      <div className="flex flex-col gap-3">
+        {networks.map(network => (
+          <Btn
+            key={network.id}
+            variant="secondary"
+            disabled={network.id === state.networkId}
+            onClick={() => selectNetwork(network.id)}
+          >
+            {network.name}
+          </Btn>
+        ))}
+      </div>
     </div>
   );
 }
