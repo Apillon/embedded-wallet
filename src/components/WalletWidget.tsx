@@ -18,7 +18,7 @@ type AppProps = {
 };
 
 function Wallet({ disableAutoBroadcastAfterSign = false }: AppProps) {
-  const { state, wallet } = useWalletContext();
+  const { state, wallet, dispatch: dispatchWallet } = useWalletContext();
   const { dispatch: dispatchTx } = useTransactionsContext();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -86,8 +86,20 @@ function Wallet({ disableAutoBroadcastAfterSign = false }: AppProps) {
    * Reset approve screen if closed
    */
   useEffect(() => {
-    if (!isModalOpen && (!!txToConfirm || !!messageToSign || !!contractFunctionData)) {
-      closeApproveScreen();
+    if (!isModalOpen) {
+      if (!!txToConfirm || !!messageToSign || !!contractFunctionData) {
+        closeApproveScreen();
+      }
+
+      if (state.walletScreen !== 'main') {
+        dispatchWallet({
+          type: 'setValue',
+          payload: {
+            key: 'walletScreen',
+            value: 'main',
+          },
+        });
+      }
     }
   }, [isModalOpen]);
 
@@ -106,9 +118,15 @@ function Wallet({ disableAutoBroadcastAfterSign = false }: AppProps) {
   let modalContent = <></>;
 
   if (!loggedIn) {
+    /**
+     * Login/register
+     */
     modalContent = <WalletAuth />;
   } else if (!!txToConfirm || !!messageToSign || !!contractFunctionData) {
     if (approvedData.title) {
+      /**
+       * Transaction submitted to network
+       */
       modalContent = (
         <div className="text-center">
           <h2 className="mb-6">{approvedData.title}</h2>
@@ -131,6 +149,9 @@ function Wallet({ disableAutoBroadcastAfterSign = false }: AppProps) {
         </div>
       );
     } else {
+      /**
+       * Approve tx (authenticate w/ passkey e.g.)
+       */
       modalContent = (
         <WalletApprove
           tx={txToConfirm}
@@ -193,6 +214,9 @@ function Wallet({ disableAutoBroadcastAfterSign = false }: AppProps) {
       );
     }
   } else {
+    /**
+     * Default UI
+     */
     modalContent = <WalletMain />;
   }
 

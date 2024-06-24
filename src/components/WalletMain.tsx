@@ -9,8 +9,6 @@ import WalletTransactions from './WalletTransactions';
 export default function WalletMain() {
   const { state, dispatch, networksById } = useWalletContext();
 
-  const [screen, setScreen] = useState<'main' | 'networks' | 'transactions'>('main');
-
   return (
     <div>
       {/* Selected network + trigger change screen to network select */}
@@ -25,15 +23,23 @@ export default function WalletMain() {
           <p>
             <button
               className="text-sm"
-              onClick={() => setScreen(screen === 'main' ? 'networks' : 'main')}
+              onClick={() =>
+                dispatch({
+                  type: 'setValue',
+                  payload: {
+                    key: 'walletScreen',
+                    value: state.walletScreen === 'main' ? 'networks' : 'main',
+                  },
+                })
+              }
             >
-              {screen === 'main' ? 'Change' : 'Back'}
+              {state.walletScreen === 'main' ? 'Change' : 'Back'}
             </button>
           </p>
         </div>
       </div>
 
-      {screen === 'main' && (
+      {state.walletScreen === 'main' && (
         <div>
           {/* Account info: username, address, balance */}
           <AccountInfo className="mb-6" />
@@ -53,7 +59,7 @@ export default function WalletMain() {
         </div>
       )}
 
-      {screen === 'networks' && (
+      {state.walletScreen === 'networks' && (
         <div>
           <WalletNetworkSelect />
         </div>

@@ -13,6 +13,7 @@ const initialState = (defaultNetworkId = 0) => ({
   balance: '',
   authStrategy: 'passkey' as AuthStrategyName,
   networkId: defaultNetworkId,
+  walletScreen: 'main' as 'main' | 'networks' | 'transactions',
 });
 
 type ContextState = ReturnType<typeof initialState>;

@@ -1,4 +1,5 @@
 import { useWalletContext } from '../contexts/wallet.context';
+import Btn from './Btn';
 
 export default function WalletNetworkSelect() {
   const { state, dispatch, networks, wallet, reloadUserBalance } = useWalletContext();
@@ -7,22 +8,25 @@ export default function WalletNetworkSelect() {
     return <></>;
   }
 
+  function selectNetwork(networkId: number) {
+    dispatch({ type: 'setValue', payload: { key: 'networkId', value: networkId } });
+    wallet?.setDefaultNetworkId(networkId);
+    reloadUserBalance();
+    dispatch({ type: 'setValue', payload: { key: 'walletScreen', value: 'main' } });
+  }
+
   return (
-    <select
-      name="network"
-      value={state.networkId}
-      className="text-black"
-      onChange={ev => {
-        dispatch({ type: 'setValue', payload: { key: 'networkId', value: +ev.target.value } });
-        wallet?.setDefaultNetworkId(+ev.target.value);
-        reloadUserBalance();
-      }}
-    >
+    <div className="flex flex-col gap-3">
       {networks.map(network => (
-        <option key={network.id} value={network.id}>
+        <Btn
+          key={network.id}
+          variant="secondary"
+          disabled={network.id === state.networkId}
+          onClick={() => selectNetwork(network.id)}
+        >
           {network.name}
-        </option>
+        </Btn>
       ))}
-    </select>
+    </div>
   );
 }
