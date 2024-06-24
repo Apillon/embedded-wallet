@@ -39,7 +39,7 @@ export default function WalletTokens() {
     }
 
     return nativeToken;
-  }, [tokens.selectedToken]);
+  }, [tokens.selectedToken, tokens.list]);
 
   if (state.walletScreen === 'selectToken') {
     return <SelectToken nativeToken={nativeToken} />;
