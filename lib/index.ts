@@ -32,13 +32,12 @@ class OasisAppWallet {
     23295: 'https://explorer.oasis.io/testnet/sapphire',
   } as { [networkId: number]: string };
 
-  /**
-   * @TODO refac to object
-   */
-  lastAccountUsername = '';
-  lastAccountStrategy = 'passkey' as AuthStrategyName;
-  lastAccountAddress = '';
-  lastAccountContractAddress = '';
+  lastAccount = {
+    username: '',
+    authStrategy: 'passkey' as AuthStrategyName,
+    address: '',
+    contractAddress: '',
+  };
 
   /**
    * Prepare sapphire provider and account manager (WebAuthn) contract.
@@ -161,8 +160,8 @@ class OasisAppWallet {
 
     const txHash = await this.sapphireProvider.send('eth_sendRawTransaction', [signedTx]);
 
-    this.lastAccountStrategy = strategy;
-    this.lastAccountUsername = authData.username;
+    this.lastAccount.authStrategy = strategy;
+    this.lastAccount.username = authData.username;
 
     if (await this.waitForTxReceipt(txHash)) {
       return await this.getAccountAddress(authData.username);
@@ -216,8 +215,8 @@ class OasisAppWallet {
      */
     const contractRes = await this.accountManagerContract.getAccount(hashedUsername as any);
 
-    this.lastAccountStrategy = strategy;
-    this.lastAccountUsername = authData.username;
+    this.lastAccount.authStrategy = strategy;
+    this.lastAccount.username = authData.username;
 
     /**
      * If keys match -> Auth success, return account addresses
@@ -242,10 +241,10 @@ class OasisAppWallet {
     }
 
     if (!username) {
-      if (this.lastAccountAddress) {
+      if (this.lastAccount.address) {
         return {
-          publicAddress: this.lastAccountAddress,
-          accountContractAddress: this.lastAccountContractAddress,
+          publicAddress: this.lastAccount.address,
+          accountContractAddress: this.lastAccount.contractAddress,
         };
       }
 
@@ -257,8 +256,8 @@ class OasisAppWallet {
     const userData = await this.accountManagerContract.getAccount(hashedUsername as any);
 
     if (Array.isArray(userData) && userData.length > 1) {
-      this.lastAccountAddress = userData[1] as string;
-      this.lastAccountContractAddress = userData[0] as string;
+      this.lastAccount.address = userData[1] as string;
+      this.lastAccount.contractAddress = userData[0] as string;
 
       return {
         publicAddress: userData[1] as string,
@@ -288,10 +287,10 @@ class OasisAppWallet {
     address: string;
     contractAddress: string;
   }) {
-    this.lastAccountUsername = params.username;
-    this.lastAccountStrategy = params.strategy;
-    this.lastAccountAddress = params.address;
-    this.lastAccountContractAddress = params.contractAddress;
+    this.lastAccount.username = params.username;
+    this.lastAccount.authStrategy = params.strategy;
+    this.lastAccount.address = params.address;
+    this.lastAccount.contractAddress = params.contractAddress;
   }
   // #endregion
 
@@ -338,7 +337,7 @@ class OasisAppWallet {
      * Authenticate user and sign message
      */
     const res = await this.getProxyForStrategy(
-      params.strategy || this.lastAccountStrategy,
+      params.strategy || this.lastAccount.authStrategy,
       data,
       params.authData!
     );
@@ -378,7 +377,7 @@ class OasisAppWallet {
      */
     if (!params.tx.nonce) {
       params.tx.nonce = await this.getRpcProviderForChainId(chainId).getTransactionCount(
-        this.lastAccountAddress
+        this.lastAccount.address
       );
     }
 
@@ -459,7 +458,7 @@ class OasisAppWallet {
       hash: txHash,
       label,
       rawData: signedTxData,
-      owner: this.lastAccountAddress || 'none',
+      owner: this.lastAccount.address || 'none',
       status: 'pending' as const,
       chainId: chainId || this.defaultNetworkId,
       explorerUrl: this.explorerUrls[chainId || this.defaultNetworkId]
@@ -468,7 +467,7 @@ class OasisAppWallet {
       createdAt: Date.now(),
     };
 
-    this.events.emit('transactionSubmitted', txItem);
+    this.events.emit('txSubmitted', txItem);
 
     return {
       txHash,
@@ -543,7 +542,7 @@ class OasisAppWallet {
     const AC = new ethers.Interface(AccountAbi);
     const data = AC.encodeFunctionData('signEIP155', [tx]);
     const res = await this.getProxyForStrategy(
-      params.strategy || this.lastAccountStrategy,
+      params.strategy || this.lastAccount.authStrategy,
       data,
       params.authData!
     );

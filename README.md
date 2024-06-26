@@ -39,11 +39,11 @@ The SDK exposes some events on its `events` property.
 - `txApprove`
   e.g. display UI with transaction details and approve/decline buttons
 
-- `transactionSubmitted`
+- `txSubmitted`
   e.g. log the transaction in session storage or own backend
 
 ```ts
-wallet.events.on('transactionSubmitted', tx => {
+wallet.events.on('txSubmitted', tx => {
   console.log(tx);
 });
 ```

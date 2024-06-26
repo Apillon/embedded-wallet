@@ -213,9 +213,7 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
           },
         });
 
-        /**
-         * @TODO Emit done event
-         */
+        wallet.events.emit('txDone', tx);
       });
     } else {
       /**
@@ -243,9 +241,7 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
       // Reload balance on every tx
       reloadUserBalance();
 
-      /**
-       * @TODO Emit done event
-       */
+      wallet.events.emit('txDone', tx);
     }
   }
 

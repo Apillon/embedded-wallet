@@ -102,5 +102,6 @@ export type TransactionItem = {
 export type Events = {
   signatureRequest: SignMessageParams;
   txApprove: { plain?: PlainTransactionParams; contractWrite?: ContractWriteParams };
-  transactionSubmitted: TransactionItem;
+  txSubmitted: TransactionItem;
+  txDone: TransactionItem; // emitted by UI
 };

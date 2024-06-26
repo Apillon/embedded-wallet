@@ -63,21 +63,21 @@ function Wallet({ disableAutoBroadcastAfterSign = false }: AppProps) {
       setIsModalOpen(true);
     };
 
-    const onTransactionSubmittedEvent = (params: Events['transactionSubmitted']) => {
+    const onTxSubmittedEvent = (params: Events['txSubmitted']) => {
       dispatchTx({ type: 'addTx', payload: params });
     };
 
     if (wallet) {
       wallet.events.on('txApprove', onTxApproveEvent);
       wallet.events.on('signatureRequest', onSignatureRequestEvent);
-      wallet.events.on('transactionSubmitted', onTransactionSubmittedEvent);
+      wallet.events.on('txSubmitted', onTxSubmittedEvent);
     }
 
     return () => {
       if (wallet) {
         wallet.events.off('txApprove', onTxApproveEvent);
         wallet.events.off('signatureRequest', onSignatureRequestEvent);
-        wallet.events.off('transactionSubmitted', onTransactionSubmittedEvent);
+        wallet.events.off('txSubmitted', onTxSubmittedEvent);
       }
     };
   }, [wallet]);

@@ -50,7 +50,7 @@
         const w = getOasisAppWallet();
         w.signMessage({
           strategy: 'passkey',
-          authData: { username: w.lastAccountUsername },
+          authData: { username: w.lastAccount.username },
           message: 'Test message from module',
           mustConfirm: true,
         });
