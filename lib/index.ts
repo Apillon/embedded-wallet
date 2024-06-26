@@ -9,6 +9,7 @@ import {
   PlainTransactionParams,
   RegisterData,
   SignMessageParams,
+  SignatureCallback,
   WebauthnContract,
 } from './types';
 import * as sapphire from '@oasisprotocol/sapphire-paratime';
@@ -23,6 +24,7 @@ class OasisAppWallet {
   accountManagerContract: WebauthnContract;
   abiCoder = ethers.AbiCoder.defaultAbiCoder();
   events: Emitter<Events>;
+  onGetSignature: SignatureCallback | undefined;
 
   defaultNetworkId = 0;
   rpcUrls = {} as { [networkId: number]: string };
@@ -66,6 +68,8 @@ class OasisAppWallet {
     }
 
     this.events = mitt<Events>();
+
+    this.onGetSignature = params?.signatureCallback;
   }
 
   // #region Auth utils
@@ -132,31 +136,32 @@ class OasisAppWallet {
       await this.accountManagerContract.gaspayingAddress()
     );
 
-    /**
-     * @TODO Get signature from backend.
-     * 1st request: GET {{Apillon API url}}/oasis/session-token
-     * 2nd request: POST {{Apillon API url}}/oasis/signature
-     *    {
-     *      token: get from 1st request,
-     *      data: gaslessData
-     *    }
-     * Use the signature for the signedTx.
-     *
-     * @TODO @Vinko 2nd request should return gasLimit & timestamp as well?
-     */
+    let signedTx = '';
 
-    // if (!signature) {
-    //   throw new Error('Cannot get dataHash signature');
-    // }
+    if (this.onGetSignature) {
+      //Get signature from API (handle gas payments e.g.)
+      const gaslessParams = await this.onGetSignature(gaslessData);
 
-    const signedTx = await this.accountManagerContract.generateGaslessTx(
-      gaslessData,
-      nonce as any,
-      gasPrice as any
-      // gasLimit as any, // gas limit
-      // timestamp as any,
-      // signature
-    );
+      if (!gaslessParams.signature) {
+        abort('CANT_GET_SIGNATURE');
+      }
+
+      signedTx = await this.accountManagerContract.generateGaslessTx(
+        gaslessData,
+        nonce as any,
+        gasPrice as any,
+        gaslessParams.gasLimit ? BigInt(gaslessParams.gasLimit) : 1_000_000n,
+        BigInt(gaslessParams.timestamp),
+        gaslessParams.signature
+      );
+    } else {
+      // Old ABI / interface
+      signedTx = await (this.accountManagerContract.generateGaslessTx as any)(
+        gaslessData,
+        nonce as any,
+        gasPrice as any
+      );
+    }
 
     const txHash = await this.sapphireProvider.send('eth_sendRawTransaction', [signedTx]);
 

@@ -229,7 +229,7 @@ function ReceiveToken() {
         <QRCode
           value={`ethereum:${state.address}`}
           size={256}
-          style={{ height: 'auto', maxWidth: '100%', width: '100%' }}
+          style={{ height: 'auto', maxWidth: '100%', width: '256px', margin: '0 auto' }}
           viewBox={`0 0 256 256`}
         />
       </div>

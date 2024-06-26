@@ -9,11 +9,16 @@ export type WebauthnContract = TypedContract<typeof wacAbi>;
 
 export type NetworkConfig = { [networkId: number]: { rpcUrl: string; explorerUrl: string } };
 
+export type SignatureCallback = (
+  gaslessData: string
+) => Promise<{ signature: string; gasLimit: number; timestamp: number }>;
+
 export type AppParams = {
   accountManagerAddress?: string;
   sapphireUrl?: string;
   defaultNetworkId?: number;
   networkConfig?: NetworkConfig;
+  signatureCallback?: SignatureCallback;
 };
 
 export type AuthData = {

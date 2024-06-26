@@ -30,6 +30,29 @@ export default function App() {
             explorerUrl: 'https://www.oklink.com/amoy',
           },
         ]}
+        signatureCallback={async gaslessData => {
+          try {
+            const res = await (
+              await fetch(`{{Apillon API url}}/oasis/signature`, {
+                method: 'POST',
+                body: JSON.stringify({
+                  token: '',
+                  data: gaslessData,
+                }),
+              })
+            ).json();
+
+            return {
+              signature: res?.signature,
+              gasLimit: res?.gasLimit,
+              timestamp: res?.timestamp,
+            };
+          } catch (e) {
+            console.error('Signature request error', e);
+          }
+
+          return { signature: '', gasLimit: 0, timestamp: 0 };
+        }}
       />
 
       <hr className="my-6" />

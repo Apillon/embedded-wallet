@@ -5,17 +5,14 @@ import WalletAuth from './WalletAuth';
 import WalletMain from './WalletMain';
 import { ethers } from 'ethers';
 import WalletApprove, { DisplayedContractParams } from './WalletApprove';
-import { Events } from '../../lib/types';
+import { AppParams, Events } from '../../lib/types';
 import { TransactionsProvider, useTransactionsContext } from '../contexts/transactions.context';
 import Btn from './Btn';
 
 type AppProps = {
-  accountManagerAddress?: string;
-  sapphireUrl?: string;
-  defaultNetworkId?: number;
   networks?: Network[];
   disableAutoBroadcastAfterSign?: boolean;
-};
+} & AppParams;
 
 function Wallet({ disableAutoBroadcastAfterSign = false }: AppProps) {
   const { state, wallet, setScreen, handleError } = useWalletContext();

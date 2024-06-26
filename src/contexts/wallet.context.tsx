@@ -1,5 +1,5 @@
 import { ReactNode, createContext, useContext, useEffect, useReducer, useState } from 'react';
-import { AuthStrategyName, NetworkConfig } from '../../lib/types';
+import { AppParams, AuthStrategyName, NetworkConfig } from '../../lib/types';
 import { ErrorMessages, WebStorageKeys } from '../../lib/constants';
 import OasisAppWallet from '../../lib';
 import { initializeOnWindow } from '../../lib/utils';
@@ -85,10 +85,7 @@ function WalletProvider({
 }: {
   children: ReactNode;
   networks?: Network[];
-  defaultNetworkId?: number;
-  sapphireUrl?: string;
-  accountManagerAddress?: string;
-}) {
+} & AppParams) {
   const [state, dispatch] = useReducer(reducer, initialState(defaultNetworkId));
   const [initialized, setInitialized] = useState(false);
   const [wallet, setWallet] = useState<OasisAppWallet>();
