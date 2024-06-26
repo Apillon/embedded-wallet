@@ -15,7 +15,7 @@ import * as sapphire from '@oasisprotocol/sapphire-paratime';
 import { AccountAbi, AccountManagerAbi } from './abi';
 import PasswordStrategy from './strategies/password';
 import PasskeyStrategy from './strategies/passkey';
-import { networkIdIsSapphire, getHashedUsername } from './utils';
+import { networkIdIsSapphire, getHashedUsername, abort } from './utils';
 import mitt, { Emitter } from 'mitt';
 
 class OasisAppWallet {
@@ -75,24 +75,18 @@ class OasisAppWallet {
    */
   async userExists(username: string) {
     if (!this.sapphireProvider) {
-      throw new Error('Sapphire provider not initialized');
+      abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
     }
 
     if (!this.accountManagerContract) {
-      throw new Error('Account manager contract not initialized');
+      abort('ACCOUNT_MANAGER_CONTRACT_NOT_INITIALIZED');
     }
 
-    try {
-      const res = await this.accountManagerContract.userExists(
-        (await getHashedUsername(username)) as any
-      );
+    const res = await this.accountManagerContract.userExists(
+      (await getHashedUsername(username)) as any
+    );
 
-      return res;
-    } catch (e) {
-      console.error(e);
-    }
-
-    return false;
+    return res || false;
   }
 
   /**
@@ -101,81 +95,77 @@ class OasisAppWallet {
    */
   async register(strategy: AuthStrategyName, authData: AuthData) {
     if (!this.sapphireProvider) {
-      throw new Error('Sapphire provider not initialized');
+      abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
     }
 
     if (!this.accountManagerContract) {
-      throw new Error('Account manager contract not initialized');
+      abort('ACCOUNT_MANAGER_CONTRACT_NOT_INITIALIZED');
     }
 
-    try {
-      let registerData = undefined as RegisterData | undefined;
+    let registerData = undefined as RegisterData | undefined;
 
-      /**
-       * Authentication method
-       */
-      if (strategy === 'password') {
-        registerData = await new PasswordStrategy().getRegisterData(authData);
-      } else if (strategy === 'passkey') {
-        registerData = await new PasskeyStrategy().getRegisterData(authData);
-      }
+    /**
+     * Authentication method
+     */
+    if (strategy === 'password') {
+      registerData = await new PasswordStrategy().getRegisterData(authData);
+    } else if (strategy === 'passkey') {
+      registerData = await new PasskeyStrategy().getRegisterData(authData);
+    }
 
-      const gaslessData = this.abiCoder.encode(
-        ['tuple(bytes funcData, uint8 txType)'],
-        [
-          {
-            funcData: this.abiCoder.encode(
-              [
-                'tuple(bytes32 hashedUsername, bytes credentialId, tuple(uint8 kty, int8 alg, uint8 crv, uint256 x, uint256 y) pubkey, bytes32 optionalPassword)',
-              ],
-              [registerData]
-            ),
-            txType: 0,
-          },
-        ]
-      );
+    const gaslessData = this.abiCoder.encode(
+      ['tuple(bytes funcData, uint8 txType)'],
+      [
+        {
+          funcData: this.abiCoder.encode(
+            [
+              'tuple(bytes32 hashedUsername, bytes credentialId, tuple(uint8 kty, int8 alg, uint8 crv, uint256 x, uint256 y) pubkey, bytes32 optionalPassword)',
+            ],
+            [registerData]
+          ),
+          txType: 0,
+        },
+      ]
+    );
 
-      const gasPrice = (await this.sapphireProvider.getFeeData()).gasPrice;
-      const nonce = await this.sapphireProvider.getTransactionCount(
-        await this.accountManagerContract.gaspayingAddress()
-      );
+    const gasPrice = (await this.sapphireProvider.getFeeData()).gasPrice;
+    const nonce = await this.sapphireProvider.getTransactionCount(
+      await this.accountManagerContract.gaspayingAddress()
+    );
 
-      /**
-       * @TODO Get signature from backend.
-       * 1st request: GET {{Apillon API url}}/oasis/session-token
-       * 2nd request: POST {{Apillon API url}}/oasis/signature
-       *    {
-       *      token: get from 1st request,
-       *      data: gaslessData
-       *    }
-       * Use the signature for the signedTx.
-       *
-       * @TODO @Vinko 2nd request should return gasLimit & timestamp as well?
-       */
+    /**
+     * @TODO Get signature from backend.
+     * 1st request: GET {{Apillon API url}}/oasis/session-token
+     * 2nd request: POST {{Apillon API url}}/oasis/signature
+     *    {
+     *      token: get from 1st request,
+     *      data: gaslessData
+     *    }
+     * Use the signature for the signedTx.
+     *
+     * @TODO @Vinko 2nd request should return gasLimit & timestamp as well?
+     */
 
-      // if (!signature) {
-      //   throw new Error('Cannot get dataHash signature');
-      // }
+    // if (!signature) {
+    //   throw new Error('Cannot get dataHash signature');
+    // }
 
-      const signedTx = await this.accountManagerContract.generateGaslessTx(
-        gaslessData,
-        nonce as any,
-        gasPrice as any
-        // gasLimit as any, // gas limit
-        // timestamp as any,
-        // signature
-      );
+    const signedTx = await this.accountManagerContract.generateGaslessTx(
+      gaslessData,
+      nonce as any,
+      gasPrice as any
+      // gasLimit as any, // gas limit
+      // timestamp as any,
+      // signature
+    );
 
-      const txHash = await this.sapphireProvider.send('eth_sendRawTransaction', [signedTx]);
+    const txHash = await this.sapphireProvider.send('eth_sendRawTransaction', [signedTx]);
 
-      this.lastAccountStrategy = strategy;
-      this.lastAccountUsername = authData.username;
+    this.lastAccountStrategy = strategy;
+    this.lastAccountUsername = authData.username;
 
-      if (await this.waitForTxReceipt(txHash)) {
-        return await this.getAccountAddress(authData.username);
-      }
-    } catch (e) {
-      console.error(e);
+    if (await this.waitForTxReceipt(txHash)) {
+      return await this.getAccountAddress(authData.username);
     }
   }
 
@@ -184,60 +174,56 @@ class OasisAppWallet {
    */
   async authenticate(strategy: AuthStrategyName, authData: AuthData) {
     if (!this.sapphireProvider) {
-      throw new Error('Sapphire provider not initialized');
+      abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
     }
 
     if (!this.accountManagerContract) {
-      throw new Error('Account manager contract not initialized');
+      abort('ACCOUNT_MANAGER_CONTRACT_NOT_INITIALIZED');
     }
 
     if (!authData.username) {
-      throw new Error('No username');
+      abort('NO_USERNAME');
     }
 
     const RANDOM_STRING = '0x000000000000000000000000000000000000000000000000000000000000DEAD';
 
-    try {
-      const hashedUsername = await getHashedUsername(authData.username);
+    const hashedUsername = await getHashedUsername(authData.username);
 
-      const AC = new ethers.Interface(AccountAbi);
-      const data = AC.encodeFunctionData('sign', [RANDOM_STRING]);
+    const AC = new ethers.Interface(AccountAbi);
+    const data = AC.encodeFunctionData('sign', [RANDOM_STRING]);
 
-      const loginData = await this.getProxyForStrategy(strategy, data, {
-        ...authData,
-        hashedUsername,
-      });
+    const loginData = await this.getProxyForStrategy(strategy, data, {
+      ...authData,
+      hashedUsername,
+    });
 
-      if (!loginData) {
-        throw new Error('Login: no proxy data');
-      }
+    if (!loginData) {
+      abort('NO_LOGIN_PROXY_DATA');
+    }
 
-      /**
-       * Get public key from credentials
-       */
-      const [[r, s, v]] = AC.decodeFunctionResult('sign', loginData).toArray();
-      const recoveredPublicKey = ethers.recoverAddress(RANDOM_STRING, {
-        r,
-        s,
-        v,
-      });
+    /**
+     * Get public key from credentials
+     */
+    const [[r, s, v]] = AC.decodeFunctionResult('sign', loginData!).toArray();
+    const recoveredPublicKey = ethers.recoverAddress(RANDOM_STRING, {
+      r,
+      s,
+      v,
+    });
 
-      /**
-       * Get public key for username from account manager contract
-       */
-      const contractRes = await this.accountManagerContract.getAccount(hashedUsername as any);
+    /**
+     * Get public key for username from account manager contract
+     */
+    const contractRes = await this.accountManagerContract.getAccount(hashedUsername as any);
 
-      this.lastAccountStrategy = strategy;
-      this.lastAccountUsername = authData.username;
+    this.lastAccountStrategy = strategy;
+    this.lastAccountUsername = authData.username;
 
-      /**
-       * If keys match -> Auth success, return account addresses
-       */
-      if (contractRes.length > 1 && recoveredPublicKey === contractRes[1]) {
-        return await this.getAccountAddress(authData.username);
-      }
-    } catch (e) {
-      console.error(e);
+    /**
+     * If keys match -> Auth success, return account addresses
+     */
+    if (contractRes.length > 1 && recoveredPublicKey === contractRes[1]) {
+      return await this.getAccountAddress(authData.username);
     }
   }
 
@@ -248,11 +234,11 @@ class OasisAppWallet {
    */
   async getAccountAddress(username?: string) {
     if (!this.sapphireProvider) {
-      throw new Error('Sapphire provider not initialized');
+      abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
     }
 
     if (!this.accountManagerContract) {
-      throw new Error('Account manager contract not initialized');
+      abort('ACCOUNT_MANAGER_CONTRACT_NOT_INITIALIZED');
     }
 
     if (!username) {
@@ -263,25 +249,21 @@ class OasisAppWallet {
         };
       }
 
-      throw new Error('No username');
+      abort('NO_USERNAME');
     }
 
-    try {
-      const hashedUsername = await getHashedUsername(username);
+    const hashedUsername = await getHashedUsername(username);
 
-      const userData = await this.accountManagerContract.getAccount(hashedUsername as any);
+    const userData = await this.accountManagerContract.getAccount(hashedUsername as any);
 
-      if (Array.isArray(userData) && userData.length > 1) {
-        this.lastAccountAddress = userData[1] as string;
-        this.lastAccountContractAddress = userData[0] as string;
+    if (Array.isArray(userData) && userData.length > 1) {
+      this.lastAccountAddress = userData[1] as string;
+      this.lastAccountContractAddress = userData[0] as string;
 
-        return {
-          publicAddress: userData[1] as string,
-          accountContractAddress: userData[0] as string,
-        };
-      }
-    } catch (e) {
-      console.error(e);
+      return {
+        publicAddress: userData[1] as string,
+        accountContractAddress: userData[0] as string,
+      };
     }
   }
 
@@ -316,71 +298,67 @@ class OasisAppWallet {
   // #region Transactions
   async signMessage(params: SignMessageParams) {
     if (!this.sapphireProvider) {
-      throw new Error('Sapphire provider not initialized');
+      abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
     }
 
-    try {
-      const AC = new ethers.Interface(AccountAbi);
+    const AC = new ethers.Interface(AccountAbi);
 
-      let data = params.data || '';
-      const originalMessage = params.message;
+    let data = params.data || '';
+    const originalMessage = params.message;
 
-      if (!data || params.mustConfirm) {
-        if (typeof params.message === 'string') {
-          params.message = ethers.encodeBytes32String(params.message);
-        }
-
-        data = AC.encodeFunctionData('sign', [params.message]);
-
-        /**
-         * Emits 'signatureRequest' if confirmation is needed.
-         * Handle confirmation in UI part of app (call this method again w/o `mustConfirm`).
-         */
-        if (params.mustConfirm) {
-          return await new Promise<string>(resolve => {
-            this.events.emit('signatureRequest', {
-              ...params,
-              data,
-              message: originalMessage,
-              mustConfirm: false,
-              resolve,
-            });
-          });
-        }
+    if (!data || params.mustConfirm) {
+      if (typeof params.message === 'string') {
+        params.message = ethers.encodeBytes32String(params.message);
       }
 
-      if (!params.authData) {
-        throw new Error('Authentication data not provided');
-      }
+      data = AC.encodeFunctionData('sign', [params.message]);
 
       /**
-       * Authenticate user and sign message
+       * Emits 'signatureRequest' if confirmation is needed.
+       * Handle confirmation in UI part of app (call this method again w/o `mustConfirm`).
        */
-      const res = await this.getProxyForStrategy(
-        params.strategy || this.lastAccountStrategy,
-        data,
-        params.authData
-      );
-
-      if (res) {
-        const [signedRSV] = AC.decodeFunctionResult('sign', res).toArray();
-
-        if (Array.isArray(signedRSV) && signedRSV.length > 2) {
-          const signedMsg = ethers.Signature.from({
-            r: signedRSV[0],
-            s: signedRSV[1],
-            v: signedRSV[2],
-          }).serialized;
-
-          if (params.resolve) {
-            params.resolve(signedMsg);
-          }
-
-          return signedMsg;
-        }
+      if (params.mustConfirm) {
+        return await new Promise<string>(resolve => {
+          this.events.emit('signatureRequest', {
+            ...params,
+            data,
+            message: originalMessage,
+            mustConfirm: false,
+            resolve,
+          });
+        });
       }
-    } catch (e) {
-      console.error(e);
+    }
+
+    if (!params.authData) {
+      abort('AUTHENTICATION_DATA_NOT_PROVIDED');
+    }
+
+    /**
+     * Authenticate user and sign message
+     */
+    const res = await this.getProxyForStrategy(
+      params.strategy || this.lastAccountStrategy,
+      data,
+      params.authData!
+    );
+
+    if (res) {
+      const [signedRSV] = AC.decodeFunctionResult('sign', res).toArray();
+
+      if (Array.isArray(signedRSV) && signedRSV.length > 2) {
+        const signedMsg = ethers.Signature.from({
+          r: signedRSV[0],
+          s: signedRSV[1],
+          v: signedRSV[2],
+        }).serialized;
+
+        if (params.resolve) {
+          params.resolve(signedMsg);
+        }
+
+        return signedMsg;
+      }
     }
   }
 
@@ -434,35 +412,31 @@ class OasisAppWallet {
     }
 
     if (!params.authData) {
-      throw new Error('Authentication data not provided');
+      abort('AUTHENTICATION_DATA_NOT_PROVIDED');
     }
 
-    try {
-      const AC = new ethers.Interface(AccountAbi);
-      const data = AC.encodeFunctionData('signEIP155', [params.tx]);
+    const AC = new ethers.Interface(AccountAbi);
+    const data = AC.encodeFunctionData('signEIP155', [params.tx]);
 
-      /**
-       * Authenticate user and sign transaction
-       */
-      const res = await this.getProxyForStrategy(params.strategy, data, params.authData);
+    /**
+     * Authenticate user and sign transaction
+     */
+    const res = await this.getProxyForStrategy(params.strategy, data, params.authData!);
 
-      if (res) {
-        const [signedTxData] = AC.decodeFunctionResult('signEIP155', res).toArray();
+    if (res) {
+      const [signedTxData] = AC.decodeFunctionResult('signEIP155', res).toArray();
 
-        if (params.resolve) {
-          params.resolve({
-            signedTxData,
-            chainId,
-          });
-        }
-
-        return {
+      if (params.resolve) {
+        params.resolve({
           signedTxData,
           chainId,
-        };
+        });
       }
-    } catch (e) {
-      console.error(e);
+
+      return {
+        signedTxData,
+        chainId,
+      };
     }
   }
 
@@ -529,69 +503,65 @@ class OasisAppWallet {
     }
 
     if (!params.authData) {
-      throw new Error('Authentication data not provided');
+      abort('AUTHENTICATION_DATA_NOT_PROVIDED');
     }
 
-    const accountAddresses = await this.getAccountAddress(params.authData.username);
+    const accountAddresses = await this.getAccountAddress(params.authData!.username);
 
     if (!accountAddresses?.publicAddress) {
-      throw new Error(`Couldn't get account address`);
+      abort('CANT_GET_ACCOUNT_ADDRESS');
     }
 
-    try {
-      /**
-       * Encode contract data
-       */
-      const contractInterface = new ethers.Interface(params.contractAbi);
+    /**
+     * Encode contract data
+     */
+    const contractInterface = new ethers.Interface(params.contractAbi);
 
-      const contractData = contractInterface.encodeFunctionData(
-        params.contractFunctionName,
-        params.contractFunctionValues
-      );
+    const contractData = contractInterface.encodeFunctionData(
+      params.contractFunctionName,
+      params.contractFunctionValues
+    );
 
-      /**
-       * Prepare transaction
-       */
-      const tx = await new ethers.VoidSigner(
-        accountAddresses.publicAddress,
-        this.getRpcProviderForChainId(chainId)
-      ).populateTransaction({
-        from: accountAddresses.publicAddress,
-        to: params.contractAddress,
-        gasLimit: 1_000_000,
-        value: 0,
-        data: contractData,
-      });
-      tx.gasPrice = 20_000_000_000; // 20 gwei
+    /**
+     * Prepare transaction
+     */
+    const tx = await new ethers.VoidSigner(
+      accountAddresses!.publicAddress,
+      this.getRpcProviderForChainId(chainId)
+    ).populateTransaction({
+      from: accountAddresses!.publicAddress,
+      to: params.contractAddress,
+      gasLimit: 1_000_000,
+      value: 0,
+      data: contractData,
+    });
+    tx.gasPrice = 20_000_000_000; // 20 gwei
 
-      /**
-       * Encode tx data and authenticate it with selected auth strategy through sapphire "Account Manager"
-       */
-      const AC = new ethers.Interface(AccountAbi);
-      const data = AC.encodeFunctionData('signEIP155', [tx]);
-      const res = await this.getProxyForStrategy(
-        params.strategy || this.lastAccountStrategy,
-        data,
-        params.authData
-      );
+    /**
+     * Encode tx data and authenticate it with selected auth strategy through sapphire "Account Manager"
+     */
+    const AC = new ethers.Interface(AccountAbi);
+    const data = AC.encodeFunctionData('signEIP155', [tx]);
+    const res = await this.getProxyForStrategy(
+      params.strategy || this.lastAccountStrategy,
+      data,
+      params.authData!
+    );
 
-      if (res) {
-        const [signedTxData] = AC.decodeFunctionResult('signEIP155', res).toArray();
+    if (res) {
+      const [signedTxData] = AC.decodeFunctionResult('signEIP155', res).toArray();
 
-        if (params.resolve) {
-          params.resolve({
-            signedTxData,
-            chainId,
-          });
-        }
-
-        return {
+      if (params.resolve) {
+        params.resolve({
           signedTxData,
           chainId,
-        };
+        });
       }
-    } catch (e) {
-      console.error(e);
+
+      return {
+        signedTxData,
+        chainId,
+      };
     }
   }
 
@@ -603,16 +573,12 @@ class OasisAppWallet {
     const chainId = this.validateChainId(params.chainId);
     const ethProvider = this.getRpcProviderForChainId(chainId);
 
-    try {
-      const contract = new ethers.Contract(params.contractAddress, params.contractAbi, ethProvider);
+    const contract = new ethers.Contract(params.contractAddress, params.contractAbi, ethProvider);
 
-      if (params.contractFunctionValues) {
-        return await contract[params.contractFunctionName](...params.contractFunctionValues);
-      } else {
-        return await contract[params.contractFunctionName]();
-      }
-    } catch (e) {
-      console.error(e);
+    if (params.contractFunctionValues) {
+      return await contract[params.contractFunctionName](...params.contractFunctionValues);
+    } else {
+      return await contract[params.contractFunctionName]();
     }
   }
   // #endregion
@@ -623,7 +589,7 @@ class OasisAppWallet {
    */
   async getProxyForStrategy(strategy: AuthStrategyName, data: any, authData: AuthData) {
     if (!this.accountManagerContract) {
-      throw new Error('Account manager contract not initialized');
+      abort('ACCOUNT_MANAGER_CONTRACT_NOT_INITIALIZED');
     }
 
     if (strategy === 'password') {
@@ -646,7 +612,7 @@ class OasisAppWallet {
    */
   async waitForTxReceipt(txHash: string, provider?: ethers.JsonRpcProvider) {
     if (!provider && !this.sapphireProvider) {
-      throw new Error('Sapphire provider not initialized');
+      abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
     }
 
     const maxRetries = 60;
@@ -681,9 +647,9 @@ class OasisAppWallet {
    */
   validateChainId(chainId?: number) {
     if (chainId && !networkIdIsSapphire(chainId) && !this.rpcUrls[chainId]) {
-      throw new Error('No RPC url configured for selected chainId');
+      abort('NO_RPC_URL_CONFIGURED_FOR_SELECTED_CHAINID');
     } else if (!chainId && !!this.defaultNetworkId && !this.rpcUrls[this.defaultNetworkId]) {
-      throw new Error('No RPC url configured for default chainId');
+      abort('NO_RPC_URL_CONFIGURED_FOR_SELECTED_CHAINID');
     }
 
     /**
@@ -706,7 +672,7 @@ class OasisAppWallet {
        * On sapphire network, use sapphire provider
        */
       if (!this.sapphireProvider) {
-        throw new Error('Sapphire provider not initialized');
+        abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
       }
 
       return this.sapphireProvider;
@@ -720,7 +686,7 @@ class OasisAppWallet {
       this.rpcProviders[chainId] = ethProvider;
 
       if (!ethProvider) {
-        throw new Error('Cross chain provider not initialized');
+        abort('CROSS_CHAIN_PROVIDER_NOT_INITIALIZED');
       }
 
       return ethProvider;

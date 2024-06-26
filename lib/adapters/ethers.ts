@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { getOasisAppWallet } from '../utils';
+import { abort, getOasisAppWallet } from '../utils';
 import OasisAppWallet from '..';
 
 class OasisEthersSigner extends ethers.AbstractSigner<ethers.JsonRpcProvider> {
@@ -13,10 +13,10 @@ class OasisEthersSigner extends ethers.AbstractSigner<ethers.JsonRpcProvider> {
     const w = getOasisAppWallet();
 
     if (!w) {
-      throw new Error('Oasis wallet not initialized');
+      abort('OASIS_WALLET_NOT_INITIALIZED');
     }
 
-    this.wallet = w;
+    this.wallet = w!;
     this.provider = provider;
   }
 

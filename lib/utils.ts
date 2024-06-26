@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 import OasisAppWallet from '.';
-import { SapphireMainnet, SapphireTestnet, WindowId } from './constants';
+import { SapphireMainnet, SapphireTestnet, WindowId, Errors } from './constants';
 import { pbkdf2Sync } from 'pbkdf2';
 import { AppParams } from './types';
 
@@ -42,4 +42,10 @@ export async function getHashedUsername(name = '') {
 
 export function networkIdIsSapphire(id: number) {
   return [SapphireTestnet, SapphireMainnet].includes(id);
+}
+
+export function abort(e: keyof typeof Errors, message = 'Error') {
+  const err = new Error(message);
+  err.name = 'OAW_' + e;
+  throw err;
 }

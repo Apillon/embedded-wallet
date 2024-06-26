@@ -58,6 +58,7 @@ export type PlainTransactionParams = {
   strategy: AuthStrategyName;
   authData?: AuthData;
   tx: ethers.TransactionLike<ethers.AddressLike>;
+  label?: string;
   mustConfirm?: boolean;
   resolve?: (result: { signedTxData: any; chainId?: number }) => void;
 };
@@ -66,8 +67,8 @@ export type SignMessageParams = {
   strategy?: AuthStrategyName;
   authData?: AuthData;
   message: ethers.BytesLike | string;
-  mustConfirm?: boolean;
   data?: string;
+  mustConfirm?: boolean;
   resolve?: (value: string) => void;
 };
 
@@ -82,6 +83,7 @@ export type ContractReadParams = {
 export type ContractWriteParams = {
   strategy?: AuthStrategyName;
   authData?: AuthData;
+  label?: string;
   mustConfirm?: boolean;
   resolve?: (result: { signedTxData: any; chainId?: number }) => void;
 } & ContractReadParams;

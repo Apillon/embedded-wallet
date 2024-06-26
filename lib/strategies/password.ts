@@ -2,71 +2,64 @@ import { AuthData, AuthStrategy, WebauthnContract } from '../types';
 import { secp256r1 } from '@noble/curves/p256';
 import { bytesToHex } from '@noble/curves/abstract/utils';
 import { ethers } from 'ethers';
-import { getHashedUsername } from '../utils';
+import { abort, getHashedUsername } from '../utils';
 
 class PasswordStrategy implements AuthStrategy {
   abiCoder = ethers.AbiCoder.defaultAbiCoder();
 
   async getRegisterData(authData: AuthData) {
-    try {
-      if (!authData.username) {
-        throw new Error('No username');
-      }
-
-      if (!authData.password) {
-        throw new Error('No password');
-      }
-
-      const hashedUsername = await getHashedUsername(authData.username);
-
-      if (!hashedUsername) {
-        throw new Error('Could not hash username');
-      }
-
-      const keyPair = this.generateNewKeypair();
-
-      return {
-        hashedUsername,
-        credentialId: keyPair.credentialId,
-        pubkey: {
-          kty: 2, // Elliptic Curve format
-          alg: -7, // ES256 algorithm
-          crv: 1, // P-256 curve
-          x: keyPair.decoded_x,
-          y: keyPair.decoded_y,
-        },
-        optionalPassword: ethers.encodeBytes32String(authData.password),
-      };
-    } catch (e) {
-      console.error(e);
+    if (!authData.username) {
+      abort('NO_USERNAME');
     }
+
+    if (!authData.password) {
+      abort('NO_PASSWORD');
+    }
+
+    const hashedUsername = await getHashedUsername(authData.username);
+
+    if (!hashedUsername) {
+      abort('CANT_HASH_USERNAME');
+      return;
+    }
+
+    const keyPair = this.generateNewKeypair();
+
+    return {
+      hashedUsername,
+      credentialId: keyPair.credentialId,
+      pubkey: {
+        kty: 2, // Elliptic Curve format
+        alg: -7, // ES256 algorithm
+        crv: 1, // P-256 curve
+        x: keyPair.decoded_x,
+        y: keyPair.decoded_y,
+      },
+      optionalPassword: ethers.encodeBytes32String(authData.password!),
+    };
   }
 
   async getProxyResponse(WAC: WebauthnContract, data: string, authData: AuthData) {
-    try {
-      if (!authData.username) {
-        throw new Error('No username');
-      }
-
-      if (!authData.password) {
-        throw new Error('No password');
-      }
-
-      const hashedUsername = await getHashedUsername(authData.username);
-
-      if (!hashedUsername) {
-        throw new Error('Could not hash username');
-      }
-
-      const digest = ethers.solidityPackedKeccak256(
-        ['bytes32', 'bytes'],
-        [ethers.encodeBytes32String(authData.password), data]
-      );
-
-      return await WAC.proxyViewPassword(hashedUsername as any, digest, data);
-    } catch (e) {
-      console.error(e);
+    if (!authData.username) {
+      abort('NO_USERNAME');
     }
+
+    if (!authData.password) {
+      abort('NO_PASSWORD');
+    }
+
+    const hashedUsername = await getHashedUsername(authData.username);
+
+    if (!hashedUsername) {
+      abort('CANT_HASH_USERNAME');
+    }
+
+    const digest = ethers.solidityPackedKeccak256(
+      ['bytes32', 'bytes'],
+      [ethers.encodeBytes32String(authData.password!), data]
+    );
+
+    return await WAC.proxyViewPassword(hashedUsername as any, digest, data);
   }
 
   generateNewKeypair() {

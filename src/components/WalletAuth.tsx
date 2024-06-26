@@ -39,7 +39,7 @@ export default function WalletAuth() {
       } else {
         /**
          * Register
-         * 1. Send email
+         * 1. Send email @TODO
          * 2. Enter code
          * 3. Setup passkey
          */
