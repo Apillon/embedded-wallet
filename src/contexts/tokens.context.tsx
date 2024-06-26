@@ -31,13 +31,6 @@ type ContextActions =
       payload: { key: keyof ReturnType<typeof initialState>; value: any };
     }
   | {
-      type: 'addToken';
-      payload: {
-        owner: string;
-        token: TokenInfo;
-      };
-    }
-  | {
       type: 'updateToken';
       payload: {
         owner: string;
@@ -56,17 +49,6 @@ function reducer(state: ContextState, action: ContextActions) {
       return {
         ...state,
         [action.payload.key]: action.payload.value,
-      };
-    case 'addToken':
-      return {
-        ...state,
-        list: {
-          ...state.list,
-          [action.payload.owner]: [
-            ...(state.list[action.payload.owner] || []),
-            action.payload.token,
-          ],
-        },
       };
     case 'updateToken': {
       const newTokens = [...(state.list[action.payload.owner] || [])];

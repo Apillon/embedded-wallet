@@ -46,6 +46,6 @@ export function networkIdIsSapphire(id: number) {
 
 export function abort(e: keyof typeof Errors, message = 'Error') {
   const err = new Error(message);
-  err.name = 'OAW_' + e;
+  err.name = Errors[e];
   throw err;
 }

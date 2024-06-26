@@ -7,7 +7,7 @@ import { ethers } from 'ethers';
 import QRCode from 'react-qr-code';
 
 export default function WalletTokens() {
-  const { state, networksById, setScreen, wallet } = useWalletContext();
+  const { state, networksById, setScreen, wallet, handleError } = useWalletContext();
   const { state: tokens } = useTokensContext();
 
   const [receiverAddress, setReceiverAddress] = useState('');
@@ -69,6 +69,7 @@ export default function WalletTokens() {
         }
 
         setLoading(true);
+        handleError();
 
         try {
           await wallet.signContractWrite({
@@ -82,7 +83,7 @@ export default function WalletTokens() {
             ],
           });
         } catch (e) {
-          console.error(e);
+          handleError(e);
         }
 
         setLoading(false);
@@ -124,7 +125,7 @@ export default function WalletTokens() {
 }
 
 function SelectToken({ nativeToken }: { nativeToken: TokenInfo }) {
-  const { state, setScreen } = useWalletContext();
+  const { state, setScreen, handleError } = useWalletContext();
   const { state: tokens, dispatch, getTokenDetails } = useTokensContext();
 
   const [address, setAddress] = useState('');
@@ -155,6 +156,7 @@ function SelectToken({ nativeToken }: { nativeToken: TokenInfo }) {
           }
 
           setLoading(true);
+          handleError();
 
           try {
             const res = await getTokenDetails(address);
@@ -163,10 +165,9 @@ function SelectToken({ nativeToken }: { nativeToken: TokenInfo }) {
               throw new Error('Could not get token details');
             }
 
-            dispatch({ type: 'addToken', payload: { owner: state.address, token: res } });
+            dispatch({ type: 'updateToken', payload: { owner: state.address, token: res } });
           } catch (e) {
-            console.error(e);
-            console.error('Could not get token details');
+            handleError(e);
           }
 
           setLoading(false);

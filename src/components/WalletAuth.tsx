@@ -5,7 +5,7 @@ import Btn from './Btn';
 import { AuthStrategyName } from '../../lib/types';
 
 export default function WalletAuth() {
-  const { dispatch, defaultNetworkId } = useWalletContext();
+  const { dispatch, defaultNetworkId, handleError } = useWalletContext();
 
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,6 +21,7 @@ export default function WalletAuth() {
     const wallet = getOasisAppWallet();
 
     setLoading(true);
+    handleError();
 
     try {
       if (await wallet?.userExists(username)) {
@@ -46,7 +47,7 @@ export default function WalletAuth() {
         setIsCodeScreen(true);
       }
     } catch (e) {
-      console.error(e);
+      handleError(e);
     }
 
     setLoading(false);
@@ -83,6 +84,7 @@ export default function WalletAuth() {
         loading={loading}
         onConfirm={async () => {
           setLoading(true);
+          handleError();
 
           try {
             const wallet = getOasisAppWallet();
@@ -93,7 +95,7 @@ export default function WalletAuth() {
               setupUserInfo({ username, address: res.publicAddress, authStrategy: 'passkey' });
             }
           } catch (e) {
-            console.error(e);
+            handleError(e);
           }
 
           setLoading(false);
@@ -131,6 +133,7 @@ function ConfirmEmail({
   onConfirm?: (code: string) => void;
   onLoading?: (val: boolean) => void;
 }) {
+  const { handleError } = useWalletContext();
   const [code, setCode] = useState('');
   const [isCodeSubmitted, setIsCodeSubmitted] = useState(false);
 
@@ -151,6 +154,7 @@ function ConfirmEmail({
 
   async function onSubmit() {
     onLoading?.(true);
+    handleError();
 
     try {
       /**
@@ -164,7 +168,7 @@ function ConfirmEmail({
 
       onConfirm?.(code);
     } catch (e) {
-      console.error(e);
+      handleError(e);
 
       onLoading?.(false);
     }

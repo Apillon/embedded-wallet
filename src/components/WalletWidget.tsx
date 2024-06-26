@@ -18,7 +18,7 @@ type AppProps = {
 };
 
 function Wallet({ disableAutoBroadcastAfterSign = false }: AppProps) {
-  const { state, wallet, setScreen } = useWalletContext();
+  const { state, wallet, setScreen, handleError } = useWalletContext();
   const { dispatch: dispatchTx } = useTransactionsContext();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -154,6 +154,8 @@ function Wallet({ disableAutoBroadcastAfterSign = false }: AppProps) {
           onApprove={async () => {
             if (approveParams.current) {
               try {
+                handleError();
+
                 if (approveParams.current.signature) {
                   await wallet?.signMessage({
                     ...approveParams.current.signature,
@@ -207,7 +209,7 @@ function Wallet({ disableAutoBroadcastAfterSign = false }: AppProps) {
                   }
                 }
               } catch (e) {
-                console.error(e);
+                handleError(e);
               }
             }
           }}

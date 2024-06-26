@@ -1,6 +1,6 @@
 import { ReactNode, createContext, useContext, useEffect, useReducer, useState } from 'react';
 import { AuthStrategyName, NetworkConfig } from '../../lib/types';
-import { WebStorageKeys } from '../../lib/constants';
+import { ErrorMessages, WebStorageKeys } from '../../lib/constants';
 import OasisAppWallet from '../../lib';
 import { initializeOnWindow } from '../../lib/utils';
 
@@ -22,6 +22,7 @@ const initialState = (defaultNetworkId = 0) => ({
   authStrategy: 'passkey' as AuthStrategyName,
   networkId: defaultNetworkId,
   walletScreen: 'main' as WalletScreens,
+  displayedError: '',
 });
 
 type ContextState = ReturnType<typeof initialState>;
@@ -70,6 +71,7 @@ const WalletContext = createContext<
       setWallet: (wallet: OasisAppWallet) => void;
       reloadUserBalance: (walletRef?: OasisAppWallet) => void;
       setScreen: (screen: WalletScreens) => void;
+      handleError: (e?: any) => void;
     }
   | undefined
 >(undefined);
@@ -99,13 +101,10 @@ function WalletProvider({
       /**
        * Exclude some state variables from being saved
        */
-      // const {
-      //   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      //   address,
-      //   ...save
-      // } = state;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { walletScreen, displayedError, ...save } = state;
 
-      localStorage.setItem(WebStorageKeys.WALLET_CONTEXT, JSON.stringify(state));
+      localStorage.setItem(WebStorageKeys.WALLET_CONTEXT, JSON.stringify(save));
     }
   }, [state]);
 
@@ -201,6 +200,20 @@ function WalletProvider({
         reloadUserBalance,
         setScreen: (s: WalletScreens) =>
           dispatch({ type: 'setValue', payload: { key: 'walletScreen', value: s } }),
+        handleError: (e?: any) => {
+          if (e) {
+            console.error(e);
+
+            if (e?.name || e?.message) {
+              dispatch({
+                type: 'setValue',
+                payload: { key: 'displayedError', value: ErrorMessages[e.name] || e.message },
+              });
+            }
+          } else {
+            dispatch({ type: 'setValue', payload: { key: 'displayedError', value: '' } });
+          }
+        },
       }}
     >
       {children}

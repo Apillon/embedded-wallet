@@ -11,6 +11,7 @@ export default {
 
       yellow: '#F9FF73',
       blue: '#78DCE8',
+      red: '#FF6188',
       bright: '#F0F2DA',
       offwhite: '#F0F2DA',
       brightdark: '#313442',
