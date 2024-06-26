@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { WalletScreens, useWalletContext } from '../contexts/wallet.context';
 import { shortHash } from '../lib/helpers';
 import Btn from './Btn';
@@ -6,6 +6,7 @@ import WalletNetworkSelect from './WalletNetworkSelect';
 import WalletTransactions from './WalletTransactions';
 import WalletTokens from './WalletTokens';
 import { TokensProvider } from '../contexts/tokens.context';
+import useCopyToClipboard from '../hooks/useCopyToClipboard';
 
 export default function WalletMain() {
   const { state, dispatch, networksById, setScreen, handleError } = useWalletContext();
@@ -115,20 +116,7 @@ export default function WalletMain() {
 
 function AccountInfo({ className }: { className: string }) {
   const { state } = useWalletContext();
-
-  const [copied, setCopied] = useState(false);
-  let copiedTimeout = null as any;
-
-  function onCopy() {
-    navigator.clipboard.writeText(state.address);
-
-    if (copiedTimeout) {
-      clearTimeout(copiedTimeout);
-    }
-
-    setCopied(true);
-    copiedTimeout = setTimeout(() => setCopied(false), 2000);
-  }
+  const { text: copyText, onCopy } = useCopyToClipboard();
 
   return (
     <div className={className}>
@@ -137,8 +125,8 @@ function AccountInfo({ className }: { className: string }) {
       <p title={state.address} className="text-xl">
         <span className="mr-2">{shortHash(state.address)}</span>
 
-        <button className="text-sm" onClick={() => onCopy()}>
-          {copied ? 'Copied!' : 'Copy'}
+        <button className="text-sm" onClick={() => onCopy(state.address)}>
+          {copyText}
         </button>
       </p>
 

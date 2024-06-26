@@ -5,6 +5,7 @@ import Btn from './Btn';
 import { ERC20Abi } from '../../lib/abi';
 import { ethers } from 'ethers';
 import QRCode from 'react-qr-code';
+import useCopyToClipboard from '../hooks/useCopyToClipboard';
 
 export default function WalletTokens() {
   const { state, networksById, setScreen, wallet, handleError } = useWalletContext();
@@ -216,20 +217,7 @@ function SelectToken({ nativeToken }: { nativeToken: TokenInfo }) {
 
 function ReceiveToken() {
   const { state } = useWalletContext();
-
-  const [copied, setCopied] = useState(false);
-  let copiedTimeout = null as any;
-
-  function onCopy(val: string) {
-    navigator.clipboard.writeText(val);
-
-    if (copiedTimeout) {
-      clearTimeout(copiedTimeout);
-    }
-
-    setCopied(true);
-    copiedTimeout = setTimeout(() => setCopied(false), 2000);
-  }
+  const { text: copyText, onCopy } = useCopyToClipboard();
 
   if (!state.address) {
     return <></>;
@@ -249,7 +237,7 @@ function ReceiveToken() {
       <input readOnly value={state.address} className="w-full mb-4" />
 
       <Btn className="w-full" onClick={() => onCopy(state.address)}>
-        {copied ? 'Copied!' : 'Copy'}
+        {copyText}
       </Btn>
     </div>
   );

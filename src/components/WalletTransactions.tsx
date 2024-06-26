@@ -1,9 +1,9 @@
-import { useState } from 'react';
 import { TransactionItem } from '../../lib/types';
 import { useTransactionsContext } from '../contexts/transactions.context';
 import { useWalletContext } from '../contexts/wallet.context';
 import { shortHash } from '../lib/helpers';
 import clsx from 'clsx';
+import useCopyToClipboard from '../hooks/useCopyToClipboard';
 
 export default function WalletTransactions() {
   const {
@@ -29,19 +29,7 @@ export default function WalletTransactions() {
 }
 
 function Transaction({ tx }: { tx: TransactionItem }) {
-  const [copied, setCopied] = useState(false);
-  let copiedTimeout = null as any;
-
-  function onCopy(val: string) {
-    navigator.clipboard.writeText(val);
-
-    if (copiedTimeout) {
-      clearTimeout(copiedTimeout);
-    }
-
-    setCopied(true);
-    copiedTimeout = setTimeout(() => setCopied(false), 2000);
-  }
+  const { text: copyText, onCopy } = useCopyToClipboard();
 
   return (
     <div className="rounded-md bg-offwhite/5 px-2 py-1">
@@ -68,7 +56,7 @@ function Transaction({ tx }: { tx: TransactionItem }) {
         <span className="text-sm">
           {shortHash(tx.hash)}{' '}
           <button className="text-xs" onClick={() => onCopy(tx.hash)}>
-            {copied ? 'Copied!' : 'Copy'}
+            {copyText}
           </button>
         </span>
 
