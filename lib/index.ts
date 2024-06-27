@@ -389,7 +389,7 @@ class OasisAppWallet {
     /**
      * Add tx params needed for write tx
      */
-    if (params.tx.type === 2) {
+    if (params.tx.type === 2 || params.tx.type === 'eip1559') {
       if (!params.tx.gasPrice) {
         /**
          * @TODO Calculate this?

@@ -1,12 +1,13 @@
 import WalletWidget from '../components/WalletWidget';
 import Test2 from './Test2';
 import Test3 from './Test3';
+import Test4 from './Test4';
 
-export default function App() {
+export default function TestApp() {
   return (
     <div>
       <WalletWidget
-        // disableAutoBroadcastAfterSign
+        disableAutoBroadcastAfterSign
         accountManagerAddress="0x5C357DaFfe6b1016C0c9A5607367E8f47765D4bC"
         // accountManagerAddress="0xF35C3eB93c6D3764A7D5efC6e9DEB614779437b1"
         defaultNetworkId={1287}
@@ -58,7 +59,10 @@ export default function App() {
       <hr className="my-6" />
 
       <Test2 />
+      <hr className="my-6" />
       <Test3 />
+      <hr className="my-6" />
+      <Test4 />
     </div>
   );
 }

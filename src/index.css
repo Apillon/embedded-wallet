@@ -34,7 +34,7 @@
 }
 
 #oaw-wallet-widget ::selection {
-  @apply text-blue bg-yellow/25;
+  @apply text-primary bg-offwhite;
 }
 
 @keyframes rotate {
