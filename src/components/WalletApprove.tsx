@@ -3,6 +3,7 @@ import { ContractReadParams } from '../../lib/types';
 import Btn from './Btn';
 import { useState } from 'react';
 import { useWalletContext } from '../contexts/wallet.context';
+import WalletError from './WalletError';
 
 export type DisplayedContractParams = Pick<
   ContractReadParams,
@@ -89,6 +90,9 @@ export default function WalletApprove({
           </div>
         </div>
       )}
+
+      {/* Error */}
+      <WalletError show className="mt-6 -mb-6" />
 
       <div className="mt-12 flex gap-4">
         <Btn
