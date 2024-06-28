@@ -387,9 +387,17 @@ class OasisAppWallet {
     }
 
     /**
+     * Change viem specific properties to ethers spec
+     */
+    if ((params.tx.type as any) === 'eip1559') {
+      params.tx.type = 2;
+      params.tx.gasLimit = (params.tx as any).gas;
+    }
+
+    /**
      * Add tx params needed for write tx
      */
-    if (params.tx.type === 2 || params.tx.type === 'eip1559') {
+    if (params.tx.type === 2) {
       if (!params.tx.gasPrice) {
         /**
          * @TODO Calculate this?
