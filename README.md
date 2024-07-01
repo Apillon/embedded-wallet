@@ -14,6 +14,28 @@ The build is divided into `sdk` and `ui` parts.
 
 To test the build, run `npm run build`, then include "Package test" region in `./index.html` and run `npm run dev`.
 
+## Using SDK from github private repo (TEMP)
+
+### Option 1
+
+Clone code to a private repo you have access to.
+
+Get an access token for your github account: Settings > Developer Settings > Personal access tokens > Generate new token > classic token (https://github.com/settings/tokens)
+
+Add path to package.json and run `npm i`.
+
+```json
+"dependencies": {
+  "oasis-sdk": "git+https://simon:ghp_access_token@github.com/simon/oasis-wallet#main"
+}
+```
+
+### Option 2
+
+Build files, copy `/dist` dir into your project and import sdk locally.
+
+(Can also copy into `node_modules` but it might get overwritten)
+
 ## SDK
 
 SDK is centered around the `OasisAppWallet` class. This class exposes methods for working with Oasis Sapphire chain authentication.
