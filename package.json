@@ -9,6 +9,7 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
+  "main": "./dist/sdk.js",
   "exports": {
     ".": {
       "import": "./dist/sdk.js",
