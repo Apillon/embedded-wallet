@@ -8,7 +8,19 @@ declare type AppParams = {
     signatureCallback?: SignatureCallback;
 };
 
-export declare function initializeApp(activatorSelector?: string, options?: AppParams): void;
+declare type AppProps = {
+    networks?: Network[];
+    disableAutoBroadcastAfterSign?: boolean;
+} & AppParams;
+
+export declare function initializeApp(activatorSelector?: string, options?: AppProps): void;
+
+declare type Network = {
+    name: string;
+    id: number;
+    rpcUrl: string;
+    explorerUrl: string;
+};
 
 declare type NetworkConfig = {
     [networkId: number]: {

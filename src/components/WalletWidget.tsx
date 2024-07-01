@@ -9,7 +9,7 @@ import { AppParams, Events } from '../../lib/types';
 import { TransactionsProvider, useTransactionsContext } from '../contexts/transactions.context';
 import Btn from './Btn';
 
-type AppProps = {
+export type AppProps = {
   networks?: Network[];
   disableAutoBroadcastAfterSign?: boolean;
 } & AppParams;

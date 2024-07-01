@@ -1,10 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { AppParams } from '../lib/types';
-import WalletWidget from './components/WalletWidget';
+import WalletWidget, { AppProps } from './components/WalletWidget';
 import './index.css';
 
-export function initializeApp(activatorSelector?: string, options?: AppParams) {
+export function initializeApp(activatorSelector?: string, options?: AppProps) {
   if (typeof document === 'undefined') {
     console.error('Cannot initialize oasis wallet app UI');
     return;
