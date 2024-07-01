@@ -4,7 +4,7 @@ import { AppParams } from '../lib/types';
 import WalletWidget from './components/WalletWidget';
 import './index.css';
 
-export function initializeApp(activatorSelector: string, options: AppParams) {
+export function initializeApp(activatorSelector?: string, options?: AppParams) {
   if (typeof document === 'undefined') {
     console.error('Cannot initialize oasis wallet app UI');
     return;

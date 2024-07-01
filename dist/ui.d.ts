@@ -8,7 +8,7 @@ declare type AppParams = {
     signatureCallback?: SignatureCallback;
 };
 
-export declare function initializeApp(activatorSelector: string, options: AppParams): void;
+export declare function initializeApp(activatorSelector?: string, options?: AppParams): void;
 
 declare type NetworkConfig = {
     [networkId: number]: {
