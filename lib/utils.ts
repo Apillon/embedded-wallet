@@ -1,14 +1,8 @@
 import { ethers } from 'ethers';
-import OasisAppWallet from '.';
+import { OasisAppWallet } from '.';
 import { SapphireMainnet, SapphireTestnet, WindowId, Errors } from './constants';
 import { pbkdf2Sync } from 'pbkdf2';
 import { AppParams } from './types';
-
-declare global {
-  interface Window {
-    [WindowId]: OasisAppWallet;
-  }
-}
 
 /**
  * Global wallet object.

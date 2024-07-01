@@ -1,4 +1,4 @@
-export const WindowId = 'oasisAppWallet';
+export const WindowId = 'oasisAppWallet'; // update "interface Window" manually in index.ts (.d.ts doesnt replace WindowId on build)
 export const SapphireMainnet = 23294;
 export const SapphireTestnet = 23295;
 

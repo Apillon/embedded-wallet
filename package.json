@@ -18,6 +18,9 @@
     "./ui": {
       "import": "./dist/ui.js",
       "require": "./dist/ui.umd.cjs"
+    },
+    "./css": {
+      "default": "./dist/style.css"
     }
   },
   "dependencies": {

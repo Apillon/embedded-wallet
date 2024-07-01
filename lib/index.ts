@@ -709,3 +709,9 @@ class OasisAppWallet {
 
 export { OasisAppWallet };
 export default OasisAppWallet;
+
+declare global {
+  interface Window {
+    oasisAppWallet: OasisAppWallet;
+  }
+}

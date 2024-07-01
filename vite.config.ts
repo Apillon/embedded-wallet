@@ -7,7 +7,22 @@ import dts from 'vite-plugin-dts';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), nodePolyfills(), dts({ include: ['lib'] })],
+  plugins: [
+    react(),
+    nodePolyfills(),
+    dts({
+      include: ['lib', 'src'],
+      rollupTypes: true,
+      beforeWriteFile(filePath, content) {
+        if (filePath.endsWith('ui.d.ts')) {
+          return {
+            filePath,
+            content: `import { OasisAppWallet } from "./sdk";\n\n` + content,
+          };
+        }
+      },
+    }),
+  ],
 
   build: {
     lib: {
