@@ -80,8 +80,7 @@ function WalletProvider({
   children,
   networks = [],
   defaultNetworkId = 0,
-  sapphireUrl,
-  accountManagerAddress,
+  ...restOfParams
 }: {
   children: ReactNode;
   networks?: Network[];
@@ -132,8 +131,7 @@ function WalletProvider({
 
       if (networks && networks.length) {
         w = initializeOnWindow({
-          sapphireUrl,
-          accountManagerAddress,
+          ...restOfParams,
           defaultNetworkId: state.networkId || defaultNetworkId,
           networkConfig: networks.reduce((acc, x) => {
             acc[x.id] = {
