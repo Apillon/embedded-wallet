@@ -134,40 +134,40 @@ function fr() {
   if (ut)
     return oe;
   ut = 1;
-  var t = Ae, n = Symbol.for("react.element"), a = Symbol.for("react.fragment"), i = Object.prototype.hasOwnProperty, m = t.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner, d = { key: !0, ref: !0, __self: !0, __source: !0 };
-  function v(y, u, g) {
-    var p, f = {}, o = null, c = null;
-    g !== void 0 && (o = "" + g), u.key !== void 0 && (o = "" + u.key), u.ref !== void 0 && (c = u.ref);
-    for (p in u)
-      i.call(u, p) && !d.hasOwnProperty(p) && (f[p] = u[p]);
-    if (y && y.defaultProps)
-      for (p in u = y.defaultProps, u)
-        f[p] === void 0 && (f[p] = u[p]);
-    return { $$typeof: n, type: y, key: o, ref: c, props: f, _owner: m.current };
+  var t = Ae, n = Symbol.for("react.element"), a = Symbol.for("react.fragment"), i = Object.prototype.hasOwnProperty, d = t.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner, h = { key: !0, ref: !0, __self: !0, __source: !0 };
+  function m(v, c, x) {
+    var p, o = {}, u = null, f = null;
+    x !== void 0 && (u = "" + x), c.key !== void 0 && (u = "" + c.key), c.ref !== void 0 && (f = c.ref);
+    for (p in c)
+      i.call(c, p) && !h.hasOwnProperty(p) && (o[p] = c[p]);
+    if (v && v.defaultProps)
+      for (p in c = v.defaultProps, c)
+        o[p] === void 0 && (o[p] = c[p]);
+    return { $$typeof: n, type: v, key: u, ref: f, props: o, _owner: d.current };
   }
-  return oe.Fragment = a, oe.jsx = v, oe.jsxs = v, oe;
+  return oe.Fragment = a, oe.jsx = m, oe.jsxs = m, oe;
 }
 var ie = {}, dt;
 function pr() {
   return dt || (dt = 1, Fe.env.NODE_ENV !== "production" && function() {
-    var t = Ae, n = Symbol.for("react.element"), a = Symbol.for("react.portal"), i = Symbol.for("react.fragment"), m = Symbol.for("react.strict_mode"), d = Symbol.for("react.profiler"), v = Symbol.for("react.provider"), y = Symbol.for("react.context"), u = Symbol.for("react.forward_ref"), g = Symbol.for("react.suspense"), p = Symbol.for("react.suspense_list"), f = Symbol.for("react.memo"), o = Symbol.for("react.lazy"), c = Symbol.for("react.offscreen"), h = Symbol.iterator, S = "@@iterator";
+    var t = Ae, n = Symbol.for("react.element"), a = Symbol.for("react.portal"), i = Symbol.for("react.fragment"), d = Symbol.for("react.strict_mode"), h = Symbol.for("react.profiler"), m = Symbol.for("react.provider"), v = Symbol.for("react.context"), c = Symbol.for("react.forward_ref"), x = Symbol.for("react.suspense"), p = Symbol.for("react.suspense_list"), o = Symbol.for("react.memo"), u = Symbol.for("react.lazy"), f = Symbol.for("react.offscreen"), g = Symbol.iterator, S = "@@iterator";
     function k(e) {
       if (e === null || typeof e != "object")
         return null;
-      var s = h && e[h] || e[S];
+      var s = g && e[g] || e[S];
       return typeof s == "function" ? s : null;
     }
     var I = t.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
     function E(e) {
       {
-        for (var s = arguments.length, l = new Array(s > 1 ? s - 1 : 0), x = 1; x < s; x++)
-          l[x - 1] = arguments[x];
+        for (var s = arguments.length, l = new Array(s > 1 ? s - 1 : 0), y = 1; y < s; y++)
+          l[y - 1] = arguments[y];
         H("error", e, l);
       }
     }
     function H(e, s, l) {
       {
-        var x = I.ReactDebugCurrentFrame, j = x.getStackAddendum();
+        var y = I.ReactDebugCurrentFrame, j = y.getStackAddendum();
         j !== "" && (s += "%s", l = l.concat([j]));
         var T = l.map(function(w) {
           return String(w);
@@ -178,16 +178,16 @@ function pr() {
     var F = !1, J = !1, z = !1, C = !1, kt = !1, Le;
     Le = Symbol.for("react.module.reference");
     function St(e) {
-      return !!(typeof e == "string" || typeof e == "function" || e === i || e === d || kt || e === m || e === g || e === p || C || e === c || F || J || z || typeof e == "object" && e !== null && (e.$$typeof === o || e.$$typeof === f || e.$$typeof === v || e.$$typeof === y || e.$$typeof === u || // This needs to include all possible module reference object
+      return !!(typeof e == "string" || typeof e == "function" || e === i || e === h || kt || e === d || e === x || e === p || C || e === f || F || J || z || typeof e == "object" && e !== null && (e.$$typeof === u || e.$$typeof === o || e.$$typeof === m || e.$$typeof === v || e.$$typeof === c || // This needs to include all possible module reference object
       // types supported by any Flight configuration anywhere since
       // we don't know which Flight build this will end up being used
       // with.
       e.$$typeof === Le || e.getModuleId !== void 0));
     }
     function Ct(e, s, l) {
-      var x = e.displayName;
-      if (x)
-        return x;
+      var y = e.displayName;
+      if (y)
+        return y;
       var j = s.displayName || s.name || "";
       return j !== "" ? l + "(" + j + ")" : l;
     }
@@ -206,29 +206,29 @@ function pr() {
           return "Fragment";
         case a:
           return "Portal";
-        case d:
+        case h:
           return "Profiler";
-        case m:
+        case d:
           return "StrictMode";
-        case g:
+        case x:
           return "Suspense";
         case p:
           return "SuspenseList";
       }
       if (typeof e == "object")
         switch (e.$$typeof) {
-          case y:
+          case v:
             var s = e;
             return Ue(s) + ".Consumer";
-          case v:
+          case m:
             var l = e;
             return Ue(l._context) + ".Provider";
-          case u:
+          case c:
             return Ct(e, e.render, "ForwardRef");
-          case f:
-            var x = e.displayName || null;
-            return x !== null ? x : $(e.type) || "Memo";
-          case o: {
+          case o:
+            var y = e.displayName || null;
+            return y !== null ? y : $(e.type) || "Memo";
+          case u: {
             var j = e, T = j._payload, w = j._init;
             try {
               return $(w(T));
@@ -308,8 +308,8 @@ function pr() {
           try {
             throw Error();
           } catch (j) {
-            var x = j.stack.trim().match(/\n( *(at )?)/);
-            ge = x && x[1] || "";
+            var y = j.stack.trim().match(/\n( *(at )?)/);
+            ge = y && y[1] || "";
           }
         return `
 ` + ge + e;
@@ -328,7 +328,7 @@ function pr() {
         if (l !== void 0)
           return l;
       }
-      var x;
+      var y;
       be = !0;
       var j = Error.prepareStackTrace;
       Error.prepareStackTrace = void 0;
@@ -347,14 +347,14 @@ function pr() {
             try {
               Reflect.construct(w, []);
             } catch (D) {
-              x = D;
+              y = D;
             }
             Reflect.construct(e, [], w);
           } else {
             try {
               w.call();
             } catch (D) {
-              x = D;
+              y = D;
             }
             e.call(w.prototype);
           }
@@ -362,14 +362,14 @@ function pr() {
           try {
             throw Error();
           } catch (D) {
-            x = D;
+            y = D;
           }
           e();
         }
       } catch (D) {
-        if (D && x && typeof D.stack == "string") {
+        if (D && y && typeof D.stack == "string") {
           for (var b = D.stack.split(`
-`), P = x.stack.split(`
+`), P = y.stack.split(`
 `), R = b.length - 1, A = P.length - 1; R >= 1 && A >= 0 && b[R] !== P[A]; )
             A--;
           for (; R >= 1 && A >= 0; R--, A--)
@@ -406,19 +406,19 @@ function pr() {
       if (typeof e == "string")
         return ue(e);
       switch (e) {
-        case g:
+        case x:
           return ue("Suspense");
         case p:
           return ue("SuspenseList");
       }
       if (typeof e == "object")
         switch (e.$$typeof) {
-          case u:
+          case c:
             return At(e.render);
-          case f:
+          case o:
             return fe(e.type, s, l);
-          case o: {
-            var x = e, j = x._payload, T = x._init;
+          case u: {
+            var y = e, j = y._payload, T = y._init;
             try {
               return fe(T(j), s, l);
             } catch {
@@ -435,7 +435,7 @@ function pr() {
       } else
         Xe.setExtraStackFrame(null);
     }
-    function It(e, s, l, x, j) {
+    function It(e, s, l, y, j) {
       {
         var T = Function.call.bind(ae);
         for (var w in e)
@@ -443,14 +443,14 @@ function pr() {
             var b = void 0;
             try {
               if (typeof e[w] != "function") {
-                var P = Error((x || "React class") + ": " + l + " type `" + w + "` is invalid; it must be a function, usually from the `prop-types` package, but received `" + typeof e[w] + "`.This often happens because of typos such as `PropTypes.function` instead of `PropTypes.func`.");
+                var P = Error((y || "React class") + ": " + l + " type `" + w + "` is invalid; it must be a function, usually from the `prop-types` package, but received `" + typeof e[w] + "`.This often happens because of typos such as `PropTypes.function` instead of `PropTypes.func`.");
                 throw P.name = "Invariant Violation", P;
               }
-              b = e[w](s, w, x, l, null, "SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED");
+              b = e[w](s, w, y, l, null, "SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED");
             } catch (R) {
               b = R;
             }
-            b && !(b instanceof Error) && (pe(j), E("%s: type specification of %s `%s` is invalid; the type checker function must return `null` or an `Error` but returned a %s. You may have forgotten to pass an argument to the type checker creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and shape all require an argument).", x || "React class", l, w, typeof b), pe(null)), b instanceof Error && !(b.message in Ke) && (Ke[b.message] = !0, pe(j), E("Failed %s type: %s", l, b.message), pe(null));
+            b && !(b instanceof Error) && (pe(j), E("%s: type specification of %s `%s` is invalid; the type checker function must return `null` or an `Error` but returned a %s. You may have forgotten to pass an argument to the type checker creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and shape all require an argument).", y || "React class", l, w, typeof b), pe(null)), b instanceof Error && !(b.message in Ke) && (Ke[b.message] = !0, pe(j), E("Failed %s type: %s", l, b.message), pe(null));
           }
       }
     }
@@ -529,7 +529,7 @@ function pr() {
         });
       }
     }
-    var Mt = function(e, s, l, x, j, T, w) {
+    var Mt = function(e, s, l, y, j, T, w) {
       var b = {
         // This tag allows us to uniquely identify this as a React Element
         $$typeof: n,
@@ -550,7 +550,7 @@ function pr() {
         configurable: !1,
         enumerable: !1,
         writable: !1,
-        value: x
+        value: y
       }), Object.defineProperty(b, "_source", {
         configurable: !1,
         enumerable: !1,
@@ -558,7 +558,7 @@ function pr() {
         value: j
       }), Object.freeze && (Object.freeze(b.props), Object.freeze(b)), b;
     };
-    function Yt(e, s, l, x, j) {
+    function Yt(e, s, l, y, j) {
       {
         var T, w = {}, b = null, P = null;
         l !== void 0 && (Qe(l), b = "" + l), Ut(s) && (Qe(s.key), b = "" + s.key), Lt(s) && (P = s.ref, $t(s, j));
@@ -573,7 +573,7 @@ function pr() {
           var A = typeof e == "function" ? e.displayName || e.name || "Unknown" : e;
           b && Vt(w, A), P && Bt(w, A);
         }
-        return Mt(e, b, P, j, x, se.current, w);
+        return Mt(e, b, P, j, y, se.current, w);
       }
     }
     var Te = I.ReactCurrentOwner, tt = I.ReactDebugCurrentFrame;
@@ -626,8 +626,8 @@ Check the top-level render call using <` + l + ">.");
         if (nt[l])
           return;
         nt[l] = !0;
-        var x = "";
-        e && e._owner && e._owner !== Te.current && (x = " It was passed a child from " + $(e._owner.type) + "."), Q(e), E('Each child in a list should have a unique "key" prop.%s%s See https://reactjs.org/link/warning-keys for more information.', l, x), Q(null);
+        var y = "";
+        e && e._owner && e._owner !== Te.current && (y = " It was passed a child from " + $(e._owner.type) + "."), Q(e), E('Each child in a list should have a unique "key" prop.%s%s See https://reactjs.org/link/warning-keys for more information.', l, y), Q(null);
       }
     }
     function st(e, s) {
@@ -636,8 +636,8 @@ Check the top-level render call using <` + l + ">.");
           return;
         if (we(e))
           for (var l = 0; l < e.length; l++) {
-            var x = e[l];
-            ke(x) && at(x, s);
+            var y = e[l];
+            ke(y) && at(y, s);
           }
         else if (ke(e))
           e._store && (e._store.validated = !0);
@@ -657,15 +657,15 @@ Check the top-level render call using <` + l + ">.");
         var l;
         if (typeof s == "function")
           l = s.propTypes;
-        else if (typeof s == "object" && (s.$$typeof === u || // Note: Memo only checks outer props here.
+        else if (typeof s == "object" && (s.$$typeof === c || // Note: Memo only checks outer props here.
         // Inner props are checked in the reconciler.
-        s.$$typeof === f))
+        s.$$typeof === o))
           l = s.propTypes;
         else
           return;
         if (l) {
-          var x = $(s);
-          It(l, e.props, "prop", x, e);
+          var y = $(s);
+          It(l, e.props, "prop", y, e);
         } else if (s.PropTypes !== void 0 && !Ee) {
           Ee = !0;
           var j = $(s);
@@ -677,9 +677,9 @@ Check the top-level render call using <` + l + ">.");
     function qt(e) {
       {
         for (var s = Object.keys(e.props), l = 0; l < s.length; l++) {
-          var x = s[l];
-          if (x !== "children" && x !== "key") {
-            Q(e), E("Invalid prop `%s` supplied to `React.Fragment`. React.Fragment can only have `key` and `children` props.", x), Q(null);
+          var y = s[l];
+          if (y !== "children" && y !== "key") {
+            Q(e), E("Invalid prop `%s` supplied to `React.Fragment`. React.Fragment can only have `key` and `children` props.", y), Q(null);
             break;
           }
         }
@@ -687,7 +687,7 @@ Check the top-level render call using <` + l + ">.");
       }
     }
     var ot = {};
-    function it(e, s, l, x, j, T) {
+    function it(e, s, l, y, j, T) {
       {
         var w = St(e);
         if (!w) {
@@ -704,7 +704,7 @@ Check the top-level render call using <` + l + ">.");
         if (w) {
           var L = s.children;
           if (L !== void 0)
-            if (x)
+            if (y)
               if (we(L)) {
                 for (var Z = 0; Z < L.length; Z++)
                   st(L[Z], e);
@@ -796,55 +796,53 @@ function mr({
   children: t,
   networks: n = [],
   defaultNetworkId: a = 0,
-  sapphireUrl: i,
-  accountManagerAddress: m
+  ...i
 }) {
-  const [d, v] = Ie(hr, vt(a)), [y, u] = N(!1), [g, p] = N();
+  const [d, h] = Ie(hr, vt(a)), [m, v] = N(!1), [c, x] = N();
   U(() => {
-    if (y) {
-      const { walletScreen: o, displayedError: c, ...h } = d;
-      localStorage.setItem(re.WALLET_CONTEXT, JSON.stringify(h));
+    if (m) {
+      const { walletScreen: o, displayedError: u, ...f } = d;
+      localStorage.setItem(re.WALLET_CONTEXT, JSON.stringify(f));
     }
   }, [d]), U(() => {
     const o = localStorage.getItem(re.WALLET_CONTEXT);
     if (o)
       try {
-        const c = JSON.parse(o);
-        v({ type: "setState", payload: c });
-      } catch (c) {
-        console.error("Cant parse global state localStorage", c);
+        const u = JSON.parse(o);
+        h({ type: "setState", payload: u });
+      } catch (u) {
+        console.error("Cant parse global state localStorage", u);
       }
-    setTimeout(() => u(!0), 10);
+    setTimeout(() => v(!0), 10);
   }, []), U(() => {
-    if (y && !g) {
+    if (m && !c) {
       let o;
       n && n.length ? o = ct({
-        sapphireUrl: i,
-        accountManagerAddress: m,
+        ...i,
         defaultNetworkId: d.networkId || a,
-        networkConfig: n.reduce((c, h) => (c[h.id] = {
-          rpcUrl: h.rpcUrl,
-          explorerUrl: h.explorerUrl
-        }, c), {})
-      }) : o = ct(), o && (p(o), f(o), o.setAccount({
+        networkConfig: n.reduce((u, f) => (u[f.id] = {
+          rpcUrl: f.rpcUrl,
+          explorerUrl: f.explorerUrl
+        }, u), {})
+      }) : o = ct(), o && (x(o), p(o), o.setAccount({
         username: d.username,
         strategy: d.authStrategy,
         address: d.address,
         contractAddress: d.contractAddress
       }));
     }
-  }, [n, a, y]);
-  async function f(o) {
-    const c = o || g;
-    if (c && d.address)
+  }, [n, a, m]);
+  async function p(o) {
+    const u = o || c;
+    if (u && d.address)
       try {
-        const h = await c?.getAccountBalance(d.address);
-        v({ type: "setValue", payload: { key: "balance", value: h } }), console.log(
+        const f = await u?.getAccountBalance(d.address);
+        h({ type: "setValue", payload: { key: "balance", value: f } }), console.log(
           "Native Oasis Sapphire balance:",
-          await c.getAccountBalance(d.address, 23295)
+          await u.getAccountBalance(d.address, 23295)
         );
-      } catch (h) {
-        console.error("Reloading balance", h);
+      } catch (f) {
+        console.error("Reloading balance", f);
       }
   }
   return /* @__PURE__ */ r.jsx(
@@ -852,19 +850,19 @@ function mr({
     {
       value: {
         state: d,
-        dispatch: v,
+        dispatch: h,
         networks: n,
-        networksById: n.reduce((o, c) => (o[c.id] = c, o), {}),
+        networksById: n.reduce((o, u) => (o[u.id] = u, o), {}),
         defaultNetworkId: a || 0,
-        wallet: g,
-        setWallet: p,
-        reloadUserBalance: f,
-        setScreen: (o) => v({ type: "setValue", payload: { key: "walletScreen", value: o } }),
+        wallet: c,
+        setWallet: x,
+        reloadUserBalance: p,
+        setScreen: (o) => h({ type: "setValue", payload: { key: "walletScreen", value: o } }),
         handleError: (o) => {
-          o ? (console.error(o), (o?.name || o?.message) && v({
+          o ? (console.error(o), (o?.name || o?.message) && h({
             type: "setValue",
             payload: { key: "displayedError", value: or[o.name] || o.message }
-          })) : v({ type: "setValue", payload: { key: "displayedError", value: "" } });
+          })) : h({ type: "setValue", payload: { key: "displayedError", value: "" } });
         }
       },
       children: t
@@ -883,8 +881,8 @@ function xt(t) {
     i += t;
   else if (typeof t == "object")
     if (Array.isArray(t)) {
-      var m = t.length;
-      for (n = 0; n < m; n++)
+      var d = t.length;
+      for (n = 0; n < d; n++)
         t[n] && (a = xt(t[n])) && (i && (i += " "), i += a);
     } else
       for (a in t)
@@ -892,7 +890,7 @@ function xt(t) {
   return i;
 }
 function De() {
-  for (var t, n, a = 0, i = "", m = arguments.length; a < m; a++)
+  for (var t, n, a = 0, i = "", d = arguments.length; a < d; a++)
     (t = arguments[a]) && (n = xt(t)) && (i && (i += " "), i += n);
   return i;
 }
@@ -941,127 +939,127 @@ const yr = "160px", xr = "40px", gr = "px-4 py-2.5", O = tr(
     self: n = !1,
     variant: a = "primary",
     minWidth: i = yr,
-    minHeight: m = xr,
-    paddingClass: d = gr,
-    disabled: v = !1,
-    loading: y = !1,
-    type: u = "button",
-    className: g,
+    minHeight: d = xr,
+    paddingClass: h = gr,
+    disabled: m = !1,
+    loading: v = !1,
+    type: c = "button",
+    className: x,
     ...p
-  }, f) => {
-    const o = De(
-      d,
-      g,
+  }, o) => {
+    const u = De(
+      h,
+      x,
       "relative inline-block rounded-lg text-sm font-bold border-b-[4px] border-t-[4px]",
       {
-        "transition-all hover:border-b-blue/50 hover:translate-y-[-2px] focus:translate-y-px focus:border-b-yellow/50": !y && !v,
+        "transition-all hover:border-b-blue/50 hover:translate-y-[-2px] focus:translate-y-px focus:border-b-yellow/50": !v && !m,
         "bg-yellow text-dark border-b-yellow border-t-yellow": a === "primary",
         "bg-lightdark text-offwhite border-b-lightdark border-t-lightdark": a === "secondary",
-        "opacity-60": v
+        "opacity-60": m
       }
-    ), c = { minWidth: i, minHeight: m }, h = /* @__PURE__ */ r.jsxs(r.Fragment, { children: [
-      !!y && /* @__PURE__ */ r.jsxs(r.Fragment, { children: [
+    ), f = { minWidth: i, minHeight: d }, g = /* @__PURE__ */ r.jsxs(r.Fragment, { children: [
+      !!v && /* @__PURE__ */ r.jsxs(r.Fragment, { children: [
         " ",
         /* @__PURE__ */ r.jsx(vr, { color: "#141721" })
       ] }),
       " ",
-      !y && p.children
+      !v && p.children
     ] });
     return (t || n) && typeof p.href == "string" ? /* @__PURE__ */ r.jsx(
       "a",
       {
-        ref: f,
+        ref: o,
         href: p.href,
         target: t ? "_blank" : "_self",
         rel: "noreferrer",
         title: p.title,
-        className: o,
-        style: c,
+        className: u,
+        style: f,
         onClick: p.onClick,
-        children: h
+        children: g
       }
     ) : /* @__PURE__ */ r.jsx(
       "button",
       {
-        ref: f,
-        type: u,
-        disabled: y || v,
-        className: o,
-        style: c,
+        ref: o,
+        type: c,
+        disabled: v || m,
+        className: u,
+        style: f,
         ...p,
-        children: h
+        children: g
       }
     );
   }
 );
 O.displayName = "Btn";
 function br() {
-  const { dispatch: t, defaultNetworkId: n, handleError: a } = W(), [i, m] = N(""), [d, v] = N(!1), [y, u] = N(!1);
-  async function g(f) {
-    if (f.preventDefault(), !i)
+  const { dispatch: t, defaultNetworkId: n, handleError: a } = W(), [i, d] = N(""), [h, m] = N(!1), [v, c] = N(!1);
+  async function x(o) {
+    if (o.preventDefault(), !i)
       return;
-    const o = me();
-    v(!0), a();
+    const u = me();
+    m(!0), a();
     try {
-      if (await o?.userExists(i)) {
-        const c = await o?.authenticate("passkey", { username: i });
-        c && p({
+      if (await u?.userExists(i)) {
+        const f = await u?.authenticate("passkey", { username: i });
+        f && p({
           username: i,
-          address: c.publicAddress,
+          address: f.publicAddress,
           authStrategy: "passkey"
         });
       } else
-        u(!0);
-    } catch (c) {
-      a(c);
+        c(!0);
+    } catch (f) {
+      a(f);
     }
-    v(!1);
+    m(!1);
   }
   async function p({
-    username: f,
-    address: o,
-    authStrategy: c
+    username: o,
+    address: u,
+    authStrategy: f
   }) {
-    const S = await me()?.getAccountBalance(o) || "0";
+    const S = await me()?.getAccountBalance(u) || "0";
     t({
       type: "setState",
       payload: {
-        address: o,
-        username: f,
+        address: u,
+        username: o,
         balance: S,
-        authStrategy: c,
+        authStrategy: f,
         networkId: n || void 0
       }
     });
   }
-  return y ? /* @__PURE__ */ r.jsx(
+  return v ? /* @__PURE__ */ r.jsx(
     wr,
     {
-      loading: d,
+      loading: h,
       onConfirm: async () => {
-        v(!0), a();
+        m(!0), a();
         try {
-          const o = await me()?.register("passkey", { username: i });
-          o && p({ username: i, address: o.publicAddress, authStrategy: "passkey" });
-        } catch (f) {
-          a(f);
+          const u = await me()?.register("passkey", { username: i });
+          u && p({ username: i, address: u.publicAddress, authStrategy: "passkey" });
+        } catch (o) {
+          a(o);
         }
-        v(!1);
+        m(!1);
       }
     }
   ) : /* @__PURE__ */ r.jsxs("div", { children: [
     /* @__PURE__ */ r.jsx("h2", { className: "mb-6", children: "Sign in or Sign up" }),
-    /* @__PURE__ */ r.jsxs("form", { onSubmit: (f) => g(f), children: [
+    /* @__PURE__ */ r.jsxs("form", { onSubmit: (o) => x(o), children: [
       /* @__PURE__ */ r.jsx(
         "input",
         {
           placeholder: "your e-mail@email.com",
           value: i,
           className: "w-full mb-8",
-          onChange: (f) => m(f.target.value)
+          onChange: (o) => d(o.target.value)
         }
       ),
-      /* @__PURE__ */ r.jsx(O, { type: "submit", loading: d, className: "w-full", children: "Continue" })
+      /* @__PURE__ */ r.jsx(O, { type: "submit", loading: h, className: "w-full", children: "Continue" })
     ] })
   ] });
 }
@@ -1070,7 +1068,7 @@ function wr({
   onConfirm: n,
   onLoading: a
 }) {
-  const { handleError: i } = W(), [m, d] = N(""), [v, y] = N(!1), u = [
+  const { handleError: i } = W(), [d, h] = N(""), [m, v] = N(!1), c = [
     X(null),
     X(null),
     X(null),
@@ -1079,58 +1077,58 @@ function wr({
     X(null)
   ];
   U(() => {
-    m.length === 6 && !/\s/.test(m) && g();
-  }, [m]);
-  async function g() {
+    d.length === 6 && !/\s/.test(d) && x();
+  }, [d]);
+  async function x() {
     a?.(!0), i();
     try {
-      console.log(m), await new Promise((c) => setTimeout(c, 1337)), y(!0), n?.(m);
-    } catch (c) {
-      i(c), a?.(!1);
+      console.log(d), await new Promise((f) => setTimeout(f, 1337)), v(!0), n?.(d);
+    } catch (f) {
+      i(f), a?.(!1);
     }
   }
-  function p(c, h) {
-    const S = c.target;
+  function p(f, g) {
+    const S = f.target;
     if (/^[^\d]$/.test(S.value)) {
       S.value = "";
       return;
     }
-    const k = u[h - 1], I = u[h + 1], E = u.map((H, F) => m[F] || " ");
-    E[h] = S.value, d(E.join("")), S.select(), S.value === "" ? k?.current && k.current.focus() : I?.current && I.current.select();
+    const k = c[g - 1], I = c[g + 1], E = c.map((H, F) => d[F] || " ");
+    E[g] = S.value, h(E.join("")), S.select(), S.value === "" ? k?.current && k.current.focus() : I?.current && I.current.select();
   }
-  function f(c, h) {
-    const S = c.target, k = u[h - 1];
-    (c.key === "Backspace" || c.key === "Delete") && S.value === "" && (c.preventDefault(), d((I) => I.slice(0, h) + " " + I.slice(h + 1)), k?.current && k.current.focus());
+  function o(f, g) {
+    const S = f.target, k = c[g - 1];
+    (f.key === "Backspace" || f.key === "Delete") && S.value === "" && (f.preventDefault(), h((I) => I.slice(0, g) + " " + I.slice(g + 1)), k?.current && k.current.focus());
   }
-  function o(c) {
-    const h = c.clipboardData.getData("text");
-    h.length === 6 && (d(h), u.forEach((S, k) => {
-      S?.current && (S.current.value = h.charAt(k));
+  function u(f) {
+    const g = f.clipboardData.getData("text");
+    g.length === 6 && (h(g), c.forEach((S, k) => {
+      S?.current && (S.current.value = g.charAt(k));
     }));
   }
-  return v ? /* @__PURE__ */ r.jsxs("div", { className: "text-center", children: [
+  return m ? /* @__PURE__ */ r.jsxs("div", { className: "text-center", children: [
     /* @__PURE__ */ r.jsx("h2", { className: "mb-12", children: "Email succesfully confirmed." }),
     /* @__PURE__ */ r.jsx("p", { className: "text-xl mb-12", children: "Passkey configuration will now start." }),
-    /* @__PURE__ */ r.jsx(O, { loading: t, onClick: () => n?.(m), children: "Retry" })
+    /* @__PURE__ */ r.jsx(O, { loading: t, onClick: () => n?.(d), children: "Retry" })
   ] }) : /* @__PURE__ */ r.jsxs("div", { className: "text-center", children: [
     /* @__PURE__ */ r.jsx("p", { children: "We just sent a confirmation code to your email. Paste the code below to proceed with account creation." }),
     /* @__PURE__ */ r.jsx("h2", { className: "my-6", children: "Check your email" }),
     /* @__PURE__ */ r.jsx("p", { className: "mb-6", children: "Enter the 6-digit code you received" }),
-    /* @__PURE__ */ r.jsx("div", { className: "flex gap-2 mb-12 justify-center", children: [0, 1, 2, 3, 4, 5].map((c) => /* @__PURE__ */ r.jsx(
+    /* @__PURE__ */ r.jsx("div", { className: "flex gap-2 mb-12 justify-center", children: [0, 1, 2, 3, 4, 5].map((f) => /* @__PURE__ */ r.jsx(
       "input",
       {
-        ref: u[c],
+        ref: c[f],
         type: "text",
         maxLength: 1,
-        autoFocus: c === 0,
+        autoFocus: f === 0,
         disabled: t,
         className: "min-w-0 w-14 h-14",
-        onFocus: (h) => h.target.select(),
-        onKeyDown: (h) => f(h, c),
-        onPaste: (h) => o(h),
-        onChange: (h) => p(h, c)
+        onFocus: (g) => g.target.select(),
+        onKeyDown: (g) => o(g, f),
+        onPaste: (g) => u(g),
+        onChange: (g) => p(g, f)
       },
-      c
+      f
     )) }),
     /* @__PURE__ */ r.jsx(O, { disabled: t, children: "Send again" })
   ] });
@@ -1139,23 +1137,23 @@ function gt(t) {
   return !t || t.length <= 10 ? t : `${t.slice(0, 6)}...${t.slice(-4)}`;
 }
 function jr() {
-  const { state: t, dispatch: n, networks: a, wallet: i, reloadUserBalance: m, setScreen: d } = W();
+  const { state: t, dispatch: n, networks: a, wallet: i, reloadUserBalance: d, setScreen: h } = W();
   if (!Array.isArray(a) || !a.length)
     return /* @__PURE__ */ r.jsx(r.Fragment, {});
-  function v(y) {
-    n({ type: "setValue", payload: { key: "networkId", value: y } }), i?.setDefaultNetworkId(y), m(), d("main");
+  function m(v) {
+    n({ type: "setValue", payload: { key: "networkId", value: v } }), i?.setDefaultNetworkId(v), d(), h("main");
   }
   return /* @__PURE__ */ r.jsxs("div", { children: [
     /* @__PURE__ */ r.jsx("h2", { className: "mb-4", children: "Select network" }),
-    /* @__PURE__ */ r.jsx("div", { className: "flex flex-col gap-3", children: a.map((y) => /* @__PURE__ */ r.jsx(
+    /* @__PURE__ */ r.jsx("div", { className: "flex flex-col gap-3", children: a.map((v) => /* @__PURE__ */ r.jsx(
       O,
       {
         variant: "secondary",
-        disabled: y.id === t.networkId,
-        onClick: () => v(y.id),
-        children: y.name
+        disabled: v.id === t.networkId,
+        onClick: () => m(v.id),
+        children: v.name
       },
-      y.id
+      v.id
     )) })
   ] });
 }
@@ -1213,79 +1211,79 @@ function Er(t, n) {
 }
 const bt = Oe(void 0);
 function kr({ children: t }) {
-  const [n, a] = Ie(Er, Tr()), [i, m] = N(!1), {
-    state: { address: d },
-    reloadUserBalance: v
+  const [n, a] = Ie(Er, Tr()), [i, d] = N(!1), {
+    state: { address: h },
+    reloadUserBalance: m
   } = W();
   U(() => {
     if (i) {
-      const { pending: u, chainIdsForHash: g, ...p } = n;
+      const { pending: c, chainIdsForHash: x, ...p } = n;
       localStorage.setItem(re.TRANSACTIONS_CONTEXT, JSON.stringify(p));
     }
   }, [n]), U(() => {
-    const u = localStorage.getItem(re.TRANSACTIONS_CONTEXT);
-    if (u)
+    const c = localStorage.getItem(re.TRANSACTIONS_CONTEXT);
+    if (c)
       try {
-        const g = JSON.parse(u);
-        a({ type: "setState", payload: g });
-      } catch (g) {
-        console.error("Cant parse context state localStorage", g);
+        const x = JSON.parse(c);
+        a({ type: "setState", payload: x });
+      } catch (x) {
+        console.error("Cant parse context state localStorage", x);
       }
     setTimeout(() => {
-      m(!0);
+      d(!0);
     }, 100);
   }, []), U(() => {
-    if (d && n.txs[d] && Object.keys(n.txs[d]).length)
-      for (const u of Object.keys(n.txs[d]))
-        y(u);
-  }, [d, n.txs]);
-  async function y(u) {
-    if (!d)
+    if (h && n.txs[h] && Object.keys(n.txs[h]).length)
+      for (const c of Object.keys(n.txs[h]))
+        v(c);
+  }, [h, n.txs]);
+  async function v(c) {
+    if (!h)
       return;
-    const g = me();
-    if (!g)
-      throw new Error("Wallet not initialized." + u);
-    const p = g.getRpcProviderForChainId(n.chainIdsForHash[u]);
+    const x = me();
+    if (!x)
+      throw new Error("Wallet not initialized." + c);
+    const p = x.getRpcProviderForChainId(n.chainIdsForHash[c]);
     if (!p)
-      throw new Error("Provider not initialized. " + u);
-    const f = n.txs[d]?.[u];
-    if (!f || f.status === "confirmed" || f.status === "failed" || n.pending.includes(u))
+      throw new Error("Provider not initialized. " + c);
+    const o = n.txs[h]?.[c];
+    if (!o || o.status === "confirmed" || o.status === "failed" || n.pending.includes(c))
       return;
-    if (Date.now() - f.createdAt > 15e3 && !await p.getTransaction(u)) {
-      a({ type: "setTxStatus", payload: { tx: f, status: "failed" } });
+    if (Date.now() - o.createdAt > 15e3 && !await p.getTransaction(c)) {
+      a({ type: "setTxStatus", payload: { tx: o, status: "failed" } });
       return;
     }
-    const o = await p.getTransactionReceipt(u);
-    o ? (o.status ? a({
+    const u = await p.getTransactionReceipt(c);
+    u ? (u.status ? a({
       type: "setTxStatus",
       payload: {
-        tx: f,
+        tx: o,
         status: "confirmed"
       }
     }) : a({
       type: "setTxStatus",
       payload: {
-        tx: f,
+        tx: o,
         status: "failed"
       }
-    }), v(), g.events.emit("txDone", f)) : (a({
+    }), m(), x.events.emit("txDone", o)) : (a({
       type: "setTxStatus",
       payload: {
-        tx: f,
+        tx: o,
         status: "pending"
       }
-    }), p.once(u, (c) => {
-      const h = c && !isNaN(c.status) && c.status === 0;
-      v(), a({
+    }), p.once(c, (f) => {
+      const g = f && !isNaN(f.status) && f.status === 0;
+      m(), a({
         type: "setTxStatus",
         payload: {
-          tx: f,
-          status: h ? "failed" : "confirmed"
+          tx: o,
+          status: g ? "failed" : "confirmed"
         }
-      }), g.events.emit("txDone", f);
+      }), x.events.emit("txDone", o);
     }));
   }
-  return /* @__PURE__ */ r.jsx(bt.Provider, { value: { state: n, dispatch: a, checkTransaction: y }, children: t });
+  return /* @__PURE__ */ r.jsx(bt.Provider, { value: { state: n, dispatch: a, checkTransaction: v }, children: t });
 }
 function wt() {
   const t = Pe(bt);
@@ -1297,13 +1295,13 @@ function wt() {
 }
 function We(t = "Copy", n = "Copied!") {
   const [a, i] = N(t);
-  let m = null;
-  function d(v) {
-    navigator.clipboard.writeText(v), m && clearTimeout(m), i(n), m = setTimeout(() => i(t), 2e3);
+  let d = null;
+  function h(m) {
+    navigator.clipboard.writeText(m), d && clearTimeout(d), i(n), d = setTimeout(() => i(t), 2e3);
   }
   return {
     text: a,
-    onCopy: d
+    onCopy: h
   };
 }
 function Sr() {
@@ -1360,7 +1358,7 @@ function Nr(t, n) {
         [n.payload.key]: n.payload.value
       };
     case "updateToken": {
-      const a = [...t.list[n.payload.owner] || []], i = a.findIndex((m) => m.address === n.payload.token.address);
+      const a = [...t.list[n.payload.owner] || []], i = a.findIndex((d) => d.address === n.payload.token.address);
       return i < 0 ? a.push(n.payload.token) : a[i] = n.payload.token, {
         ...t,
         list: {
@@ -1375,73 +1373,73 @@ function Nr(t, n) {
 }
 const jt = Oe(void 0);
 function _r({ children: t }) {
-  const [n, a] = Ie(Nr, Rr()), [i, m] = N(!1), { state: d, wallet: v } = W();
+  const [n, a] = Ie(Nr, Rr()), [i, d] = N(!1), { state: h, wallet: m } = W();
   U(() => {
     i && localStorage.setItem(re.TOKENS_CONTEXT, JSON.stringify(n));
   }, [n]), U(() => {
-    const u = localStorage.getItem(re.TOKENS_CONTEXT);
-    if (u)
+    const c = localStorage.getItem(re.TOKENS_CONTEXT);
+    if (c)
       try {
-        const g = JSON.parse(u);
-        a({ type: "setState", payload: g }), Array.isArray(g?.list?.[d.address]) && g.list[d.address].forEach(async (p) => {
-          if (v) {
-            const f = await v.contractRead({
+        const x = JSON.parse(c);
+        a({ type: "setState", payload: x }), Array.isArray(x?.list?.[h.address]) && x.list[h.address].forEach(async (p) => {
+          if (m) {
+            const o = await m.contractRead({
               contractAddress: p.address,
               contractAbi: ee,
               contractFunctionName: "balanceOf",
-              contractFunctionValues: [d.address]
+              contractFunctionValues: [h.address]
             });
-            f && a({
+            o && a({
               type: "updateToken",
               payload: {
-                owner: d.address,
+                owner: h.address,
                 token: {
                   ...p,
-                  balance: Ce.formatUnits(f, p.decimals)
+                  balance: Ce.formatUnits(o, p.decimals)
                 }
               }
             });
           }
         });
-      } catch (g) {
-        console.error("Cant parse context state localStorage", g);
+      } catch (x) {
+        console.error("Cant parse context state localStorage", x);
       }
     setTimeout(() => {
-      m(!0);
+      d(!0);
     }, 100);
   }, []);
-  async function y(u) {
-    if (v) {
-      const [g, p, f, o] = await Promise.all([
-        v.contractRead({
-          contractAddress: u,
+  async function v(c) {
+    if (m) {
+      const [x, p, o, u] = await Promise.all([
+        m.contractRead({
+          contractAddress: c,
           contractAbi: ee,
           contractFunctionName: "name"
         }),
-        v.contractRead({
-          contractAddress: u,
+        m.contractRead({
+          contractAddress: c,
           contractAbi: ee,
           contractFunctionName: "symbol"
         }),
-        v.contractRead({
-          contractAddress: u,
+        m.contractRead({
+          contractAddress: c,
           contractAbi: ee,
           contractFunctionName: "decimals"
         }),
-        v.contractRead({
-          contractAddress: u,
+        m.contractRead({
+          contractAddress: c,
           contractAbi: ee,
           contractFunctionName: "balanceOf",
-          contractFunctionValues: [d.address]
+          contractFunctionValues: [h.address]
         })
       ]);
       if (p)
         return {
-          address: u,
-          name: g,
+          address: c,
+          name: x,
           symbol: p,
-          decimals: Number(f),
-          balance: Ce.formatUnits(o, f)
+          decimals: Number(o),
+          balance: Ce.formatUnits(u, o)
         };
     }
   }
@@ -1451,7 +1449,7 @@ function _r({ children: t }) {
       value: {
         state: n,
         dispatch: a,
-        getTokenDetails: y
+        getTokenDetails: v
       },
       children: t
     }
@@ -1464,7 +1462,7 @@ function Tt() {
   return t;
 }
 function Ar() {
-  const { state: t, networksById: n, setScreen: a, wallet: i, handleError: m } = W(), { state: d } = Tt(), [v, y] = N(""), [u, g] = N(""), [p, f] = N(!1), o = ye(
+  const { state: t, networksById: n, setScreen: a, wallet: i, handleError: d } = W(), { state: h } = Tt(), [m, v] = N(""), [c, x] = N(""), [p, o] = N(!1), u = ye(
     () => ({
       address: "",
       name: `${n[t.networkId].name} ETH`,
@@ -1473,23 +1471,23 @@ function Ar() {
       balance: t.balance
     }),
     [t.balance, t.networkId]
-  ), c = ye(() => {
-    if (d.selectedToken) {
-      const h = d.list[t.address];
-      if (h) {
-        const S = h.find((k) => k.address === d.selectedToken);
+  ), f = ye(() => {
+    if (h.selectedToken) {
+      const g = h.list[t.address];
+      if (g) {
+        const S = g.find((k) => k.address === h.selectedToken);
         if (S)
           return S;
       }
     }
-    return o;
-  }, [d.selectedToken, d.list]);
-  return t.walletScreen === "selectToken" ? /* @__PURE__ */ r.jsx(Or, { nativeToken: o }) : t.walletScreen === "receiveToken" ? /* @__PURE__ */ r.jsx(Ir, {}) : /* @__PURE__ */ r.jsxs(
+    return u;
+  }, [h.selectedToken, h.list]);
+  return t.walletScreen === "selectToken" ? /* @__PURE__ */ r.jsx(Or, { nativeToken: u }) : t.walletScreen === "receiveToken" ? /* @__PURE__ */ r.jsx(Ir, {}) : /* @__PURE__ */ r.jsxs(
     "form",
     {
-      onSubmit: async (h) => {
-        if (h.preventDefault(), !p) {
-          if (!v || !u) {
+      onSubmit: async (g) => {
+        if (g.preventDefault(), !p) {
+          if (!m || !c) {
             console.error("Address and amount are required");
             return;
           }
@@ -1497,22 +1495,22 @@ function Ar() {
             console.error("Wallet not initialized");
             return;
           }
-          f(!0), m();
+          o(!0), d();
           try {
             await i.signContractWrite({
               mustConfirm: !0,
               contractAbi: ee,
-              contractAddress: c.address,
+              contractAddress: f.address,
               contractFunctionName: "transfer",
               contractFunctionValues: [
-                v,
-                Ce.parseUnits(u, c.decimals)
+                m,
+                Ce.parseUnits(c, f.decimals)
               ]
             });
           } catch (S) {
-            m(S);
+            d(S);
           }
-          f(!1);
+          o(!1);
         }
       },
       children: [
@@ -1525,13 +1523,13 @@ function Ar() {
             onClick: () => a("selectToken"),
             children: [
               "Token: ",
-              c.name,
+              f.name,
               /* @__PURE__ */ r.jsx("br", {}),
               /* @__PURE__ */ r.jsxs("span", { className: "font-normal", children: [
                 "Balance: ",
-                c.balance,
+                f.balance,
                 " ",
-                c.symbol
+                f.symbol
               ] })
             ]
           }
@@ -1540,18 +1538,18 @@ function Ar() {
           "input",
           {
             placeholder: "Receiver address",
-            value: v,
+            value: m,
             className: "w-full mb-4",
-            onChange: (h) => y(h.target.value)
+            onChange: (g) => v(g.target.value)
           }
         ),
         /* @__PURE__ */ r.jsx(
           "input",
           {
             placeholder: "Amount",
-            value: u,
+            value: c,
             className: "w-full mb-8",
-            onChange: (h) => g(h.target.value)
+            onChange: (g) => x(g.target.value)
           }
         ),
         /* @__PURE__ */ r.jsx(O, { type: "submit", className: "w-full", children: "Send" })
@@ -1560,27 +1558,27 @@ function Ar() {
   );
 }
 function Or({ nativeToken: t }) {
-  const { state: n, setScreen: a, handleError: i } = W(), { state: m, dispatch: d, getTokenDetails: v } = Tt(), [y, u] = N(""), [g, p] = N(!1), f = ye(() => Array.isArray(m.list[n.address]) ? [t, ...m.list[n.address]] : [t], [m.list]);
+  const { state: n, setScreen: a, handleError: i } = W(), { state: d, dispatch: h, getTokenDetails: m } = Tt(), [v, c] = N(""), [x, p] = N(!1), o = ye(() => Array.isArray(d.list[n.address]) ? [t, ...d.list[n.address]] : [t], [d.list]);
   return /* @__PURE__ */ r.jsxs("div", { children: [
     /* @__PURE__ */ r.jsx("h2", { className: "mb-4", children: "Add token" }),
     /* @__PURE__ */ r.jsxs(
       "form",
       {
         className: "mb-8",
-        onSubmit: async (o) => {
-          if (o.preventDefault(), !g) {
-            if (!y) {
+        onSubmit: async (u) => {
+          if (u.preventDefault(), !x) {
+            if (!v) {
               console.error("No address");
               return;
             }
             p(!0), i();
             try {
-              const c = await v(y);
-              if (!c)
+              const f = await m(v);
+              if (!f)
                 throw new Error("Could not get token details");
-              d({ type: "updateToken", payload: { owner: n.address, token: c } });
-            } catch (c) {
-              i(c);
+              h({ type: "updateToken", payload: { owner: n.address, token: f } });
+            } catch (f) {
+              i(f);
             }
             p(!1);
           }
@@ -1590,41 +1588,41 @@ function Or({ nativeToken: t }) {
             "input",
             {
               placeholder: "Token address",
-              value: y,
+              value: v,
               className: "w-full mb-4",
-              onChange: (o) => u(o.target.value)
+              onChange: (u) => c(u.target.value)
             }
           ),
-          /* @__PURE__ */ r.jsx(O, { type: "submit", loading: g, className: "w-full", children: "Add" })
+          /* @__PURE__ */ r.jsx(O, { type: "submit", loading: x, className: "w-full", children: "Add" })
         ]
       }
     ),
     /* @__PURE__ */ r.jsx("h2", { className: "mb-4", children: "Select token" }),
-    /* @__PURE__ */ r.jsx("div", { className: "flex flex-col gap-3", children: f.map((o) => /* @__PURE__ */ r.jsxs(
+    /* @__PURE__ */ r.jsx("div", { className: "flex flex-col gap-3", children: o.map((u) => /* @__PURE__ */ r.jsxs(
       O,
       {
         variant: "secondary",
-        disabled: o.address === m.selectedToken,
+        disabled: u.address === d.selectedToken,
         className: "w-full text-left",
         onClick: () => {
-          d({
+          h({
             type: "setValue",
-            payload: { key: "selectedToken", value: o.address }
+            payload: { key: "selectedToken", value: u.address }
           }), a("sendToken");
         },
         children: [
           "Token: ",
-          o.name,
+          u.name,
           /* @__PURE__ */ r.jsx("br", {}),
           /* @__PURE__ */ r.jsxs("span", { className: "font-normal", children: [
             "Balance: ",
-            o.balance,
+            u.balance,
             " ",
-            o.symbol
+            u.symbol
           ] })
         ]
       },
-      o.address
+      u.address
     )) })
   ] });
 }
@@ -1649,7 +1647,7 @@ function Et({
   show: n,
   className: a
 }) {
-  const { state: i, handleError: m } = W();
+  const { state: i, handleError: d } = W();
   return !i.displayedError && !t || !n ? /* @__PURE__ */ r.jsx(r.Fragment, {}) : /* @__PURE__ */ r.jsxs(
     "div",
     {
@@ -1664,7 +1662,7 @@ function Et({
           {
             title: "Dismiss",
             className: "text-offwhite hover:text-white -mt-0.5 shrink-0",
-            onClick: () => m(),
+            onClick: () => d(),
             children: /* @__PURE__ */ r.jsx(
               "svg",
               {
@@ -1691,11 +1689,11 @@ function Et({
   );
 }
 function Pr() {
-  const { state: t, dispatch: n, networksById: a, setScreen: i } = W(), m = ye(() => t.walletScreen === "main" ? { key: "networks", label: "Change" } : t.walletScreen === "selectToken" ? { key: "sendToken", label: "Back" } : { key: "main", label: "Back" }, [t.walletScreen]);
+  const { state: t, dispatch: n, networksById: a, setScreen: i } = W(), d = ye(() => t.walletScreen === "main" ? { key: "networks", label: "Change" } : t.walletScreen === "selectToken" ? { key: "sendToken", label: "Back" } : { key: "main", label: "Back" }, [t.walletScreen]);
   return /* @__PURE__ */ r.jsxs("div", { children: [
     /* @__PURE__ */ r.jsx("div", { className: "text-center -mt-4 sm:-mt-8 mb-4", children: /* @__PURE__ */ r.jsxs("div", { className: "inline-block", children: [
       /* @__PURE__ */ r.jsx("p", { children: t.networkId && a[t.networkId] ? a[t.networkId].name : "No network" }),
-      /* @__PURE__ */ r.jsx("p", { children: /* @__PURE__ */ r.jsx("button", { className: "text-sm", onClick: () => i(m.key), children: m.label }) })
+      /* @__PURE__ */ r.jsx("p", { children: /* @__PURE__ */ r.jsx("button", { className: "text-sm", onClick: () => i(d.key), children: d.label }) })
     ] }) }),
     /* @__PURE__ */ r.jsx(Et, { show: !0, className: "mb-2" }),
     t.walletScreen === "main" && /* @__PURE__ */ r.jsxs("div", { children: [
@@ -1736,11 +1734,11 @@ function Dr({
   signMessage: n,
   contractFunctionData: a,
   approveText: i = "Approve",
-  declineText: m = "Reject",
-  onApprove: d,
-  onDecline: v
+  declineText: d = "Reject",
+  onApprove: h,
+  onDecline: m
 }) {
-  const { networksById: y } = W(), [u, g] = N(!1), p = "bg-offwhite/25 p-3 whitespace-pre-wrap break-all rounded-sm";
+  const { networksById: v } = W(), [c, x] = N(!1), p = "bg-offwhite/25 p-3 whitespace-pre-wrap break-all rounded-sm";
   return /* @__PURE__ */ r.jsxs(r.Fragment, { children: [
     !!n && /* @__PURE__ */ r.jsxs("div", { children: [
       /* @__PURE__ */ r.jsx("h2", { className: "mb-6", children: "Sign Message" }),
@@ -1754,15 +1752,15 @@ function Dr({
       /* @__PURE__ */ r.jsx("h2", { className: "mb-6", children: "Approve Transaction" }),
       /* @__PURE__ */ r.jsx("pre", { className: p, children: JSON.stringify(
         t,
-        (f, o) => typeof o == "bigint" ? o.toString() : o,
+        (o, u) => typeof u == "bigint" ? u.toString() : u,
         2
       ) })
     ] }),
     !!a && /* @__PURE__ */ r.jsxs("div", { children: [
       /* @__PURE__ */ r.jsx("h2", { className: "mb-6", children: "Approve Contract Transaction" }),
-      !!a.chainId && !!y[a.chainId] && /* @__PURE__ */ r.jsxs("p", { children: [
+      !!a.chainId && !!v[a.chainId] && /* @__PURE__ */ r.jsxs("p", { children: [
         "Chain: ",
-        y[a.chainId].name
+        v[a.chainId].name
       ] }),
       /* @__PURE__ */ r.jsxs("p", { className: "my-3 break-all", children: [
         "Contract address: ",
@@ -1774,7 +1772,7 @@ function Dr({
       ] }),
       /* @__PURE__ */ r.jsx("div", { className: "my-3", children: /* @__PURE__ */ r.jsx("pre", { className: p, children: JSON.stringify(
         a.contractFunctionValues,
-        (f, o) => typeof o == "bigint" ? o.toString() : o,
+        (o, u) => typeof u == "bigint" ? u.toString() : u,
         2
       ) }) })
     ] }),
@@ -1783,69 +1781,69 @@ function Dr({
       /* @__PURE__ */ r.jsx(
         O,
         {
-          loading: u,
+          loading: c,
           className: "w-full",
           onClick: async () => {
-            g(!0), await d(), g(!1);
+            x(!0), await h(), x(!1);
           },
           children: i
         }
       ),
-      /* @__PURE__ */ r.jsx(O, { variant: "secondary", disabled: u, className: "w-full", onClick: v, children: m })
+      /* @__PURE__ */ r.jsx(O, { variant: "secondary", disabled: c, className: "w-full", onClick: m, children: d })
     ] })
   ] });
 }
 function Wr({ disableAutoBroadcastAfterSign: t = !1 }) {
-  const { state: n, wallet: a, setScreen: i, handleError: m } = W(), { dispatch: d } = wt(), [v, y] = N(!1), [u, g] = N(), [p, f] = N(), [o, c] = N(""), [h, S] = N({
+  const { state: n, wallet: a, setScreen: i, handleError: d } = W(), { dispatch: h } = wt(), [m, v] = N(!1), [c, x] = N(), [p, o] = N(), [u, f] = N(""), [g, S] = N({
     title: "",
     txHash: "",
     explorerUrl: ""
   }), k = X(), I = n.username && n.address;
   U(() => {
     const F = (C) => {
-      C.plain ? (g(C.plain?.tx), k.current = C, y(!0)) : C.contractWrite && (f({
+      C.plain ? (x(C.plain?.tx), k.current = C, v(!0)) : C.contractWrite && (o({
         chainId: C.contractWrite.chainId,
         contractAddress: C.contractWrite.contractAddress,
         contractFunctionName: C.contractWrite.contractFunctionName,
         contractFunctionValues: C.contractWrite.contractFunctionValues
-      }), k.current = C, y(!0));
+      }), k.current = C, v(!0));
     }, J = (C) => {
-      c(C.message), k.current = { signature: C }, y(!0);
+      f(C.message), k.current = { signature: C }, v(!0);
     }, z = (C) => {
-      d({ type: "addTx", payload: C });
+      h({ type: "addTx", payload: C });
     };
     return a && (a.events.on("txApprove", F), a.events.on("signatureRequest", J), a.events.on("txSubmitted", z)), () => {
       a && (a.events.off("txApprove", F), a.events.off("signatureRequest", J), a.events.off("txSubmitted", z));
     };
   }, [a]), U(() => {
-    v || ((u || o || p) && E(), n.walletScreen !== "main" && i("main"));
-  }, [v]);
+    m || ((c || u || p) && E(), n.walletScreen !== "main" && i("main"));
+  }, [m]);
   function E() {
-    y(!1), g(void 0), f(void 0), c(""), S({
+    v(!1), x(void 0), o(void 0), f(""), S({
       title: "",
       txHash: "",
       explorerUrl: ""
     });
   }
   let H = /* @__PURE__ */ r.jsx(r.Fragment, {});
-  return I ? u || o || p ? h.title ? H = /* @__PURE__ */ r.jsxs("div", { className: "text-center", children: [
-    /* @__PURE__ */ r.jsx("h2", { className: "mb-6", children: h.title }),
-    !!h.explorerUrl && /* @__PURE__ */ r.jsx("p", { className: "mb-6", children: /* @__PURE__ */ r.jsx(O, { variant: "secondary", href: h.explorerUrl, blank: !0, children: "View on explorer" }) }),
-    !!h.txHash && /* @__PURE__ */ r.jsxs("p", { className: "break-all my-3", children: [
+  return I ? c || u || p ? g.title ? H = /* @__PURE__ */ r.jsxs("div", { className: "text-center", children: [
+    /* @__PURE__ */ r.jsx("h2", { className: "mb-6", children: g.title }),
+    !!g.explorerUrl && /* @__PURE__ */ r.jsx("p", { className: "mb-6", children: /* @__PURE__ */ r.jsx(O, { variant: "secondary", href: g.explorerUrl, blank: !0, children: "View on explorer" }) }),
+    !!g.txHash && /* @__PURE__ */ r.jsxs("p", { className: "break-all my-3", children: [
       "Transaction hash: ",
-      h.txHash
+      g.txHash
     ] }),
     /* @__PURE__ */ r.jsx("div", { className: "mt-12", children: /* @__PURE__ */ r.jsx(O, { onClick: () => E(), children: "Close" }) })
   ] }) : H = /* @__PURE__ */ r.jsx(
     Dr,
     {
-      tx: u,
-      signMessage: o,
+      tx: c,
+      signMessage: u,
       contractFunctionData: p,
       onApprove: async () => {
         if (k.current)
           try {
-            if (m(), k.current.signature)
+            if (d(), k.current.signature)
               await a?.signMessage({
                 ...k.current.signature,
                 authData: { username: n.username }
@@ -1890,14 +1888,14 @@ function Wr({ disableAutoBroadcastAfterSign: t = !1 }) {
               }
             }
           } catch (F) {
-            m(F);
+            d(F);
           }
       },
       onDecline: () => E()
     }
   ) : H = /* @__PURE__ */ r.jsx(Pr, {}) : H = /* @__PURE__ */ r.jsx(br, {}), /* @__PURE__ */ r.jsxs("div", { children: [
-    /* @__PURE__ */ r.jsx(Lr, { isOpen: v, setIsOpen: y, children: H }),
-    /* @__PURE__ */ r.jsx(O, { id: "oaw-wallet-widget-btn", onClick: () => y(!0), children: I ? "Open wallet" : "Sign in now" })
+    /* @__PURE__ */ r.jsx(Lr, { isOpen: m, setIsOpen: v, children: H }),
+    /* @__PURE__ */ r.jsx(O, { id: "oaw-wallet-widget-btn", onClick: () => v(!0), children: I ? "Open wallet" : "Sign in now" })
   ] });
 }
 function Lr({
