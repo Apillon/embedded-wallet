@@ -31,7 +31,8 @@ declare type NetworkConfig = {
 
 declare type SignatureCallback = (gaslessData: string) => Promise<{
     signature: string;
-    gasLimit: number;
+    gasLimit?: number;
+    gasPrice?: number;
     timestamp: number;
 }>;
 

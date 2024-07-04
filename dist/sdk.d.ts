@@ -241,7 +241,8 @@ export declare type RegisterData = {
 
 export declare type SignatureCallback = (gaslessData: string) => Promise<{
     signature: string;
-    gasLimit: number;
+    gasLimit?: number;
+    gasPrice?: number;
     timestamp: number;
 }>;
 

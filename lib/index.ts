@@ -149,7 +149,7 @@ class OasisAppWallet {
       signedTx = await this.accountManagerContract.generateGaslessTx(
         gaslessData,
         nonce as any,
-        gasPrice as any,
+        gaslessParams.gasPrice ? BigInt(gaslessParams.gasPrice) : (gasPrice as any),
         gaslessParams.gasLimit ? BigInt(gaslessParams.gasLimit) : 1_000_000n,
         BigInt(gaslessParams.timestamp),
         gaslessParams.signature

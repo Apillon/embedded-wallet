@@ -11,7 +11,7 @@ export type NetworkConfig = { [networkId: number]: { rpcUrl: string; explorerUrl
 
 export type SignatureCallback = (
   gaslessData: string
-) => Promise<{ signature: string; gasLimit: number; timestamp: number }>;
+) => Promise<{ signature: string; gasLimit?: number; gasPrice?: number; timestamp: number }>;
 
 export type AppParams = {
   accountManagerAddress?: string;

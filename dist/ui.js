@@ -1,7 +1,7 @@
 import Ae, { createContext as Oe, useReducer as Ie, useState as N, useEffect as U, useContext as Pe, forwardRef as tr, useRef as X, useMemo as ye } from "react";
 import rr from "react-dom";
 import { Transition as nr, Dialog as ar, TransitionChild as lt, DialogPanel as sr } from "@headlessui/react";
-import { W as re, i as ct, E as or, g as me, c as ee } from "./index-VLVQMktF.js";
+import { W as re, i as ct, E as or, g as me, c as ee } from "./index-CPVUey3w.js";
 import { ethers as Ce } from "ethers";
 import ir from "react-qr-code";
 function lr(t) {
