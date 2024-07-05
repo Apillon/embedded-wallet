@@ -1,66 +1,16 @@
 {
-  "name": "oasis-app-wallet",
   "private": true,
-  "version": "0.0.0",
-  "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
-  },
-  "main": "./dist/sdk.js",
-  "exports": {
-    ".": {
-      "import": "./dist/sdk.js",
-      "require": "./dist/sdk.umd.cjs"
-    },
-    "./ui": {
-      "import": "./dist/ui.js",
-      "require": "./dist/ui.umd.cjs"
-    },
-    "./css": {
-      "default": "./dist/style.css"
-    }
-  },
-  "dependencies": {
-    "@headlessui/react": "^2.0.4",
-    "@noble/curves": "^1.4.0",
-    "@oasisprotocol/sapphire-paratime": "^1.3.2",
-    "abitype": "^1.0.2",
-    "asn1js": "^3.0.5",
-    "cbor-redux": "^1.0.0",
-    "ecdsa-secp256r1": "^1.3.3",
-    "elliptic": "^6.5.4",
-    "ethers": "^6.7.1",
-    "mitt": "^3.0.1",
-    "pbkdf2": "^3.1.2",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-qr-code": "^2.0.15",
-    "secp256r1": "^0.0.3",
-    "viem": "^2.16.2"
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
   "devDependencies": {
-    "@types/elliptic": "^6.4.14",
-    "@types/pbkdf2": "^3.1.0",
-    "@types/react": "^18.2.66",
-    "@types/react-dom": "^18.2.22",
-    "@typescript-eslint/eslint-plugin": "^7.2.0",
-    "@typescript-eslint/parser": "^7.2.0",
-    "@vitejs/plugin-react-swc": "^3.5.0",
-    "autoprefixer": "^10.4.19",
-    "clsx": "^2.1.1",
     "eslint": "^8.57.0",
-    "eslint-plugin-react": "^7.34.1",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "eslint-plugin-react-refresh": "^0.4.6",
-    "ethers-abitype": "^1.0.3",
-    "postcss": "^8.4.38",
-    "tailwindcss": "^3.4.3",
-    "typescript": "^5.2.2",
-    "vite": "^5.2.0",
-    "vite-plugin-dts": "^3.9.1",
-    "vite-plugin-node-polyfills": "^0.21.0"
-  }
+    "prettier": "^3.2.5",
+    "turbo": "^2.0.6"
+  },
+  "packageManager": "pnpm@8.15.6",
+  "name": "with-vite"
 }
