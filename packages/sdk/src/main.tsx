@@ -18,9 +18,8 @@ export function initializeApp(activatorSelector?: string, options?: AppProps) {
   if (!selectedEl) {
     selectedEl = document.createElement('div');
     selectedEl.id = 'oasis-app-wallet';
+    document.body.appendChild(selectedEl);
   }
-
-  document.body.appendChild(selectedEl);
 
   ReactDOM.createRoot(selectedEl).render(
     <React.StrictMode>
