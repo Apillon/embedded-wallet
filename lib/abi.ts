@@ -21,6 +21,28 @@ export const AccountManagerAbi = [
   'function userExists(bytes32 in_username) view returns (bool)',
 ] as const;
 
+export const AccountManagerAbiOld = [
+  'constructor()',
+  'error DER_Split_Error()',
+  'error expmod_Error()',
+  'error k256Decompress_Invalid_Length_Error()',
+  'error k256DeriveY_Invalid_Prefix_Error()',
+  'error recoverV_Error()',
+  'function createAccount((bytes32 hashedUsername, bytes credentialId, (uint8 kty, int8 alg, uint8 crv, uint256 x, uint256 y) pubkey, bytes32 optionalPassword) args)',
+  'function credentialIdsByUsername(bytes32 in_hashedUsername) view returns (bytes[] out_credentialIds)',
+  'function encryptedTx(bytes32 nonce, bytes ciphertext)',
+  'function gaspayingAddress() view returns (address)',
+  'function generateGaslessTx(bytes in_data, uint64 nonce, uint256 gasPrice) view returns (bytes out_data)',
+  'function getAccount(bytes32 in_username) view returns (address account, address keypairAddress)',
+  'function manageCredential((bytes32 credentialIdHashed, (bytes authenticatorData, (uint8 t, string k, string v)[] clientDataTokens, uint256 sigR, uint256 sigS) resp, bytes data) args)',
+  'function manageCredentialPassword((bytes32 digest, bytes data) args)',
+  'function personalization() view returns (bytes32)',
+  'function proxyView(bytes32 in_credentialIdHashed, (bytes authenticatorData, (uint8 t, string k, string v)[] clientDataTokens, uint256 sigR, uint256 sigS) in_resp, bytes in_data) view returns (bytes out_data)',
+  'function proxyViewPassword(bytes32 in_hashedUsername, bytes32 in_digest, bytes in_data) view returns (bytes out_data)',
+  'function salt() view returns (bytes32)',
+  'function userExists(bytes32 in_username) view returns (bool)',
+] as const;
+
 export const AccountAbi = [
   'constructor()',
   'error DER_Split_Error()',

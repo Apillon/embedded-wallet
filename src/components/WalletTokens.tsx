@@ -73,16 +73,31 @@ export default function WalletTokens() {
         handleError();
 
         try {
-          await wallet.signContractWrite({
-            mustConfirm: true,
-            contractAbi: ERC20Abi,
-            contractAddress: selectedToken.address,
-            contractFunctionName: 'transfer',
-            contractFunctionValues: [
-              receiverAddress,
-              ethers.parseUnits(amount, selectedToken.decimals),
-            ],
-          });
+          if (!selectedToken.address) {
+            // Native token
+            await wallet.signPlainTransaction({
+              mustConfirm: true,
+              strategy: 'passkey',
+              tx: {
+                to: receiverAddress,
+                data: '0x',
+                gasLimit: 1_000_000,
+                value: ethers.parseEther(amount),
+              },
+            });
+          } else {
+            // Other ERC20 Token
+            await wallet.signContractWrite({
+              mustConfirm: true,
+              contractAbi: ERC20Abi,
+              contractAddress: selectedToken.address,
+              contractFunctionName: 'transfer',
+              contractFunctionValues: [
+                receiverAddress,
+                ethers.parseUnits(amount, selectedToken.decimals),
+              ],
+            });
+          }
         } catch (e) {
           handleError(e);
         }

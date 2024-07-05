@@ -13,7 +13,7 @@ import {
   WebauthnContract,
 } from './types';
 import * as sapphire from '@oasisprotocol/sapphire-paratime';
-import { AccountAbi, AccountManagerAbi } from './abi';
+import { AccountAbi, AccountManagerAbi, AccountManagerAbiOld } from './abi';
 import PasswordStrategy from './strategies/password';
 import PasskeyStrategy from './strategies/passkey';
 import { networkIdIsSapphire, getHashedUsername, abort } from './utils';
@@ -26,6 +26,7 @@ class OasisAppWallet {
   events: Emitter<Events>;
   onGetSignature: SignatureCallback | undefined;
 
+  legacyContract = false;
   defaultNetworkId = 0;
   rpcUrls = {} as { [networkId: number]: string };
   rpcProviders = {} as { [networkId: number]: ethers.JsonRpcProvider };
@@ -54,7 +55,7 @@ class OasisAppWallet {
 
     this.accountManagerContract = new ethers.Contract(
       params?.accountManagerAddress || '0x5C357DaFfe6b1016C0c9A5607367E8f47765D4bC',
-      AccountManagerAbi,
+      params?.legacyContract ? AccountManagerAbiOld : AccountManagerAbi,
       new ethers.VoidSigner(ethers.ZeroAddress, this.sapphireProvider)
     ) as unknown as WebauthnContract;
 
@@ -70,6 +71,7 @@ class OasisAppWallet {
     this.events = mitt<Events>();
 
     this.onGetSignature = params?.signatureCallback;
+    this.legacyContract = !!params?.legacyContract;
   }
 
   // #region Auth utils
@@ -138,7 +140,7 @@ class OasisAppWallet {
 
     let signedTx = '';
 
-    if (this.onGetSignature) {
+    if (this.onGetSignature && !this.legacyContract) {
       //Get signature from API (handle gas payments e.g.)
       const gaslessParams = await this.onGetSignature(gaslessData);
 
@@ -395,15 +397,24 @@ class OasisAppWallet {
     }
 
     /**
+     * Calculate gasPrice if missing
+     */
+    if (!params.tx.gasPrice) {
+      params.tx.gasPrice = (
+        await this.getRpcProviderForChainId(params.tx.chainId).getFeeData()
+      ).gasPrice;
+    }
+
+    /**
      * Add tx params needed for write tx
      */
     if (params.tx.type === 2) {
-      if (!params.tx.gasPrice) {
-        /**
-         * @TODO Calculate this?
-         */
-        params.tx.gasPrice = 20_000_000_000;
-      }
+      // if (!params.tx.gasPrice) {
+      //   /**
+      //    * @TODO Calculate this?
+      //    */
+      //   params.tx.gasPrice = 20_000_000_000;
+      // }
 
       if (!params.tx.value) {
         params.tx.value = 0n;
