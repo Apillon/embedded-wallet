@@ -28,7 +28,7 @@ export default function WalletTokens() {
 
   const selectedToken = useMemo<TokenInfo>(() => {
     if (tokens.selectedToken) {
-      const userTokens = tokens.list[state.address];
+      const userTokens = tokens.list[state.address][state.networkId];
 
       if (userTokens) {
         const found = userTokens.find(x => x.address === tokens.selectedToken);
@@ -84,6 +84,7 @@ export default function WalletTokens() {
                 gasLimit: 1_000_000,
                 value: ethers.parseEther(amount),
               },
+              label: 'Transfer native token',
             });
           } else {
             // Other ERC20 Token
@@ -96,6 +97,7 @@ export default function WalletTokens() {
                 receiverAddress,
                 ethers.parseUnits(amount, selectedToken.decimals),
               ],
+              label: 'Transfer ERC20 token',
             });
           }
         } catch (e) {
@@ -148,8 +150,8 @@ function SelectToken({ nativeToken }: { nativeToken: TokenInfo }) {
   const [loading, setLoading] = useState(false);
 
   const tokenList = useMemo<TokenInfo[]>(() => {
-    return Array.isArray(tokens.list[state.address])
-      ? [nativeToken, ...tokens.list[state.address]]
+    return Array.isArray(tokens.list[state.address]?.[state.networkId])
+      ? [nativeToken, ...tokens.list[state.address][state.networkId]]
       : [nativeToken];
   }, [tokens.list]);
 
@@ -181,7 +183,10 @@ function SelectToken({ nativeToken }: { nativeToken: TokenInfo }) {
               throw new Error('Could not get token details');
             }
 
-            dispatch({ type: 'updateToken', payload: { owner: state.address, token: res } });
+            dispatch({
+              type: 'updateToken',
+              payload: { owner: state.address, chainId: state.networkId, token: res },
+            });
           } catch (e) {
             handleError(e);
           }

@@ -14,7 +14,7 @@ export type TokenInfo = {
 
 const initialState = () => ({
   list: {} as {
-    [ownerAddress: string]: TokenInfo[];
+    [ownerAddress: string]: { [chainId: number]: TokenInfo[] };
   },
   selectedToken: '', // address
 });
@@ -34,6 +34,7 @@ type ContextActions =
       type: 'updateToken';
       payload: {
         owner: string;
+        chainId: number;
         token: TokenInfo;
       };
     };
@@ -51,7 +52,7 @@ function reducer(state: ContextState, action: ContextActions) {
         [action.payload.key]: action.payload.value,
       };
     case 'updateToken': {
-      const newTokens = [...(state.list[action.payload.owner] || [])];
+      const newTokens = [...(state.list[action.payload.owner]?.[action.payload.chainId] || [])];
       const found = newTokens.findIndex(x => x.address === action.payload.token.address);
 
       if (found < 0) {
@@ -64,7 +65,10 @@ function reducer(state: ContextState, action: ContextActions) {
         ...state,
         list: {
           ...state.list,
-          [action.payload.owner]: newTokens,
+          [action.payload.owner]: {
+            ...state.list[action.payload.owner],
+            [action.payload.chainId]: newTokens,
+          },
         },
       };
     }
@@ -101,30 +105,33 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
         const restored = JSON.parse(stored);
         dispatch({ type: 'setState', payload: restored });
 
-        if (Array.isArray(restored?.list?.[walletState.address])) {
-          restored.list[walletState.address].forEach(async (t: TokenInfo) => {
-            if (wallet) {
-              const res = await wallet.contractRead({
-                contractAddress: t.address,
-                contractAbi: ERC20Abi,
-                contractFunctionName: 'balanceOf',
-                contractFunctionValues: [walletState.address],
-              });
-
-              if (res) {
-                dispatch({
-                  type: 'updateToken',
-                  payload: {
-                    owner: walletState.address,
-                    token: {
-                      ...t,
-                      balance: ethers.formatUnits(res, t.decimals),
-                    },
-                  },
+        if (Array.isArray(restored?.list?.[walletState.address]?.[walletState.networkId])) {
+          restored.list[walletState.address][walletState.networkId].forEach(
+            async (t: TokenInfo) => {
+              if (wallet) {
+                const res = await wallet.contractRead({
+                  contractAddress: t.address,
+                  contractAbi: ERC20Abi,
+                  contractFunctionName: 'balanceOf',
+                  contractFunctionValues: [walletState.address],
                 });
+
+                if (res) {
+                  dispatch({
+                    type: 'updateToken',
+                    payload: {
+                      owner: walletState.address,
+                      chainId: walletState.networkId,
+                      token: {
+                        ...t,
+                        balance: ethers.formatUnits(res, t.decimals),
+                      },
+                    },
+                  });
+                }
               }
             }
-          });
+          );
         }
       } catch (e) {
         console.error('Cant parse context state localStorage', e);

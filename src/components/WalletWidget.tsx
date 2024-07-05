@@ -173,7 +173,7 @@ function Wallet({ disableAutoBroadcastAfterSign = false }: AppProps) {
                     const res2 = await wallet?.broadcastTransaction(
                       signedTxData,
                       chainId,
-                      approveParams.current.plain.label || ''
+                      approveParams.current.plain.label || 'Transaction'
                     );
 
                     setApprovedData({
@@ -195,7 +195,7 @@ function Wallet({ disableAutoBroadcastAfterSign = false }: AppProps) {
                     const res2 = await wallet?.broadcastTransaction(
                       signedTxData,
                       chainId,
-                      approveParams.current.contractWrite.label || ''
+                      approveParams.current.contractWrite.label || 'Transaction'
                     );
 
                     setApprovedData({
