@@ -1,7 +1,5 @@
 import WalletWidget from '../components/WalletWidget';
-import Test2 from './Test2';
-import Test3 from './Test3';
-import Test4 from './Test4';
+import TestSign from './TestSign';
 
 export default function TestApp() {
   return (
@@ -59,11 +57,12 @@ export default function TestApp() {
 
       <hr className="my-6" />
 
-      <Test2 />
+      <TestSign />
+      {/* <Test2 />
       <hr className="my-6" />
       <Test3 />
       <hr className="my-6" />
-      <Test4 />
+      <Test4 /> */}
     </div>
   );
 }

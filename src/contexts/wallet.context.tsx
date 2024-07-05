@@ -179,6 +179,19 @@ function WalletProvider({
     }
   }
 
+  /**
+   * @TODO Switch with Mainnet on prod
+   */
+  networks = [
+    {
+      name: 'Sapphire Testnet',
+      id: 23295,
+      rpcUrl: 'https://testnet.sapphire.oasis.dev',
+      explorerUrl: 'https://explorer.oasis.io/testnet/sapphire',
+    },
+    ...networks,
+  ];
+
   return (
     <WalletContext.Provider
       value={{
