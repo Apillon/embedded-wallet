@@ -89,21 +89,28 @@ function Wallet({ disableAutoBroadcastAfterSign = false }: AppProps) {
       }
 
       if (state.walletScreen !== 'main') {
-        setScreen('main');
+        // Wait for modal transition
+        setTimeout(() => {
+          setScreen('main');
+        }, 200);
       }
     }
   }, [isModalOpen]);
 
   function closeApproveScreen() {
     setIsModalOpen(false);
-    setTxToConfirm(undefined);
-    setContractFunctionData(undefined);
-    setMessageToSign('');
-    setApprovedData({
-      title: '',
-      txHash: '',
-      explorerUrl: '',
-    });
+
+    // Wait for modal transition
+    setTimeout(() => {
+      setTxToConfirm(undefined);
+      setContractFunctionData(undefined);
+      setMessageToSign('');
+      setApprovedData({
+        title: '',
+        txHash: '',
+        explorerUrl: '',
+      });
+    }, 200);
   }
 
   let modalContent = <></>;
