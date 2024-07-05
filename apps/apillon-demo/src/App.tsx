@@ -3,6 +3,7 @@ import imageWallet from './assets/image-wallet.png';
 import Modal from './components/Modal';
 import Demo from './components/Demo';
 import myImage from './assets/image.png'; // Adjust the path as needed
+import { Toaster } from 'sonner';
 
 export default function App() {
   const btnClass =
@@ -99,6 +100,8 @@ export default function App() {
       <Modal maxWidth="767px" isOpen={isModalOpen} setIsOpen={o => setIsModalOpen(o)}>
         <img className="max-w-[767px] w-full" src={myImage} alt="" />
       </Modal>
+
+      <Toaster position="top-center" />
     </>
   );
 }

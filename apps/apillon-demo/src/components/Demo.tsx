@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { getOasisAppWallet } from '@oasis-app-wallet/sdk';
+import { toast } from 'sonner';
 
 export default function Demo() {
   const [message, setMessage] = useState('Hello from Apillon!');
@@ -26,6 +27,7 @@ export default function Demo() {
             message,
           });
           console.log(msg);
+          toast.success(msg);
         }}
       >
         <input
