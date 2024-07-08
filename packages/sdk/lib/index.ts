@@ -167,6 +167,17 @@ class OasisAppWallet {
 
     const txHash = await this.sapphireProvider.send('eth_sendRawTransaction', [signedTx]);
 
+    this.events.emit('dataUpdated', {
+      name: 'authStrategy',
+      newValue: strategy,
+      oldValue: this.lastAccount.authStrategy,
+    });
+    this.events.emit('dataUpdated', {
+      name: 'username',
+      newValue: authData.username,
+      oldValue: this.lastAccount.username,
+    });
+
     this.lastAccount.authStrategy = strategy;
     this.lastAccount.username = authData.username;
 
@@ -222,6 +233,17 @@ class OasisAppWallet {
      */
     const contractRes = await this.accountManagerContract.getAccount(hashedUsername as any);
 
+    this.events.emit('dataUpdated', {
+      name: 'authStrategy',
+      newValue: strategy,
+      oldValue: this.lastAccount.authStrategy,
+    });
+    this.events.emit('dataUpdated', {
+      name: 'username',
+      newValue: authData.username,
+      oldValue: this.lastAccount.username,
+    });
+
     this.lastAccount.authStrategy = strategy;
     this.lastAccount.username = authData.username;
 
@@ -263,6 +285,12 @@ class OasisAppWallet {
     const userData = await this.accountManagerContract.getAccount(hashedUsername as any);
 
     if (Array.isArray(userData) && userData.length > 1) {
+      this.events.emit('dataUpdated', {
+        name: 'address',
+        newValue: userData[1],
+        oldValue: this.lastAccount.address,
+      });
+
       this.lastAccount.address = userData[1] as string;
       this.lastAccount.contractAddress = userData[0] as string;
 
@@ -294,6 +322,24 @@ class OasisAppWallet {
     address: string;
     contractAddress: string;
   }) {
+    this.events.emit('dataUpdated', {
+      name: 'username',
+      newValue: params.username,
+      oldValue: this.lastAccount.username,
+    });
+
+    this.events.emit('dataUpdated', {
+      name: 'authStrategy',
+      newValue: params.strategy,
+      oldValue: this.lastAccount.authStrategy,
+    });
+
+    this.events.emit('dataUpdated', {
+      name: 'address',
+      newValue: params.address,
+      oldValue: this.lastAccount.address,
+    });
+
     this.lastAccount.username = params.username;
     this.lastAccount.authStrategy = params.strategy;
     this.lastAccount.address = params.address;
@@ -661,6 +707,12 @@ class OasisAppWallet {
 
   setDefaultNetworkId(networkId: number) {
     if (this.rpcUrls[networkId]) {
+      this.events.emit('dataUpdated', {
+        name: 'defaultNetworkId',
+        newValue: networkId,
+        oldValue: this.defaultNetworkId,
+      });
+
       this.defaultNetworkId = networkId;
     }
   }
