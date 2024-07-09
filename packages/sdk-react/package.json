@@ -9,6 +9,12 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
+  "main": "./dist/main.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/sdk.js"
+    }
+  },
   "dependencies": {
     "@oasis-app-wallet/sdk": "*",
     "react": "^18.3.1",
@@ -21,6 +27,8 @@
     "@vitejs/plugin-react-swc": "^3.5.0",
     "eslint": "^8.57.0",
     "typescript": "^5.2.2",
-    "vite": "^5.3.1"
+    "vite": "^5.3.1",
+    "vite-plugin-dts": "^3.9.1",
+    "vite-plugin-node-polyfills": "^0.22.0"
   }
 }

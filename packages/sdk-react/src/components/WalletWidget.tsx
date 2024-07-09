@@ -1,7 +1,7 @@
-import { AppParams } from '@oasis-app-wallet/sdk';
-import { initializeApp } from '@oasis-app-wallet/sdk/ui';
+import { AppProps, initializeApp } from '@oasis-app-wallet/sdk/ui';
+import '@oasis-app-wallet/sdk/css';
 
-export default function WalletWidget({ className, ...params }: AppParams & { className?: string }) {
+export default function WalletWidget({ className, ...params }: AppProps & { className?: string }) {
   setTimeout(() => {
     initializeApp('#oasis-app-wallet-activator-react', params);
   }, 5);

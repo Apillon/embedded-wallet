@@ -27,3 +27,5 @@ export function initializeApp(activatorSelector?: string, options?: AppProps) {
     </React.StrictMode>
   );
 }
+
+export type { AppProps };
