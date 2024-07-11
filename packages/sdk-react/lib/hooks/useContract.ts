@@ -1,6 +1,4 @@
-// import { abort } from '@sdk/lib/utils';
 import { abort } from '@oasis-app-wallet/sdk';
-// import { abort } from '../types';
 import useWallet from './useWallet';
 import useAccount from './useAccount';
 
