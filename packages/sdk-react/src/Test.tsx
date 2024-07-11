@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import WalletWidget from './components/WalletWidget';
+import { WalletWidget } from '../lib/components/WalletWidget';
 
 function Test() {
   return (
