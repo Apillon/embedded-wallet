@@ -1,6 +1,6 @@
 import { ReactNode, createContext, useContext, useEffect, useReducer, useState } from 'react';
 import { AppParams, AuthStrategyName, NetworkConfig } from '../../lib/types';
-import { ErrorMessages, WebStorageKeys } from '../../lib/constants';
+import { ErrorMessages, SapphireTestnet, WebStorageKeys } from '../../lib/constants';
 import OasisAppWallet from '../../lib';
 import { initializeOnWindow } from '../../lib/utils';
 
@@ -14,7 +14,7 @@ export type WalletScreens =
   | 'selectToken'
   | 'receiveToken';
 
-const initialState = (defaultNetworkId = 0) => ({
+const initialState = (defaultNetworkId = SapphireTestnet) => ({
   username: '',
   address: '',
   contractAddress: '',
@@ -79,7 +79,7 @@ const WalletContext = createContext<
 function WalletProvider({
   children,
   networks = [],
-  defaultNetworkId = 0,
+  defaultNetworkId = SapphireTestnet,
   ...restOfParams
 }: {
   children: ReactNode;
