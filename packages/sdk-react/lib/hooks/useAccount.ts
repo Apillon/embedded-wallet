@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { AuthStrategyName, Events } from '@oasis-app-wallet/sdk';
+import { AuthStrategyName, Events } from '@oasis-app-wallet/sdk';
 import useWallet from './useWallet';
 
 export default function useAccount() {

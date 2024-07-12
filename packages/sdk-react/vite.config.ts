@@ -2,16 +2,25 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { resolve } from 'path';
-// import pkg from './package.json' assert { type: 'json' };
+import dts from 'vite-plugin-dts';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [nodePolyfills(), react()],
+  plugins: [
+    nodePolyfills(),
+    react(),
+    dts({
+      include: ['lib'],
+      tsconfigPath: resolve(__dirname, 'tsconfig.app.json'),
+      rollupTypes: true,
+    }),
+  ],
 
   build: {
     lib: {
       entry: resolve(__dirname, 'lib/main.ts'),
       name: 'OasisAppWalletReact',
+      fileName: 'react',
       formats: ['es'],
     },
 
@@ -19,6 +28,7 @@ export default defineConfig({
       external: [
         'react',
         'react-dom',
+        'react/jsx-runtime',
         '@headlessui/react',
         '@noble/curves',
         '@oasisprotocol/sapphire-paratime',

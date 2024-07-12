@@ -1,4 +1,4 @@
-import { AppProps, initializeApp } from '@oasis-app-wallet/sdk/ui';
+import { initializeApp, AppProps } from '@oasis-app-wallet/sdk/ui';
 
 export function WalletWidget({ className, ...params }: AppProps & { className?: string }) {
   setTimeout(() => {
