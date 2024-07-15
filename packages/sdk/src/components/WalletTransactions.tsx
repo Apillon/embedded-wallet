@@ -35,7 +35,12 @@ function Transaction({ tx }: { tx: TransactionItem }) {
     <div className="rounded-md bg-offwhite/5 px-2 py-1">
       <div className="flex justify-between items-center">
         <span className="font-bold text-sm">
-          <a href={tx.explorerUrl || '#'} target="_blank" title="View on explorer">
+          <a
+            href={tx.explorerUrl || '#'}
+            target="_blank"
+            title="View on explorer"
+            className="rounded-sm"
+          >
             {tx.label}
             &nbsp; &#8599;
           </a>

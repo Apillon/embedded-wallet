@@ -41,7 +41,7 @@ const Btn = forwardRef<HTMLAnchorElement, Props>(
     const btnClass = clsx(
       paddingClass,
       className,
-      'relative inline-block rounded-lg text-sm font-bold border-b-[4px] border-t-[4px]',
+      'oaw-button relative inline-block rounded-lg text-sm font-bold border-b-[4px] border-t-[4px] border-x-0',
       {
         'transition-all hover:border-b-blue/50 hover:translate-y-[-2px] focus:translate-y-px focus:border-b-yellow/50':
           !loading && !disabled,
