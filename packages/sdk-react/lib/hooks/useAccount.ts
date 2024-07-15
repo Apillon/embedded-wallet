@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { AuthStrategyName, Events } from '@oasis-app-wallet/sdk';
 import useWallet from './useWallet';
 
-export default function useAccount() {
+export function useAccount() {
   const { wallet } = useWallet();
 
   const [username, setUsername] = useState('');
@@ -36,7 +36,7 @@ export default function useAccount() {
   }, [wallet]);
 
   async function getBalance(networkId = undefined) {
-    await wallet?.getAccountBalance(address, networkId);
+    return await wallet?.getAccountBalance(address, networkId);
   }
 
   return {
@@ -46,3 +46,5 @@ export default function useAccount() {
     getBalance,
   };
 }
+
+export default useAccount;

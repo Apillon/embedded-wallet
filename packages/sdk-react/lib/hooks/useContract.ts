@@ -2,14 +2,16 @@ import { abort } from '@oasis-app-wallet/sdk';
 import useWallet from './useWallet';
 import useAccount from './useAccount';
 
-export default function useContract({
+export function useContract({
   abi,
   address,
   chainId,
+  mustConfirm = true, //
 }: {
-  abi: string;
+  abi: any;
   address: string;
   chainId?: number;
+  mustConfirm?: boolean;
 }) {
   const { wallet } = useWallet();
   const { username, authStrategy } = useAccount();
@@ -44,6 +46,7 @@ export default function useContract({
       label,
       strategy: authStrategy,
       authData: { username: username },
+      mustConfirm,
     });
   }
 
@@ -52,3 +55,5 @@ export default function useContract({
     write,
   };
 }
+
+export default useContract;

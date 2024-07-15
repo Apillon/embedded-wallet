@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { OasisAppWallet, WindowId } from '@oasis-app-wallet/sdk';
 
-export default function useWallet() {
+export function useWallet() {
   const [wallet, setWallet] = useState<OasisAppWallet>();
 
   useEffect(() => {
@@ -23,3 +23,5 @@ export default function useWallet() {
     wallet,
   };
 }
+
+export default useWallet;
