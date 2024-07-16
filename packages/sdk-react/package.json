@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "generate-imports": "node ./sdk-imports/generate.mjs"
   },
-  "main": "./dist/main.ts",
+  "main": "./dist/react.ts",
   "exports": {
     ".": {
       "import": "./dist/react.js"
