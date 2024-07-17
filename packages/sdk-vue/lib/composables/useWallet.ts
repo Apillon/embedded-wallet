@@ -1,26 +1,23 @@
-import { useEffect, useState } from 'react';
+import { computed, onMounted, shallowRef } from 'vue';
 import { OasisAppWallet, WindowId } from '@oasis-app-wallet/sdk';
 
-export function useWallet() {
-  const [wallet, setWallet] = useState<OasisAppWallet>();
+export function useWallet(): any {
+  const wallet = shallowRef<OasisAppWallet>();
 
-  useEffect(() => {
+  onMounted(() => {
     checkForWindowWallet();
-  }, []);
+  });
 
-  /**
-   * Keep checking if not available
-   */
   function checkForWindowWallet() {
     if (typeof window !== 'undefined' && window[WindowId]) {
-      setWallet(window[WindowId]);
+      wallet.value = window[WindowId];
       return;
     }
     setTimeout(checkForWindowWallet, 50);
   }
 
   return {
-    wallet,
+    wallet: computed(() => wallet.value),
   };
 }
 

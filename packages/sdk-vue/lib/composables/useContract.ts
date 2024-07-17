@@ -1,12 +1,12 @@
 import { abort } from '@oasis-app-wallet/sdk';
-import useWallet from './useWallet';
 import useAccount from './useAccount';
+import useWallet from './useWallet';
 
 export function useContract({
   abi,
   address,
   chainId,
-  mustConfirm = true, //
+  mustConfirm = true,
 }: {
   abi: any;
   address: string;
@@ -14,15 +14,15 @@ export function useContract({
   mustConfirm?: boolean;
 }) {
   const { wallet } = useWallet();
-  const { username, authStrategy } = useAccount();
+  const { info: accountInfo } = useAccount();
 
   async function read(fn: string, values?: any[]) {
-    if (!wallet) {
+    if (!wallet.value) {
       abort('OASIS_WALLET_NOT_INITIALIZED');
       return;
     }
 
-    return await wallet.contractRead({
+    return await wallet.value.contractRead({
       contractAbi: abi,
       contractAddress: address,
       contractFunctionName: fn,
@@ -32,20 +32,20 @@ export function useContract({
   }
 
   async function write(fn: string, values?: any[], label?: string) {
-    if (!wallet) {
+    if (!wallet.value) {
       abort('OASIS_WALLET_NOT_INITIALIZED');
       return;
     }
 
-    return await wallet.signContractWrite({
+    return await wallet.value.signContractWrite({
       contractAbi: abi,
       contractAddress: address,
       contractFunctionName: fn,
       contractFunctionValues: values,
       chainId,
       label,
-      strategy: authStrategy,
-      authData: { username: username },
+      strategy: accountInfo.authStrategy,
+      authData: { username: accountInfo.username },
       mustConfirm,
     });
   }

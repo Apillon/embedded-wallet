@@ -1,34 +1,46 @@
-import { useState } from 'react';
-import reactLogo from './assets/react.svg';
-import viteLogo from '/vite.svg';
 import './App.css';
 import { WalletWidget } from '@oasis-app-wallet/react';
+import Test from './Test';
 
 function App() {
-  const [count, setCount] = useState(0);
-
   return (
     <>
       <div>
-        <WalletWidget />
+        <WalletWidget
+          legacyContract
+          accountManagerAddress="0x5C357DaFfe6b1016C0c9A5607367E8f47765D4bC"
+          defaultNetworkId={1287}
+          networks={[
+            {
+              name: 'Moonbeam Testnet',
+              id: 1287,
+              rpcUrl: 'https://rpc.testnet.moonbeam.network',
+              explorerUrl: 'https://moonbase.moonscan.io',
+            },
+            {
+              name: 'Celo Alfajores Testnet',
+              id: 44787,
+              rpcUrl: 'https://alfajores-forno.celo-testnet.org',
+              explorerUrl: 'https://explorer.celo.org/alfajores',
+            },
+            {
+              name: 'Amoy',
+              id: 80002,
+              rpcUrl: 'https://rpc-amoy.polygon.technology',
+              explorerUrl: 'https://www.oklink.com/amoy',
+            },
+          ]}
+        />
       </div>
 
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount(count => count + 1)}>count is {count}</button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">Click on the Vite and React logos to learn more</p>
+      <div
+        style={{
+          margin: '16px 0',
+          border: 'solid 1px grey',
+        }}
+      />
+
+      <Test />
     </>
   );
 }
