@@ -51,7 +51,7 @@ export default function App() {
             <img className="max-w-[350px] w-full mx-auto" src={imageWallet} alt="" />
           </div>
           <div>
-            <div className="flex justify-center w-full max-w-[350px] mx-auto">
+            <div className="flex justify-center w-full max-w-[450px] mx-auto">
               <Demo />
             </div>
           </div>

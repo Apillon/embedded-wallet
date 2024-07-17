@@ -55,6 +55,10 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  background-color: rgb(120 220 232 / var(--tw-bg-opacity)) !important;
+  border-bottom-color: rgb(120 220 232 / var(--tw-bg-opacity)) !important;
+  border-top-color: rgb(120 220 232 / var(--tw-bg-opacity)) !important;
 }
 
 #oaw-wallet-widget input::placeholder {

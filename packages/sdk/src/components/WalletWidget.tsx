@@ -235,7 +235,7 @@ function Wallet({ disableAutoBroadcastAfterSign = false }: AppProps) {
       </Modal>
 
       <Btn id="oaw-wallet-widget-btn" onClick={() => setIsModalOpen(true)}>
-        {loggedIn ? 'Open wallet' : 'Sign in now'}
+        {loggedIn ? 'Open wallet' : 'Sign in'}
       </Btn>
 
       {/* <Btn
