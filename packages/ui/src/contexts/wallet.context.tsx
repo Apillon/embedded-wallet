@@ -7,7 +7,7 @@ import {
   WebStorageKeys,
   OasisAppWallet,
   initializeOnWindow,
-} from '@oasis-app-wallet/sdk';
+} from '@embedded-wallet/sdk';
 
 export type Network = { name: string; id: number; rpcUrl: string; explorerUrl: string };
 

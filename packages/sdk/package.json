@@ -1,5 +1,5 @@
 {
-  "name": "@oasis-app-wallet/sdk",
+  "name": "@embedded-wallet/sdk",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -35,7 +35,7 @@
     "viem": "^2.16.2"
   },
   "devDependencies": {
-    "@oasis-app-wallet/eslint-config": "*",
+    "@embedded-wallet/eslint-config": "*",
     "@types/elliptic": "^6.4.14",
     "@types/pbkdf2": "^3.1.0",
     "@types/react": "^18.2.66",

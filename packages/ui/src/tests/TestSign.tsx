@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { getOasisAppWallet } from '@oasis-app-wallet/sdk';
+import { getOasisAppWallet } from '@embedded-wallet/sdk';
 
 export default function TestSign() {
   const [message, setMessage] = useState('Test message 1234');

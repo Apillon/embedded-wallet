@@ -1,5 +1,5 @@
 {
-  "name": "@oasis-app-wallet/vue",
+  "name": "@embedded-wallet/vue",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -15,8 +15,8 @@
     }
   },
   "dependencies": {
-    "@oasis-app-wallet/sdk": "*",
-    "@oasis-app-wallet/ui": "*",
+    "@embedded-wallet/sdk": "*",
+    "@embedded-wallet/ui": "*",
     "vue": "^3.4.29"
   },
   "devDependencies": {

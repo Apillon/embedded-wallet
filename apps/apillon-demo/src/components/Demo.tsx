@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ethers } from 'ethers';
-import { getOasisAppWallet } from '@oasis-app-wallet/sdk';
+import { getOasisAppWallet } from '@embedded-wallet/sdk';
 import { ERC20Abi } from '../lib';
 
 export default function Demo() {

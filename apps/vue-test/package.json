@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@oasis-app-wallet/sdk": "*",
+    "@embedded-wallet/vue": "*",
     "vue": "^3.4.31"
   },
   "devDependencies": {

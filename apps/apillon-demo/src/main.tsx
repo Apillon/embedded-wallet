@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
-import { initializeApp } from '@oasis-app-wallet/ui';
+import { initializeApp } from '@embedded-wallet/ui';
 
 import './index.css';
 

@@ -11,14 +11,14 @@
   },
   "dependencies": {
     "@headlessui/react": "^2.0.4",
-    "@oasis-app-wallet/sdk": "*",
-    "@oasis-app-wallet/ui": "*",
+    "@embedded-wallet/sdk": "*",
+    "@embedded-wallet/ui": "*",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "sonner": "^1.5.0"
   },
   "devDependencies": {
-    "@oasis-app-wallet/eslint-config": "*",
+    "@embedded-wallet/eslint-config": "*",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react-swc": "^3.5.0",

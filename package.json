@@ -3,7 +3,7 @@
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
-    "dev:react": "turbo run dev --filter=@oasis-app-wallet/react",
+    "dev:react": "turbo run dev --filter=@embedded-wallet/react",
     "lint": "turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
@@ -12,7 +12,7 @@
     "prettier": "^3.2.5",
     "turbo": "^2.0.6"
   },
-  "name": "oasis-app-wallet",
+  "name": "embedded-wallet",
   "packageManager": "npm@10.2.3",
   "workspaces": [
     "apps/*",

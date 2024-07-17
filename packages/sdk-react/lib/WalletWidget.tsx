@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { initializeApp, AppProps } from '@oasis-app-wallet/ui';
+import { initializeApp, AppProps } from '@embedded-wallet/ui';
 
 export function WalletWidget({ className, ...params }: AppProps & { className?: string }) {
   const initialized = useRef(false);
@@ -12,9 +12,9 @@ export function WalletWidget({ className, ...params }: AppProps & { className?: 
 
       initialized.current = true;
 
-      initializeApp('#oasis-app-wallet-activator-react', params);
+      initializeApp('#embedded-wallet-activator-react', params);
     }, 5);
   }, []);
 
-  return <div id="oasis-app-wallet-activator-react" className={className}></div>;
+  return <div id="embedded-wallet-activator-react" className={className}></div>;
 }

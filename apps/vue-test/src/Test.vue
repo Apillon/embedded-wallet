@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { useAccount, useContract } from '@oasis-app-wallet/vue';
+import { useAccount, useContract } from '@embedded-wallet/vue';
 import { ERC20Abi } from './lib';
 
 const { info, getBalance } = useAccount();

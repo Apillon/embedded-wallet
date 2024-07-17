@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { getOasisAppWallet, AuthStrategyName } from '@oasis-app-wallet/sdk';
+import { getOasisAppWallet, AuthStrategyName } from '@embedded-wallet/sdk';
 import { useWalletContext } from '../contexts/wallet.context';
 import Btn from './Btn';
 

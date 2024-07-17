@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AuthStrategyName, Events } from '@oasis-app-wallet/sdk';
+import { AuthStrategyName, Events } from '@embedded-wallet/sdk';
 import useWallet from './useWallet';
 
 export function useAccount() {

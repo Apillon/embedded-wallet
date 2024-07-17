@@ -1,6 +1,6 @@
 import { reactive, readonly, watch } from 'vue';
 import useWallet from './useWallet';
-import { AuthStrategyName, Events } from '@oasis-app-wallet/sdk';
+import { AuthStrategyName, Events } from '@embedded-wallet/sdk';
 
 export function useAccount() {
   const { wallet } = useWallet();

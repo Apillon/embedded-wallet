@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { WalletWidget } from '@oasis-app-wallet/vue';
+import { WalletWidget } from '@embedded-wallet/vue';
 import Test from './Test.vue';
 </script>
 

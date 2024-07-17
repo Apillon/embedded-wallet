@@ -1,5 +1,5 @@
 import './App.css';
-import { WalletWidget } from '@oasis-app-wallet/react';
+import { WalletWidget } from '@embedded-wallet/react';
 import Test from './Test';
 
 function App() {

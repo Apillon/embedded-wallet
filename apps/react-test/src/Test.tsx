@@ -1,4 +1,4 @@
-import { useAccount, useContract } from '@oasis-app-wallet/react';
+import { useAccount, useContract } from '@embedded-wallet/react';
 import { ERC20Abi } from './lib';
 
 export default function Test() {

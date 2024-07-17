@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { ContractReadParams } from '@oasis-app-wallet/sdk';
+import { ContractReadParams } from '@embedded-wallet/sdk';
 import Btn from './Btn';
 import { useState } from 'react';
 import { useWalletContext } from '../contexts/wallet.context';

@@ -1,4 +1,4 @@
-import { abort } from '@oasis-app-wallet/sdk';
+import { abort } from '@embedded-wallet/sdk';
 import useAccount from './useAccount';
 import useWallet from './useWallet';
 

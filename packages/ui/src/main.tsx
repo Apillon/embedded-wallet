@@ -17,7 +17,7 @@ export function initializeApp(activatorSelector?: string, options?: AppProps) {
 
   if (!selectedEl) {
     selectedEl = document.createElement('div');
-    selectedEl.id = 'oasis-app-wallet';
+    selectedEl.id = 'embedded-wallet';
     document.body.appendChild(selectedEl);
   }
 
