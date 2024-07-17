@@ -40,13 +40,21 @@ setTimeout(() => {
     ],
     signatureCallback: async gaslessData => {
       try {
+
+        
+        const tokenRes = await (
+          await fetch(`http://localhost:3000/session-token`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+          })
+        ).json();
+
         const res = await (
           await fetch(`https://api-dev.apillon.io/oasis/signature`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              token:
-                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwcm9qZWN0X3V1aWQiOiI4MDlkM2I5Yy0zMTYzLTQ4MzAtYWY4Ni0yYjUzMWJmZjU1MmQiLCJhcGlLZXkiOiI0MDk1Nzg0OS0wZTgxLTQzOTYtOTE3ZC0zZDY5NzEyMDA0NWIiLCJpYXQiOjE3MjAwMTM1NDIsImV4cCI6MTcyMDAxMzg0Miwic3ViIjoib2FzaXMtc2RrLXRva2VuIn0.M5soXwZ6WPdd9va6jxkgWMFIhPlsP1OCfOODRABL4Mk',
+              token: tokenRes.data.token,
               data: gaslessData,
             }),
           })
