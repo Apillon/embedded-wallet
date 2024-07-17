@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { getOasisAppWallet } from '../../lib/utils';
+import { getOasisAppWallet, AuthStrategyName } from '@oasis-app-wallet/sdk';
 import { useWalletContext } from '../contexts/wallet.context';
 import Btn from './Btn';
-import { AuthStrategyName } from '../../lib/types';
 
 export default function WalletAuth() {
   const { dispatch, defaultNetworkId, handleError } = useWalletContext();

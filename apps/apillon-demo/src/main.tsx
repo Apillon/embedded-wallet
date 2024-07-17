@@ -1,10 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
-import { initializeApp } from '@oasis-app-wallet/sdk/ui';
+import { initializeApp } from '@oasis-app-wallet/ui';
 
 import './index.css';
-import '@oasis-app-wallet/sdk/css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

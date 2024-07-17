@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@oasis-app-wallet/sdk": "*",
+    "@oasis-app-wallet/ui": "*",
     "vue": "^3.4.29"
   },
   "devDependencies": {
@@ -23,7 +24,6 @@
     "typescript": "^5.2.2",
     "vite": "^5.3.1",
     "vite-plugin-dts": "^3.9.1",
-    "vite-plugin-lib-inject-css": "^2.1.1",
     "vite-plugin-node-polyfills": "^0.22.0",
     "vue-tsc": "^2.0.21"
   }

@@ -1,8 +1,13 @@
 import { ReactNode, createContext, useContext, useEffect, useReducer, useState } from 'react';
-import { AppParams, AuthStrategyName, NetworkConfig } from '../../lib/types';
-import { ErrorMessages, WebStorageKeys } from '../../lib/constants';
-import OasisAppWallet from '../../lib';
-import { initializeOnWindow } from '../../lib/utils';
+import {
+  AppParams,
+  AuthStrategyName,
+  NetworkConfig,
+  ErrorMessages,
+  WebStorageKeys,
+  OasisAppWallet,
+  initializeOnWindow,
+} from '@oasis-app-wallet/sdk';
 
 export type Network = { name: string; id: number; rpcUrl: string; explorerUrl: string };
 

@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useReducer, useState } from 'react';
-import { WebStorageKeys } from '../../lib/constants';
+import { WebStorageKeys, ERC20Abi } from '@oasis-app-wallet/sdk';
 import { useWalletContext } from './wallet.context';
-import { ERC20Abi } from '../../lib/abi';
 import { ethers } from 'ethers';
 
 export type TokenInfo = {

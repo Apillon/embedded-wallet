@@ -1,7 +1,6 @@
 import { createPublicClient, createWalletClient, getContract, http, parseEther } from 'viem';
 import OasisViemAdapter from '../../lib/adapters/viem';
 import { getOasisAppWallet } from '../../lib/utils';
-import Btn from '../components/Btn';
 import { moonbaseAlpha } from 'viem/chains';
 import { ERC20Abi } from '../../lib/abi';
 
@@ -58,7 +57,7 @@ export default function Test4() {
 
   return (
     <div>
-      <Btn onClick={() => testViem()}>Test Viem</Btn>
+      <button onClick={() => testViem()}>Test Viem</button>
     </div>
   );
 }

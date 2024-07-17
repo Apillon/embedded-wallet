@@ -3,7 +3,6 @@ import vue from '@vitejs/plugin-vue';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { resolve } from 'path';
 import dts from 'vite-plugin-dts';
-import { libInjectCss } from 'vite-plugin-lib-inject-css';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -15,13 +14,12 @@ export default defineConfig({
       tsconfigPath: resolve(__dirname, 'tsconfig.app.json'),
       rollupTypes: true,
     }),
-    libInjectCss(),
   ],
 
   build: {
     lib: {
       entry: resolve(__dirname, 'lib/main.ts'),
-      name: 'OasisAppWalletVue',
+      name: 'EmbeddedWalletVue',
       fileName: 'vue',
       formats: ['es'],
     },

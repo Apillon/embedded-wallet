@@ -1,8 +1,6 @@
 import { createContext, useContext, useEffect, useReducer, useState } from 'react';
-import { getOasisAppWallet } from '../../lib/utils';
+import { getOasisAppWallet, WebStorageKeys, TransactionItem } from '@oasis-app-wallet/sdk';
 import { useWalletContext } from './wallet.context';
-import { WebStorageKeys } from '../../lib/constants';
-import { TransactionItem } from '../../lib/types';
 
 const initialState = () => ({
   txs: {} as { [ownerAddress: string]: { [txHash: string]: TransactionItem } },
@@ -69,12 +67,15 @@ function reducer(state: ContextState, action: ContextActions) {
                 ...state.chainIdsForHash,
                 [action.payload.tx.hash]: action.payload.tx.chainId,
               }
-            : Object.keys(state.chainIdsForHash).reduce((acc, x) => {
-                if (x !== action.payload.tx.hash) {
-                  acc[x] = action.payload.tx.chainId;
-                }
-                return acc;
-              }, {} as { [txHash: string]: number }),
+            : Object.keys(state.chainIdsForHash).reduce(
+                (acc, x) => {
+                  if (x !== action.payload.tx.hash) {
+                    acc[x] = action.payload.tx.chainId;
+                  }
+                  return acc;
+                },
+                {} as { [txHash: string]: number }
+              ),
       };
     default:
       throw new Error('Unhandled action type.' + JSON.stringify(action));

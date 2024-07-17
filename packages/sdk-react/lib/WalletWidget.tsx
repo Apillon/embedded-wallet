@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { initializeApp, AppProps } from '@oasis-app-wallet/sdk/ui';
-import '@oasis-app-wallet/sdk/css';
+import { initializeApp, AppProps } from '@oasis-app-wallet/ui';
 
 export function WalletWidget({ className, ...params }: AppProps & { className?: string }) {
   const initialized = useRef(false);

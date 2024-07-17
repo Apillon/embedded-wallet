@@ -1,7 +1,6 @@
 <script lang="ts" setup>
-import { initializeApp, AppProps } from '@oasis-app-wallet/sdk/ui';
+import { initializeApp, AppProps } from '@oasis-app-wallet/ui';
 import { onMounted } from 'vue';
-import '@oasis-app-wallet/sdk/css';
 
 const props = defineProps<AppProps>();
 

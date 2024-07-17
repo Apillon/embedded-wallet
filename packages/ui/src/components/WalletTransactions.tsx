@@ -1,4 +1,4 @@
-import { TransactionItem } from '../../lib/types';
+import { TransactionItem } from '@oasis-app-wallet/sdk';
 import { useTransactionsContext } from '../contexts/transactions.context';
 import { useWalletContext } from '../contexts/wallet.context';
 import { shortHash } from '../lib/helpers';

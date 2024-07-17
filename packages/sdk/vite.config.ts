@@ -11,26 +11,16 @@ export default defineConfig({
     react(),
     nodePolyfills(),
     dts({
-      include: ['lib', 'src'],
+      include: ['lib'],
       rollupTypes: true,
-      beforeWriteFile(filePath, content) {
-        if (filePath.endsWith('ui.d.ts')) {
-          return {
-            filePath,
-            content: `import { OasisAppWallet } from "./sdk";\n\n` + content,
-          };
-        }
-      },
     }),
   ],
 
   build: {
     lib: {
-      entry: {
-        sdk: resolve(__dirname, 'lib/main.ts'),
-        ui: resolve(__dirname, 'src/main.tsx'),
-      },
-      name: 'OasisAppWallet',
+      entry: resolve(__dirname, 'lib/main.ts'),
+      fileName: 'sdk',
+      name: 'EmbeddedWalletSdk',
       // formats: ['es']
     },
     rollupOptions: {

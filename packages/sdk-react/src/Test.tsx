@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { WalletWidget } from '../lib/WalletWidget';
 
-function Test() {
+export function Test() {
   return (
     <>
       <div>

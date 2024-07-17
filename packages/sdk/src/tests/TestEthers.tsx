@@ -2,7 +2,6 @@ import OasisEthersSigner from '../../lib/adapters/ethers';
 import { getOasisAppWallet } from '../../lib/utils';
 import { ethers } from 'ethers';
 import { ERC20Abi } from '../../lib/abi';
-import Btn from '../components/Btn';
 
 export default function Test3() {
   async function testEthers() {
@@ -37,7 +36,7 @@ export default function Test3() {
 
   return (
     <div>
-      <Btn onClick={() => testEthers()}>Test Ethers</Btn>
+      <button onClick={() => testEthers()}>Test Ethers</button>
     </div>
   );
 }
