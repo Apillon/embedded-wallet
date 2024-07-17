@@ -1,0 +1,30 @@
+{
+  "name": "@oasis-app-wallet/vue",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "main": "./dist/vue.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/vue.js"
+    }
+  },
+  "dependencies": {
+    "@oasis-app-wallet/sdk": "*",
+    "vue": "^3.4.29"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.5",
+    "typescript": "^5.2.2",
+    "vite": "^5.3.1",
+    "vite-plugin-dts": "^3.9.1",
+    "vite-plugin-lib-inject-css": "^2.1.1",
+    "vite-plugin-node-polyfills": "^0.22.0",
+    "vue-tsc": "^2.0.21"
+  }
+}

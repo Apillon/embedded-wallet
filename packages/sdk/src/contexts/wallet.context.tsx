@@ -85,7 +85,20 @@ function WalletProvider({
   children: ReactNode;
   networks?: Network[];
 } & AppParams) {
-  const [state, dispatch] = useReducer(reducer, initialState(defaultNetworkId));
+  /**
+   * @TODO Switch with Mainnet on prod
+   */
+  networks = [
+    {
+      name: 'Sapphire Testnet',
+      id: 23295,
+      rpcUrl: 'https://testnet.sapphire.oasis.dev',
+      explorerUrl: 'https://explorer.oasis.io/testnet/sapphire',
+    },
+    ...networks,
+  ];
+
+  const [state, dispatch] = useReducer(reducer, initialState(defaultNetworkId || networks[0].id));
   const [initialized, setInitialized] = useState(false);
   const [wallet, setWallet] = useState<OasisAppWallet>();
 
@@ -112,7 +125,7 @@ function WalletProvider({
 
     if (stored) {
       try {
-        const restored = JSON.parse(stored);
+        const restored = JSON.parse(stored) as ContextState;
         dispatch({ type: 'setState', payload: restored });
       } catch (e) {
         console.error('Cant parse global state localStorage', e);
@@ -174,19 +187,6 @@ function WalletProvider({
       }
     }
   }
-
-  /**
-   * @TODO Switch with Mainnet on prod
-   */
-  networks = [
-    {
-      name: 'Sapphire Testnet',
-      id: 23295,
-      rpcUrl: 'https://testnet.sapphire.oasis.dev',
-      explorerUrl: 'https://explorer.oasis.io/testnet/sapphire',
-    },
-    ...networks,
-  ];
 
   return (
     <WalletContext.Provider

@@ -18,7 +18,7 @@ export default function WalletTokens() {
   const nativeToken = useMemo<TokenInfo>(
     () => ({
       address: '',
-      name: `${networksById[state.networkId].name} ETH`,
+      name: `${networksById?.[state.networkId]?.name} ETH`,
       symbol: 'ETH',
       decimals: 18,
       balance: state.balance,

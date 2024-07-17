@@ -110,4 +110,9 @@ export type Events = {
   txApprove: { plain?: PlainTransactionParams; contractWrite?: ContractWriteParams };
   txSubmitted: TransactionItem;
   txDone: TransactionItem; // emitted by UI
+  dataUpdated: {
+    name: 'username' | 'address' | 'authStrategy' | 'defaultNetworkId';
+    newValue: any;
+    oldValue: any;
+  };
 };
