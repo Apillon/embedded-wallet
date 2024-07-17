@@ -12,9 +12,13 @@ import Btn from './Btn';
 export type AppProps = {
   networks?: Network[];
   disableAutoBroadcastAfterSign?: boolean;
+  disableDefaultActivatorStyle?: boolean;
 } & AppParams;
 
-function Wallet({ disableAutoBroadcastAfterSign = false }: AppProps) {
+function Wallet({
+  disableAutoBroadcastAfterSign = false,
+  disableDefaultActivatorStyle = false,
+}: AppProps) {
   const { state, wallet, setScreen, handleError } = useWalletContext();
   const { dispatch: dispatchTx } = useTransactionsContext();
 
@@ -234,9 +238,13 @@ function Wallet({ disableAutoBroadcastAfterSign = false }: AppProps) {
         {modalContent}
       </Modal>
 
-      <Btn id="oaw-wallet-widget-btn" onClick={() => setIsModalOpen(true)}>
+      <button
+        id="oaw-wallet-widget-btn"
+        className={!disableDefaultActivatorStyle ? 'oaw-btn-default-style' : undefined}
+        onClick={() => setIsModalOpen(true)}
+      >
         {loggedIn ? 'Open wallet' : 'Sign in'}
-      </Btn>
+      </button>
 
       {/* <Btn
         onClick={async () => {
@@ -270,7 +278,7 @@ function Modal({
         <Dialog
           id="oaw-wallet-widget"
           open={isOpen}
-          className="relative z-50"
+          className="relative !z-50"
           onClose={() => setIsOpen(false)}
         >
           <TransitionChild

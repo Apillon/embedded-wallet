@@ -15,11 +15,6 @@
   all: unset;
 }
 
-#oaw-wallet-widget *:focus,
-#oaw-wallet-widget *:focus-visible {
-  @apply outline outline-2 outline-offset-2 outline-yellow/50;
-}
-
 #oaw-wallet-widget {
   h2 {
     @apply font-bold text-3xl;
@@ -46,8 +41,7 @@
   }
 }
 
-#oaw-wallet-widget,
-#oaw-wallet-widget-btn {
+#oaw-wallet-widget {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
 
@@ -55,10 +49,6 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
-  background-color: rgb(120 220 232 / var(--tw-bg-opacity)) !important;
-  border-bottom-color: rgb(120 220 232 / var(--tw-bg-opacity)) !important;
-  border-top-color: rgb(120 220 232 / var(--tw-bg-opacity)) !important;
 }
 
 #oaw-wallet-widget input::placeholder {
@@ -67,6 +57,31 @@
 
 #oaw-wallet-widget ::selection {
   @apply text-primary bg-offwhite;
+}
+
+.oaw-btn-default-style {
+  @apply px-4 py-2 relative inline-block rounded-lg text-sm font-bold
+    border-b-[4px] border-t-[4px] border-x-0
+    transition-all hover:border-b-offwhite/50 hover:translate-y-[-2px]
+    focus:translate-y-px focus:border-b-yellow/50
+    bg-blue text-dark border-b-blue border-t-blue;
+
+  min-width: 160px;
+  min-height: 40px;
+
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#oaw-wallet-widget *:focus,
+#oaw-wallet-widget *:focus-visible,
+.oaw-btn-default-style:focus,
+.oaw-btn-default-style:focus-visible {
+  @apply outline outline-2 outline-offset-2 outline-yellow/50;
 }
 
 @keyframes rotate {

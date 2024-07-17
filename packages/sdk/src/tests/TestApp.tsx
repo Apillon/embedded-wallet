@@ -6,6 +6,7 @@ export default function TestApp() {
     <div>
       <WalletWidget
         // disableAutoBroadcastAfterSign
+        // disableDefaultActivatorStyle
         legacyContract
         accountManagerAddress="0x5C357DaFfe6b1016C0c9A5607367E8f47765D4bC"
         // accountManagerAddress="0xF35C3eB93c6D3764A7D5efC6e9DEB614779437b1"
@@ -55,7 +56,7 @@ export default function TestApp() {
         }}
       />
 
-      <hr className="my-6" />
+      <hr style={{ margin: '1.5rem 0' }} />
 
       <TestSign />
       {/* <Test2 />

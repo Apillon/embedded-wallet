@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ethers } from 'ethers';
-import { getOasisAppWallet, ERC20Abi } from '@oasis-app-wallet/sdk';
+import { getOasisAppWallet } from '@oasis-app-wallet/sdk';
+import { ERC20Abi } from '../lib';
 
 export default function Demo() {
   const [message, setMessage] = useState('Hello from Apillon!');
@@ -43,82 +44,82 @@ export default function Demo() {
       </p>
 
       <br />
-        <form
-          className="my-4 flex gap-4 flex-col mt-16"
-          onSubmit={async ev => {
-            ev.preventDefault();
-            const wallet = getOasisAppWallet();
+      <form
+        className="my-4 flex gap-4 flex-col mt-16"
+        onSubmit={async ev => {
+          ev.preventDefault();
+          const wallet = getOasisAppWallet();
 
-            await wallet?.signContractWrite({
-              mustConfirm: true,
-              strategy: 'passkey',
-              contractAbi: ERC20Abi,
-              contractAddress: '0xb1058eD01451B947A836dA3609f88C91804D0663',
-              contractFunctionName: 'transfer',
-              contractFunctionValues: [address, ethers.parseEther(amount)],
-              chainId: 1287,
-            });
-          }}
-        >
-          <input
-            value={address}
-            placeholder="Receiver Address"
-            className={inputClass}
-            onChange={ev => setAddress(ev.target.value)}
-          />
+          await wallet?.signContractWrite({
+            mustConfirm: true,
+            strategy: 'passkey',
+            contractAbi: ERC20Abi,
+            contractAddress: '0xb1058eD01451B947A836dA3609f88C91804D0663',
+            contractFunctionName: 'transfer',
+            contractFunctionValues: [address, ethers.parseEther(amount)],
+            chainId: 1287,
+          });
+        }}
+      >
+        <input
+          value={address}
+          placeholder="Receiver Address"
+          className={inputClass}
+          onChange={ev => setAddress(ev.target.value)}
+        />
 
-          <input
-            value={amount}
-            placeholder="Amount"
-            className={inputClass}
-            onChange={ev => setAmount(ev.target.value)}
-          />
+        <input
+          value={amount}
+          placeholder="Amount"
+          className={inputClass}
+          onChange={ev => setAmount(ev.target.value)}
+        />
 
-          <div className="flex flex-row">
-            <button
-              type="button"
-              className={btnClass + ' w-1/2'}
-              onClick={async () => {
-                const wallet = getOasisAppWallet();
-                await wallet?.signPlainTransaction({
-                  mustConfirm: true,
-                  strategy: 'passkey',
-                  tx: {
-                    to: address,
-                    data: '0x',
-                    gasLimit: 1_000_000,
-                    value: ethers.parseEther(amount),
-                    chainId: 23295, // 1287,
-                    gasPrice: 100_000_000_000,
-                  },
-                });
-              }}
-            >
-              Plain Transfer
-            </button>
-            <button
-              type="button"
-              className={btnClass + ' w-1/2 ml-4'}
-              onClick={async () => {
-                const wallet = getOasisAppWallet();
-                await wallet?.signPlainTransaction({
-                  mustConfirm: true,
-                  strategy: 'passkey',
-                  tx: {
-                    to: address,
-                    data: '0x',
-                    gasLimit: 1_000_000,
-                    value: ethers.parseEther(amount),
-                    chainId: 1287,
-                    gasPrice: 100_000_000_000,
-                  },
-                });
-              }}
-            >
-              Cross-chain Transfer
-            </button>
-          </div>
-        </form>
+        <div className="flex flex-row">
+          <button
+            type="button"
+            className={btnClass + ' w-1/2'}
+            onClick={async () => {
+              const wallet = getOasisAppWallet();
+              await wallet?.signPlainTransaction({
+                mustConfirm: true,
+                strategy: 'passkey',
+                tx: {
+                  to: address,
+                  data: '0x',
+                  gasLimit: 1_000_000,
+                  value: ethers.parseEther(amount),
+                  chainId: 23295, // 1287,
+                  gasPrice: 100_000_000_000,
+                },
+              });
+            }}
+          >
+            Plain Transfer
+          </button>
+          <button
+            type="button"
+            className={btnClass + ' w-1/2 ml-4'}
+            onClick={async () => {
+              const wallet = getOasisAppWallet();
+              await wallet?.signPlainTransaction({
+                mustConfirm: true,
+                strategy: 'passkey',
+                tx: {
+                  to: address,
+                  data: '0x',
+                  gasLimit: 1_000_000,
+                  value: ethers.parseEther(amount),
+                  chainId: 1287,
+                  gasPrice: 100_000_000_000,
+                },
+              });
+            }}
+          >
+            Cross-chain Transfer
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

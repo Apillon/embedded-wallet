@@ -40,8 +40,6 @@ setTimeout(() => {
     ],
     signatureCallback: async gaslessData => {
       try {
-
-        
         const tokenRes = await (
           await fetch(`http://localhost:3000/session-token`, {
             method: 'GET',
