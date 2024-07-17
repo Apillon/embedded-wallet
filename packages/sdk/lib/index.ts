@@ -645,8 +645,6 @@ class OasisAppWallet {
     const contract = new ethers.Contract(params.contractAddress, params.contractAbi, ethProvider);
 
     if (params.contractFunctionValues) {
-      console.log(contract);
-      console.log(params.contractFunctionName);
       return await contract[params.contractFunctionName](...params.contractFunctionValues);
     } else {
       return await contract[params.contractFunctionName]();

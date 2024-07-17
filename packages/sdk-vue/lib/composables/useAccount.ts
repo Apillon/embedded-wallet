@@ -36,7 +36,6 @@ export function useAccount() {
   }
 
   async function getBalance(networkId = undefined) {
-    console.log(wallet.value);
     return await wallet.value?.getAccountBalance(info.address, networkId);
   }
 

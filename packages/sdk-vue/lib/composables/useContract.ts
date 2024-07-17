@@ -17,19 +17,11 @@ export function useContract({
   const { info: accountInfo } = useAccount();
 
   async function read(fn: string, values?: any[]) {
-    console.log(wallet.value);
     if (!wallet.value) {
       abort('OASIS_WALLET_NOT_INITIALIZED');
       return;
     }
 
-    // return await window[WindowId].contractRead({
-    //   contractAbi: abi,
-    //   contractAddress: address,
-    //   contractFunctionName: fn,
-    //   contractFunctionValues: values,
-    //   chainId,
-    // });
     return await wallet.value.contractRead({
       contractAbi: abi,
       contractAddress: address,

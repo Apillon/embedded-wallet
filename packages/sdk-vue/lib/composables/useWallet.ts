@@ -1,13 +1,8 @@
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, shallowRef } from 'vue';
 import { OasisAppWallet, WindowId } from '@oasis-app-wallet/sdk';
 
 export function useWallet(): any {
-  let wallet = undefined as OasisAppWallet | undefined;
-
-  const shh = computed({
-    get: () => wallet,
-    set: val => (wallet = val),
-  });
+  const wallet = shallowRef<OasisAppWallet>();
 
   onMounted(() => {
     checkForWindowWallet();
@@ -15,14 +10,14 @@ export function useWallet(): any {
 
   function checkForWindowWallet() {
     if (typeof window !== 'undefined' && window[WindowId]) {
-      shh.value = window[WindowId];
+      wallet.value = window[WindowId];
       return;
     }
     setTimeout(checkForWindowWallet, 50);
   }
 
   return {
-    wallet: shh,
+    wallet: computed(() => wallet.value),
   };
 }
 
