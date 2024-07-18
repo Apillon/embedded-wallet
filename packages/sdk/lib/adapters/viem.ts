@@ -1,13 +1,13 @@
 import { toAccount } from 'viem/accounts';
-import OasisAppWallet from '..';
-import { abort, getOasisAppWallet } from '../utils';
+import EmbeddedWallet from '..';
+import { abort, getEmbeddedWallet } from '../utils';
 
 class OasisViemAdapter {
   address = '';
-  wallet: OasisAppWallet;
+  wallet: EmbeddedWallet;
 
   constructor() {
-    const w = getOasisAppWallet();
+    const w = getEmbeddedWallet();
 
     if (!w) {
       abort('OASIS_WALLET_NOT_INITIALIZED');

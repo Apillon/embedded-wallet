@@ -1,5 +1,5 @@
 import { useAccount, useContract } from '@embedded-wallet/react';
-import { ERC20Abi } from './lib';
+import { ERC20Abi } from '@embedded-wallet/sdk';
 
 export default function Test() {
   const { username, address, getBalance } = useAccount();

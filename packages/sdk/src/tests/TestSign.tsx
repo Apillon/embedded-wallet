@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { getOasisAppWallet } from '../../lib/utils';
+import { getEmbeddedWallet } from '../../lib/utils';
 
 export default function TestSign() {
   const [message, setMessage] = useState('Test message 1234');
@@ -10,7 +10,7 @@ export default function TestSign() {
 
       <button
         onClick={async () => {
-          const wallet = getOasisAppWallet();
+          const wallet = getEmbeddedWallet();
           const msg = await wallet?.signMessage({
             mustConfirm: true,
             strategy: 'passkey',

@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { OasisAppWallet } from '.';
+import { EmbeddedWallet } from '.';
 import { SapphireMainnet, SapphireTestnet, WindowId, Errors } from './constants';
 import { pbkdf2Sync } from 'pbkdf2';
 import { AppParams } from './types';
@@ -9,23 +9,23 @@ import { AppParams } from './types';
  */
 export function initializeOnWindow(params?: AppParams) {
   if (typeof window !== 'undefined') {
-    window[WindowId] = new OasisAppWallet(params);
+    window[WindowId] = new EmbeddedWallet(params);
     return window[WindowId];
   }
 }
 
-export function getOasisAppWallet() {
+export function getEmbeddedWallet() {
   if (typeof window !== 'undefined') {
     if (!window[WindowId]) {
-      window[WindowId] = new OasisAppWallet();
+      window[WindowId] = new EmbeddedWallet();
     }
 
-    return window[WindowId] as OasisAppWallet;
+    return window[WindowId] as EmbeddedWallet;
   }
 }
 
 export async function getHashedUsername(name = '') {
-  const oaw = getOasisAppWallet();
+  const oaw = getEmbeddedWallet();
 
   const salt = await oaw?.accountManagerContract?.salt();
 

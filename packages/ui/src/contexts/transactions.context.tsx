@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useReducer, useState } from 'react';
-import { getOasisAppWallet, WebStorageKeys, TransactionItem } from '@embedded-wallet/sdk';
+import { getEmbeddedWallet, WebStorageKeys, TransactionItem } from '@embedded-wallet/sdk';
 import { useWalletContext } from './wallet.context';
 
 const initialState = () => ({
@@ -148,7 +148,7 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const wallet = getOasisAppWallet();
+    const wallet = getEmbeddedWallet();
 
     if (!wallet) {
       throw new Error('Wallet not initialized.' + txHash);

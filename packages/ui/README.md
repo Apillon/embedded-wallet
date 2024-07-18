@@ -1,30 +1,43 @@
-# React + TypeScript + Vite
+# Embedded wallet UI
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This package provides default UI for showing the state of connected account and confirmations on events.
 
-Currently, two official plugins are available:
+Use `initializeApp()` to initialize SDK and the UI. The UI is done with React and HeadlessUI (tailwind).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+There are some UI specific options in addition to all SDK options.
 
-## Expanding the ESLint configuration
+```ts
+// Supported networks info, for showing names and links to explorer.
+networks?: { name: string; id: number; rpcUrl: string; explorerUrl: string }[];
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+// If you want to broadcast the encoded data another way. E.g. via viem/ethers.
+disableAutoBroadcastAfterSign?: boolean;
 
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json', './tsconfig.app.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
+// Leave the "open wallet" button unstyled.
+disableDefaultActivatorStyle?: boolean;
 ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+```js
+import { initializeApp } from '@embedded-wallet/ui';
+
+initializeApp('#open-wallet-button-selector', {
+  disableAutoBroadcastAfterSign: false,
+  disableDefaultActivatorStyle: false,
+  accountManagerAddress: '0xF35C3eB93c6D3764A7D5efC6e9DEB614779437b1',
+  networks: [
+    {
+      name: 'Moonbeam Testnet',
+      id: 1287,
+      rpcUrl: 'https://rpc.testnet.moonbeam.network',
+      explorerUrl: 'https://moonbase.moonscan.io',
+    },
+    {
+      name: 'Amoy',
+      id: 80002,
+      rpcUrl: 'https://rpc-amoy.polygon.technology',
+      explorerUrl: 'https://www.oklink.com/amoy',
+    },
+  ],
+  // ...
+});
+```

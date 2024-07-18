@@ -1,8 +1,8 @@
 import { computed, onMounted, shallowRef } from 'vue';
-import { OasisAppWallet, WindowId } from '@embedded-wallet/sdk';
+import { EmbeddedWallet, WindowId } from '@embedded-wallet/sdk';
 
 export function useWallet(): any {
-  const wallet = shallowRef<OasisAppWallet>();
+  const wallet = shallowRef<EmbeddedWallet>();
 
   onMounted(() => {
     checkForWindowWallet();

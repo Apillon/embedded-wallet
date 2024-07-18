@@ -1,5 +1,58 @@
-# Vue 3 + TypeScript + Vite
+# Embedded wallet Vue helpers
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+Collection of Vue composabes to help with embedded wallet implementation.
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+## Component `<WalletWidget />`
+
+Initialize wallet SDK and UI.
+
+```ts
+import { WalletWidget } from '@embedded-wallet/vue';
+
+<WalletWidget ...props />
+```
+
+## Hooks
+
+### useWallet
+
+Get the initialized instance of embedded wallet.
+
+```ts
+import { useWallet } from '@embedded-wallet/vue';
+
+const { wallet } = useWallet();
+
+console.log(await wallet.value.userExists('johndoe'));
+```
+
+### useAccount
+
+Get current connected account info.
+
+```ts
+import { useAccount } from '@embedded-wallet/vue';
+
+const { info, getBalance } = useAccount();
+```
+
+### useContract
+
+Helper methods to interact with contracts.
+
+```ts
+import { useContract } from '@embedded-wallet/vue';
+
+const { read, write } = useContract({
+  abi: ERC20Abi,
+  address: '0xb1058eD01451B947A836dA3609f88C91804D0663',
+});
+
+console.log(await read('balanceOf', [address]));
+
+const txHash = await write(
+  'transfer',
+  ['0x700cebAA997ecAd7B0797f8f359C621604Cce6Bf', '10000000'],
+  'React Transfer'
+);
+```

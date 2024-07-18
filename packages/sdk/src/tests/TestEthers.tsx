@@ -1,11 +1,11 @@
 import OasisEthersSigner from '../../lib/adapters/ethers';
-import { getOasisAppWallet } from '../../lib/utils';
+import { getEmbeddedWallet } from '../../lib/utils';
 import { ethers } from 'ethers';
 import { ERC20Abi } from '../../lib/abi';
 
 export default function Test3() {
   async function testEthers() {
-    const w = getOasisAppWallet();
+    const w = getEmbeddedWallet();
 
     if (w) {
       console.log('Initialize signer');

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { ethers } from 'ethers';
-import { getOasisAppWallet } from '@embedded-wallet/sdk';
-import { ERC20Abi } from '../lib';
+import { getEmbeddedWallet, ERC20Abi } from '@embedded-wallet/sdk';
 
 export default function Demo() {
   const [message, setMessage] = useState('Hello from Apillon!');
@@ -30,7 +29,7 @@ export default function Demo() {
         <button
           className={btnClass}
           onClick={async () => {
-            const wallet = getOasisAppWallet();
+            const wallet = getEmbeddedWallet();
             const msg = await wallet?.signMessage({
               mustConfirm: true,
               strategy: 'passkey',
@@ -48,7 +47,7 @@ export default function Demo() {
         className="my-4 flex gap-4 flex-col mt-16"
         onSubmit={async ev => {
           ev.preventDefault();
-          const wallet = getOasisAppWallet();
+          const wallet = getEmbeddedWallet();
 
           await wallet?.signContractWrite({
             mustConfirm: true,
@@ -80,7 +79,7 @@ export default function Demo() {
             type="button"
             className={btnClass + ' w-1/2'}
             onClick={async () => {
-              const wallet = getOasisAppWallet();
+              const wallet = getEmbeddedWallet();
               await wallet?.signPlainTransaction({
                 mustConfirm: true,
                 strategy: 'passkey',
@@ -101,7 +100,7 @@ export default function Demo() {
             type="button"
             className={btnClass + ' w-1/2 ml-4'}
             onClick={async () => {
-              const wallet = getOasisAppWallet();
+              const wallet = getEmbeddedWallet();
               await wallet?.signPlainTransaction({
                 mustConfirm: true,
                 strategy: 'passkey',

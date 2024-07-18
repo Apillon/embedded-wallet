@@ -1,6 +1,6 @@
-import OasisAppWallet from '.';
+import EmbeddedWallet from '.';
 
-export { OasisAppWallet };
+export { EmbeddedWallet };
 export * from './types';
 export * from './utils';
 export * from './abi';

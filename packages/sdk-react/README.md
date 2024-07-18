@@ -1,30 +1,58 @@
-# React + TypeScript + Vite
+# Embedded wallet React helpers
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Collection of React hooks to help with embedded wallet implementation.
 
-Currently, two official plugins are available:
+## Component `<WalletWidget />`
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Initialize wallet SDK and UI.
 
-## Expanding the ESLint configuration
+```tsx
+import { WalletWidget } from '@embedded-wallet/react';
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
+return <WalletWidget ...props />;
 ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+## Hooks
+
+### useWallet
+
+Get the initialized instance of embedded wallet.
+
+```ts
+import { useWallet } from '@embedded-wallet/react';
+
+const { wallet } = useWallet();
+
+console.log(await wallet.userExists('johndoe'));
+```
+
+### useAccount
+
+Get current connected account info.
+
+```ts
+import { useAccount } from '@embedded-wallet/react';
+
+const { username, address, getBalance } = useAccount();
+```
+
+### useContract
+
+Helper methods to interact with contracts.
+
+```ts
+import { useContract } from '@embedded-wallet/react';
+
+const { read, write } = useContract({
+  abi: ERC20Abi,
+  address: '0xb1058eD01451B947A836dA3609f88C91804D0663',
+});
+
+console.log(await read('balanceOf', [address]));
+
+const txHash = await write(
+  'transfer',
+  ['0x700cebAA997ecAd7B0797f8f359C621604Cce6Bf', '10000000'],
+  'React Transfer'
+);
+```

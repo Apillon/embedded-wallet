@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { getOasisAppWallet, AuthStrategyName } from '@embedded-wallet/sdk';
+import { getEmbeddedWallet, AuthStrategyName } from '@embedded-wallet/sdk';
 import { useWalletContext } from '../contexts/wallet.context';
 import Btn from './Btn';
 
@@ -17,7 +17,7 @@ export default function WalletAuth() {
       return;
     }
 
-    const wallet = getOasisAppWallet();
+    const wallet = getEmbeddedWallet();
 
     setLoading(true);
     handleError();
@@ -61,7 +61,7 @@ export default function WalletAuth() {
     address: string;
     authStrategy: AuthStrategyName;
   }) {
-    const wallet = getOasisAppWallet();
+    const wallet = getEmbeddedWallet();
 
     const balance = (await wallet?.getAccountBalance(address)) || '0';
 
@@ -86,7 +86,7 @@ export default function WalletAuth() {
           handleError();
 
           try {
-            const wallet = getOasisAppWallet();
+            const wallet = getEmbeddedWallet();
 
             const res = await wallet?.register('passkey', { username });
 

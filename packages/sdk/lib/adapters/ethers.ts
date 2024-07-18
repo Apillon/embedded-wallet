@@ -1,16 +1,16 @@
 import { ethers } from 'ethers';
-import { abort, getOasisAppWallet } from '../utils';
-import OasisAppWallet from '..';
+import { abort, getEmbeddedWallet } from '../utils';
+import EmbeddedWallet from '..';
 
 class OasisEthersSigner extends ethers.AbstractSigner<ethers.JsonRpcProvider> {
   address = '';
-  wallet: OasisAppWallet;
+  wallet: EmbeddedWallet;
   override provider: ethers.JsonRpcProvider;
 
   constructor(provider: ethers.JsonRpcProvider) {
     super(provider);
 
-    const w = getOasisAppWallet();
+    const w = getEmbeddedWallet();
 
     if (!w) {
       abort('OASIS_WALLET_NOT_INITIALIZED');

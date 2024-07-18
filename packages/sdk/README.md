@@ -1,44 +1,21 @@
-# Oasis App Wallet
+# Embedded App Wallet
 
-JS SDK and wallet widget interface.
+JS SDK.
 
-## Running locally and building
+## Stack
 
-Check that "React dev" region is included in `./index.html`, then run `npm run dev`. This will start a development react app from `./src/tests/testMain.tsx`.
+- React + TypeScript + Vite
+
+- Ethers v6 used internally
 
 ### Build
 
 Build is done with [vite library mode](https://vitejs.dev/guide/build#library-mode).
-Typescript support provided with [vite-plugin-dts](https://github.com/qmhc/vite-plugin-dts) (untested).
-The build is divided into `sdk` and `ui` parts.
-
-To test the build, run `npm run build`, then include "Package test" region in `./index.html` and run `npm run dev`.
-
-## Using SDK from github private repo (TEMP)
-
-### Option 1
-
-Clone code to a private repo you have access to.
-
-Get an access token for your github account: Settings > Developer Settings > Personal access tokens > Generate new token > classic token (https://github.com/settings/tokens)
-
-Add path to package.json and run `npm i`.
-
-```json
-"dependencies": {
-  "oasis-sdk": "git+https://simon:ghp_access_token@github.com/simon/oasis-wallet#main"
-}
-```
-
-### Option 2
-
-Build files, copy `/dist` dir into your project and import sdk locally.
-
-(Can also copy into `node_modules` but it might get overwritten)
+Typescript support provided with [vite-plugin-dts](https://github.com/qmhc/vite-plugin-dts).
 
 ## SDK
 
-SDK is centered around the `OasisAppWallet` class. This class exposes methods for working with Oasis Sapphire chain authentication.
+SDK is centered around the `EmbeddedWallet` class. This class exposes methods for working with Oasis Sapphire chain authentication.
 
 Initialize the class once by using `initializeOnWindow()` utility, with optional configuration:
 
@@ -47,9 +24,10 @@ accountManagerAddress?: string;
 sapphireUrl?: string;
 defaultNetworkId?: number;
 networkConfig?: NetworkConfig;
+signatureCallback?: SignatureCallback;
 ```
 
-The class instance is then available on window (`oasisAppWallet`) and can be obtained with the `getOasisAppWallet()` utility.
+The class instance is then available on window (`embeddedWallet`) and can be obtained with the `getEmbeddedWallet()` utility.
 
 ### Events
 
@@ -120,7 +98,7 @@ const testContract = new ethers.Contract(
 A default wallet UI can be added by using `initializeApp()`. This includes a react app that handles logged in state and transaction confirmations etc.
 
 ```ts
-import { initializeApp } from './dist/ui';
+import { initializeApp } from '@embedded-wallet/ui';
 
 initializeApp(undefined, '#oasis-btn', {
   accountManagerAddress: '0x5C3512312312312312312312312312312365D4bC',
@@ -141,15 +119,3 @@ initializeApp(undefined, '#oasis-btn', {
   ],
 });
 ```
-
-## Stack
-
-- React + TypeScript + Vite
-
-- Ethers v6 used internally
-
-## Types
-
-- Contract types are theoretically provided with [ethers-abitype](https://github.com/RealPeha/ethers-abitype). However in some cases it expects the wrong type, so use `as any` without hesitation.
-
-- package typescript support WIP

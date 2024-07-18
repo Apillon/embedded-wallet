@@ -5,7 +5,7 @@ import {
   NetworkConfig,
   ErrorMessages,
   WebStorageKeys,
-  OasisAppWallet,
+  EmbeddedWallet,
   initializeOnWindow,
 } from '@embedded-wallet/sdk';
 
@@ -72,9 +72,9 @@ const WalletContext = createContext<
       networks: Network[];
       networksById: { [networkId: number]: Network };
       defaultNetworkId: number;
-      wallet?: OasisAppWallet;
-      setWallet: (wallet: OasisAppWallet) => void;
-      reloadUserBalance: (walletRef?: OasisAppWallet) => void;
+      wallet?: EmbeddedWallet;
+      setWallet: (wallet: EmbeddedWallet) => void;
+      reloadUserBalance: (walletRef?: EmbeddedWallet) => void;
       setScreen: (screen: WalletScreens) => void;
       handleError: (e?: any) => void;
     }
@@ -105,7 +105,7 @@ function WalletProvider({
 
   const [state, dispatch] = useReducer(reducer, initialState(defaultNetworkId || networks[0].id));
   const [initialized, setInitialized] = useState(false);
-  const [wallet, setWallet] = useState<OasisAppWallet>();
+  const [wallet, setWallet] = useState<EmbeddedWallet>();
 
   /**
    * Store changed state to localStorage
@@ -145,7 +145,7 @@ function WalletProvider({
    */
   useEffect(() => {
     if (initialized && !wallet) {
-      let w = undefined as OasisAppWallet | undefined;
+      let w = undefined as EmbeddedWallet | undefined;
 
       if (networks && networks.length) {
         w = initializeOnWindow({
@@ -180,7 +180,7 @@ function WalletProvider({
   /**
    * Reload balance if user "logged in"
    */
-  async function reloadUserBalance(walletRef?: OasisAppWallet) {
+  async function reloadUserBalance(walletRef?: EmbeddedWallet) {
     const w = walletRef || wallet;
 
     if (w && state.address) {

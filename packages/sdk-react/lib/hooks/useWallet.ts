@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { OasisAppWallet, WindowId } from '@embedded-wallet/sdk';
+import { EmbeddedWallet, WindowId } from '@embedded-wallet/sdk';
 
 export function useWallet() {
-  const [wallet, setWallet] = useState<OasisAppWallet>();
+  const [wallet, setWallet] = useState<EmbeddedWallet>();
 
   useEffect(() => {
     checkForWindowWallet();

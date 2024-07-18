@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useAccount, useContract } from '@embedded-wallet/vue';
-import { ERC20Abi } from './lib';
+import { ERC20Abi } from '@embedded-wallet/sdk';
 
 const { info, getBalance } = useAccount();
 const { read, write } = useContract({

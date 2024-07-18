@@ -19,14 +19,13 @@ import PasskeyStrategy from './strategies/passkey';
 import { networkIdIsSapphire, getHashedUsername, abort } from './utils';
 import mitt, { Emitter } from 'mitt';
 
-class OasisAppWallet {
+class EmbeddedWallet {
   sapphireProvider: ethers.JsonRpcProvider;
   accountManagerContract: WebauthnContract;
   abiCoder = ethers.AbiCoder.defaultAbiCoder();
   events: Emitter<Events>;
   onGetSignature: SignatureCallback | undefined;
 
-  legacyContract = false;
   defaultNetworkId = 0;
   rpcUrls = {} as { [networkId: number]: string };
   rpcProviders = {} as { [networkId: number]: ethers.JsonRpcProvider };
@@ -55,7 +54,7 @@ class OasisAppWallet {
 
     this.accountManagerContract = new ethers.Contract(
       params?.accountManagerAddress || '0x5C357DaFfe6b1016C0c9A5607367E8f47765D4bC',
-      params?.legacyContract ? AccountManagerAbiOld : AccountManagerAbi,
+      !params?.signatureCallback ? AccountManagerAbiOld : AccountManagerAbi,
       new ethers.VoidSigner(ethers.ZeroAddress, this.sapphireProvider)
     ) as unknown as WebauthnContract;
 
@@ -71,7 +70,6 @@ class OasisAppWallet {
     this.events = mitt<Events>();
 
     this.onGetSignature = params?.signatureCallback;
-    this.legacyContract = !!params?.legacyContract;
   }
 
   // #region Auth utils
@@ -140,7 +138,7 @@ class OasisAppWallet {
 
     let signedTx = '';
 
-    if (this.onGetSignature && !this.legacyContract) {
+    if (this.onGetSignature) {
       //Get signature from API (handle gas payments e.g.)
       const gaslessParams = await this.onGetSignature(gaslessData);
 
@@ -157,7 +155,7 @@ class OasisAppWallet {
         gaslessParams.signature
       );
     } else {
-      // Old ABI / interface
+      // Old ABI / interface -- without additional signature for register
       signedTx = await (this.accountManagerContract.generateGaslessTx as any)(
         gaslessData,
         nonce as any,
@@ -770,11 +768,11 @@ class OasisAppWallet {
   // #endregion
 }
 
-export { OasisAppWallet };
-export default OasisAppWallet;
+export { EmbeddedWallet };
+export default EmbeddedWallet;
 
 declare global {
   interface Window {
-    oasisAppWallet: OasisAppWallet;
+    embeddedWallet: EmbeddedWallet;
   }
 }
