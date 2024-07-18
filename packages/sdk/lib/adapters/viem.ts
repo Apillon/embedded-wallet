@@ -20,14 +20,14 @@ class OasisViemAdapter {
     return toAccount({
       address: this.wallet.lastAccount.address,
 
-      signMessage: async ({ message }) => {
+      signMessage: async ({ message }, mustConfirm = false) => {
         const res = await this.wallet.signMessage({
           message: message as any,
           strategy: this.wallet.lastAccount.authStrategy,
           authData: {
             username: this.wallet.lastAccount.username,
           },
-          mustConfirm: true,
+          mustConfirm,
         });
 
         if (res) {
@@ -37,13 +37,13 @@ class OasisViemAdapter {
         return '0x';
       },
 
-      signTransaction: async transaction => {
+      signTransaction: async (transaction, _serializer, mustConfirm = false) => {
         const res = await this.wallet.signPlainTransaction({
           strategy: this.wallet.lastAccount.authStrategy,
           authData: {
             username: this.wallet.lastAccount.username,
           },
-          mustConfirm: true,
+          mustConfirm,
           tx: transaction as any,
         });
 

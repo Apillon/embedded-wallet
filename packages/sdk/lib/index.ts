@@ -381,7 +381,11 @@ class EmbeddedWallet {
     }
 
     if (!params.authData) {
-      abort('AUTHENTICATION_DATA_NOT_PROVIDED');
+      if (params.strategy === 'passkey' && this.lastAccount.username) {
+        params.authData = { username: this.lastAccount.username };
+      } else {
+        abort('AUTHENTICATION_DATA_NOT_PROVIDED');
+      }
     }
 
     /**

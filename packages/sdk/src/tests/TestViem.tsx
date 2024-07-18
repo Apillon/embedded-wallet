@@ -4,7 +4,7 @@ import { getEmbeddedWallet } from '../../lib/utils';
 import { moonbaseAlpha } from 'viem/chains';
 import { ERC20Abi } from '../../lib/abi';
 
-export default function Test4() {
+export default function TestViem() {
   async function testViem() {
     const w = getEmbeddedWallet();
 

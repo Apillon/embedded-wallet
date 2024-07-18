@@ -48,6 +48,10 @@ wallet.events.on('txSubmitted', tx => {
 });
 ```
 
+### mustConfirm
+
+This parameter can be used for wallet actions that require user confirmation. If set to `true`, the event `signatureRequest`/`txApprove` will be emitted with `resolve()` method passed in payload. Once resolve is called, the action continues. This can be used to display tx confirmation UI e.g.
+
 ### Auth methods
 
 - `register`

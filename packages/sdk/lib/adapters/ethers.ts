@@ -29,27 +29,30 @@ class OasisEthersSigner extends ethers.AbstractSigner<ethers.JsonRpcProvider> {
     return a?.publicAddress || '';
   }
 
-  override async signTransaction(tx: ethers.TransactionRequest): Promise<string> {
+  override async signTransaction(
+    tx: ethers.TransactionRequest,
+    mustConfirm = false
+  ): Promise<string> {
     const res = await this.wallet.signPlainTransaction({
       strategy: this.wallet.lastAccount.authStrategy,
       authData: {
         username: this.wallet.lastAccount.username,
       },
-      mustConfirm: true,
+      mustConfirm,
       tx: await this.populateTransaction(tx),
     });
 
     return res?.signedTxData || '';
   }
 
-  override async signMessage(message: string | Uint8Array): Promise<string> {
+  override async signMessage(message: string | Uint8Array, mustConfirm = false): Promise<string> {
     const res = await this.wallet.signMessage({
       message,
       strategy: this.wallet.lastAccount.authStrategy,
       authData: {
         username: this.wallet.lastAccount.username,
       },
-      mustConfirm: true,
+      mustConfirm,
     });
 
     return res || '';

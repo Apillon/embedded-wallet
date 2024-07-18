@@ -3,7 +3,7 @@ import { getEmbeddedWallet } from '../../lib/utils';
 import { ethers } from 'ethers';
 import { ERC20Abi } from '../../lib/abi';
 
-export default function Test3() {
+export default function TestEthers() {
   async function testEthers() {
     const w = getEmbeddedWallet();
 
