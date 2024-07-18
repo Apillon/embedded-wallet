@@ -37,7 +37,7 @@
   } */
 
   button:not(.oaw-button) {
-    @apply text-lightgrey cursor-pointer bg-transparent border-none hover:text-offwhite p-0 rounded-sm;
+    @apply text-lightgrey cursor-pointer bg-transparent border-none hover:text-offwhite p-0 rounded-sm min-w-0 min-h-0;
   }
 }
 

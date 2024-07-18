@@ -32,7 +32,7 @@ export default function WalletApprove({
 
   const [loading, setLoading] = useState(false);
 
-  const preClass = 'bg-offwhite/25 p-3 whitespace-pre-wrap break-all rounded-sm';
+  const preClass = 'bg-offwhite/25 p-3 whitespace-pre-wrap break-all rounded-sm mt-2';
 
   return (
     <>
@@ -54,13 +54,24 @@ export default function WalletApprove({
         <div>
           <h2 className="mb-6">Approve Transaction</h2>
 
-          <pre className={preClass}>
-            {JSON.stringify(
-              tx,
-              (_, value) => (typeof value === 'bigint' ? value.toString() : value),
-              2
-            )}
-          </pre>
+          {Object.entries(tx).map(([k, v]) => (
+            <div key={k} className="mb-2">
+              <p className="font-bold text-sm">{k}</p>
+              {typeof v === 'bigint' ? (
+                v.toString()
+              ) : typeof v === 'object' ? (
+                <pre className={preClass}>
+                  {JSON.stringify(
+                    tx,
+                    (_, value) => (typeof value === 'bigint' ? value.toString() : value),
+                    2
+                  )}
+                </pre>
+              ) : (
+                v
+              )}
+            </div>
+          ))}
         </div>
       )}
 
@@ -70,24 +81,36 @@ export default function WalletApprove({
           <h2 className="mb-6">Approve Contract Transaction</h2>
 
           {!!contractFunctionData.chainId && !!networksById[contractFunctionData.chainId] && (
-            <p>Chain: {networksById[contractFunctionData.chainId].name}</p>
+            <div>
+              <p className="font-bold text-sm">Chain</p>
+              {networksById[contractFunctionData.chainId].name}
+            </div>
           )}
 
-          <p className="my-3 break-all">Contract address: {contractFunctionData.contractAddress}</p>
-
-          <p className="my-3 break-all">
-            Contract function: {contractFunctionData.contractFunctionName}
-          </p>
-
-          <div className="my-3">
-            <pre className={preClass}>
-              {JSON.stringify(
-                contractFunctionData.contractFunctionValues,
-                (_, value) => (typeof value === 'bigint' ? value.toString() : value),
-                2
-              )}
-            </pre>
+          <div className="mb-3 break-all">
+            <p className="font-bold text-sm">Contract address</p>
+            {contractFunctionData.contractAddress}
           </div>
+
+          <div className="mb-3 break-all">
+            <p className="font-bold text-sm">Contract function</p>
+            {contractFunctionData.contractFunctionName}
+          </div>
+
+          {!!contractFunctionData.contractFunctionValues &&
+            !!contractFunctionData.contractFunctionValues.length && (
+              <div>
+                <p className="font-bold text-sm">Contract function values</p>
+
+                <pre className={preClass}>
+                  {JSON.stringify(
+                    contractFunctionData.contractFunctionValues,
+                    (_, value) => (typeof value === 'bigint' ? value.toString() : value),
+                    2
+                  )}
+                </pre>
+              </div>
+            )}
         </div>
       )}
 

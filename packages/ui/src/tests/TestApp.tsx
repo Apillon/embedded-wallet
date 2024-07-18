@@ -4,6 +4,8 @@ import TestSign from './TestSign';
 export default function TestApp() {
   return (
     <div>
+      <h2>Wallet Widget</h2>
+
       <WalletWidget
         // disableAutoBroadcastAfterSign
         // disableDefaultActivatorStyle
@@ -55,7 +57,10 @@ export default function TestApp() {
         }}
       />
 
-      <hr style={{ margin: '1.5rem 0' }} />
+      <br />
+      <br />
+
+      <h2>Test sign</h2>
 
       <TestSign />
       {/* <Test2 />
