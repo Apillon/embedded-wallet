@@ -11,13 +11,24 @@ import Btn from './Btn';
 
 export type AppProps = {
   networks?: Network[];
+
   disableAutoBroadcastAfterSign?: boolean;
   disableDefaultActivatorStyle?: boolean;
+
+  authFormPlaceholder?: string;
+  isAuthEmail?: boolean; // frontend email validation
+
+  /**
+   * If `onEmailConfirmRequest` is not provided the code check step is skipped
+   */
+  onEmailConfirmRequest?: (email: string) => Promise<any>; // send code to user
+  onEmailConfirm?: (email: string, code: string) => Promise<any>; // confirm that entered code is correct
 } & AppParams;
 
 function Wallet({
   disableAutoBroadcastAfterSign = false,
   disableDefaultActivatorStyle = false,
+  ...restOfProps
 }: AppProps) {
   const { state, wallet, setScreen, handleError } = useWalletContext();
   const { dispatch: dispatchTx } = useTransactionsContext();
@@ -123,7 +134,7 @@ function Wallet({
     /**
      * Login/register
      */
-    modalContent = <WalletAuth />;
+    modalContent = <WalletAuth {...restOfProps} />;
   } else if (!!txToConfirm || !!messageToSign || !!contractFunctionData) {
     if (approvedData.title) {
       /**

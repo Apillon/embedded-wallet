@@ -2,13 +2,23 @@ import { useEffect, useRef, useState } from 'react';
 import { getEmbeddedWallet, AuthStrategyName } from '@embedded-wallet/sdk';
 import { useWalletContext } from '../contexts/wallet.context';
 import Btn from './Btn';
+import { AppProps } from './WalletWidget';
 
-export default function WalletAuth() {
+export default function WalletAuth({
+  authFormPlaceholder = 'your e-mail@email.com',
+  isAuthEmail = true,
+  onEmailConfirmRequest,
+  onEmailConfirm,
+}: Pick<
+  AppProps,
+  'authFormPlaceholder' | 'isAuthEmail' | 'onEmailConfirmRequest' | 'onEmailConfirm'
+>) {
   const { dispatch, defaultNetworkId, handleError } = useWalletContext();
 
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
   const [isCodeScreen, setIsCodeScreen] = useState(false);
+  const [isCodeSubmitted, setIsCodeSubmitted] = useState(false);
 
   async function onAuth(ev: React.FormEvent<HTMLFormElement>) {
     ev.preventDefault();
@@ -37,13 +47,41 @@ export default function WalletAuth() {
           });
         }
       } else {
-        /**
-         * Register
-         * 1. Send email @TODO
-         * 2. Enter code
-         * 3. Setup passkey
-         */
-        setIsCodeScreen(true);
+        if (onEmailConfirmRequest) {
+          /**
+           * Register with email confirmation
+           * 1. Send email
+           * 2. Enter code
+           * 3. Setup passkey
+           */
+          await onEmailConfirmRequest(username);
+          setIsCodeScreen(true);
+        } else {
+          /**
+           * Just setup passkey
+           */
+          startRegister();
+        }
+      }
+    } catch (e) {
+      handleError(e);
+    }
+
+    setLoading(false);
+  }
+
+  async function startRegister() {
+    setLoading(true);
+
+    handleError();
+
+    try {
+      const wallet = getEmbeddedWallet();
+
+      const res = await wallet?.register('passkey', { username });
+
+      if (res) {
+        setupUserInfo({ username, address: res.publicAddress, authStrategy: 'passkey' });
       }
     } catch (e) {
       handleError(e);
@@ -80,24 +118,30 @@ export default function WalletAuth() {
   if (isCodeScreen) {
     return (
       <ConfirmEmail
+        isCodeSubmitted={isCodeSubmitted}
         loading={loading}
-        onConfirm={async () => {
+        onConfirm={async code => {
+          if (!onEmailConfirm) {
+            return startRegister();
+          }
+
           setLoading(true);
           handleError();
 
           try {
-            const wallet = getEmbeddedWallet();
+            /**
+             * Code check
+             */
+            await onEmailConfirm(username, code);
 
-            const res = await wallet?.register('passkey', { username });
+            setIsCodeSubmitted(true);
 
-            if (res) {
-              setupUserInfo({ username, address: res.publicAddress, authStrategy: 'passkey' });
-            }
+            startRegister();
           } catch (e) {
             handleError(e);
-          }
 
-          setLoading(false);
+            setLoading(false);
+          }
         }}
       />
     );
@@ -109,7 +153,8 @@ export default function WalletAuth() {
 
       <form onSubmit={ev => onAuth(ev)}>
         <input
-          placeholder="your e-mail@email.com"
+          type={isAuthEmail ? 'email' : 'text'}
+          placeholder={authFormPlaceholder}
           value={username}
           className="w-full mb-8"
           onChange={ev => setUsername(ev.target.value)}
@@ -124,17 +169,15 @@ export default function WalletAuth() {
 }
 
 function ConfirmEmail({
+  isCodeSubmitted,
   loading,
   onConfirm,
-  onLoading,
 }: {
+  isCodeSubmitted: boolean;
   loading: boolean;
-  onConfirm?: (code: string) => void;
-  onLoading?: (val: boolean) => void;
+  onConfirm: (code: string) => void;
 }) {
-  const { handleError } = useWalletContext();
   const [code, setCode] = useState('');
-  const [isCodeSubmitted, setIsCodeSubmitted] = useState(false);
 
   const inputRefs = [
     useRef<HTMLInputElement>(null),
@@ -147,31 +190,9 @@ function ConfirmEmail({
 
   useEffect(() => {
     if (code.length === 6 && !/\s/.test(code)) {
-      onSubmit();
+      onConfirm(code);
     }
   }, [code]);
-
-  async function onSubmit() {
-    onLoading?.(true);
-    handleError();
-
-    try {
-      /**
-       * @TODO Code check
-       */
-      console.log(code);
-
-      await new Promise(resolve => setTimeout(resolve, 1337));
-
-      setIsCodeSubmitted(true);
-
-      onConfirm?.(code);
-    } catch (e) {
-      handleError(e);
-
-      onLoading?.(false);
-    }
-  }
 
   function handleInput(e: React.ChangeEvent<HTMLInputElement>, index: number) {
     const input = e.target;

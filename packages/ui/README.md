@@ -15,6 +15,19 @@ disableAutoBroadcastAfterSign?: boolean;
 
 // Leave the "open wallet" button unstyled.
 disableDefaultActivatorStyle?: boolean;
+
+// Text for login/register input
+authFormPlaceholder?: string;
+
+// Set type=email for login/register input
+isAuthEmail?: boolean;
+
+// Send code to user
+// If `onEmailConfirmRequest` is not provided the code check step is skipped
+onEmailConfirmRequest?: (email: string) => Promise<any>;
+
+// Confirm that entered code is correct
+onEmailConfirm?: (email: string, code: string) => Promise<any>;
 ```
 
 ```js
