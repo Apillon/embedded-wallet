@@ -13,7 +13,8 @@
   "exports": {
     ".": {
       "import": "./dist/ui.js",
-      "require": "./dist/ui.umd.cjs"
+      "require": "./dist/ui.umd.cjs",
+      "types": "./dist/ui.d.ts"
     },
     "./css": {
       "default": "./dist/main.css"

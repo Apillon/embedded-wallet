@@ -13,7 +13,8 @@
   "exports": {
     ".": {
       "import": "./dist/sdk.js",
-      "require": "./dist/sdk.umd.cjs"
+      "require": "./dist/sdk.umd.cjs",
+      "types": "./dist/sdk.d.ts"
     }
   },
   "dependencies": {

@@ -23,7 +23,6 @@ export default defineConfig({
       entry: resolve(__dirname, 'src/main.tsx'),
       fileName: 'ui',
       name: 'EmbeddedWalletUi',
-      // formats: ['es']
     },
     rollupOptions: {
       external: [

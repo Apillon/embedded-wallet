@@ -13,7 +13,9 @@
   "main": "./dist/react.ts",
   "exports": {
     ".": {
-      "import": "./dist/react.js"
+      "import": "./dist/react.js",
+      "require": "./dist/react.umd.cjs",
+      "types": "./dist/react.d.ts"
     }
   },
   "dependencies": {

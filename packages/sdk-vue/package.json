@@ -11,7 +11,9 @@
   "main": "./dist/vue.ts",
   "exports": {
     ".": {
-      "import": "./dist/vue.js"
+      "import": "./dist/vue.js",
+      "require": "./dist/vue.umd.cjs",
+      "types": "./dist/vue.d.ts"
     }
   },
   "dependencies": {

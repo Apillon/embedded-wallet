@@ -35,7 +35,6 @@ export default defineConfig({
       entry: resolve(__dirname, 'lib/main.ts'),
       name: 'EmbeddedWalletReact',
       fileName: 'react',
-      formats: ['es'],
     },
 
     rollupOptions: {
