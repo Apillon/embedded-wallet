@@ -52,46 +52,13 @@ setTimeout(() => {
       }
     },
 
-    // onGetSignature: async gaslessData => {
-    //   try {
-    //     const tokenRes = await (
-    //       await fetch(`http://localhost:3000/session-token`, {
-    //         method: 'GET',
-    //         headers: { 'Content-Type': 'application/json' },
-    //       })
-    //     ).json();
-
-    //     const res = await (
-    //       await fetch(`https://api-dev.apillon.io/oasis/signature`, {
-    //         method: 'POST',
-    //         headers: { 'Content-Type': 'application/json' },
-    //         body: JSON.stringify({
-    //           token: tokenRes.data.token,
-    //           data: gaslessData,
-    //         }),
-    //       })
-    //     ).json();
-
-    //     return {
-    //       signature: res?.data.signature,
-    //       gasLimit: res?.data.gasLimit || 0,
-    //       gasPrice: res?.data.gasPrice || 0,
-    //       timestamp: res?.data.timestamp,
-    //     };
-    //   } catch (e) {
-    //     console.error('Signature request error', e);
-    //   }
-
-    //   return { signature: '', gasLimit: 0, timestamp: 0 };
-    // },
-
     onEmailConfirmRequest: async email => {
       console.log('Generate and send email confirmation code', email);
       await new Promise(r => setTimeout(r, 2000));
     },
 
     onEmailConfirm: async (email, code) => {
-      console.log('Validate entered code for email', { email, code });
+      console.log('Validate code entered for email', { email, code });
       await new Promise(r => setTimeout(r, 2000));
     },
   });
