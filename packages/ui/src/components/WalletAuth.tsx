@@ -115,6 +115,22 @@ export default function WalletAuth({
     });
   }
 
+  if (isCodeSubmitted) {
+    return (
+      <div className="text-center">
+        <h2 className="mb-12">
+          {onEmailConfirmRequest ? 'Email succesfully confirmed.' : 'Welcome'}
+        </h2>
+
+        <p className="text-xl mb-12">Passkey configuration will now start.</p>
+
+        <Btn loading={loading} onClick={() => startRegister()}>
+          Retry
+        </Btn>
+      </div>
+    );
+  }
+
   if (isCodeScreen) {
     return (
       <ConfirmEmail
@@ -169,7 +185,6 @@ export default function WalletAuth({
 }
 
 function ConfirmEmail({
-  isCodeSubmitted,
   loading,
   onConfirm,
 }: {
@@ -249,20 +264,6 @@ function ConfirmEmail({
         }
       });
     }
-  }
-
-  if (isCodeSubmitted) {
-    return (
-      <div className="text-center">
-        <h2 className="mb-12">Email succesfully confirmed.</h2>
-
-        <p className="text-xl mb-12">Passkey configuration will now start.</p>
-
-        <Btn loading={loading} onClick={() => onConfirm?.(code)}>
-          Retry
-        </Btn>
-      </div>
-    );
   }
 
   return (

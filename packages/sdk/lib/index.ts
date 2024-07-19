@@ -26,7 +26,9 @@ class EmbeddedWallet {
   abiCoder = ethers.AbiCoder.defaultAbiCoder();
   events: Emitter<Events>;
   onGetSignature: SignatureCallback | undefined;
+  onGetApillonSessionToken: (() => Promise<string>) | undefined;
 
+  isProduction = false;
   defaultNetworkId = 0;
   rpcUrls = {} as { [networkId: number]: string };
   rpcProviders = {} as { [networkId: number]: ethers.JsonRpcProvider };
@@ -72,7 +74,9 @@ class EmbeddedWallet {
 
     this.events = mitt<Events>();
 
+    this.isProduction = !!params?.production;
     this.onGetSignature = params?.onGetSignature;
+    this.onGetApillonSessionToken = params?.onGetApillonSessionToken;
   }
 
   // #region Auth utils
@@ -141,7 +145,14 @@ class EmbeddedWallet {
 
     let signedTx = '';
 
-    if (this.onGetSignature) {
+    if (!!this.onGetSignature || !!this.onGetApillonSessionToken) {
+      /**
+       * Use apillon signature fetch if no custom provided
+       */
+      if (!this.onGetSignature) {
+        this.onGetSignature = this.getApillonSignature;
+      }
+
       //Get signature from API (handle gas payments e.g.)
       const gaslessParams = await this.onGetSignature(gaslessData);
 
@@ -185,6 +196,52 @@ class EmbeddedWallet {
     if (await this.waitForTxReceipt(txHash)) {
       return await this.getAccountAddress(authData.username);
     }
+  }
+
+  /**
+   * If no custom `onGetSignature` param is provided, use apillon^tm by default.
+   *
+   * `onGetApillonSessionToken` param must be provided in this case to authenticate
+   * with the signature generating endpoint.
+   */
+  async getApillonSignature(
+    gaslessData: Parameters<SignatureCallback>[0]
+  ): ReturnType<SignatureCallback> {
+    if (!this.onGetApillonSessionToken) {
+      abort('NO_APILLON_SESSION_TOKEN_CALLBACK');
+      return { signature: '', gasLimit: 0, timestamp: 0 };
+    }
+
+    try {
+      const token = await this.onGetApillonSessionToken();
+
+      const res = await (
+        await fetch(
+          this.isProduction
+            ? `https://api.apillon.io/oasis/signature`
+            : `https://api-dev.apillon.io/oasis/signature`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              token,
+              data: gaslessData,
+            }),
+          }
+        )
+      ).json();
+
+      return {
+        signature: res?.data.signature,
+        gasLimit: res?.data.gasLimit || 0,
+        gasPrice: res?.data.gasPrice || 0,
+        timestamp: res?.data.timestamp,
+      };
+    } catch (e) {
+      console.error('Signature request error', e);
+    }
+
+    return { signature: '', gasLimit: 0, timestamp: 0 };
   }
 
   /**

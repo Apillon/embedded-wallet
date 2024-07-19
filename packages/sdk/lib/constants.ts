@@ -21,6 +21,7 @@ export const Errors = {
   OASIS_WALLET_NOT_INITIALIZED: 'OAW_OASIS_WALLET_NOT_INITIALIZED',
   CANT_HASH_USERNAME: 'OAW_CANT_HASH_USERNAME',
   CANT_GET_SIGNATURE: 'CANT_GET_SIGNATURE',
+  NO_APILLON_SESSION_TOKEN_CALLBACK: 'NO_APILLON_SESSION_TOKEN_CALLBACK',
 };
 
 export const ErrorMessages = {
@@ -35,4 +36,5 @@ export const ErrorMessages = {
   [Errors.CROSS_CHAIN_PROVIDER_NOT_INITIALIZED]: 'Cross chain provider not initialized',
   [Errors.OASIS_WALLET_NOT_INITIALIZED]: 'Oasis wallet not initialized',
   [Errors.CANT_HASH_USERNAME]: "Can't hash username",
+  [Errors.NO_APILLON_SESSION_TOKEN_CALLBACK]: 'Session token callback must be provided',
 };

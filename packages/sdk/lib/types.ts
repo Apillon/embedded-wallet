@@ -14,12 +14,13 @@ export type SignatureCallback = (
 ) => Promise<{ signature: string; gasLimit?: number; gasPrice?: number; timestamp: number }>;
 
 export type AppParams = {
+  production?: boolean; // Use oasis mainnet and apillon prod api e.g.
   accountManagerAddress?: string;
   sapphireUrl?: string;
   defaultNetworkId?: number;
   networkConfig?: NetworkConfig;
   onGetSignature?: SignatureCallback;
-  production?: boolean;
+  onGetApillonSessionToken?: () => Promise<string>; // only used if no `onGetSignature` param is provided
 };
 
 export type AuthData = {

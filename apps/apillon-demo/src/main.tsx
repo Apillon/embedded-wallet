@@ -36,7 +36,8 @@ setTimeout(() => {
         explorerUrl: 'https://www.oklink.com/amoy',
       },
     ],
-    onGetSignature: async gaslessData => {
+
+    onGetApillonSessionToken: async () => {
       try {
         const tokenRes = await (
           await fetch(`http://localhost:3000/session-token`, {
@@ -45,29 +46,44 @@ setTimeout(() => {
           })
         ).json();
 
-        const res = await (
-          await fetch(`https://api-dev.apillon.io/oasis/signature`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              token: tokenRes.data.token,
-              data: gaslessData,
-            }),
-          })
-        ).json();
-
-        return {
-          signature: res?.data.signature,
-          gasLimit: res?.data.gasLimit || 0,
-          gasPrice: res?.data.gasPrice || 0,
-          timestamp: res?.data.timestamp,
-        };
+        return tokenRes.data.token;
       } catch (e) {
-        console.error('Signature request error', e);
+        console.error(e);
       }
-
-      return { signature: '', gasLimit: 0, timestamp: 0 };
     },
+
+    // onGetSignature: async gaslessData => {
+    //   try {
+    //     const tokenRes = await (
+    //       await fetch(`http://localhost:3000/session-token`, {
+    //         method: 'GET',
+    //         headers: { 'Content-Type': 'application/json' },
+    //       })
+    //     ).json();
+
+    //     const res = await (
+    //       await fetch(`https://api-dev.apillon.io/oasis/signature`, {
+    //         method: 'POST',
+    //         headers: { 'Content-Type': 'application/json' },
+    //         body: JSON.stringify({
+    //           token: tokenRes.data.token,
+    //           data: gaslessData,
+    //         }),
+    //       })
+    //     ).json();
+
+    //     return {
+    //       signature: res?.data.signature,
+    //       gasLimit: res?.data.gasLimit || 0,
+    //       gasPrice: res?.data.gasPrice || 0,
+    //       timestamp: res?.data.timestamp,
+    //     };
+    //   } catch (e) {
+    //     console.error('Signature request error', e);
+    //   }
+
+    //   return { signature: '', gasLimit: 0, timestamp: 0 };
+    // },
 
     onEmailConfirmRequest: async email => {
       console.log('Generate and send email confirmation code', email);

@@ -20,14 +20,25 @@ SDK is centered around the `EmbeddedWallet` class. This class exposes methods fo
 Initialize the class once by using `initializeOnWindow()` utility, with optional configuration:
 
 ```ts
+production?: boolean;
 accountManagerAddress?: string;
 sapphireUrl?: string;
 defaultNetworkId?: number;
 networkConfig?: NetworkConfig;
 onGetSignature?: SignatureCallback;
+onGetApillonSessionToken?: () => Promise<string>;
 ```
 
 The class instance is then available on window (`embeddedWallet`) and can be obtained with the `getEmbeddedWallet()` utility.
+
+### Signature callbacks usage
+
+| `onGetSignature` | `onGetApillonSessionToken` | On register               |
+| ---------------- | -------------------------- | ------------------------- |
+| unset            | unset                      | No signature request      |
+| unset            | set                        | Apillon signature request |
+| set              | unset                      | Custom signature request  |
+| set              | set                        | Custom signature request  |
 
 ### onGetSignature
 
@@ -79,6 +90,31 @@ Example:
 
     return { signature: '', gasLimit: 0, timestamp: 0 };
   },
+}
+```
+
+### onGetApillonSessionToken
+
+By default [Apillon](https://apillon.io/) is used for generating the signature. However the Apillon backend needs to receive a session token from the dApp. This token can be provided with `onGetApillonSessionToken`.
+
+```ts
+{
+  ...
+  onGetApillonSessionToken: async () => {
+    try {
+      const tokenRes = await (
+        await fetch(`http://localhost:3000/session-token`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        })
+      ).json();
+
+      return tokenRes.data.token;
+    } catch (e) {
+      console.error(e);
+    }
+  },
+  ...
 }
 ```
 
