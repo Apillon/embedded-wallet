@@ -7,6 +7,8 @@ import {
   WebStorageKeys,
   EmbeddedWallet,
   initializeOnWindow,
+  SapphireTestnet,
+  SapphireMainnet,
 } from '@embedded-wallet/sdk';
 
 export type Network = { name: string; id: number; rpcUrl: string; explorerUrl: string };
@@ -90,18 +92,24 @@ function WalletProvider({
   children: ReactNode;
   networks?: Network[];
 } & AppParams) {
-  /**
-   * @TODO Switch with Mainnet on prod
-   */
-  networks = [
-    {
-      name: 'Sapphire Testnet',
-      id: 23295,
-      rpcUrl: 'https://testnet.sapphire.oasis.dev',
-      explorerUrl: 'https://explorer.oasis.io/testnet/sapphire',
-    },
-    ...networks,
-  ];
+  networks = restOfParams?.production
+    ? [
+        {
+          name: 'Oasis Sapphire',
+          id: SapphireMainnet,
+          rpcUrl: 'https://sapphire.oasis.io',
+          explorerUrl: 'https://explorer.oasis.io/mainnet/sapphire',
+        },
+      ]
+    : [
+        {
+          name: 'Sapphire Testnet',
+          id: SapphireTestnet,
+          rpcUrl: 'https://testnet.sapphire.oasis.io',
+          explorerUrl: 'https://explorer.oasis.io/testnet/sapphire',
+        },
+        ...networks,
+      ];
 
   const [state, dispatch] = useReducer(reducer, initialState(defaultNetworkId || networks[0].id));
   const [initialized, setInitialized] = useState(false);

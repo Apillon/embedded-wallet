@@ -18,6 +18,7 @@ import PasswordStrategy from './strategies/password';
 import PasskeyStrategy from './strategies/passkey';
 import { networkIdIsSapphire, getHashedUsername, abort } from './utils';
 import mitt, { Emitter } from 'mitt';
+import { SapphireMainnet, SapphireTestnet } from './constants';
 
 class EmbeddedWallet {
   sapphireProvider: ethers.JsonRpcProvider;
@@ -30,8 +31,8 @@ class EmbeddedWallet {
   rpcUrls = {} as { [networkId: number]: string };
   rpcProviders = {} as { [networkId: number]: ethers.JsonRpcProvider };
   explorerUrls = {
-    23294: 'https://explorer.oasis.io/mainnet/sapphire',
-    23295: 'https://explorer.oasis.io/testnet/sapphire',
+    [SapphireMainnet]: 'https://explorer.oasis.io/mainnet/sapphire',
+    [SapphireTestnet]: 'https://explorer.oasis.io/testnet/sapphire',
   } as { [networkId: number]: string };
 
   lastAccount = {
@@ -47,13 +48,15 @@ class EmbeddedWallet {
    */
   constructor(params?: AppParams) {
     const ethSaphProvider = new ethers.JsonRpcProvider(
-      params?.sapphireUrl || 'https://testnet.sapphire.oasis.dev'
+      params?.sapphireUrl || params?.production
+        ? 'https://sapphire.oasis.io'
+        : 'https://testnet.sapphire.oasis.io'
     );
 
     this.sapphireProvider = sapphire.wrap(ethSaphProvider);
 
     this.accountManagerContract = new ethers.Contract(
-      params?.accountManagerAddress || '0x5C357DaFfe6b1016C0c9A5607367E8f47765D4bC',
+      params?.accountManagerAddress || '0xF35C3eB93c6D3764A7D5efC6e9DEB614779437b1',
       !params?.signatureCallback ? AccountManagerAbiOld : AccountManagerAbi,
       new ethers.VoidSigner(ethers.ZeroAddress, this.sapphireProvider)
     ) as unknown as WebauthnContract;

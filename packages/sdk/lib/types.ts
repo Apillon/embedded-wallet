@@ -19,6 +19,7 @@ export type AppParams = {
   defaultNetworkId?: number;
   networkConfig?: NetworkConfig;
   signatureCallback?: SignatureCallback;
+  production?: boolean;
 };
 
 export type AuthData = {

@@ -245,20 +245,6 @@ function Wallet({
       >
         {loggedIn ? 'Open wallet' : 'Sign in'}
       </button>
-
-      {/* <Btn
-        onClick={async () => {
-          const res = await wallet?.contractRead({
-            contractAbi: AccountManagerAbi,
-            contractAddress: '0xF35C3eB93c6D3764A7D5efC6e9DEB614779437b1',
-            contractFunctionName: 'signer',
-            chainId: 23295,
-          });
-          console.log(res);
-        }}
-      >
-        Test
-      </Btn> */}
     </div>
   );
 }
