@@ -29,6 +29,59 @@ signatureCallback?: SignatureCallback;
 
 The class instance is then available on window (`embeddedWallet`) and can be obtained with the `getEmbeddedWallet()` utility.
 
+### signatureCallback
+
+Provide this callback in configuration and it will be used to get contract values for registration. This is useful for controlling gas expenses on account manager contract when registering new wallets.
+
+When `signatureCallback` is used, the provided contract should support `generateGaslessTx` contract function that accepts `timestamp` and `signature`.
+
+```rust
+function generateGaslessTx(bytes in_data, uint64 nonce, uint256 gasPrice, uint64 gasLimit, uint256 timestamp, bytes signature) view returns (bytes out_data)
+```
+
+The callback receives encoded `gaslessData` (string). An appropriate signature should then be generated for this data on e.g. some backend. The returned values should be:
+
+```ts
+{
+  signature: string;
+  gasLimit?: number;
+  gasPrice?: number;
+  timestamp: number
+}
+```
+
+Example:
+
+```ts
+{
+  signatureCallback: async gaslessData => {
+    try {
+      const res = await (
+        await fetch(`https://api-dev.apillon.io/oasis/signature`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            token: `user session token`,
+            data: gaslessData,
+          }),
+        })
+      ).json();
+
+      return {
+        signature: res?.data.signature,
+        gasLimit: res?.data.gasLimit || 0,
+        gasPrice: res?.data.gasPrice || 0,
+        timestamp: res?.data.timestamp,
+      };
+    } catch (e) {
+      console.error('Signature request error', e);
+    }
+
+    return { signature: '', gasLimit: 0, timestamp: 0 };
+  },
+}
+```
+
 ### Events
 
 The SDK exposes some events on its `events` property.
@@ -42,15 +95,17 @@ The SDK exposes some events on its `events` property.
 - `txSubmitted`
   e.g. log the transaction in session storage or own backend
 
+- `txDone`
+  Emitted by UI after a submitted tx is consisdered done (ethereum provider listener)
+
+- `dataUpdated`
+  Emitted after state data changes, e.g. for keeping track of active account
+
 ```ts
 wallet.events.on('txSubmitted', tx => {
   console.log(tx);
 });
 ```
-
-### mustConfirm
-
-This parameter can be used for wallet actions that require user confirmation. If set to `true`, the event `signatureRequest`/`txApprove` will be emitted with `resolve()` method passed in payload. Once resolve is called, the action continues. This can be used to display tx confirmation UI e.g.
 
 ### Auth methods
 
@@ -78,6 +133,10 @@ This parameter can be used for wallet actions that require user confirmation. If
 - `contractRead`
   Get result of contract read.
   Utility function, this has nothing to do with Oasis.
+
+### mustConfirm
+
+This parameter can be used for wallet actions that require user confirmation. If set to `true`, the event `signatureRequest`/`txApprove` will be emitted with `resolve()` method passed in payload. Once resolve is called, the action continues. This can be used to display tx confirmation UI e.g.
 
 ## Use with ethers (v6)
 

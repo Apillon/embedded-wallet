@@ -58,14 +58,14 @@ function Transaction({ tx }: { tx: TransactionItem }) {
       </div>
 
       <div className="flex justify-between items-end">
-        <span className="text-sm">
+        <span title={tx.hash} className="text-sm">
           {shortHash(tx.hash)}{' '}
           <button className="text-xs" onClick={() => onCopy(tx.hash)}>
             {copyText}
           </button>
         </span>
 
-        <span className="text-xs">
+        <span title={new Date(tx.createdAt).toISOString()} className="text-xs">
           {new Date(tx.createdAt).toISOString().slice(0, -5).replace('T', ' ')}
         </span>
       </div>

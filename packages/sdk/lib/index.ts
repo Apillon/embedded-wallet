@@ -457,13 +457,6 @@ class EmbeddedWallet {
      * Add tx params needed for write tx
      */
     if (params.tx.type === 2) {
-      // if (!params.tx.gasPrice) {
-      //   /**
-      //    * @TODO Calculate this?
-      //    */
-      //   params.tx.gasPrice = 20_000_000_000;
-      // }
-
       if (!params.tx.value) {
         params.tx.value = 0n;
       }

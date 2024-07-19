@@ -16,12 +16,14 @@
 }
 
 #oaw-wallet-widget {
+  @apply text-offwhite;
+
   h2 {
-    @apply font-bold text-3xl;
+    @apply font-bold text-3xl text-offwhite;
   }
 
   h3 {
-    @apply font-bold text-xl;
+    @apply font-bold text-xl text-offwhite;
   }
 
   input {
@@ -37,7 +39,7 @@
   } */
 
   button:not(.oaw-button) {
-    @apply text-lightgrey cursor-pointer bg-transparent border-none hover:text-offwhite p-0 rounded-sm min-w-0 min-h-0;
+    @apply text-lightgrey cursor-pointer bg-transparent border-none hover:text-offwhite p-0 rounded-sm min-w-0 min-h-0 font-normal transform-none;
   }
 }
 

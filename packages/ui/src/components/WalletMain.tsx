@@ -27,7 +27,7 @@ export default function WalletMain() {
     <div>
       {/* Selected network + trigger change screen to network select */}
       <div className="text-center -mt-4 sm:-mt-8 mb-4">
-        <div className="inline-block">
+        <div className="inline-block opacity-50 hover:opacity-100">
           <p>
             {!!state.networkId && !!networksById[state.networkId]
               ? networksById[state.networkId].name
