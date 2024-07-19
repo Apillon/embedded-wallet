@@ -57,7 +57,7 @@ class EmbeddedWallet {
 
     this.accountManagerContract = new ethers.Contract(
       params?.accountManagerAddress || '0xF35C3eB93c6D3764A7D5efC6e9DEB614779437b1',
-      !params?.signatureCallback ? AccountManagerAbiOld : AccountManagerAbi,
+      !params?.onGetSignature ? AccountManagerAbiOld : AccountManagerAbi,
       new ethers.VoidSigner(ethers.ZeroAddress, this.sapphireProvider)
     ) as unknown as WebauthnContract;
 
@@ -72,7 +72,7 @@ class EmbeddedWallet {
 
     this.events = mitt<Events>();
 
-    this.onGetSignature = params?.signatureCallback;
+    this.onGetSignature = params?.onGetSignature;
   }
 
   // #region Auth utils

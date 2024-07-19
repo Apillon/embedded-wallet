@@ -36,7 +36,7 @@ setTimeout(() => {
         explorerUrl: 'https://www.oklink.com/amoy',
       },
     ],
-    signatureCallback: async gaslessData => {
+    onGetSignature: async gaslessData => {
       try {
         const tokenRes = await (
           await fetch(`http://localhost:3000/session-token`, {

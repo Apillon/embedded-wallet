@@ -18,7 +18,7 @@ export type AppParams = {
   sapphireUrl?: string;
   defaultNetworkId?: number;
   networkConfig?: NetworkConfig;
-  signatureCallback?: SignatureCallback;
+  onGetSignature?: SignatureCallback;
   production?: boolean;
 };
 

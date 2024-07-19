@@ -24,16 +24,16 @@ accountManagerAddress?: string;
 sapphireUrl?: string;
 defaultNetworkId?: number;
 networkConfig?: NetworkConfig;
-signatureCallback?: SignatureCallback;
+onGetSignature?: SignatureCallback;
 ```
 
 The class instance is then available on window (`embeddedWallet`) and can be obtained with the `getEmbeddedWallet()` utility.
 
-### signatureCallback
+### onGetSignature
 
 Provide this callback in configuration and it will be used to get contract values for registration. This is useful for controlling gas expenses on account manager contract when registering new wallets.
 
-When `signatureCallback` is used, the provided contract should support `generateGaslessTx` contract function that accepts `timestamp` and `signature`.
+When `onGetSignature` is used, the provided contract should support `generateGaslessTx` contract function that accepts `timestamp` and `signature`.
 
 ```rust
 function generateGaslessTx(bytes in_data, uint64 nonce, uint256 gasPrice, uint64 gasLimit, uint256 timestamp, bytes signature) view returns (bytes out_data)
@@ -54,7 +54,7 @@ Example:
 
 ```ts
 {
-  signatureCallback: async gaslessData => {
+  onGetSignature: async gaslessData => {
     try {
       const res = await (
         await fetch(`https://api-dev.apillon.io/oasis/signature`, {

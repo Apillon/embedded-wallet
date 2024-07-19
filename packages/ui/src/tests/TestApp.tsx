@@ -32,7 +32,7 @@ export default function TestApp() {
             explorerUrl: 'https://www.oklink.com/amoy',
           },
         ]}
-        signatureCallback={async gaslessData => {
+        onGetSignature={async gaslessData => {
           try {
             const res = await (
               await fetch(`{{Apillon API url}}/oasis/signature`, {
