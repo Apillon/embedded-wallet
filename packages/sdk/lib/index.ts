@@ -59,7 +59,9 @@ class EmbeddedWallet {
 
     this.accountManagerContract = new ethers.Contract(
       params?.accountManagerAddress || '0xF35C3eB93c6D3764A7D5efC6e9DEB614779437b1',
-      !params?.onGetSignature ? AccountManagerAbiOld : AccountManagerAbi,
+      !params?.onGetSignature && !params?.onGetApillonSessionToken
+        ? AccountManagerAbiOld
+        : AccountManagerAbi,
       new ethers.VoidSigner(ethers.ZeroAddress, this.sapphireProvider)
     ) as unknown as WebauthnContract;
 

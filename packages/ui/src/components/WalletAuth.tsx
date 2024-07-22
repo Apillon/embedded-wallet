@@ -3,6 +3,7 @@ import { getEmbeddedWallet, AuthStrategyName } from '@embedded-wallet/sdk';
 import { useWalletContext } from '../contexts/wallet.context';
 import Btn from './Btn';
 import { AppProps } from './WalletWidget';
+import WalletError from './WalletError';
 
 export default function WalletAuth({
   authFormPlaceholder = 'your e-mail@email.com',
@@ -127,39 +128,44 @@ export default function WalletAuth({
         <Btn loading={loading} onClick={() => startRegister()}>
           Retry
         </Btn>
+
+        <WalletError show className="mt-6" />
       </div>
     );
   }
 
   if (isCodeScreen) {
     return (
-      <ConfirmEmail
-        isCodeSubmitted={isCodeSubmitted}
-        loading={loading}
-        onConfirm={async code => {
-          if (!onEmailConfirm) {
-            return startRegister();
-          }
+      <>
+        <ConfirmEmail
+          isCodeSubmitted={isCodeSubmitted}
+          loading={loading}
+          onConfirm={async code => {
+            if (!onEmailConfirm) {
+              return startRegister();
+            }
 
-          setLoading(true);
-          handleError();
+            setLoading(true);
+            handleError();
 
-          try {
-            /**
-             * Code check
-             */
-            await onEmailConfirm(username, code);
+            try {
+              /**
+               * Code check
+               */
+              await onEmailConfirm(username, code);
 
-            setIsCodeSubmitted(true);
+              setIsCodeSubmitted(true);
 
-            startRegister();
-          } catch (e) {
-            handleError(e);
+              startRegister();
+            } catch (e) {
+              handleError(e);
 
-            setLoading(false);
-          }
-        }}
-      />
+              setLoading(false);
+            }
+          }}
+        />
+        <WalletError show className="mt-6" />
+      </>
     );
   }
 
@@ -180,6 +186,8 @@ export default function WalletAuth({
           Continue
         </Btn>
       </form>
+
+      <WalletError show className="mt-6" />
     </div>
   );
 }

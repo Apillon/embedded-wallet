@@ -43,6 +43,23 @@ export default function App() {
 
           <div className="w-full md:!w-1/3 md:!text-right text-center">
             <div id="wallet"></div>
+
+            {/* <button
+              style={{ color: 'white', border: 'solid 1px white' }}
+              onClick={async () => {
+                const w = getEmbeddedWallet();
+                console.log(
+                  await w?.contractRead({
+                    contractAbi: AccountManagerAbi,
+                    contractAddress: '0xF35C3eB93c6D3764A7D5efC6e9DEB614779437b1',
+                    contractFunctionName: 'gaspayingAddress',
+                    chainId: 23295,
+                  })
+                );
+              }}
+            >
+              W READ
+            </button> */}
           </div>
         </nav>
 

@@ -224,10 +224,28 @@ function WalletProvider({
           if (e) {
             console.error(e);
 
-            if (e?.name || e?.message) {
+            let msg = '';
+
+            if (e?.name) {
+              msg = ErrorMessages[e.name];
+            }
+
+            if (!msg && e?.error) {
+              if (e?.error?.message) {
+                msg = e.error.message;
+              } else if (typeof e.error === 'string') {
+                msg = e.error;
+              }
+            }
+
+            if (!msg && e?.message) {
+              msg = e.message;
+            }
+
+            if (msg) {
               dispatch({
                 type: 'setValue',
-                payload: { key: 'displayedError', value: ErrorMessages[e.name] || e.message },
+                payload: { key: 'displayedError', value: msg },
               });
             }
           } else {
