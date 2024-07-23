@@ -98,7 +98,7 @@ Example:
   onGetSignature: async gaslessData => {
     try {
       const res = await (
-        await fetch(`https://api-dev.apillon.io/oasis/signature`, {
+        await fetch(`https://api.apillon.io/oasis/signature`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -125,7 +125,7 @@ Example:
 
 ### onGetApillonSessionToken
 
-By default [Apillon](https://apillon.io/) is used for generating the signature. However the Apillon backend needs to receive a session token from the dApp. This token can be provided with `onGetApillonSessionToken`.
+By default [Apillon](https://api.apillon.io/) is used for generating the signature. However the Apillon backend needs to receive a session token from the dApp. This token can be provided with `onGetApillonSessionToken`.
 
 ```ts
 {
@@ -229,7 +229,7 @@ A default wallet UI can be added by using `initializeApp()`. This includes a rea
 ```ts
 import { initializeApp } from '@embedded-wallet/ui';
 
-initializeApp(undefined, '#oasis-btn', {
+initializeApp('#oasis-btn', {
   accountManagerAddress: '0x5C3512312312312312312312312312312365D4bC',
   defaultNetworkId: 1287,
   networks: [
