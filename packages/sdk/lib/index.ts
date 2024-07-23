@@ -50,9 +50,7 @@ class EmbeddedWallet {
    */
   constructor(params?: AppParams) {
     const ethSaphProvider = new ethers.JsonRpcProvider(
-      params?.sapphireUrl || params?.production
-        ? 'https://sapphire.oasis.io'
-        : 'https://testnet.sapphire.oasis.io'
+      params?.production ? 'https://sapphire.oasis.io' : 'https://testnet.sapphire.oasis.io'
     );
 
     this.sapphireProvider = sapphire.wrap(ethSaphProvider);
@@ -155,7 +153,7 @@ class EmbeddedWallet {
         this.onGetSignature = this.getApillonSignature;
       }
 
-      //Get signature from API (handle gas payments e.g.)
+      // Get signature from API (handle gas payments e.g.)
       const gaslessParams = await this.onGetSignature(gaslessData);
 
       if (!gaslessParams.signature) {

@@ -20,13 +20,43 @@ SDK is centered around the `EmbeddedWallet` class. This class exposes methods fo
 Initialize the class once by using `initializeOnWindow()` utility, with optional configuration:
 
 ```ts
+/**
+ * Use production URLS
+ * - Oasis Sapphire mainnet instead of testnet
+ * - Apillon production API if using Apillon for registration signature
+ */
 production?: boolean;
+
+/**
+ * Address for "Account manager" contract on Oasis Sapphire chain
+ */
 accountManagerAddress?: string;
-sapphireUrl?: string;
+
+/**
+ * Network ID for network (chain) selected on first use
+ */
 defaultNetworkId?: number;
+
+/**
+ * Configuration of available networks. Oasis Sapphire is always included (ids 23294 and 23295)
+*/
 networkConfig?: NetworkConfig;
+
+/**
+* Provide this callback in configuration and it will be used to get contract values for registration.
+*
+* This is useful for controlling gas expenses on account manager contract when registering new wallets.
+*
+* @more sdk/README.md
+*/
 onGetSignature?: SignatureCallback;
-onGetApillonSessionToken?: () => Promise<string>;
+
+/**
+* Provide the Apillon session token to be used with Apillon API to generate a signature for contract interaction.
+*
+* @more sdk/README.md
+*/
+onGetApillonSessionToken?: () => Promise<string>; // only used if no `onGetSignature` param is provided
 ```
 
 The class instance is then available on window (`embeddedWallet`) and can be obtained with the `getEmbeddedWallet()` utility.

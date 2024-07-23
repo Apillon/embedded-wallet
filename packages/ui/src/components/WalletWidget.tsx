@@ -10,19 +10,59 @@ import { TransactionsProvider, useTransactionsContext } from '../contexts/transa
 import Btn from './Btn';
 
 export type AppProps = {
+  /**
+   * Configuration of available networks. Oasis Sapphire is always included (ids 23294 and 23295).
+   * @example
+   ```ts
+    [
+      {
+        name: 'Moonbeam Testnet',
+        id: 1287,
+        rpcUrl: 'https://rpc.testnet.moonbeam.network',
+        explorerUrl: 'https://moonbase.moonscan.io',
+      }
+    ]
+   ```
+   */
   networks?: Network[];
 
+  /**
+   * Do not automatically broadcast with SDK after confirming a transaction.
+   *
+   * Useful when using ethers/viem where txs are automatically processed with contract interfaces e.g.
+   */
   disableAutoBroadcastAfterSign?: boolean;
-  disableDefaultActivatorStyle?: boolean;
-
-  authFormPlaceholder?: string;
-  isAuthEmail?: boolean; // frontend email validation
 
   /**
-   * If `onEmailConfirmRequest` is not provided the code check step is skipped
+   * Remove styles from "open wallet" button
    */
-  onEmailConfirmRequest?: (email: string) => Promise<any>; // send code to user
-  onEmailConfirm?: (email: string, code: string) => Promise<any>; // confirm that entered code is correct
+  disableDefaultActivatorStyle?: boolean;
+
+  /**
+   * Placeholder displayed in input for username/email
+   */
+  authFormPlaceholder?: string;
+
+  /**
+   * Use email validation on input for username/email
+   */
+  isAuthEmail?: boolean;
+
+  /**
+   * Executes in auth process, after user enters a valid email. If an error is thrown, the auth process will terminate.
+   *
+   * Should be used to send a verification code to user.
+   *
+   * If this is not provided the code check step is skipped.
+   */
+  onEmailConfirmRequest?: (email: string) => Promise<any>;
+
+  /**
+   * Executes in auth process, during email verification, confirm that entered code is correct.
+   *
+   * If `onEmailConfirmRequest` is not provided the code check step is skipped.
+   */
+  onEmailConfirm?: (email: string, code: string) => Promise<any>; //
 } & AppParams;
 
 function Wallet({
