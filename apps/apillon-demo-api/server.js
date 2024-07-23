@@ -11,8 +11,13 @@ app.use((req, res, next) => {
 app.use(express.json());
 
 app.get('/session-token', async (req, res) => {
-  const response = await apillonAuthAPI.get('/session-token');
-  res.json(response.data);
+  try {
+    const response = await apillonAuthAPI.get('/session-token');
+    res.json(response.data);
+  } catch (err) {
+    console.error(err)
+    res.status(500).json(`Error: ${err}`);
+  }
 });
 
 const port = 3000;

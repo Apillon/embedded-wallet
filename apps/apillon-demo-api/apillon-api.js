@@ -1,13 +1,12 @@
-const axios = require('axios');
+const { create } = require('axios');
 require('dotenv').config();
 
-const baseUrl = process.env.APILLON_API_BASE_URI || 'https://api.apillon.io/oasis';
 const apiKey = process.env.APILLON_API_KEY;
 const apiSecret = process.env.APILLON_API_SECRET;
 
-const apillonAuthAPI = axios.create({
-  baseURL: baseUrl,
-  timeout: 3000,
+const apillonAuthAPI = create({
+  baseURL: 'https://api.apillon.io/oasis',
+  timeout: 10_000,
   headers: {
     Authorization: `Basic ${btoa(`${apiKey}:${apiSecret}`)}`,
   },
