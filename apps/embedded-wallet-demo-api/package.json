@@ -1,7 +1,7 @@
 {
-  "name": "apillon-api",
+  "name": "embedded-wallet-demo-api",
   "version": "1.0.0",
-  "description": "",
+  "description": "A demo server-side app for embedded wallet",
   "main": "server.js",
   "scripts": {
     "dev": "node server.js"

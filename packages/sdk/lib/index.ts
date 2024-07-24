@@ -215,11 +215,11 @@ class EmbeddedWallet {
     try {
       const token = await this.onGetApillonSessionToken();
 
-      const res = await (
+      const { data } = await (
         await fetch(
           this.isProduction
-            ? `https://api.apillon.io/oasis/signature`
-            : `https://api-dev.apillon.io/oasis/signature`,
+            ? `https://api.apillon.io/embedded-wallet/signature`
+            : `https://api-dev.apillon.io/embedded-wallet/signature`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -232,10 +232,10 @@ class EmbeddedWallet {
       ).json();
 
       return {
-        signature: res?.data.signature,
-        gasLimit: res?.data.gasLimit || 0,
-        gasPrice: res?.data.gasPrice || 0,
-        timestamp: res?.data.timestamp,
+        signature: data.signature,
+        gasLimit: data.gasLimit || 0,
+        gasPrice: data.gasPrice || 0,
+        timestamp: data.timestamp,
       };
     } catch (e) {
       console.error('Signature request error', e);

@@ -35,8 +35,8 @@ export default function TestApp() {
         ]}
         onGetSignature={async gaslessData => {
           try {
-            const res = await (
-              await fetch(`{{Apillon API url}}/oasis/signature`, {
+            const { data } = await (
+              await fetch(`{{Apillon API url}}/embedded-wallet/signature`, {
                 method: 'POST',
                 body: JSON.stringify({
                   token: '',
@@ -46,9 +46,9 @@ export default function TestApp() {
             ).json();
 
             return {
-              signature: res?.signature,
-              gasLimit: res?.gasLimit,
-              timestamp: res?.timestamp,
+              signature: data.signature,
+              gasLimit: data.gasLimit,
+              timestamp: data.timestamp,
             };
           } catch (e) {
             console.error('Signature request error', e);

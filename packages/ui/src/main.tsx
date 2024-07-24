@@ -5,7 +5,7 @@ import './index.css';
 
 export function initializeApp(activatorSelector?: string, options?: AppProps) {
   if (typeof document === 'undefined') {
-    console.error('Cannot initialize oasis wallet app UI');
+    console.error('Cannot initialize embedded wallet app UI');
     return;
   }
 

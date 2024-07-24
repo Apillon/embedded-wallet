@@ -11,7 +11,7 @@ Embedded wallet with **Oasis Sapphire** secured authentication.
 
 ## Implementation examples/tests
 
-- `/apps/apillon-demo` + `/apps/apillon-api` -- Example of controlling gas expenses on account manager contract by using signature callback when registering new wallets.
+- `/apps/embedded-wallet-demo` + `/apps/embedded-wallet-demo-api` -- Example of controlling gas expenses on account manager contract by using signature callback when registering new wallets.
 - `/apps/react-test`
 - `/apps/vue-test`
 

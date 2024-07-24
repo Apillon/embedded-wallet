@@ -1,6 +1,7 @@
 {
-  "name": "apillon-demo",
+  "name": "embedded-wallet-demo",
   "private": true,
+  "description": "A demo client-side app for embedded wallet",
   "version": "0.0.0",
   "type": "module",
   "scripts": {

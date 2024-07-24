@@ -1,8 +1,8 @@
-# Demo Node.js + express server
+# Demo Node.js + Express server
 
 ## Introduction
 
-Node.js express demo server, which calls Apillon API oasis endpoint, to get session token, which is later used in embedded wallet SDK to create signature.
+Node.js express demo server, which calls Apillon API embedded-wallet endpoint, to get session token, which is later used in embedded wallet SDK to create a signature.
 
 To integrate embedded wallet into the application with Apillon, follow these steps:
 

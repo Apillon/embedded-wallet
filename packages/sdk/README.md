@@ -97,8 +97,8 @@ Example:
 {
   onGetSignature: async gaslessData => {
     try {
-      const res = await (
-        await fetch(`https://api.apillon.io/oasis/signature`, {
+      const { data } = await (
+        await fetch(`https://api.apillon.io/embedded-wallet/signature`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -109,10 +109,10 @@ Example:
       ).json();
 
       return {
-        signature: res?.data.signature,
-        gasLimit: res?.data.gasLimit || 0,
-        gasPrice: res?.data.gasPrice || 0,
-        timestamp: res?.data.timestamp,
+        signature: data.signature,
+        gasLimit: data.gasLimit || 0,
+        gasPrice: data.gasPrice || 0,
+        timestamp: data.timestamp,
       };
     } catch (e) {
       console.error('Signature request error', e);
@@ -229,7 +229,7 @@ A default wallet UI can be added by using `initializeApp()`. This includes a rea
 ```ts
 import { initializeApp } from '@embedded-wallet/ui';
 
-initializeApp('#oasis-btn', {
+initializeApp('#wallet', {
   accountManagerAddress: '0x5C3512312312312312312312312312312365D4bC',
   defaultNetworkId: 1287,
   networks: [
