@@ -22,6 +22,7 @@ export const Errors = {
   CANT_HASH_USERNAME: 'OAW_CANT_HASH_USERNAME',
   CANT_GET_SIGNATURE: 'CANT_GET_SIGNATURE',
   NO_APILLON_SESSION_TOKEN_CALLBACK: 'NO_APILLON_SESSION_TOKEN_CALLBACK',
+  INVALID_APILLON_SESSION_TOKEN: 'INVALID_APILLON_SESSION_TOKEN',
 };
 
 export const ErrorMessages = {
@@ -37,4 +38,5 @@ export const ErrorMessages = {
   [Errors.OASIS_WALLET_NOT_INITIALIZED]: 'Oasis wallet not initialized',
   [Errors.CANT_HASH_USERNAME]: "Can't hash username",
   [Errors.NO_APILLON_SESSION_TOKEN_CALLBACK]: 'Session token callback must be provided',
+  [Errors.INVALID_APILLON_SESSION_TOKEN]: 'Session token is not valid',
 };

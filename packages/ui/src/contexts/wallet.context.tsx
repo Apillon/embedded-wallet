@@ -92,16 +92,8 @@ function WalletProvider({
   children: ReactNode;
   networks?: Network[];
 } & AppParams) {
-  networks = restOfParams?.production
+  networks = restOfParams?.test
     ? [
-        {
-          name: 'Oasis Sapphire',
-          id: SapphireMainnet,
-          rpcUrl: 'https://sapphire.oasis.io',
-          explorerUrl: 'https://explorer.oasis.io/mainnet/sapphire',
-        },
-      ]
-    : [
         {
           name: 'Sapphire Testnet',
           id: SapphireTestnet,
@@ -109,6 +101,14 @@ function WalletProvider({
           explorerUrl: 'https://explorer.oasis.io/testnet/sapphire',
         },
         ...networks,
+      ]
+    : [
+        {
+          name: 'Oasis Sapphire',
+          id: SapphireMainnet,
+          rpcUrl: 'https://sapphire.oasis.io',
+          explorerUrl: 'https://explorer.oasis.io/mainnet/sapphire',
+        },
       ];
 
   const [state, dispatch] = useReducer(reducer, initialState(defaultNetworkId || networks[0].id));

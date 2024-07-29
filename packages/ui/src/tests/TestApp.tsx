@@ -36,13 +36,16 @@ export default function TestApp() {
         onGetSignature={async gaslessData => {
           try {
             const { data } = await (
-              await fetch(`{{Apillon API url}}/embedded-wallet/signature`, {
-                method: 'POST',
-                body: JSON.stringify({
-                  token: '',
-                  data: gaslessData,
-                }),
-              })
+              await fetch(
+                `${import.meta.env.VITE_APILLON_BASE_URL ?? 'https://api.apillon.io'}/embedded-wallet/signature`,
+                {
+                  method: 'POST',
+                  body: JSON.stringify({
+                    token: '',
+                    data: gaslessData,
+                  }),
+                }
+              )
             ).json();
 
             return {

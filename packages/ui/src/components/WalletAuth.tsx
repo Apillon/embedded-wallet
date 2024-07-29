@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { getEmbeddedWallet, AuthStrategyName } from '@embedded-wallet/sdk';
+import { getEmbeddedWallet, AuthStrategyName, abort } from '@embedded-wallet/sdk';
 import { useWalletContext } from '../contexts/wallet.context';
 import Btn from './Btn';
 import { AppProps } from './WalletWidget';
@@ -9,7 +9,6 @@ export default function WalletAuth({
   authFormPlaceholder = 'your e-mail@email.com',
   isAuthEmail = true,
   isEmailConfirm = true,
-  production: isProduction,
   onEmailConfirmRequest,
   onEmailConfirm,
   onGetApillonSessionToken,
@@ -18,7 +17,6 @@ export default function WalletAuth({
   | 'authFormPlaceholder'
   | 'isAuthEmail'
   | 'isEmailConfirm'
-  | 'production'
   | 'onEmailConfirmRequest'
   | 'onEmailConfirm'
   | 'onGetApillonSessionToken'
@@ -72,8 +70,12 @@ export default function WalletAuth({
            */
           const token = await onGetApillonSessionToken();
 
+          if (!token) {
+            abort('INVALID_APILLON_SESSION_TOKEN');
+          }
+
           await fetch(
-            `https://${isProduction ? 'api' : 'api-dev'}.apillon.io/embedded-wallet/otp/generate`,
+            `${import.meta.env.VITE_APILLON_BASE_URL ?? 'https://api.apillon.io'}/embedded-wallet/otp/generate`,
             {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -185,9 +187,13 @@ export default function WalletAuth({
               } else if (onGetApillonSessionToken) {
                 const token = await onGetApillonSessionToken();
 
+                if (!token) {
+                  abort('INVALID_APILLON_SESSION_TOKEN');
+                }
+
                 const { data } = await (
                   await fetch(
-                    `https://${isProduction ? 'api' : 'api-dev'}.apillon.io/embedded-wallet/otp/validate`,
+                    `${import.meta.env.VITE_APILLON_BASE_URL ?? 'https://api.apillon.io'}/embedded-wallet/otp/validate`,
                     {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },

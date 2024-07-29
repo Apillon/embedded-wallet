@@ -15,11 +15,10 @@ export type SignatureCallback = (
 
 export type AppParams = {
   /**
-   * Use production URLS
-   * - Oasis Sapphire mainnet instead of testnet
-   * - Apillon production API if using Apillon for registration signature
+   * Use test URLS
+   * - Oasis Sapphire testnet instead of mainnet
    */
-  production?: boolean;
+  test?: boolean;
 
   /**
    * Address for "Account manager" contract on Oasis Sapphire chain

@@ -28,7 +28,7 @@ class EmbeddedWallet {
   onGetSignature: SignatureCallback | undefined;
   onGetApillonSessionToken: (() => Promise<string>) | undefined;
 
-  isProduction = false;
+  isTest = false;
   defaultNetworkId = 0;
   rpcUrls = {} as { [networkId: number]: string };
   rpcProviders = {} as { [networkId: number]: ethers.JsonRpcProvider };
@@ -50,7 +50,7 @@ class EmbeddedWallet {
    */
   constructor(params?: AppParams) {
     const ethSaphProvider = new ethers.JsonRpcProvider(
-      params?.production ? 'https://sapphire.oasis.io' : 'https://testnet.sapphire.oasis.io'
+      params?.test ? 'https://testnet.sapphire.oasis.io' : 'https://sapphire.oasis.io'
     );
 
     this.sapphireProvider = sapphire.wrap(ethSaphProvider);
@@ -74,7 +74,7 @@ class EmbeddedWallet {
 
     this.events = mitt<Events>();
 
-    this.isProduction = !!params?.production;
+    this.isTest = !!params?.test;
     this.onGetSignature = params?.onGetSignature;
     this.onGetApillonSessionToken = params?.onGetApillonSessionToken;
   }
@@ -215,9 +215,13 @@ class EmbeddedWallet {
     try {
       const token = await this.onGetApillonSessionToken();
 
+      if (!token) {
+        abort('INVALID_APILLON_SESSION_TOKEN');
+      }
+
       const { data } = await (
         await fetch(
-          `https://${this.isProduction ? 'api' : 'api-dev'}.apillon.io/embedded-wallet/signature`,
+          `${import.meta.env.VITE_APILLON_BASE_URL ?? 'https://api.apillon.io'}/embedded-wallet/signature`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
