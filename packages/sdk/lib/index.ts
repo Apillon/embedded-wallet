@@ -217,9 +217,7 @@ class EmbeddedWallet {
 
       const { data } = await (
         await fetch(
-          this.isProduction
-            ? `https://api.apillon.io/embedded-wallet/signature`
-            : `https://api-dev.apillon.io/embedded-wallet/signature`,
+          `https://${this.isProduction ? 'api' : 'api-dev'}.apillon.io/embedded-wallet/signature`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

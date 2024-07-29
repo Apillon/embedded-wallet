@@ -51,15 +51,5 @@ setTimeout(() => {
         console.error(e);
       }
     },
-
-    onEmailConfirmRequest: async email => {
-      console.log('Generate and send email confirmation code', email);
-      await new Promise(r => setTimeout(r, 2000));
-    },
-
-    onEmailConfirm: async (email, code) => {
-      console.log('Validate code entered for email', { email, code });
-      await new Promise(r => setTimeout(r, 2000));
-    },
   });
 }, 5);

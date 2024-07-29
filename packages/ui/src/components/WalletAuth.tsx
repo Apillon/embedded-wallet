@@ -8,11 +8,20 @@ import WalletError from './WalletError';
 export default function WalletAuth({
   authFormPlaceholder = 'your e-mail@email.com',
   isAuthEmail = true,
+  isEmailConfirm = true,
+  production: isProduction,
   onEmailConfirmRequest,
   onEmailConfirm,
+  onGetApillonSessionToken,
 }: Pick<
   AppProps,
-  'authFormPlaceholder' | 'isAuthEmail' | 'onEmailConfirmRequest' | 'onEmailConfirm'
+  | 'authFormPlaceholder'
+  | 'isAuthEmail'
+  | 'isEmailConfirm'
+  | 'production'
+  | 'onEmailConfirmRequest'
+  | 'onEmailConfirm'
+  | 'onGetApillonSessionToken'
 >) {
   const { dispatch, defaultNetworkId, handleError } = useWalletContext();
 
@@ -48,7 +57,7 @@ export default function WalletAuth({
           });
         }
       } else {
-        if (onEmailConfirmRequest) {
+        if (isEmailConfirm && onEmailConfirmRequest) {
           /**
            * Register with email confirmation
            * 1. Send email
@@ -56,6 +65,25 @@ export default function WalletAuth({
            * 3. Setup passkey
            */
           await onEmailConfirmRequest(username);
+          setIsCodeScreen(true);
+        } else if (isEmailConfirm && onGetApillonSessionToken) {
+          /**
+           * Apillon email confirmation
+           */
+          const token = await onGetApillonSessionToken();
+
+          await fetch(
+            `https://${isProduction ? 'api' : 'api-dev'}.apillon.io/embedded-wallet/otp/generate`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                token,
+                email: username,
+              }),
+            }
+          );
+
           setIsCodeScreen(true);
         } else {
           /**
@@ -141,7 +169,7 @@ export default function WalletAuth({
           isCodeSubmitted={isCodeSubmitted}
           loading={loading}
           onConfirm={async code => {
-            if (!onEmailConfirm) {
+            if (!onEmailConfirm && !onGetApillonSessionToken) {
               return startRegister();
             }
 
@@ -152,7 +180,24 @@ export default function WalletAuth({
               /**
                * Code check
                */
-              await onEmailConfirm(username, code);
+              if (onEmailConfirm) {
+                await onEmailConfirm(username, code);
+              } else if (onGetApillonSessionToken) {
+                const token = await onGetApillonSessionToken();
+
+                await fetch(
+                  `https://${isProduction ? 'api' : 'api-dev'}.apillon.io/embedded-wallet/otp/validate`,
+                  {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      token,
+                      email: username,
+                      code,
+                    }),
+                  }
+                );
+              }
 
               setIsCodeSubmitted(true);
 
