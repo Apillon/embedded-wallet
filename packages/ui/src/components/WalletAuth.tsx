@@ -185,18 +185,24 @@ export default function WalletAuth({
               } else if (onGetApillonSessionToken) {
                 const token = await onGetApillonSessionToken();
 
-                await fetch(
-                  `https://${isProduction ? 'api' : 'api-dev'}.apillon.io/embedded-wallet/otp/validate`,
-                  {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      token,
-                      email: username,
-                      code,
-                    }),
-                  }
-                );
+                const { data } = await (
+                  await fetch(
+                    `https://${isProduction ? 'api' : 'api-dev'}.apillon.io/embedded-wallet/otp/validate`,
+                    {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        token,
+                        email: username,
+                        code,
+                      }),
+                    }
+                  )
+                ).json();
+
+                if (!data) {
+                  throw new Error('Verification code is not valid.');
+                }
               }
 
               setIsCodeSubmitted(true);
