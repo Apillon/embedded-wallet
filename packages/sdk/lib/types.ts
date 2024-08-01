@@ -150,4 +150,5 @@ export type Events = {
     newValue: any;
     oldValue: any;
   };
+  providerRequestAccounts: (address: string) => void;
 };

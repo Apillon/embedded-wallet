@@ -124,10 +124,15 @@ function Wallet({
       dispatchTx({ type: 'addTx', payload: params });
     };
 
+    const onProviderRequestAccounts = () => {
+      setIsModalOpen(true);
+    };
+
     if (wallet) {
       wallet.events.on('txApprove', onTxApproveEvent);
       wallet.events.on('signatureRequest', onSignatureRequestEvent);
       wallet.events.on('txSubmitted', onTxSubmittedEvent);
+      wallet.events.on('providerRequestAccounts', onProviderRequestAccounts);
     }
 
     return () => {
@@ -135,6 +140,7 @@ function Wallet({
         wallet.events.off('txApprove', onTxApproveEvent);
         wallet.events.off('signatureRequest', onSignatureRequestEvent);
         wallet.events.off('txSubmitted', onTxSubmittedEvent);
+        wallet.events.off('providerRequestAccounts', onProviderRequestAccounts);
       }
     };
   }, [wallet]);
@@ -153,6 +159,11 @@ function Wallet({
         setTimeout(() => {
           setScreen('main');
         }, 200);
+      }
+
+      if (wallet && wallet.waitForAccountResolver) {
+        wallet.waitForAccountResolver('');
+        wallet.waitForAccountResolver = null;
       }
     }
   }, [isModalOpen]);

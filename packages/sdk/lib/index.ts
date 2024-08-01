@@ -45,6 +45,11 @@ class EmbeddedWallet {
   };
 
   /**
+   * Resolve on login/register if defined. This resolves EIP-1193 request.
+   */
+  waitForAccountResolver = null as null | ((address: string) => void);
+
+  /**
    * Prepare sapphire provider and account manager (WebAuthn) contract.
    * Prepare data for available chains
    */
@@ -194,7 +199,14 @@ class EmbeddedWallet {
     this.lastAccount.username = authData.username;
 
     if (await this.waitForTxReceipt(txHash)) {
-      return await this.getAccountAddress(authData.username);
+      const addr = await this.getAccountAddress(authData.username);
+
+      if (addr && this.waitForAccountResolver) {
+        this.waitForAccountResolver(addr.publicAddress);
+        this.waitForAccountResolver = null;
+      }
+
+      return addr;
     }
   }
 
@@ -311,7 +323,14 @@ class EmbeddedWallet {
      * If keys match -> Auth success, return account addresses
      */
     if (contractRes.length > 1 && recoveredPublicKey === contractRes[1]) {
-      return await this.getAccountAddress(authData.username);
+      const addr = await this.getAccountAddress(authData.username);
+
+      if (addr && this.waitForAccountResolver) {
+        this.waitForAccountResolver(addr.publicAddress);
+        this.waitForAccountResolver = null;
+      }
+
+      return addr;
     }
   }
 
@@ -404,6 +423,17 @@ class EmbeddedWallet {
     this.lastAccount.authStrategy = params.strategy;
     this.lastAccount.address = params.address;
     this.lastAccount.contractAddress = params.contractAddress;
+  }
+
+  /**
+   * Create a promise and pass resolver to event `providerRequestAccounts`.
+   * Once the promise resolves, return account address.
+   */
+  async waitForAccount() {
+    return await new Promise<string>(resolve => {
+      this.waitForAccountResolver = resolve;
+      this.events.emit('providerRequestAccounts', resolve);
+    });
   }
   // #endregion
 
