@@ -53,32 +53,79 @@ function getProvider(): EIP1193Provider {
       /**
        * Sign string message
        */
-      case 'personal_sign':
+      case 'personal_sign': {
+        const res = await w.signMessage({
+          mustConfirm: true,
+          strategy: 'passkey',
+          message: params[0],
+        });
+
+        return res;
+      }
+
+      /**
+       * Sign string message (reversed params)
+       */
       case 'eth_sign': {
-        return '0x';
+        const res = await w.signMessage({
+          mustConfirm: true,
+          strategy: 'passkey',
+          message: params[1],
+        });
+
+        return res;
       }
 
       /**
        * Return signed tx
        */
       case 'eth_signTransaction': {
-        return `0x`;
+        const res = await w.signPlainTransaction({
+          mustConfirm: true,
+          strategy: w.lastAccount.authStrategy,
+          authData: {
+            username: w.lastAccount.username,
+          },
+          tx: params[0],
+        });
+
+        return res?.signedTxData || '';
       }
 
       /**
        * Change chain, emit 'chainChanged' on success
        */
       case 'wallet_switchEthereumChain': {
-        events.emit('chainChanged', { chainId: 1234 });
+        if (w.setDefaultNetworkId(Number(params[0].chainId))) {
+          events.emit('chainChanged', { chainId: params[0].chainId });
+        }
+
         return null;
       }
 
       case 'eth_sendTransaction': {
-        return ``;
+        const res = await w.signPlainTransaction({
+          mustConfirm: true,
+          strategy: w.lastAccount.authStrategy,
+          authData: {
+            username: w.lastAccount.username,
+          },
+          tx: params[0],
+        });
+
+        if (res?.signedTxData) {
+          const res2 = await w.broadcastTransaction(res.signedTxData);
+
+          return res2.txHash;
+        }
+
+        return null;
       }
 
       case 'eth_sendRawTransaction': {
-        return ``;
+        const res = await w.broadcastTransaction(params[0]);
+
+        return res.txHash;
       }
 
       /**
@@ -86,6 +133,7 @@ function getProvider(): EIP1193Provider {
        */
       default: {
         console.log(method, params);
+        return w.getRpcProviderForChainId(w.defaultNetworkId).send(method, params);
       }
     }
   };

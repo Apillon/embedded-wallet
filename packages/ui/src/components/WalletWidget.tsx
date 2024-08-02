@@ -75,7 +75,7 @@ function Wallet({
   disableDefaultActivatorStyle = false,
   ...restOfProps
 }: AppProps) {
-  const { state, wallet, setScreen, handleError } = useWalletContext();
+  const { state, wallet, setScreen, handleError, reloadUserBalance } = useWalletContext();
   const { dispatch: dispatchTx } = useTransactionsContext();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -128,11 +128,18 @@ function Wallet({
       setIsModalOpen(true);
     };
 
+    const onDataUpdated = (params: Events['dataUpdated']) => {
+      if (params.name === 'defaultNetworkId') {
+        reloadUserBalance();
+      }
+    };
+
     if (wallet) {
       wallet.events.on('txApprove', onTxApproveEvent);
       wallet.events.on('signatureRequest', onSignatureRequestEvent);
       wallet.events.on('txSubmitted', onTxSubmittedEvent);
       wallet.events.on('providerRequestAccounts', onProviderRequestAccounts);
+      wallet.events.on('dataUpdated', onDataUpdated);
     }
 
     return () => {
@@ -141,6 +148,7 @@ function Wallet({
         wallet.events.off('signatureRequest', onSignatureRequestEvent);
         wallet.events.off('txSubmitted', onTxSubmittedEvent);
         wallet.events.off('providerRequestAccounts', onProviderRequestAccounts);
+        wallet.events.off('dataUpdated', onDataUpdated);
       }
     };
   }, [wallet]);

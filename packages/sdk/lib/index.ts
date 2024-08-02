@@ -545,6 +545,11 @@ class EmbeddedWallet {
       ).gasPrice;
     }
 
+    // Seems like this is needed
+    if (!params.tx.gasLimit) {
+      params.tx.gasLimit = 1_000_000;
+    }
+
     /**
      * Add tx params needed for write tx
      */
@@ -801,7 +806,11 @@ class EmbeddedWallet {
       });
 
       this.defaultNetworkId = networkId;
+
+      return true;
     }
+
+    return false;
   }
 
   /**
