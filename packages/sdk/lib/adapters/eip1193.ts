@@ -1,7 +1,9 @@
 import mitt from 'mitt';
-import { EIP1193Provider, ProviderRpcError } from 'viem';
+import { EIP1193Provider, LocalAccount, ProviderRpcError } from 'viem';
 import { getEmbeddedWallet } from '../utils';
 import { ErrorMessages, Errors } from '../constants';
+import OasisEthersSigner from './ethers';
+import OasisViemAdapter from './viem';
 
 class WalletDisconnecteError extends ProviderRpcError {
   constructor() {
@@ -21,7 +23,10 @@ class UserRejectedRequestError extends ProviderRpcError {
   }
 }
 
-function getProvider(): EIP1193Provider {
+function getProvider(): EIP1193Provider & {
+  getSigner: () => OasisEthersSigner;
+  getAccount: () => LocalAccount;
+} {
   const events = mitt();
 
   const onRequest: any = async ({ method, params }: { method: string; params: any }) => {
@@ -138,10 +143,40 @@ function getProvider(): EIP1193Provider {
     }
   };
 
+  /**
+   * Get ethers Signer
+   */
+  const getSigner = () => {
+    const w = getEmbeddedWallet();
+
+    if (!w) {
+      throw new WalletDisconnecteError();
+    }
+
+    return new OasisEthersSigner(w.getRpcProviderForChainId(w.defaultNetworkId));
+  };
+
+  /**
+   * Get viem Account
+   */
+  const getAccount = () => {
+    const w = getEmbeddedWallet();
+
+    if (!w) {
+      throw new WalletDisconnecteError();
+    }
+
+    const adapter = new OasisViemAdapter();
+
+    return adapter.getAccount();
+  };
+
   return {
     on: events.on,
     removeListener: events.off,
     request: onRequest,
+    getSigner,
+    getAccount,
   };
 }
 
