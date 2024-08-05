@@ -449,7 +449,8 @@ class EmbeddedWallet {
     const originalMessage = params.message;
 
     if (!data || params.mustConfirm) {
-      if (typeof params.message === 'string') {
+      // maybe check if msg.length !== 66
+      if (typeof params.message === 'string' && !params.message.startsWith('0x')) {
         params.message = ethers.encodeBytes32String(params.message);
       }
 

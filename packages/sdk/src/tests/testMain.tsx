@@ -5,6 +5,7 @@ import { initializeOnWindow } from '../../lib/utils.ts';
 
 initializeOnWindow({
   accountManagerAddress: '0x5C357DaFfe6b1016C0c9A5607367E8f47765D4bC',
+  test: true,
   defaultNetworkId: 1287,
   networkConfig: {
     1287: {

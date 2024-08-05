@@ -1,5 +1,5 @@
 import mitt from 'mitt';
-import { EIP1193Provider, LocalAccount, ProviderRpcError } from 'viem';
+import { EIP1193Provider, hashMessage, LocalAccount, ProviderRpcError } from 'viem';
 import { getEmbeddedWallet } from '../utils';
 import { ErrorMessages, Errors } from '../constants';
 import OasisEthersSigner from './ethers';
@@ -36,6 +36,10 @@ function getProvider(): EIP1193Provider & {
       throw new WalletDisconnecteError();
     }
 
+    console.log([method, params]);
+
+    let finalRes = null;
+
     switch (method) {
       /**
        * Return an address to be identified by.
@@ -44,7 +48,8 @@ function getProvider(): EIP1193Provider & {
       case 'eth_requestAccounts':
       case 'eth_accounts': {
         if (w.lastAccount.address) {
-          return [w.lastAccount.address];
+          finalRes = [w.lastAccount.address];
+          break;
         }
         const a = await w.waitForAccount();
 
@@ -52,7 +57,8 @@ function getProvider(): EIP1193Provider & {
           throw new UserRejectedRequestError();
         }
 
-        return [a];
+        finalRes = [a];
+        break;
       }
 
       /**
@@ -62,10 +68,11 @@ function getProvider(): EIP1193Provider & {
         const res = await w.signMessage({
           mustConfirm: true,
           strategy: 'passkey',
-          message: params[0],
+          message: hashMessage(params[0]),
         });
 
-        return res;
+        finalRes = res;
+        break;
       }
 
       /**
@@ -78,7 +85,8 @@ function getProvider(): EIP1193Provider & {
           message: params[1],
         });
 
-        return res;
+        finalRes = res;
+        break;
       }
 
       /**
@@ -94,7 +102,8 @@ function getProvider(): EIP1193Provider & {
           tx: params[0],
         });
 
-        return res?.signedTxData || '';
+        finalRes = res?.signedTxData || '';
+        break;
       }
 
       /**
@@ -105,7 +114,8 @@ function getProvider(): EIP1193Provider & {
           events.emit('chainChanged', { chainId: params[0].chainId });
         }
 
-        return null;
+        finalRes = null;
+        break;
       }
 
       case 'eth_sendTransaction': {
@@ -121,26 +131,34 @@ function getProvider(): EIP1193Provider & {
         if (res?.signedTxData) {
           const res2 = await w.broadcastTransaction(res.signedTxData);
 
-          return res2.txHash;
+          finalRes = res2.txHash;
+          break;
         }
 
-        return null;
+        finalRes = null;
+        break;
       }
 
       case 'eth_sendRawTransaction': {
         const res = await w.broadcastTransaction(params[0]);
 
-        return res.txHash;
+        finalRes = res.txHash;
+        break;
       }
 
       /**
        * Pass through to JsonRpcProvider ?
        */
       default: {
-        console.log(method, params);
-        return w.getRpcProviderForChainId(w.defaultNetworkId).send(method, params);
+        finalRes = await w.getRpcProviderForChainId(w.defaultNetworkId).send(method, params);
+        break;
       }
     }
+
+    console.log('====', method);
+    console.log(finalRes);
+
+    return finalRes;
   };
 
   /**
