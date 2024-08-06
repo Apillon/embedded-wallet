@@ -1,11 +1,11 @@
 import mitt from 'mitt';
 import { EIP1193Provider, hashMessage, LocalAccount, ProviderRpcError } from 'viem';
-import { getEmbeddedWallet } from '../utils';
+import { getEmbeddedWallet, getEmbeddedWalletRetry } from '../utils';
 import { ErrorMessages, Errors } from '../constants';
 import OasisEthersSigner from './ethers';
 import OasisViemAdapter from './viem';
 
-class WalletDisconnecteError extends ProviderRpcError {
+class WalletDisconnectedError extends ProviderRpcError {
   constructor() {
     super(new Error(ErrorMessages[Errors.OASIS_WALLET_NOT_INITIALIZED]), {
       code: 4900,
@@ -23,17 +23,29 @@ class UserRejectedRequestError extends ProviderRpcError {
   }
 }
 
+async function initEvents(eventEmitter: ReturnType<typeof mitt>) {
+  const w = await getEmbeddedWalletRetry();
+  if (w) {
+    w.events.on('connect', p => eventEmitter.emit('connect', p));
+    w.events.on('disconnect', p => eventEmitter.emit('disconnect', p));
+    w.events.on('chainChanged', p => eventEmitter.emit('chainChanged', p));
+    w.events.on('accountsChanged', p => eventEmitter.emit('accountsChanged', p));
+  }
+}
+
 function getProvider(): EIP1193Provider & {
   getSigner: () => OasisEthersSigner;
   getAccount: () => LocalAccount;
 } {
   const events = mitt();
 
+  initEvents(events);
+
   const onRequest: any = async ({ method, params }: { method: string; params: any }) => {
     const w = getEmbeddedWallet();
 
     if (!w) {
-      throw new WalletDisconnecteError();
+      throw new WalletDisconnectedError();
     }
 
     console.log([method, params]);
@@ -110,9 +122,7 @@ function getProvider(): EIP1193Provider & {
        * Change chain, emit 'chainChanged' on success
        */
       case 'wallet_switchEthereumChain': {
-        if (w.setDefaultNetworkId(Number(params[0].chainId))) {
-          events.emit('chainChanged', { chainId: params[0].chainId });
-        }
+        w.setDefaultNetworkId(Number(params[0].chainId));
 
         finalRes = null;
         break;
@@ -168,7 +178,7 @@ function getProvider(): EIP1193Provider & {
     const w = getEmbeddedWallet();
 
     if (!w) {
-      throw new WalletDisconnecteError();
+      throw new WalletDisconnectedError();
     }
 
     return new OasisEthersSigner(w.getRpcProviderForChainId(w.defaultNetworkId));
@@ -181,7 +191,7 @@ function getProvider(): EIP1193Provider & {
     const w = getEmbeddedWallet();
 
     if (!w) {
-      throw new WalletDisconnecteError();
+      throw new WalletDisconnectedError();
     }
 
     const adapter = new OasisViemAdapter();
@@ -198,5 +208,5 @@ function getProvider(): EIP1193Provider & {
   };
 }
 
-export { getProvider };
+export { getProvider, WalletDisconnectedError };
 export default getProvider;

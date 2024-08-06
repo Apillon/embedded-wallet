@@ -19,6 +19,7 @@ import PasskeyStrategy from './strategies/passkey';
 import { networkIdIsSapphire, getHashedUsername, abort } from './utils';
 import mitt, { Emitter } from 'mitt';
 import { SapphireMainnet, SapphireTestnet } from './constants';
+import { WalletDisconnectedError } from './adapters/eip1193';
 
 class EmbeddedWallet {
   sapphireProvider: ethers.JsonRpcProvider;
@@ -82,6 +83,21 @@ class EmbeddedWallet {
     this.isTest = !!params?.test;
     this.onGetSignature = params?.onGetSignature;
     this.onGetApillonSessionToken = params?.onGetApillonSessionToken;
+
+    /**
+     * Provider connection events
+     */
+    try {
+      if (this.getRpcProviderForChainId(this.defaultNetworkId)) {
+        this.events.emit('connect', { chainId: `0x${this.defaultNetworkId.toString(16)}` });
+      }
+    } catch (_e) {
+      /* empty */
+    }
+
+    this.sapphireProvider.on('disconnect', () => {
+      this.events.emit('disconnect', { error: new WalletDisconnectedError() });
+    });
   }
 
   // #region Auth utils
@@ -199,14 +215,7 @@ class EmbeddedWallet {
     this.lastAccount.username = authData.username;
 
     if (await this.waitForTxReceipt(txHash)) {
-      const addr = await this.getAccountAddress(authData.username);
-
-      if (addr && this.waitForAccountResolver) {
-        this.waitForAccountResolver(addr.publicAddress);
-        this.waitForAccountResolver = null;
-      }
-
-      return addr;
+      return await this.handleAccountAfterAuth(authData.username);
     }
   }
 
@@ -323,15 +332,23 @@ class EmbeddedWallet {
      * If keys match -> Auth success, return account addresses
      */
     if (contractRes.length > 1 && recoveredPublicKey === contractRes[1]) {
-      const addr = await this.getAccountAddress(authData.username);
-
-      if (addr && this.waitForAccountResolver) {
-        this.waitForAccountResolver(addr.publicAddress);
-        this.waitForAccountResolver = null;
-      }
-
-      return addr;
+      return await this.handleAccountAfterAuth(authData.username);
     }
+  }
+
+  async handleAccountAfterAuth(username: string) {
+    const addr = await this.getAccountAddress(username);
+
+    if (addr && this.waitForAccountResolver) {
+      this.waitForAccountResolver(addr.publicAddress);
+      this.waitForAccountResolver = null;
+    }
+
+    if (addr) {
+      this.events.emit('accountsChanged', { accounts: [addr.publicAddress] });
+    }
+
+    return addr;
   }
 
   /**
@@ -805,6 +822,8 @@ class EmbeddedWallet {
         newValue: networkId,
         oldValue: this.defaultNetworkId,
       });
+
+      this.events.emit('chainChanged', { chainId: `0x${networkId.toString(16)}` });
 
       this.defaultNetworkId = networkId;
 
