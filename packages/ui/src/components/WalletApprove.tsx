@@ -41,7 +41,7 @@ export default function WalletApprove({
         <div>
           <h2 className="mb-6">Sign Message</h2>
 
-          <p>
+          <p className="break-all">
             You are signing:
             <br />
             {signMessage}
@@ -55,21 +55,27 @@ export default function WalletApprove({
           <h2 className="mb-6">Approve Transaction</h2>
 
           {Object.entries(tx).map(([k, v]) => (
-            <div key={k} className="mb-2">
+            <div key={k} className="mb-2 break-all">
               <p className="font-bold text-sm">{k}</p>
-              {typeof v === 'bigint' ? (
-                v.toString()
-              ) : typeof v === 'object' ? (
-                <pre className={preClass}>
-                  {JSON.stringify(
-                    tx,
-                    (_, value) => (typeof value === 'bigint' ? value.toString() : value),
-                    2
-                  )}
-                </pre>
-              ) : (
-                v
-              )}
+
+              <div
+                style={{ maxHeight: '220px' }}
+                className="overflow-auto pr-8 -mr-8 sm:pr-12 sm:-mr-12"
+              >
+                {typeof v === 'bigint' ? (
+                  v.toString()
+                ) : typeof v === 'object' ? (
+                  <pre className={preClass}>
+                    {JSON.stringify(
+                      tx,
+                      (_, value) => (typeof value === 'bigint' ? value.toString() : value),
+                      2
+                    )}
+                  </pre>
+                ) : (
+                  v
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -99,7 +105,7 @@ export default function WalletApprove({
 
           {!!contractFunctionData.contractFunctionValues &&
             !!contractFunctionData.contractFunctionValues.length && (
-              <div>
+              <div className="break-all">
                 <p className="font-bold text-sm">Contract function values</p>
 
                 <pre className={preClass}>

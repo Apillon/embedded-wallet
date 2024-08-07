@@ -205,10 +205,10 @@ This parameter can be used for wallet actions that require user confirmation. If
 
 ## Use with ethers (v6)
 
-SDK must be initialized first, then the `OasisEthersSigner` adapter can be used to work with ethers api.
+SDK must be initialized first, then the `EmbeddedEthersSigner` adapter can be used to work with ethers api.
 
 ```ts
-const signer = new OasisEthersSigner(ethProvider);
+const signer = new EmbeddedEthersSigner(ethProvider);
 
 // Sign message
 const signed = await signer.signMessage('Please sign here');

@@ -1,9 +1,9 @@
 import mitt from 'mitt';
-import { EIP1193Provider, hashMessage, LocalAccount, ProviderRpcError } from 'viem';
+import { EIP1193Provider, hashMessage, hexToString, LocalAccount, ProviderRpcError } from 'viem';
 import { getEmbeddedWallet, getEmbeddedWalletRetry } from '../utils';
 import { ErrorMessages, Errors } from '../constants';
-import OasisEthersSigner from './ethers';
-import OasisViemAdapter from './viem';
+import EmbeddedEthersSigner from './ethers';
+import EmbeddedViemAdapter from './viem';
 
 class WalletDisconnectedError extends ProviderRpcError {
   constructor() {
@@ -34,7 +34,7 @@ async function initEvents(eventEmitter: ReturnType<typeof mitt>) {
 }
 
 function getProvider(): EIP1193Provider & {
-  getSigner: () => OasisEthersSigner;
+  getSigner: () => EmbeddedEthersSigner;
   getAccount: () => LocalAccount;
 } {
   const events = mitt();
@@ -80,7 +80,7 @@ function getProvider(): EIP1193Provider & {
         const res = await w.signMessage({
           mustConfirm: true,
           strategy: 'passkey',
-          message: hashMessage(params[0]),
+          message: hashMessage(hexToString(params[0])),
         });
 
         finalRes = res;
@@ -139,7 +139,7 @@ function getProvider(): EIP1193Provider & {
         });
 
         if (res?.signedTxData) {
-          const res2 = await w.broadcastTransaction(res.signedTxData);
+          const res2 = await w.broadcastTransaction(res.signedTxData, params[0]?.chainId);
 
           finalRes = res2.txHash;
           break;
@@ -150,7 +150,7 @@ function getProvider(): EIP1193Provider & {
       }
 
       case 'eth_sendRawTransaction': {
-        const res = await w.broadcastTransaction(params[0]);
+        const res = await w.broadcastTransaction(params[0], params[0]?.chainId);
 
         finalRes = res.txHash;
         break;
@@ -181,7 +181,7 @@ function getProvider(): EIP1193Provider & {
       throw new WalletDisconnectedError();
     }
 
-    return new OasisEthersSigner(w.getRpcProviderForChainId(w.defaultNetworkId));
+    return new EmbeddedEthersSigner(w.getRpcProviderForChainId(w.defaultNetworkId));
   };
 
   /**
@@ -194,7 +194,7 @@ function getProvider(): EIP1193Provider & {
       throw new WalletDisconnectedError();
     }
 
-    const adapter = new OasisViemAdapter();
+    const adapter = new EmbeddedViemAdapter();
 
     return adapter.getAccount();
   };
@@ -208,5 +208,5 @@ function getProvider(): EIP1193Provider & {
   };
 }
 
-export { getProvider, WalletDisconnectedError };
+export { getProvider, WalletDisconnectedError, UserRejectedRequestError };
 export default getProvider;

@@ -5,7 +5,7 @@ import WalletAuth from './WalletAuth';
 import WalletMain from './WalletMain';
 import { ethers } from 'ethers';
 import WalletApprove, { DisplayedContractParams } from './WalletApprove';
-import { AppParams, Events } from '@embedded-wallet/sdk';
+import { AppParams, Events, UserRejectedRequestError } from '@embedded-wallet/sdk';
 import { TransactionsProvider, useTransactionsContext } from '../contexts/transactions.context';
 import Btn from './Btn';
 
@@ -296,7 +296,17 @@ function Wallet({
               }
             }
           }}
-          onDecline={() => closeApproveScreen()}
+          onDecline={() => {
+            closeApproveScreen();
+
+            if (approveParams.current?.contractWrite?.reject) {
+              approveParams.current.contractWrite.reject(new UserRejectedRequestError());
+            } else if (approveParams.current?.plain?.reject) {
+              approveParams.current.plain.reject(new UserRejectedRequestError());
+            } else if (approveParams.current?.signature?.reject) {
+              approveParams.current.signature.reject(new UserRejectedRequestError());
+            }
+          }}
         />
       );
     }
@@ -339,7 +349,10 @@ function Modal({
         <Dialog
           id="oaw-wallet-widget"
           open={isOpen}
-          className="relative !z-50"
+          style={{
+            position: 'relative',
+            zIndex: '10001',
+          }}
           onClose={() => setIsOpen(false)}
         >
           <TransitionChild

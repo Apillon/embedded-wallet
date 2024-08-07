@@ -94,10 +94,6 @@ class EmbeddedWallet {
     } catch (_e) {
       /* empty */
     }
-
-    this.sapphireProvider.on('disconnect', () => {
-      this.events.emit('disconnect', { error: new WalletDisconnectedError() });
-    });
   }
 
   // #region Auth utils
@@ -478,13 +474,14 @@ class EmbeddedWallet {
        * Handle confirmation in UI part of app (call this method again w/o `mustConfirm`).
        */
       if (params.mustConfirm) {
-        return await new Promise<string>(resolve => {
+        return await new Promise<string>((resolve, reject) => {
           this.events.emit('signatureRequest', {
             ...params,
             data,
             message: originalMessage,
             mustConfirm: false,
             resolve,
+            reject,
           });
         });
       }
@@ -585,8 +582,10 @@ class EmbeddedWallet {
       return await new Promise<{
         signedTxData: string;
         chainId?: number;
-      }>(resolve => {
-        this.events.emit('txApprove', { plain: { ...params, mustConfirm: false, resolve } });
+      }>((resolve, reject) => {
+        this.events.emit('txApprove', {
+          plain: { ...params, mustConfirm: false, resolve, reject },
+        });
       });
     }
 
@@ -674,9 +673,9 @@ class EmbeddedWallet {
       return await new Promise<{
         signedTxData: string;
         chainId?: number;
-      }>(resolve => {
+      }>((resolve, reject) => {
         this.events.emit('txApprove', {
-          contractWrite: { ...params, mustConfirm: false, resolve },
+          contractWrite: { ...params, mustConfirm: false, resolve, reject },
         });
       });
     }
@@ -863,6 +862,7 @@ class EmbeddedWallet {
        * On sapphire network, use sapphire provider
        */
       if (!this.sapphireProvider) {
+        this.events.emit('disconnect', { error: new WalletDisconnectedError() });
         abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
       }
 

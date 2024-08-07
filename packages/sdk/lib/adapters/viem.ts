@@ -2,7 +2,7 @@ import { toAccount } from 'viem/accounts';
 import EmbeddedWallet from '..';
 import { abort, getEmbeddedWallet } from '../utils';
 
-class OasisViemAdapter {
+class EmbeddedViemAdapter {
   address = '';
   wallet: EmbeddedWallet;
 
@@ -55,12 +55,12 @@ class OasisViemAdapter {
       },
 
       signTypedData: async typedData => {
-        console.error('OasisViemAdapter#signTypedData Not implemented', typedData);
+        console.error('EmbeddedViemAdapter#signTypedData Not implemented', typedData);
         return '0x';
       },
     });
   }
 }
 
-export { OasisViemAdapter };
-export default OasisViemAdapter;
+export { EmbeddedViemAdapter };
+export default EmbeddedViemAdapter;

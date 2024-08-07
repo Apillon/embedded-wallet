@@ -18,7 +18,7 @@ class PasskeyStrategy implements AuthStrategy {
 
     const cred = await credentialCreate(
       {
-        name: 'Oasis Wallet Account',
+        name: 'Embedded Wallet Account',
         id: window.location.hostname,
       },
       {

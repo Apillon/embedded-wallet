@@ -2,7 +2,7 @@ import { ethers } from 'ethers';
 import { abort, getEmbeddedWallet } from '../utils';
 import EmbeddedWallet from '..';
 
-class OasisEthersSigner extends ethers.AbstractSigner<ethers.JsonRpcProvider> {
+class EmbeddedEthersSigner extends ethers.AbstractSigner<ethers.JsonRpcProvider> {
   address = '';
   wallet: EmbeddedWallet;
   override provider: ethers.JsonRpcProvider;
@@ -94,10 +94,10 @@ class OasisEthersSigner extends ethers.AbstractSigner<ethers.JsonRpcProvider> {
     types: Record<string, ethers.TypedDataField[]>,
     value: Record<string, any>
   ): Promise<string> {
-    console.error('OasisEthersSigner#signTypedData Not implemented', { domain, types, value });
+    console.error('EmbeddedEthersSigner#signTypedData Not implemented', { domain, types, value });
     return '';
   }
 }
 
-export { OasisEthersSigner };
-export default OasisEthersSigner;
+export { EmbeddedEthersSigner };
+export default EmbeddedEthersSigner;

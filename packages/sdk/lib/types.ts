@@ -103,6 +103,7 @@ export type PlainTransactionParams = {
   label?: string;
   mustConfirm?: boolean;
   resolve?: (result: { signedTxData: any; chainId?: number }) => void;
+  reject?: (reason?: any) => void;
 };
 
 export type SignMessageParams = {
@@ -112,6 +113,7 @@ export type SignMessageParams = {
   data?: string;
   mustConfirm?: boolean;
   resolve?: (value: string) => void;
+  reject?: (reason?: any) => void;
 };
 
 export type ContractReadParams = {
@@ -128,6 +130,7 @@ export type ContractWriteParams = {
   label?: string;
   mustConfirm?: boolean;
   resolve?: (result: { signedTxData: any; chainId?: number }) => void;
+  reject?: (reason?: any) => void;
 } & ContractReadParams;
 
 export type TransactionItem = {

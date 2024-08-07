@@ -51,7 +51,7 @@ export default defineConfig({
         'cbor-redux',
         'ecdsa-secp256r1',
         'elliptic',
-        'ethers',
+        // 'ethers',
         'mitt',
         'pbkdf2',
         'react-qr-code',

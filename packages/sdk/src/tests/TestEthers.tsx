@@ -1,4 +1,4 @@
-import OasisEthersSigner from '../../lib/adapters/ethers';
+import EmbeddedEthersSigner from '../../lib/adapters/ethers';
 import { getEmbeddedWallet } from '../../lib/utils';
 import { ethers } from 'ethers';
 import { ERC20Abi } from '../../lib/abi';
@@ -9,7 +9,7 @@ export default function TestEthers() {
 
     if (w) {
       console.log('Initialize signer');
-      const signer = new OasisEthersSigner(w.getRpcProviderForChainId(1287));
+      const signer = new EmbeddedEthersSigner(w.getRpcProviderForChainId(1287));
       console.log(signer);
 
       console.log('Sign message');
