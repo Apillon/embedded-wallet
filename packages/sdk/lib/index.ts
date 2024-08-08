@@ -341,7 +341,7 @@ class EmbeddedWallet {
     }
 
     if (addr) {
-      this.events.emit('accountsChanged', { accounts: [addr.publicAddress] });
+      this.events.emit('accountsChanged', [addr.publicAddress]);
     }
 
     return addr;

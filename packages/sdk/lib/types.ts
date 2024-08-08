@@ -181,5 +181,5 @@ export type Events = {
   /**
    * Provider event
    */
-  accountsChanged: { accounts: string[] };
+  accountsChanged: string[];
 };

@@ -28,7 +28,7 @@ export default function WalletApprove({
   onApprove: () => Promise<void>;
   onDecline: () => void;
 }) {
-  const { networksById } = useWalletContext();
+  const { networksById, wallet, dispatch } = useWalletContext();
 
   const [loading, setLoading] = useState(false);
 
@@ -135,9 +135,36 @@ export default function WalletApprove({
         >
           {approveText}
         </Btn>
+
         <Btn variant="secondary" disabled={loading} className="w-full" onClick={onDecline}>
           {declineText}
         </Btn>
+      </div>
+
+      <div className="mt-4 text-center">
+        <button
+          onClick={() => {
+            wallet?.setAccount({
+              username: '',
+              address: '',
+              contractAddress: '',
+              strategy: 'passkey',
+            });
+
+            dispatch({
+              type: 'setState',
+              payload: {
+                username: '',
+                address: '',
+                contractAddress: '',
+                balance: '',
+                authStrategy: 'passkey',
+              },
+            });
+          }}
+        >
+          Use another account
+        </button>
       </div>
     </>
   );

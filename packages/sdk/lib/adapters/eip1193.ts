@@ -1,6 +1,6 @@
 import mitt from 'mitt';
 import { EIP1193Provider, hashMessage, hexToString, LocalAccount, ProviderRpcError } from 'viem';
-import { getEmbeddedWallet, getEmbeddedWalletRetry } from '../utils';
+import { getEmbeddedWalletRetry } from '../utils';
 import { ErrorMessages, Errors } from '../constants';
 import EmbeddedEthersSigner from './ethers';
 import EmbeddedViemAdapter from './viem';
@@ -34,15 +34,15 @@ async function initEvents(eventEmitter: ReturnType<typeof mitt>) {
 }
 
 function getProvider(): EIP1193Provider & {
-  getSigner: () => EmbeddedEthersSigner;
-  getAccount: () => LocalAccount;
+  getSigner: () => Promise<EmbeddedEthersSigner>;
+  getAccount: () => Promise<LocalAccount>;
 } {
   const events = mitt();
 
   initEvents(events);
 
   const onRequest: any = async ({ method, params }: { method: string; params: any }) => {
-    const w = getEmbeddedWallet();
+    const w = await getEmbeddedWalletRetry();
 
     if (!w) {
       throw new WalletDisconnectedError();
@@ -57,12 +57,12 @@ function getProvider(): EIP1193Provider & {
        * Return an address to be identified by.
        * If not logged in, trigger login SDK event (open modal, wait for auth...)
        */
-      case 'eth_requestAccounts':
-      case 'eth_accounts': {
+      case 'eth_requestAccounts': {
         if (w.lastAccount.address) {
           finalRes = [w.lastAccount.address];
           break;
         }
+
         const a = await w.waitForAccount();
 
         if (!a) {
@@ -70,6 +70,16 @@ function getProvider(): EIP1193Provider & {
         }
 
         finalRes = [a];
+        break;
+      }
+
+      case 'eth_accounts': {
+        if (w.lastAccount.address) {
+          finalRes = [w.lastAccount.address];
+          break;
+        }
+
+        finalRes = [];
         break;
       }
 
@@ -174,8 +184,8 @@ function getProvider(): EIP1193Provider & {
   /**
    * Get ethers Signer
    */
-  const getSigner = () => {
-    const w = getEmbeddedWallet();
+  const getSigner = async () => {
+    const w = await getEmbeddedWalletRetry();
 
     if (!w) {
       throw new WalletDisconnectedError();
@@ -187,8 +197,8 @@ function getProvider(): EIP1193Provider & {
   /**
    * Get viem Account
    */
-  const getAccount = () => {
-    const w = getEmbeddedWallet();
+  const getAccount = async () => {
+    const w = getEmbeddedWalletRetry();
 
     if (!w) {
       throw new WalletDisconnectedError();

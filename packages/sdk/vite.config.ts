@@ -25,6 +25,7 @@ export default defineConfig({
     },
     rollupOptions: {
       external: [
+        // ...Object.keys(pkg.dependencies).filter(x => x !== 'ethers'), // don't bundle dependencies
         ...Object.keys(pkg.dependencies).filter(x => x !== 'ethers'), // don't bundle dependencies
         /^node:.*/, // don't bundle built-in Node.js modules (use protocol imports!)
       ],
