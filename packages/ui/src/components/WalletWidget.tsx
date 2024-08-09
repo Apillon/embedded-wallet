@@ -5,7 +5,7 @@ import WalletAuth from './WalletAuth';
 import WalletMain from './WalletMain';
 import { ethers } from 'ethers';
 import WalletApprove, { DisplayedContractParams } from './WalletApprove';
-import { AppParams, Events } from '@embedded-wallet/sdk';
+import { AppParams, Events, UserRejectedRequestError } from '@embedded-wallet/sdk';
 import { TransactionsProvider, useTransactionsContext } from '../contexts/transactions.context';
 import Btn from './Btn';
 
@@ -75,7 +75,7 @@ function Wallet({
   disableDefaultActivatorStyle = false,
   ...restOfProps
 }: AppProps) {
-  const { state, wallet, setScreen, handleError } = useWalletContext();
+  const { state, wallet, setScreen, handleError, reloadUserBalance } = useWalletContext();
   const { dispatch: dispatchTx } = useTransactionsContext();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -124,10 +124,22 @@ function Wallet({
       dispatchTx({ type: 'addTx', payload: params });
     };
 
+    const onProviderRequestAccounts = () => {
+      setIsModalOpen(true);
+    };
+
+    const onDataUpdated = (params: Events['dataUpdated']) => {
+      if (params.name === 'defaultNetworkId') {
+        reloadUserBalance();
+      }
+    };
+
     if (wallet) {
       wallet.events.on('txApprove', onTxApproveEvent);
       wallet.events.on('signatureRequest', onSignatureRequestEvent);
       wallet.events.on('txSubmitted', onTxSubmittedEvent);
+      wallet.events.on('providerRequestAccounts', onProviderRequestAccounts);
+      wallet.events.on('dataUpdated', onDataUpdated);
     }
 
     return () => {
@@ -135,6 +147,8 @@ function Wallet({
         wallet.events.off('txApprove', onTxApproveEvent);
         wallet.events.off('signatureRequest', onSignatureRequestEvent);
         wallet.events.off('txSubmitted', onTxSubmittedEvent);
+        wallet.events.off('providerRequestAccounts', onProviderRequestAccounts);
+        wallet.events.off('dataUpdated', onDataUpdated);
       }
     };
   }, [wallet]);
@@ -153,6 +167,11 @@ function Wallet({
         setTimeout(() => {
           setScreen('main');
         }, 200);
+      }
+
+      if (wallet && wallet.waitForAccountResolver) {
+        wallet.waitForAccountResolver('');
+        wallet.waitForAccountResolver = null;
       }
     }
   }, [isModalOpen]);
@@ -277,7 +296,17 @@ function Wallet({
               }
             }
           }}
-          onDecline={() => closeApproveScreen()}
+          onDecline={() => {
+            closeApproveScreen();
+
+            if (approveParams.current?.contractWrite?.reject) {
+              approveParams.current.contractWrite.reject(new UserRejectedRequestError());
+            } else if (approveParams.current?.plain?.reject) {
+              approveParams.current.plain.reject(new UserRejectedRequestError());
+            } else if (approveParams.current?.signature?.reject) {
+              approveParams.current.signature.reject(new UserRejectedRequestError());
+            }
+          }}
         />
       );
     }
@@ -320,7 +349,10 @@ function Modal({
         <Dialog
           id="oaw-wallet-widget"
           open={isOpen}
-          className="relative !z-50"
+          style={{
+            position: 'relative',
+            zIndex: '10001',
+          }}
           onClose={() => setIsOpen(false)}
         >
           <TransitionChild

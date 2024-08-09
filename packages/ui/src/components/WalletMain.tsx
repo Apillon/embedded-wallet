@@ -10,7 +10,7 @@ import useCopyToClipboard from '../hooks/useCopyToClipboard';
 import WalletError from './WalletError';
 
 export default function WalletMain() {
-  const { state, dispatch, networksById, setScreen } = useWalletContext();
+  const { wallet, state, dispatch, networksById, setScreen } = useWalletContext();
 
   const back = useMemo<{ key: WalletScreens; label: string }>(() => {
     if (state.walletScreen === 'main') {
@@ -67,7 +67,20 @@ export default function WalletMain() {
             <WalletTransactions />
           </div>
 
-          <Btn variant="secondary" className="w-full" onClick={() => dispatch({ type: 'reset' })}>
+          <Btn
+            variant="secondary"
+            className="w-full"
+            onClick={() => {
+              dispatch({ type: 'reset' });
+
+              wallet?.setAccount({
+                username: '',
+                address: '',
+                contractAddress: '',
+                strategy: 'passkey',
+              });
+            }}
+          >
             Disconnect wallet
           </Btn>
         </div>

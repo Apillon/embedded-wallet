@@ -19,6 +19,7 @@ import PasskeyStrategy from './strategies/passkey';
 import { networkIdIsSapphire, getHashedUsername, abort } from './utils';
 import mitt, { Emitter } from 'mitt';
 import { SapphireMainnet, SapphireTestnet } from './constants';
+import { WalletDisconnectedError } from './adapters/eip1193';
 
 class EmbeddedWallet {
   sapphireProvider: ethers.JsonRpcProvider;
@@ -43,6 +44,11 @@ class EmbeddedWallet {
     address: '',
     contractAddress: '',
   };
+
+  /**
+   * Resolve on login/register if defined. This resolves EIP-1193 request.
+   */
+  waitForAccountResolver = null as null | ((address: string) => void);
 
   /**
    * Prepare sapphire provider and account manager (WebAuthn) contract.
@@ -77,6 +83,17 @@ class EmbeddedWallet {
     this.isTest = !!params?.test;
     this.onGetSignature = params?.onGetSignature;
     this.onGetApillonSessionToken = params?.onGetApillonSessionToken;
+
+    /**
+     * Provider connection events
+     */
+    try {
+      if (this.getRpcProviderForChainId(this.defaultNetworkId)) {
+        this.events.emit('connect', { chainId: `0x${this.defaultNetworkId.toString(16)}` });
+      }
+    } catch (_e) {
+      /* empty */
+    }
   }
 
   // #region Auth utils
@@ -194,56 +211,8 @@ class EmbeddedWallet {
     this.lastAccount.username = authData.username;
 
     if (await this.waitForTxReceipt(txHash)) {
-      return await this.getAccountAddress(authData.username);
+      return await this.handleAccountAfterAuth(authData.username);
     }
-  }
-
-  /**
-   * If no custom `onGetSignature` param is provided, use apillon^tm by default.
-   *
-   * `onGetApillonSessionToken` param must be provided in this case to authenticate
-   * with the signature generating endpoint.
-   */
-  async getApillonSignature(
-    gaslessData: Parameters<SignatureCallback>[0]
-  ): ReturnType<SignatureCallback> {
-    if (!this.onGetApillonSessionToken) {
-      abort('NO_APILLON_SESSION_TOKEN_CALLBACK');
-      return { signature: '', gasLimit: 0, timestamp: 0 };
-    }
-
-    try {
-      const token = await this.onGetApillonSessionToken();
-
-      if (!token) {
-        abort('INVALID_APILLON_SESSION_TOKEN');
-      }
-
-      const { data } = await (
-        await fetch(
-          `${import.meta.env.VITE_APILLON_BASE_URL ?? 'https://api.apillon.io'}/embedded-wallet/signature`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              token,
-              data: gaslessData,
-            }),
-          }
-        )
-      ).json();
-
-      return {
-        signature: data.signature,
-        gasLimit: data.gasLimit || 0,
-        gasPrice: data.gasPrice || 0,
-        timestamp: data.timestamp,
-      };
-    } catch (e) {
-      console.error('Signature request error', e);
-    }
-
-    return { signature: '', gasLimit: 0, timestamp: 0 };
   }
 
   /**
@@ -311,7 +280,7 @@ class EmbeddedWallet {
      * If keys match -> Auth success, return account addresses
      */
     if (contractRes.length > 1 && recoveredPublicKey === contractRes[1]) {
-      return await this.getAccountAddress(authData.username);
+      return await this.handleAccountAfterAuth(authData.username);
     }
   }
 
@@ -375,6 +344,58 @@ class EmbeddedWallet {
 
     return ethers.formatUnits(await ethProvider.getBalance(address), decimals);
   }
+  // #endregion
+
+  // #region Auth helpers
+  /**
+   * Default handler for getting signature.
+   *
+   * If no custom `onGetSignature` param is provided, use apillon^tm by default.
+   *
+   * `onGetApillonSessionToken` param must be provided in this case to authenticate
+   * with the signature generating endpoint.
+   */
+  async getApillonSignature(
+    gaslessData: Parameters<SignatureCallback>[0]
+  ): ReturnType<SignatureCallback> {
+    if (!this.onGetApillonSessionToken) {
+      abort('NO_APILLON_SESSION_TOKEN_CALLBACK');
+      return { signature: '', gasLimit: 0, timestamp: 0 };
+    }
+
+    try {
+      const token = await this.onGetApillonSessionToken();
+
+      if (!token) {
+        abort('INVALID_APILLON_SESSION_TOKEN');
+      }
+
+      const { data } = await (
+        await fetch(
+          `${import.meta.env.VITE_APILLON_BASE_URL ?? 'https://api.apillon.io'}/embedded-wallet/signature`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              token,
+              data: gaslessData,
+            }),
+          }
+        )
+      ).json();
+
+      return {
+        signature: data.signature,
+        gasLimit: data.gasLimit || 0,
+        gasPrice: data.gasPrice || 0,
+        timestamp: data.timestamp,
+      };
+    } catch (e) {
+      console.error('Signature request error', e);
+    }
+
+    return { signature: '', gasLimit: 0, timestamp: 0 };
+  }
 
   setAccount(params: {
     username: string;
@@ -405,6 +426,32 @@ class EmbeddedWallet {
     this.lastAccount.address = params.address;
     this.lastAccount.contractAddress = params.contractAddress;
   }
+
+  async handleAccountAfterAuth(username: string) {
+    const addr = await this.getAccountAddress(username);
+
+    if (addr && this.waitForAccountResolver) {
+      this.waitForAccountResolver(addr.publicAddress);
+      this.waitForAccountResolver = null;
+    }
+
+    if (addr) {
+      this.events.emit('accountsChanged', [addr.publicAddress]);
+    }
+
+    return addr;
+  }
+
+  /**
+   * Create a promise and pass resolver to event `providerRequestAccounts`.
+   * Once the promise resolves, return account address.
+   */
+  async waitForAccount() {
+    return await new Promise<string>(resolve => {
+      this.waitForAccountResolver = resolve;
+      this.events.emit('providerRequestAccounts', resolve);
+    });
+  }
   // #endregion
 
   // #region Transactions
@@ -419,7 +466,8 @@ class EmbeddedWallet {
     const originalMessage = params.message;
 
     if (!data || params.mustConfirm) {
-      if (typeof params.message === 'string') {
+      // maybe check if msg.length !== 66
+      if (typeof params.message === 'string' && !params.message.startsWith('0x')) {
         params.message = ethers.encodeBytes32String(params.message);
       }
 
@@ -430,13 +478,14 @@ class EmbeddedWallet {
        * Handle confirmation in UI part of app (call this method again w/o `mustConfirm`).
        */
       if (params.mustConfirm) {
-        return await new Promise<string>(resolve => {
+        return await new Promise<string>((resolve, reject) => {
           this.events.emit('signatureRequest', {
             ...params,
             data,
             message: originalMessage,
             mustConfirm: false,
             resolve,
+            reject,
           });
         });
       }
@@ -515,13 +564,22 @@ class EmbeddedWallet {
       ).gasPrice;
     }
 
+    // Seems like this is needed
+    if (!params.tx.gasLimit) {
+      params.tx.gasLimit = 1_000_000;
+    }
+
     /**
-     * Add tx params needed for write tx
+     * Set value to bigint to avoid contract type errors
+     *
+     * - When write tx doesnt have value
+     * - When value is set but is `undefined`
      */
-    if (params.tx.type === 2) {
-      if (!params.tx.value) {
-        params.tx.value = 0n;
-      }
+    if (
+      (params.tx.type === 2 && !params.tx.value) ||
+      ('value' in params.tx && typeof params.tx.value === 'undefined')
+    ) {
+      params.tx.value = 0n;
     }
 
     /**
@@ -532,8 +590,10 @@ class EmbeddedWallet {
       return await new Promise<{
         signedTxData: string;
         chainId?: number;
-      }>(resolve => {
-        this.events.emit('txApprove', { plain: { ...params, mustConfirm: false, resolve } });
+      }>((resolve, reject) => {
+        this.events.emit('txApprove', {
+          plain: { ...params, mustConfirm: false, resolve, reject },
+        });
       });
     }
 
@@ -621,9 +681,9 @@ class EmbeddedWallet {
       return await new Promise<{
         signedTxData: string;
         chainId?: number;
-      }>(resolve => {
+      }>((resolve, reject) => {
         this.events.emit('txApprove', {
-          contractWrite: { ...params, mustConfirm: false, resolve },
+          contractWrite: { ...params, mustConfirm: false, resolve, reject },
         });
       });
     }
@@ -770,8 +830,14 @@ class EmbeddedWallet {
         oldValue: this.defaultNetworkId,
       });
 
+      this.events.emit('chainChanged', { chainId: `0x${networkId.toString(16)}` });
+
       this.defaultNetworkId = networkId;
+
+      return true;
     }
+
+    return false;
   }
 
   /**
@@ -804,6 +870,7 @@ class EmbeddedWallet {
        * On sapphire network, use sapphire provider
        */
       if (!this.sapphireProvider) {
+        this.events.emit('disconnect', { error: new WalletDisconnectedError() });
         abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
       }
 

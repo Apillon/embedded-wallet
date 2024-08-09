@@ -1,5 +1,5 @@
 import { createPublicClient, createWalletClient, getContract, http, parseEther } from 'viem';
-import OasisViemAdapter from '../../lib/adapters/viem';
+import EmbeddedViemAdapter from '../../lib/adapters/viem';
 import { getEmbeddedWallet } from '../../lib/utils';
 import { moonbaseAlpha } from 'viem/chains';
 import { ERC20Abi } from '../../lib/abi';
@@ -10,7 +10,7 @@ export default function TestViem() {
 
     if (w) {
       console.log('Initialize adapter');
-      const adapter = new OasisViemAdapter();
+      const adapter = new EmbeddedViemAdapter();
       console.log(adapter);
 
       const acc = adapter.getAccount();

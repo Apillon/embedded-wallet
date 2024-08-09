@@ -24,6 +24,23 @@ export function getEmbeddedWallet() {
   }
 }
 
+/**
+ * Retry to get the wallet object on `window` a few times
+ */
+export async function getEmbeddedWalletRetry(retry = 0, retryMax = 4) {
+  if (typeof window !== 'undefined' && !!window[WindowId]) {
+    return window[WindowId] as EmbeddedWallet;
+  }
+
+  if (retry >= retryMax) {
+    return null;
+  }
+
+  await new Promise(resolve => setTimeout(resolve, 500));
+
+  return await getEmbeddedWalletRetry(retry + 1, retryMax);
+}
+
 export async function getHashedUsername(name = '') {
   const oaw = getEmbeddedWallet();
 

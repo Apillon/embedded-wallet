@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { getEmbeddedWallet } from '../../lib/utils';
+// import { hashMessage } from 'viem';
 
 export default function TestSign() {
   const [message, setMessage] = useState('Test message 1234');
@@ -14,6 +15,7 @@ export default function TestSign() {
             const wallet = getEmbeddedWallet();
             const msg = await wallet?.signMessage({
               strategy: 'passkey',
+              // message: hashMessage(message),
               message,
             });
             console.log(msg);

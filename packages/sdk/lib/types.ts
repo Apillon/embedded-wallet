@@ -2,6 +2,7 @@ import { parseAbi } from 'abitype';
 import { AccountManagerAbi } from './abi';
 import { TypedContract } from 'ethers-abitype';
 import { ethers } from 'ethers';
+import { ProviderRpcError } from 'viem';
 
 const wacAbi = parseAbi(AccountManagerAbi);
 
@@ -102,6 +103,7 @@ export type PlainTransactionParams = {
   label?: string;
   mustConfirm?: boolean;
   resolve?: (result: { signedTxData: any; chainId?: number }) => void;
+  reject?: (reason?: any) => void;
 };
 
 export type SignMessageParams = {
@@ -111,6 +113,7 @@ export type SignMessageParams = {
   data?: string;
   mustConfirm?: boolean;
   resolve?: (value: string) => void;
+  reject?: (reason?: any) => void;
 };
 
 export type ContractReadParams = {
@@ -127,6 +130,7 @@ export type ContractWriteParams = {
   label?: string;
   mustConfirm?: boolean;
   resolve?: (result: { signedTxData: any; chainId?: number }) => void;
+  reject?: (reason?: any) => void;
 } & ContractReadParams;
 
 export type TransactionItem = {
@@ -150,4 +154,32 @@ export type Events = {
     newValue: any;
     oldValue: any;
   };
+
+  /**
+   * Triggered in 'eth_requestAccounts' provider request handler.
+   * Receives resolver fn that should be invoked when user's account is available (after sign in / register)
+   */
+  providerRequestAccounts: (address: string) => void;
+
+  /**
+   * Provider event
+   * @chainId hex
+   */
+  connect: { chainId: string };
+
+  /**
+   * Provider event
+   */
+  disconnect: { error: ProviderRpcError };
+
+  /**
+   * Provider event
+   * @chainId hex
+   */
+  chainChanged: { chainId: string };
+
+  /**
+   * Provider event
+   */
+  accountsChanged: string[];
 };

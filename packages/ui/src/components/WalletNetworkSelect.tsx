@@ -2,7 +2,7 @@ import { useWalletContext } from '../contexts/wallet.context';
 import Btn from './Btn';
 
 export default function WalletNetworkSelect() {
-  const { state, dispatch, networks, wallet, reloadUserBalance, setScreen } = useWalletContext();
+  const { state, dispatch, networks, wallet, setScreen } = useWalletContext();
 
   if (!Array.isArray(networks) || !networks.length) {
     return <></>;
@@ -11,7 +11,6 @@ export default function WalletNetworkSelect() {
   function selectNetwork(networkId: number) {
     dispatch({ type: 'setValue', payload: { key: 'networkId', value: networkId } });
     wallet?.setDefaultNetworkId(networkId);
-    reloadUserBalance();
     setScreen('main');
   }
 

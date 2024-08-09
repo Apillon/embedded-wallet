@@ -18,6 +18,7 @@ export function initializeApp(activatorSelector?: string, options?: AppProps) {
   if (!selectedEl) {
     selectedEl = document.createElement('div');
     selectedEl.id = 'embedded-wallet';
+    selectedEl.setAttribute('style', 'display: none;');
     document.body.appendChild(selectedEl);
   }
 

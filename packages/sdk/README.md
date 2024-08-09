@@ -160,17 +160,22 @@ The SDK exposes some events on its `events` property.
 - `txSubmitted`
   e.g. log the transaction in session storage or own backend
 
+```ts
+wallet.events.on('txSubmitted', tx => {
+  console.log(tx);
+});
+```
+
 - `txDone`
   Emitted by UI after a submitted tx is consisdered done (ethereum provider listener)
 
 - `dataUpdated`
   Emitted after state data changes, e.g. for keeping track of active account
 
-```ts
-wallet.events.on('txSubmitted', tx => {
-  console.log(tx);
-});
-```
+- `providerRequestAccounts`
+  Triggered in 'eth_requestAccounts' provider request handler. Payload is resolver fn that should be invoked when user's account is available (after sign in / register)
+
+- EIP-1193 events: `connect`, `disconnect`, `chainChanged`, `accountsChanged`
 
 ### Auth methods
 
@@ -180,6 +185,11 @@ wallet.events.on('txSubmitted', tx => {
 
 - `authenticate`
   Check that credentials belong to some account.
+
+- `getAccountAddress`
+  Return EVM addresses (account and account contract) for username
+
+- `getAccountBalance`
 
 ### Transaction methods
 
@@ -203,12 +213,47 @@ wallet.events.on('txSubmitted', tx => {
 
 This parameter can be used for wallet actions that require user confirmation. If set to `true`, the event `signatureRequest`/`txApprove` will be emitted with `resolve()` method passed in payload. Once resolve is called, the action continues. This can be used to display tx confirmation UI e.g.
 
-## Use with ethers (v6)
+## Use as EIP-1193
 
-SDK must be initialized first, then the `OasisEthersSigner` adapter can be used to work with ethers api.
+Initialize SDK, then get the provider using `getProvider()`.
 
 ```ts
-const signer = new OasisEthersSigner(ethProvider);
+import { getProvider as getEmbeddedProvider } from '@embedded-wallet/sdk';
+```
+
+This can then be used as an injected ethereum provider, e.g. with **ethers**:
+
+```ts
+new ethers.providers.Web3Provider(getEmbeddedProvider(), 'any');
+```
+
+or **wagmi**:
+
+```ts
+const wagmiConfig = {
+  ...,
+  connectors: [
+    new InjectedConnector({
+      chains,
+      options: {
+        getProvider() {
+          return getEmbeddedProvider() as any;
+        },
+      },
+    }),
+  ],
+}
+```
+
+## Use with ethers (v6)
+
+SDK must be initialized first, then the `EmbeddedEthersSigner` adapter can be used to work with ethers api.
+
+```ts
+import { EmbeddedEthersSigner } from '@embedded-wallet/sdk';
+import { ethers } from 'ethers';
+
+const signer = new EmbeddedEthersSigner(ethProvider);
 
 // Sign message
 const signed = await signer.signMessage('Please sign here');
@@ -219,6 +264,39 @@ const testContract = new ethers.Contract(
   contractAbi,
   signer
 );
+```
+
+## Use with viem
+
+SDK must be initialized first, then the `EmbeddedViemAdapter` can be used to work with viem.
+
+```ts
+import { EmbeddedViemAdapter } from '@embedded-wallet/sdk';
+import { createPublicClient, createWalletClient, getContract, http } from 'viem';
+import { moonbaseAlpha } from 'viem/chains';
+
+const adapter = new EmbeddedViemAdapter();
+const acc = adapter.getAccount();
+
+// Sign
+const signed = await acc.signMessage({ message: 'Please sign here via viem' });
+
+// Use contract
+const testContract = getContract({
+  address: '0xb1058eD01451B947A836dA3609f88C91804D0663',
+  abi: contractAbi,
+  client: {
+    public: createPublicClient({
+      chain: moonbaseAlpha,
+      transport: http(),
+    }),
+    wallet: createWalletClient({
+      chain: moonbaseAlpha,
+      transport: http('https://rpc.testnet.moonbeam.network'),
+      account: acc,
+    }),
+  },
+});
 ```
 
 ## Wallet UI

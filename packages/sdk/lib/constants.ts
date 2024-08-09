@@ -35,7 +35,7 @@ export const ErrorMessages = {
   [Errors.CANT_GET_ACCOUNT_ADDRESS]: "Can't get account address",
   [Errors.NO_RPC_URL_CONFIGURED_FOR_SELECTED_CHAINID]: 'No rpc url configured for selected chainid',
   [Errors.CROSS_CHAIN_PROVIDER_NOT_INITIALIZED]: 'Cross chain provider not initialized',
-  [Errors.OASIS_WALLET_NOT_INITIALIZED]: 'Oasis wallet not initialized',
+  [Errors.OASIS_WALLET_NOT_INITIALIZED]: 'Embedded wallet not initialized',
   [Errors.CANT_HASH_USERNAME]: "Can't hash username",
   [Errors.NO_APILLON_SESSION_TOKEN_CALLBACK]: 'Session token callback must be provided',
   [Errors.INVALID_APILLON_SESSION_TOKEN]: 'Session token is not valid',
