@@ -216,54 +216,6 @@ class EmbeddedWallet {
   }
 
   /**
-   * If no custom `onGetSignature` param is provided, use apillon^tm by default.
-   *
-   * `onGetApillonSessionToken` param must be provided in this case to authenticate
-   * with the signature generating endpoint.
-   */
-  async getApillonSignature(
-    gaslessData: Parameters<SignatureCallback>[0]
-  ): ReturnType<SignatureCallback> {
-    if (!this.onGetApillonSessionToken) {
-      abort('NO_APILLON_SESSION_TOKEN_CALLBACK');
-      return { signature: '', gasLimit: 0, timestamp: 0 };
-    }
-
-    try {
-      const token = await this.onGetApillonSessionToken();
-
-      if (!token) {
-        abort('INVALID_APILLON_SESSION_TOKEN');
-      }
-
-      const { data } = await (
-        await fetch(
-          `${import.meta.env.VITE_APILLON_BASE_URL ?? 'https://api.apillon.io'}/embedded-wallet/signature`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              token,
-              data: gaslessData,
-            }),
-          }
-        )
-      ).json();
-
-      return {
-        signature: data.signature,
-        gasLimit: data.gasLimit || 0,
-        gasPrice: data.gasPrice || 0,
-        timestamp: data.timestamp,
-      };
-    } catch (e) {
-      console.error('Signature request error', e);
-    }
-
-    return { signature: '', gasLimit: 0, timestamp: 0 };
-  }
-
-  /**
    * Check that credentials belong to some account.
    */
   async authenticate(strategy: AuthStrategyName, authData: AuthData) {
@@ -332,21 +284,6 @@ class EmbeddedWallet {
     }
   }
 
-  async handleAccountAfterAuth(username: string) {
-    const addr = await this.getAccountAddress(username);
-
-    if (addr && this.waitForAccountResolver) {
-      this.waitForAccountResolver(addr.publicAddress);
-      this.waitForAccountResolver = null;
-    }
-
-    if (addr) {
-      this.events.emit('accountsChanged', [addr.publicAddress]);
-    }
-
-    return addr;
-  }
-
   /**
    * Return address for username.
    * - Public EVM address
@@ -407,6 +344,58 @@ class EmbeddedWallet {
 
     return ethers.formatUnits(await ethProvider.getBalance(address), decimals);
   }
+  // #endregion
+
+  // #region Auth helpers
+  /**
+   * Default handler for getting signature.
+   *
+   * If no custom `onGetSignature` param is provided, use apillon^tm by default.
+   *
+   * `onGetApillonSessionToken` param must be provided in this case to authenticate
+   * with the signature generating endpoint.
+   */
+  async getApillonSignature(
+    gaslessData: Parameters<SignatureCallback>[0]
+  ): ReturnType<SignatureCallback> {
+    if (!this.onGetApillonSessionToken) {
+      abort('NO_APILLON_SESSION_TOKEN_CALLBACK');
+      return { signature: '', gasLimit: 0, timestamp: 0 };
+    }
+
+    try {
+      const token = await this.onGetApillonSessionToken();
+
+      if (!token) {
+        abort('INVALID_APILLON_SESSION_TOKEN');
+      }
+
+      const { data } = await (
+        await fetch(
+          `${import.meta.env.VITE_APILLON_BASE_URL ?? 'https://api.apillon.io'}/embedded-wallet/signature`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              token,
+              data: gaslessData,
+            }),
+          }
+        )
+      ).json();
+
+      return {
+        signature: data.signature,
+        gasLimit: data.gasLimit || 0,
+        gasPrice: data.gasPrice || 0,
+        timestamp: data.timestamp,
+      };
+    } catch (e) {
+      console.error('Signature request error', e);
+    }
+
+    return { signature: '', gasLimit: 0, timestamp: 0 };
+  }
 
   setAccount(params: {
     username: string;
@@ -436,6 +425,21 @@ class EmbeddedWallet {
     this.lastAccount.authStrategy = params.strategy;
     this.lastAccount.address = params.address;
     this.lastAccount.contractAddress = params.contractAddress;
+  }
+
+  async handleAccountAfterAuth(username: string) {
+    const addr = await this.getAccountAddress(username);
+
+    if (addr && this.waitForAccountResolver) {
+      this.waitForAccountResolver(addr.publicAddress);
+      this.waitForAccountResolver = null;
+    }
+
+    if (addr) {
+      this.events.emit('accountsChanged', [addr.publicAddress]);
+    }
+
+    return addr;
   }
 
   /**

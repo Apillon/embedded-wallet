@@ -22,11 +22,16 @@ authFormPlaceholder?: string;
 // Set type=email for login/register input
 isAuthEmail?: boolean;
 
-// Send code to user
-// If `onEmailConfirmRequest` is not provided the code check step is skipped
+// Skip email confirmation / code check.
+isEmailConfirm?: boolean;
+
+// Executes in auth process, after user enters a valid email. If an error is thrown, the auth process will terminate.
+// Should be used to send a verification code to user.
+// If this is not provided, Apillon service is used.
 onEmailConfirmRequest?: (email: string) => Promise<any>;
 
-// Confirm that entered code is correct
+// Executes in auth process, during email verification, confirm that entered code is correct.
+// If `onEmailConfirmRequest` is not provided, Apillon service is used.
 onEmailConfirm?: (email: string, code: string) => Promise<any>;
 ```
 
