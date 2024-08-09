@@ -570,12 +570,16 @@ class EmbeddedWallet {
     }
 
     /**
-     * Add tx params needed for write tx
+     * Set value to bigint to avoid contract type errors
+     *
+     * - When write tx doesnt have value
+     * - When value is set but is `undefined`
      */
-    if (params.tx.type === 2) {
-      if (!params.tx.value) {
-        params.tx.value = 0n;
-      }
+    if (
+      (params.tx.type === 2 && !params.tx.value) ||
+      ('value' in params.tx && typeof params.tx.value === 'undefined')
+    ) {
+      params.tx.value = 0n;
     }
 
     /**
