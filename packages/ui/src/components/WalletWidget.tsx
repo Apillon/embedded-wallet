@@ -5,7 +5,7 @@ import WalletAuth from './WalletAuth';
 import WalletMain from './WalletMain';
 import { ethers } from 'ethers';
 import WalletApprove, { DisplayedContractParams } from './WalletApprove';
-import { AppParams, Events, UserRejectedRequestError } from '@embedded-wallet/sdk';
+import { AppParams, Events, UserRejectedRequestError } from '@apillon/wallet-sdk';
 import { TransactionsProvider, useTransactionsContext } from '../contexts/transactions.context';
 import Btn from './Btn';
 

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { useAccount, useContract } from '@embedded-wallet/vue';
-import { ERC20Abi } from '@embedded-wallet/sdk';
+import { useAccount, useContract } from '@apillon/wallet-vue';
+import { ERC20Abi } from '@apillon/wallet-sdk';
 
 const { info, getBalance } = useAccount();
 const { read, write } = useContract({

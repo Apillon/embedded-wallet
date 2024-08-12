@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { EmbeddedWallet, WindowId } from '@embedded-wallet/sdk';
+import { EmbeddedWallet, WindowId } from '@apillon/wallet-sdk';
 
 export function useWallet() {
   const [wallet, setWallet] = useState<EmbeddedWallet>();

@@ -1,4 +1,4 @@
-import { abort } from '@embedded-wallet/sdk';
+import { abort } from '@apillon/wallet-sdk';
 import useAccount from './useAccount';
 import useWallet from './useWallet';
 

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { getEmbeddedWallet, AuthStrategyName, abort } from '@embedded-wallet/sdk';
+import { getEmbeddedWallet, AuthStrategyName, abort } from '@apillon/wallet-sdk';
 import { useWalletContext } from '../contexts/wallet.context';
 import Btn from './Btn';
 import { AppProps } from './WalletWidget';

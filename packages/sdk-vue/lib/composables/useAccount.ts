@@ -1,6 +1,6 @@
 import { reactive, readonly, watch } from 'vue';
 import useWallet from './useWallet';
-import { AuthStrategyName, Events } from '@embedded-wallet/sdk';
+import { AuthStrategyName, Events } from '@apillon/wallet-sdk';
 
 export function useAccount() {
   const { wallet } = useWallet();

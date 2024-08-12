@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { getEmbeddedWallet } from '@embedded-wallet/sdk';
+import { getEmbeddedWallet } from '@apillon/wallet-sdk';
 
 export default function TestSign() {
   const [message, setMessage] = useState('Test message 1234');

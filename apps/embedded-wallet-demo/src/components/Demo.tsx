@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ethers } from 'ethers';
-import { getEmbeddedWallet, ERC20Abi } from '@embedded-wallet/sdk';
+import { getEmbeddedWallet, ERC20Abi } from '@apillon/wallet-sdk';
 
 export default function Demo() {
   const [message, setMessage] = useState('Hello from Apillon!');

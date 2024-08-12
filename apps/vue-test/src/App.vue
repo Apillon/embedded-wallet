@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { WalletWidget } from '@embedded-wallet/vue';
+import { WalletWidget } from '@apillon/wallet-vue';
 import Test from './Test.vue';
 </script>
 

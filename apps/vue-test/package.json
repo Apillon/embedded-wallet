@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@embedded-wallet/vue": "*",
+    "@apillon/wallet-vue": "*",
     "vue": "^3.4.31"
   },
   "devDependencies": {

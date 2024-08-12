@@ -9,7 +9,7 @@ import {
   initializeOnWindow,
   SapphireTestnet,
   SapphireMainnet,
-} from '@embedded-wallet/sdk';
+} from '@apillon/wallet-sdk';
 
 export type Network = { name: string; id: number; rpcUrl: string; explorerUrl: string };
 

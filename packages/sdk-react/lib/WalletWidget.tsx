@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { initializeApp, AppProps } from '@embedded-wallet/ui';
+import { initializeApp, AppProps } from '@apillon/wallet-ui';
 
 export function WalletWidget({ className, ...params }: AppProps & { className?: string }) {
   const initialized = useRef(false);

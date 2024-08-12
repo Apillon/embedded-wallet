@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { ContractReadParams } from '@embedded-wallet/sdk';
+import { ContractReadParams } from '@apillon/wallet-sdk';
 import Btn from './Btn';
 import { useState } from 'react';
 import { useWalletContext } from '../contexts/wallet.context';
