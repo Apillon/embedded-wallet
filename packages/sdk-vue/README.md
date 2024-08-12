@@ -1,4 +1,4 @@
-# Embedded wallet Vue helpers
+# Embedded Wallet Vue helpers
 
 Collection of Vue composabes to help with embedded wallet implementation.
 
@@ -7,7 +7,7 @@ Collection of Vue composabes to help with embedded wallet implementation.
 Initialize wallet SDK and UI.
 
 ```ts
-import { WalletWidget } from '@embedded-wallet/vue';
+import { WalletWidget } from '@apillon/wallet-vue';
 
 <WalletWidget ...props />
 ```
@@ -19,7 +19,7 @@ import { WalletWidget } from '@embedded-wallet/vue';
 Get the initialized instance of embedded wallet.
 
 ```ts
-import { useWallet } from '@embedded-wallet/vue';
+import { useWallet } from '@apillon/wallet-vue';
 
 const { wallet } = useWallet();
 
@@ -31,7 +31,7 @@ console.log(await wallet.value.userExists('johndoe'));
 Get current connected account info.
 
 ```ts
-import { useAccount } from '@embedded-wallet/vue';
+import { useAccount } from '@apillon/wallet-vue';
 
 const { info, getBalance } = useAccount();
 ```
@@ -41,7 +41,7 @@ const { info, getBalance } = useAccount();
 Helper methods to interact with contracts.
 
 ```ts
-import { useContract } from '@embedded-wallet/vue';
+import { useContract } from '@apillon/wallet-vue';
 
 const { read, write } = useContract({
   abi: ERC20Abi,

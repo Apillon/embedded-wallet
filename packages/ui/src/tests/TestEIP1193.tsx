@@ -1,4 +1,4 @@
-import { getEmbeddedWallet, getProvider } from '@embedded-wallet/sdk';
+import { getEmbeddedWallet, getProvider } from '@apillon/wallet-sdk';
 
 export default function TestEIP1193() {
   return (

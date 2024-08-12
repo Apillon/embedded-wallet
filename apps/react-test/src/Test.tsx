@@ -1,5 +1,5 @@
-import { useAccount, useContract } from '@embedded-wallet/react';
-import { ERC20Abi } from '@embedded-wallet/sdk';
+import { useAccount, useContract } from '@apillon/wallet-react';
+import { ERC20Abi } from '@apillon/wallet-sdk';
 
 export default function Test() {
   const { username, address, getBalance } = useAccount();

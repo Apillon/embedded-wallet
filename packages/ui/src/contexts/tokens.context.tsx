@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useReducer, useState } from 'react';
-import { WebStorageKeys, ERC20Abi } from '@embedded-wallet/sdk';
+import { WebStorageKeys, ERC20Abi } from '@apillon/wallet-sdk';
 import { useWalletContext } from './wallet.context';
 import { ethers } from 'ethers';
 

@@ -1,6 +1,6 @@
 # Embedded App Wallet
 
-JS SDK.
+Apillon Embedded Wallet JS SDK
 
 ## Stack
 
@@ -218,7 +218,7 @@ This parameter can be used for wallet actions that require user confirmation. If
 Initialize SDK, then get the provider using `getProvider()`.
 
 ```ts
-import { getProvider as getEmbeddedProvider } from '@embedded-wallet/sdk';
+import { getProvider as getEmbeddedProvider } from '@apillon/wallet-sdk';
 ```
 
 This can then be used as an injected ethereum provider, e.g. with **ethers**:
@@ -250,7 +250,7 @@ const wagmiConfig = {
 SDK must be initialized first, then the `EmbeddedEthersSigner` adapter can be used to work with ethers api.
 
 ```ts
-import { EmbeddedEthersSigner } from '@embedded-wallet/sdk';
+import { EmbeddedEthersSigner } from '@apillon/wallet-sdk';
 import { ethers } from 'ethers';
 
 const signer = new EmbeddedEthersSigner(ethProvider);
@@ -271,7 +271,7 @@ const testContract = new ethers.Contract(
 SDK must be initialized first, then the `EmbeddedViemAdapter` can be used to work with viem.
 
 ```ts
-import { EmbeddedViemAdapter } from '@embedded-wallet/sdk';
+import { EmbeddedViemAdapter } from '@apillon/wallet-sdk';
 import { createPublicClient, createWalletClient, getContract, http } from 'viem';
 import { moonbaseAlpha } from 'viem/chains';
 
@@ -304,7 +304,7 @@ const testContract = getContract({
 A default wallet UI can be added by using `initializeApp()`. This includes a react app that handles logged in state and transaction confirmations etc.
 
 ```ts
-import { initializeApp } from '@embedded-wallet/ui';
+import { initializeApp } from '@apillon/wallet-ui';
 
 initializeApp('#wallet', {
   accountManagerAddress: '0x5C3512312312312312312312312312312365D4bC',

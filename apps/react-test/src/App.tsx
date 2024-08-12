@@ -1,5 +1,5 @@
 import './App.css';
-import { WalletWidget } from '@embedded-wallet/react';
+import { WalletWidget } from '@apillon/wallet-react';
 import Test from './Test';
 
 function App() {

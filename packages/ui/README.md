@@ -1,4 +1,4 @@
-# Embedded wallet UI
+# Embedded Wallet UI
 
 This package provides default UI for showing the state of connected account and confirmations on events.
 
@@ -36,7 +36,7 @@ onEmailConfirm?: (email: string, code: string) => Promise<any>;
 ```
 
 ```js
-import { initializeApp } from '@embedded-wallet/ui';
+import { initializeApp } from '@apillon/wallet-ui';
 
 initializeApp('#open-wallet-button-selector', {
   disableAutoBroadcastAfterSign: false,

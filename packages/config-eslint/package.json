@@ -1,5 +1,5 @@
 {
-  "name": "@embedded-wallet/eslint-config",
+  "name": "@apillon/wallet-eslint-config",
   "version": "0.0.0",
   "main": "index.js",
   "license": "MIT",

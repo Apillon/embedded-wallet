@@ -1,4 +1,4 @@
-# Embedded wallet React helpers
+# Embedded Wallet React helpers
 
 Collection of React hooks to help with embedded wallet implementation.
 
@@ -7,7 +7,7 @@ Collection of React hooks to help with embedded wallet implementation.
 Initialize wallet SDK and UI.
 
 ```tsx
-import { WalletWidget } from '@embedded-wallet/react';
+import { WalletWidget } from '@apillon/wallet-react';
 
 return <WalletWidget ...props />;
 ```
@@ -19,7 +19,7 @@ return <WalletWidget ...props />;
 Get the initialized instance of embedded wallet.
 
 ```ts
-import { useWallet } from '@embedded-wallet/react';
+import { useWallet } from '@apillon/wallet-react';
 
 const { wallet } = useWallet();
 
@@ -31,7 +31,7 @@ console.log(await wallet.userExists('johndoe'));
 Get current connected account info.
 
 ```ts
-import { useAccount } from '@embedded-wallet/react';
+import { useAccount } from '@apillon/wallet-react';
 
 const { username, address, getBalance } = useAccount();
 ```
@@ -41,7 +41,7 @@ const { username, address, getBalance } = useAccount();
 Helper methods to interact with contracts.
 
 ```ts
-import { useContract } from '@embedded-wallet/react';
+import { useContract } from '@apillon/wallet-react';
 
 const { read, write } = useContract({
   abi: ERC20Abi,

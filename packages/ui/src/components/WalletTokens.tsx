@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { TokenInfo, useTokensContext } from '../contexts/tokens.context';
 import { useWalletContext } from '../contexts/wallet.context';
 import Btn from './Btn';
-import { ERC20Abi } from '@embedded-wallet/sdk';
+import { ERC20Abi } from '@apillon/wallet-sdk';
 import { ethers } from 'ethers';
 import QRCode from 'react-qr-code';
 import useCopyToClipboard from '../hooks/useCopyToClipboard';

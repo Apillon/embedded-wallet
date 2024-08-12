@@ -1,8 +1,20 @@
 {
-  "name": "@embedded-wallet/vue",
-  "private": true,
-  "version": "0.0.0",
+  "name": "@apillon/wallet-vue",
+  "description": "▶◀ Apillon Embedded Wallet Vue UI ▶◀",
+  "private": false,
+  "version": "1.0.0-alpha.1",
   "type": "module",
+  "files": [
+    "dist/"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "hhttps://github.com/Apillon/embedded-wallet"
+  },
+  "bugs": {
+    "url": "https://github.com/Apillon/embedded-wallet/issues"
+  },
+  "homepage": "https://wiki.apillon.io/web3-services/8-embedded-wallets.html",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
@@ -17,8 +29,8 @@
     }
   },
   "dependencies": {
-    "@embedded-wallet/sdk": "*",
-    "@embedded-wallet/ui": "*",
+    "@apillon/wallet-sdk": "*",
+    "@apillon/wallet-ui": "*",
     "vue": "^3.4.29"
   },
   "devDependencies": {

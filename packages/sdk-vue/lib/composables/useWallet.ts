@@ -1,5 +1,5 @@
 import { computed, onMounted, shallowRef } from 'vue';
-import { EmbeddedWallet, WindowId } from '@embedded-wallet/sdk';
+import { EmbeddedWallet, WindowId } from '@apillon/wallet-sdk';
 
 export function useWallet(): any {
   const wallet = shallowRef<EmbeddedWallet>();
