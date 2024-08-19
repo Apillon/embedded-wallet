@@ -7,7 +7,6 @@ import {
   WebStorageKeys,
   EmbeddedWallet,
   initializeOnWindow,
-  SapphireTestnet,
   SapphireMainnet,
 } from '@apillon/wallet-sdk';
 
@@ -92,24 +91,24 @@ function WalletProvider({
   children: ReactNode;
   networks?: Network[];
 } & AppParams) {
-  networks = restOfParams?.test
-    ? [
-        {
-          name: 'Sapphire Testnet',
-          id: SapphireTestnet,
-          rpcUrl: 'https://testnet.sapphire.oasis.io',
-          explorerUrl: 'https://explorer.oasis.io/testnet/sapphire',
-        },
-        ...networks,
-      ]
-    : [
-        {
-          name: 'Oasis Sapphire',
-          id: SapphireMainnet,
-          rpcUrl: 'https://sapphire.oasis.io',
-          explorerUrl: 'https://explorer.oasis.io/mainnet/sapphire',
-        },
-      ];
+  networks = [
+    {
+      name: 'Oasis Sapphire',
+      id: SapphireMainnet,
+      rpcUrl: 'https://sapphire.oasis.io',
+      explorerUrl: 'https://explorer.oasis.io/mainnet/sapphire',
+    },
+    ...networks,
+  ];
+  // [
+  //   {
+  //     name: 'Sapphire Testnet',
+  //     id: SapphireTestnet,
+  //     rpcUrl: 'https://testnet.sapphire.oasis.io',
+  //     explorerUrl: 'https://explorer.oasis.io/testnet/sapphire',
+  //   },
+  //   ...networks,
+  // ]
 
   const [state, dispatch] = useReducer(reducer, initialState(defaultNetworkId || networks[0].id));
   const [initialized, setInitialized] = useState(false);

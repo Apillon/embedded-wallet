@@ -8,7 +8,6 @@ const { info } = useAccount();
 <template>
   <div>
     <WalletWidget
-      accountManagerAddress="0x5C357DaFfe6b1016C0c9A5607367E8f47765D4bC"
       :isAuthEmail="false"
       :defaultNetworkId="1287"
       :networks="[

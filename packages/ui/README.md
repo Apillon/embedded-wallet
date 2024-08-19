@@ -41,7 +41,6 @@ import { initializeApp } from '@apillon/wallet-ui';
 initializeApp('#open-wallet-button-selector', {
   disableAutoBroadcastAfterSign: false,
   disableDefaultActivatorStyle: false,
-  accountManagerAddress: '0xF35C3eB93c6D3764A7D5efC6e9DEB614779437b1',
   networks: [
     {
       name: 'Moonbeam Testnet',

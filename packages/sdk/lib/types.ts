@@ -16,17 +16,6 @@ export type SignatureCallback = (
 
 export type AppParams = {
   /**
-   * Use test URLS
-   * - Oasis Sapphire testnet instead of mainnet
-   */
-  test?: boolean;
-
-  /**
-   * Address for "Account manager" contract on Oasis Sapphire chain
-   */
-  accountManagerAddress?: string;
-
-  /**
    * Network ID for network (chain) selected on first use
    */
   defaultNetworkId?: number;
@@ -42,20 +31,21 @@ export type AppParams = {
   networkConfig?: NetworkConfig;
 
   /**
-   * Provide this callback in configuration and it will be used to get contract values for registration.
+   * Token to be used with Apillon API. (e.g. to generate a signature for contract interaction and to send confirmation emails)
    *
-   * This is useful for controlling gas expenses on account manager contract when registering new wallets.
+   * Be careful that the token will stay valid for entire wallet SDK usage.
+   * If you need to change the token, use 'setSessionToken' method on the wallet object.
    *
-   * @more sdk/README.md
+   * Another option is to use 'onGetApillonSessionToken' callback.
    */
-  onGetSignature?: SignatureCallback;
+  sessionToken?: string;
 
   /**
-   * Provide the Apillon session token to be used with Apillon API to generate a signature for contract interaction.
+   * A function called when session token is needed for Apillon API. Use this to always ensure a valid token.
    *
    * @more sdk/README.md
    */
-  onGetApillonSessionToken?: () => Promise<string>; // only used if no `onGetSignature` param is provided
+  onGetApillonSessionToken?: () => Promise<string>;
 };
 
 export type AuthData = {
@@ -150,7 +140,7 @@ export type Events = {
   txSubmitted: TransactionItem;
   txDone: TransactionItem; // emitted by UI
   dataUpdated: {
-    name: 'username' | 'address' | 'authStrategy' | 'defaultNetworkId';
+    name: 'username' | 'address' | 'authStrategy' | 'defaultNetworkId' | 'sessionToken';
     newValue: any;
     oldValue: any;
   };

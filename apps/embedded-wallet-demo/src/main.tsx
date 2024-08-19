@@ -13,9 +13,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 
 setTimeout(() => {
   initializeApp('#wallet', {
-    test: true,
-    // accountManagerAddress: '0x5C357DaFfe6b1016C0c9A5607367E8f47765D4bC',
-    accountManagerAddress: '0xF35C3eB93c6D3764A7D5efC6e9DEB614779437b1', // -> gaspaying address: 0xcD4b0bf4C86F308eaeA4FF138918FA400BC9A8E8
     defaultNetworkId: 1287,
     networks: [
       {

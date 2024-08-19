@@ -9,6 +9,7 @@ export default function WalletAuth({
   authFormPlaceholder = 'your e-mail@email.com',
   isAuthEmail = true,
   isEmailConfirm = true,
+  sessionToken,
   onEmailConfirmRequest,
   onEmailConfirm,
   onGetApillonSessionToken,
@@ -17,6 +18,7 @@ export default function WalletAuth({
   | 'authFormPlaceholder'
   | 'isAuthEmail'
   | 'isEmailConfirm'
+  | 'sessionToken'
   | 'onEmailConfirmRequest'
   | 'onEmailConfirm'
   | 'onGetApillonSessionToken'
@@ -64,17 +66,20 @@ export default function WalletAuth({
            */
           await onEmailConfirmRequest(username);
           setIsCodeScreen(true);
-        } else if (isEmailConfirm && onGetApillonSessionToken) {
+        } else if (isEmailConfirm && (sessionToken || onGetApillonSessionToken)) {
           /**
            * Apillon email confirmation
            */
-          const token = await onGetApillonSessionToken();
+          const token = onGetApillonSessionToken ? await onGetApillonSessionToken() : sessionToken;
+
+          console.log(token);
 
           if (!token) {
             abort('INVALID_APILLON_SESSION_TOKEN');
+            console.log('thrown?');
           }
 
-          await fetch(
+          const res = await fetch(
             `${import.meta.env.VITE_APILLON_BASE_URL ?? 'https://api.apillon.io'}/embedded-wallet/otp/generate`,
             {
               method: 'POST',
@@ -85,6 +90,12 @@ export default function WalletAuth({
               }),
             }
           );
+
+          console.log(res);
+
+          if (!res.ok || res.status >= 400) {
+            throw new Error('Could not send confirmation email');
+          }
 
           setIsCodeScreen(true);
         } else {
@@ -171,7 +182,7 @@ export default function WalletAuth({
           isCodeSubmitted={isCodeSubmitted}
           loading={loading}
           onConfirm={async code => {
-            if (!onEmailConfirm && !onGetApillonSessionToken) {
+            if (!onEmailConfirm && (!sessionToken || !onGetApillonSessionToken)) {
               return startRegister();
             }
 
@@ -184,8 +195,10 @@ export default function WalletAuth({
                */
               if (onEmailConfirm) {
                 await onEmailConfirm(username, code);
-              } else if (onGetApillonSessionToken) {
-                const token = await onGetApillonSessionToken();
+              } else if (sessionToken || onGetApillonSessionToken) {
+                const token = onGetApillonSessionToken
+                  ? await onGetApillonSessionToken()
+                  : sessionToken;
 
                 if (!token) {
                   abort('INVALID_APILLON_SESSION_TOKEN');

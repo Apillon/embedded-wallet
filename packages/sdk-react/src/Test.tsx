@@ -7,9 +7,7 @@ export function Test() {
     <>
       <div>
         <WalletWidget
-          accountManagerAddress="0x5C357DaFfe6b1016C0c9A5607367E8f47765D4bC"
           isAuthEmail={false}
-          // accountManagerAddress="0xF35C3eB93c6D3764A7D5efC6e9DEB614779437b1"
           defaultNetworkId={1287}
           networks={[
             {

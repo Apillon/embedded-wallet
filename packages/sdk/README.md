@@ -21,17 +21,6 @@ Initialize the class once by using `initializeOnWindow()` utility, with optional
 
 ```ts
 /**
- * Use test URLS
- * - Oasis Sapphire testnet instead of mainnet
- */
-test?: boolean;
-
-/**
- * Address for "Account manager" contract on Oasis Sapphire chain
- */
-accountManagerAddress?: string;
-
-/**
  * Network ID for network (chain) selected on first use
  */
 defaultNetworkId?: number;
@@ -42,89 +31,28 @@ defaultNetworkId?: number;
 networkConfig?: NetworkConfig;
 
 /**
-* Provide this callback in configuration and it will be used to get contract values for registration.
-*
-* This is useful for controlling gas expenses on account manager contract when registering new wallets.
-*
-* @more sdk/README.md
-*/
-onGetSignature?: SignatureCallback;
+ * Token to be used with Apillon API. (e.g. to generate a signature for contract interaction and to send confirmation emails)
+ *
+ * Be careful that the token will stay valid for entire wallet SDK usage.
+ * If you need to change the token, use 'setSessionToken' method on the wallet object.
+ *
+ * Another option is to use 'onGetApillonSessionToken' callback.
+ */
+sessionToken?: string;
 
 /**
 * Provide the Apillon session token to be used with Apillon API to generate a signature for contract interaction.
 *
 * @more sdk/README.md
 */
-onGetApillonSessionToken?: () => Promise<string>; // only used if no `onGetSignature` param is provided
+onGetApillonSessionToken?: () => Promise<string>;
 ```
 
 The class instance is then available on window (`embeddedWallet`) and can be obtained with the `getEmbeddedWallet()` utility.
 
-### Signature callbacks usage
-
-| `onGetSignature` | `onGetApillonSessionToken` | On register               |
-| ---------------- | -------------------------- | ------------------------- |
-| unset            | unset                      | No signature request      |
-| unset            | set                        | Apillon signature request |
-| set              | unset                      | Custom signature request  |
-| set              | set                        | Custom signature request  |
-
-### onGetSignature
-
-Provide this callback in configuration and it will be used to get contract values for registration. This is useful for controlling gas expenses on account manager contract when registering new wallets.
-
-When `onGetSignature` is used, the provided contract should support `generateGaslessTx` contract function that accepts `timestamp` and `signature`.
-
-```rust
-function generateGaslessTx(bytes in_data, uint64 nonce, uint256 gasPrice, uint64 gasLimit, uint256 timestamp, bytes signature) view returns (bytes out_data)
-```
-
-The callback receives encoded `gaslessData` (string). An appropriate signature should then be generated for this data on e.g. some backend. The returned values should be:
-
-```ts
-{
-  signature: string;
-  gasLimit?: number;
-  gasPrice?: number;
-  timestamp: number
-}
-```
-
-Example:
-
-```ts
-{
-  onGetSignature: async gaslessData => {
-    try {
-      const { data } = await (
-        await fetch(`https://api.apillon.io/embedded-wallet/signature`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            token: `user session token`,
-            data: gaslessData,
-          }),
-        })
-      ).json();
-
-      return {
-        signature: data.signature,
-        gasLimit: data.gasLimit || 0,
-        gasPrice: data.gasPrice || 0,
-        timestamp: data.timestamp,
-      };
-    } catch (e) {
-      console.error('Signature request error', e);
-    }
-
-    return { signature: '', gasLimit: 0, timestamp: 0 };
-  },
-}
-```
-
 ### onGetApillonSessionToken
 
-By default [Apillon](https://api.apillon.io/) is used for generating the signature. However the Apillon backend needs to receive a session token from the dApp. This token can be provided with `onGetApillonSessionToken`.
+[Apillon](https://api.apillon.io/) is used for generating the signature. However the Apillon backend needs to receive a session token from the dApp. This token can be provided with `onGetApillonSessionToken`.
 
 ```ts
 {
@@ -307,7 +235,6 @@ A default wallet UI can be added by using `initializeApp()`. This includes a rea
 import { initializeApp } from '@apillon/wallet-ui';
 
 initializeApp('#wallet', {
-  accountManagerAddress: '0x5C3512312312312312312312312312312365D4bC',
   defaultNetworkId: 1287,
   networks: [
     {

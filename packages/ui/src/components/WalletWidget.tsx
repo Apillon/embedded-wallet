@@ -45,11 +45,13 @@ export type AppProps = {
 
   /**
    * Use email validation on input for username/email
+   * @default true
    */
   isAuthEmail?: boolean;
 
   /**
    * Skip email confirmation / code check.
+   * @default true
    */
   isEmailConfirm?: boolean;
 

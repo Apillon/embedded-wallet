@@ -13,7 +13,7 @@ import {
   WebauthnContract,
 } from './types';
 import * as sapphire from '@oasisprotocol/sapphire-paratime';
-import { AccountAbi, AccountManagerAbi, AccountManagerAbiOld } from './abi';
+import { AccountAbi, AccountManagerAbi } from './abi';
 import PasswordStrategy from './strategies/password';
 import PasskeyStrategy from './strategies/passkey';
 import { networkIdIsSapphire, getHashedUsername, abort } from './utils';
@@ -26,10 +26,9 @@ class EmbeddedWallet {
   accountManagerContract: WebauthnContract;
   abiCoder = ethers.AbiCoder.defaultAbiCoder();
   events: Emitter<Events>;
-  onGetSignature: SignatureCallback | undefined;
+  apillonSessionToken?: string;
   onGetApillonSessionToken: (() => Promise<string>) | undefined;
 
-  isTest = false;
   defaultNetworkId = 0;
   rpcUrls = {} as { [networkId: number]: string };
   rpcProviders = {} as { [networkId: number]: ethers.JsonRpcProvider };
@@ -56,16 +55,14 @@ class EmbeddedWallet {
    */
   constructor(params?: AppParams) {
     const ethSaphProvider = new ethers.JsonRpcProvider(
-      params?.test ? 'https://testnet.sapphire.oasis.io' : 'https://sapphire.oasis.io'
+      import.meta.env.VITE_SAPPHIRE_URL ?? 'https://sapphire.oasis.io'
     );
 
     this.sapphireProvider = sapphire.wrap(ethSaphProvider);
 
     this.accountManagerContract = new ethers.Contract(
-      params?.accountManagerAddress || '0xF35C3eB93c6D3764A7D5efC6e9DEB614779437b1',
-      !params?.onGetSignature && !params?.onGetApillonSessionToken
-        ? AccountManagerAbiOld
-        : AccountManagerAbi,
+      import.meta.env.VITE_ACCOUNT_MANAGER_ADDRESS ?? '0xF35C3eB93c6D3764A7D5efC6e9DEB614779437b1',
+      AccountManagerAbi,
       new ethers.VoidSigner(ethers.ZeroAddress, this.sapphireProvider)
     ) as unknown as WebauthnContract;
 
@@ -80,9 +77,8 @@ class EmbeddedWallet {
 
     this.events = mitt<Events>();
 
-    this.isTest = !!params?.test;
-    this.onGetSignature = params?.onGetSignature;
     this.onGetApillonSessionToken = params?.onGetApillonSessionToken;
+    this.apillonSessionToken = params?.sessionToken;
 
     /**
      * Provider connection events
@@ -160,39 +156,21 @@ class EmbeddedWallet {
       await this.accountManagerContract.gaspayingAddress()
     );
 
-    let signedTx = '';
+    // Get signature from API (handle gas payments e.g.)
+    const gaslessParams = await this.getApillonSignature(gaslessData);
 
-    if (!!this.onGetSignature || !!this.onGetApillonSessionToken) {
-      /**
-       * Use apillon signature fetch if no custom provided
-       */
-      if (!this.onGetSignature) {
-        this.onGetSignature = this.getApillonSignature;
-      }
-
-      // Get signature from API (handle gas payments e.g.)
-      const gaslessParams = await this.onGetSignature(gaslessData);
-
-      if (!gaslessParams.signature) {
-        abort('CANT_GET_SIGNATURE');
-      }
-
-      signedTx = await this.accountManagerContract.generateGaslessTx(
-        gaslessData,
-        nonce as any,
-        gaslessParams.gasPrice ? BigInt(gaslessParams.gasPrice) : (gasPrice as any),
-        gaslessParams.gasLimit ? BigInt(gaslessParams.gasLimit) : 1_000_000n,
-        BigInt(gaslessParams.timestamp),
-        gaslessParams.signature
-      );
-    } else {
-      // Old ABI / interface -- without additional signature for register
-      signedTx = await (this.accountManagerContract.generateGaslessTx as any)(
-        gaslessData,
-        nonce as any,
-        gasPrice as any
-      );
+    if (!gaslessParams.signature) {
+      abort('CANT_GET_SIGNATURE');
     }
+
+    const signedTx = await this.accountManagerContract.generateGaslessTx(
+      gaslessData,
+      nonce as any,
+      gaslessParams.gasPrice ? BigInt(gaslessParams.gasPrice) : (gasPrice as any),
+      gaslessParams.gasLimit ? BigInt(gaslessParams.gasLimit) : 1_000_000n,
+      BigInt(gaslessParams.timestamp),
+      gaslessParams.signature
+    );
 
     const txHash = await this.sapphireProvider.send('eth_sendRawTransaction', [signedTx]);
 
@@ -350,9 +328,7 @@ class EmbeddedWallet {
   /**
    * Default handler for getting signature.
    *
-   * If no custom `onGetSignature` param is provided, use apillon^tm by default.
-   *
-   * `onGetApillonSessionToken` param must be provided in this case to authenticate
+   * `sessionToken` or `onGetApillonSessionToken` param must be provided to authenticate
    * with the signature generating endpoint.
    */
   async getApillonSignature(
@@ -364,7 +340,9 @@ class EmbeddedWallet {
     }
 
     try {
-      const token = await this.onGetApillonSessionToken();
+      const token = !!this.onGetApillonSessionToken
+        ? await this.onGetApillonSessionToken()
+        : this.apillonSessionToken;
 
       if (!token) {
         abort('INVALID_APILLON_SESSION_TOKEN');
@@ -451,6 +429,16 @@ class EmbeddedWallet {
       this.waitForAccountResolver = resolve;
       this.events.emit('providerRequestAccounts', resolve);
     });
+  }
+
+  setSessionToken(token: string) {
+    this.events.emit('dataUpdated', {
+      name: 'sessionToken',
+      newValue: token,
+      oldValue: this.apillonSessionToken,
+    });
+
+    this.apillonSessionToken = token;
   }
   // #endregion
 
