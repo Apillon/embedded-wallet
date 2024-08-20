@@ -8,6 +8,7 @@ import WalletApprove, { DisplayedContractParams } from './WalletApprove';
 import { AppParams, Events, UserRejectedRequestError } from '@apillon/wallet-sdk';
 import { TransactionsProvider, useTransactionsContext } from '../contexts/transactions.context';
 import Btn from './Btn';
+import Logo from './Logo';
 
 export type AppProps = {
   /**
@@ -378,7 +379,7 @@ function Modal({
           >
             <div className="fixed inset-0 w-screen overflow-y-auto p-4">
               <div className="flex items-center justify-center min-h-full">
-                <DialogPanel className="relative max-w-lg w-full min-h-[600px] bg-dark p-8 sm:py-16 sm:px-12 border border-brightdark text-offwhite">
+                <DialogPanel className="relative max-w-lg w-full min-h-[600px] bg-dark p-8 sm:p-12 border border-brightdark text-offwhite flex flex-col">
                   <button className="absolute top-2 right-2" onClick={() => setIsOpen(false)}>
                     <svg
                       width="24"
@@ -396,7 +397,23 @@ function Modal({
                     </svg>
                   </button>
 
+                  <div>
+                    <Logo className="mb-6" />
+                  </div>
+
                   {children}
+
+                  <div className="flex-grow"></div>
+
+                  <p className="text-xs mt-6 text-center">
+                    <a
+                      href="https://apillon.io/"
+                      target="_blank"
+                      className="rounded-sm opacity-50 hover:opacity-100"
+                    >
+                      Powered by ©Apillon
+                    </a>
+                  </p>
                 </DialogPanel>
               </div>
             </div>
