@@ -87,7 +87,7 @@ export type UserInfo = {
 };
 
 export type PlainTransactionParams = {
-  strategy: AuthStrategyName;
+  strategy?: AuthStrategyName;
   authData?: AuthData;
   tx: ethers.TransactionLike<ethers.AddressLike>;
   label?: string;

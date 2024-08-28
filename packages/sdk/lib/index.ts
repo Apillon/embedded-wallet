@@ -448,6 +448,18 @@ class EmbeddedWallet {
       abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
     }
 
+    if (!params.strategy) {
+      params.strategy = this.lastAccount.authStrategy;
+    }
+
+    if (!params.authData) {
+      if (params.strategy === 'passkey' && this.lastAccount.username) {
+        params.authData = { username: this.lastAccount.username };
+      } else {
+        abort('AUTHENTICATION_DATA_NOT_PROVIDED');
+      }
+    }
+
     const AC = new ethers.Interface(AccountAbi);
 
     let data = params.data || '';
@@ -476,14 +488,6 @@ class EmbeddedWallet {
             reject,
           });
         });
-      }
-    }
-
-    if (!params.authData) {
-      if (params.strategy === 'passkey' && this.lastAccount.username) {
-        params.authData = { username: this.lastAccount.username };
-      } else {
-        abort('AUTHENTICATION_DATA_NOT_PROVIDED');
       }
     }
 
@@ -525,6 +529,18 @@ class EmbeddedWallet {
     );
 
     params.tx.chainId = chainId;
+
+    if (!params.strategy) {
+      params.strategy = this.lastAccount.authStrategy;
+    }
+
+    if (!params.authData) {
+      if (params.strategy === 'passkey' && this.lastAccount.username) {
+        params.authData = { username: this.lastAccount.username };
+      } else {
+        abort('AUTHENTICATION_DATA_NOT_PROVIDED');
+      }
+    }
 
     /**
      * Get nonce if none provided
@@ -583,10 +599,6 @@ class EmbeddedWallet {
           plain: { ...params, mustConfirm: false, resolve, reject },
         });
       });
-    }
-
-    if (!params.authData) {
-      abort('AUTHENTICATION_DATA_NOT_PROVIDED');
     }
 
     const AC = new ethers.Interface(AccountAbi);
@@ -661,6 +673,18 @@ class EmbeddedWallet {
   async signContractWrite(params: ContractWriteParams) {
     const chainId = this.validateChainId(params.chainId);
 
+    if (!params.strategy) {
+      params.strategy = this.lastAccount.authStrategy;
+    }
+
+    if (!params.authData) {
+      if (params.strategy === 'passkey' && this.lastAccount.username) {
+        params.authData = { username: this.lastAccount.username };
+      } else {
+        abort('AUTHENTICATION_DATA_NOT_PROVIDED');
+      }
+    }
+
     /**
      * Emit 'txApprove' if confirmation is needed.
      * Handle confirmation in UI part of app (call this method again w/o `mustConfirm`).
@@ -674,10 +698,6 @@ class EmbeddedWallet {
           contractWrite: { ...params, mustConfirm: false, resolve, reject },
         });
       });
-    }
-
-    if (!params.authData) {
-      abort('AUTHENTICATION_DATA_NOT_PROVIDED');
     }
 
     const accountAddresses = await this.getAccountAddress(params.authData!.username);
@@ -716,11 +736,7 @@ class EmbeddedWallet {
      */
     const AC = new ethers.Interface(AccountAbi);
     const data = AC.encodeFunctionData('signEIP155', [tx]);
-    const res = await this.getProxyForStrategy(
-      params.strategy || this.lastAccount.authStrategy,
-      data,
-      params.authData!
-    );
+    const res = await this.getProxyForStrategy(params.strategy, data, params.authData!);
 
     if (res) {
       const [signedTxData] = AC.decodeFunctionResult('signEIP155', res).toArray();
