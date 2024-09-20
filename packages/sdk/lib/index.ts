@@ -357,6 +357,7 @@ class EmbeddedWallet {
             body: JSON.stringify({
               token,
               data: gaslessData,
+              integration_uuid: import.meta.env.VITE_INTEGRATION_UUID
             }),
           }
         )

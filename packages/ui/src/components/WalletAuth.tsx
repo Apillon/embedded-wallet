@@ -290,10 +290,10 @@ function ConfirmEmail({
   function handleInput(e: React.ChangeEvent<HTMLInputElement>, index: number) {
     const input = e.target;
 
-    if (/^[^\d]$/.test(input.value)) {
-      input.value = '';
-      return;
-    }
+    // if (/^[^\d]$/.test(input.value)) {
+    //   input.value = '';
+    //   return;
+    // }
 
     const previousInput = inputRefs[index - 1];
     const nextInput = inputRefs[index + 1];
