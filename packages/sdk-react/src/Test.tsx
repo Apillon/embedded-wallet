@@ -7,7 +7,7 @@ export function Test() {
     <>
       <div>
         <WalletWidget
-          isAuthEmail={false}
+          clientId=""
           defaultNetworkId={1287}
           networks={[
             {

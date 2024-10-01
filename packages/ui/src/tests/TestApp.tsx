@@ -8,10 +8,9 @@ export default function TestApp() {
       <h2>Wallet Widget</h2>
 
       <WalletWidget
+        clientId=""
         // disableAutoBroadcastAfterSign
         // disableDefaultActivatorStyle
-        isAuthEmail={false}
-        isEmailConfirm={false}
         defaultNetworkId={1287}
         networks={[
           {

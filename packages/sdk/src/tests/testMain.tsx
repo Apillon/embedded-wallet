@@ -4,6 +4,7 @@ import TestApp from './TestApp.tsx';
 import { initializeOnWindow } from '../../lib/utils.ts';
 
 initializeOnWindow({
+  clientId: '',
   defaultNetworkId: 1287,
   networkConfig: {
     1287: {

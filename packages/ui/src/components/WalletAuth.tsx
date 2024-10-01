@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { getEmbeddedWallet, AuthStrategyName, abort } from '@apillon/wallet-sdk';
+import { getEmbeddedWallet, AuthStrategyName } from '@apillon/wallet-sdk';
 import { useWalletContext } from '../contexts/wallet.context';
 import Btn from './Btn';
 import { AppProps } from './WalletWidget';
@@ -7,22 +7,7 @@ import WalletError from './WalletError';
 
 export default function WalletAuth({
   authFormPlaceholder = 'your e-mail@email.com',
-  isAuthEmail = true,
-  isEmailConfirm = true,
-  sessionToken,
-  onEmailConfirmRequest,
-  onEmailConfirm,
-  onGetApillonSessionToken,
-}: Pick<
-  AppProps,
-  | 'authFormPlaceholder'
-  | 'isAuthEmail'
-  | 'isEmailConfirm'
-  | 'sessionToken'
-  | 'onEmailConfirmRequest'
-  | 'onEmailConfirm'
-  | 'onGetApillonSessionToken'
->) {
+}: Pick<AppProps, 'authFormPlaceholder'>) {
   const { dispatch, defaultNetworkId, handleError } = useWalletContext();
 
   const [username, setUsername] = useState('');
@@ -57,53 +42,27 @@ export default function WalletAuth({
           });
         }
       } else {
-        if (isEmailConfirm && onEmailConfirmRequest) {
-          /**
-           * Register with email confirmation
-           * 1. Send email
-           * 2. Enter code
-           * 3. Setup passkey
-           */
-          await onEmailConfirmRequest(username);
-          setIsCodeScreen(true);
-        } else if (isEmailConfirm && (sessionToken || onGetApillonSessionToken)) {
-          /**
-           * Apillon email confirmation
-           */
-          const token = onGetApillonSessionToken ? await onGetApillonSessionToken() : sessionToken;
-
-          console.log(token);
-
-          if (!token) {
-            abort('INVALID_APILLON_SESSION_TOKEN');
-            console.log('thrown?');
+        /**
+         * Apillon email confirmation
+         */
+        const res = await fetch(
+          `${import.meta.env.VITE_APILLON_BASE_URL ?? 'https://api.apillon.io'}/embedded-wallet/otp/generate`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: username,
+            }),
           }
+        );
 
-          const res = await fetch(
-            `${import.meta.env.VITE_APILLON_BASE_URL ?? 'https://api.apillon.io'}/embedded-wallet/otp/generate`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                token,
-                email: username,
-              }),
-            }
-          );
+        console.log(res);
 
-          console.log(res);
-
-          if (!res.ok || res.status >= 400) {
-            throw new Error('Could not send confirmation email');
-          }
-
-          setIsCodeScreen(true);
-        } else {
-          /**
-           * Just setup passkey
-           */
-          startRegister();
+        if (!res.ok || res.status >= 400) {
+          throw new Error('Could not send confirmation email');
         }
+
+        setIsCodeScreen(true);
       }
     } catch (e) {
       handleError(e);
@@ -160,9 +119,7 @@ export default function WalletAuth({
   if (isCodeSubmitted) {
     return (
       <div className="text-center">
-        <h2 className="mb-12">
-          {onEmailConfirmRequest ? 'Email succesfully confirmed.' : 'Welcome'}
-        </h2>
+        <h2 className="mb-12">Email succesfully confirmed.</h2>
 
         <p className="text-xl mb-12">Passkey configuration will now start.</p>
 
@@ -182,10 +139,6 @@ export default function WalletAuth({
           isCodeSubmitted={isCodeSubmitted}
           loading={loading}
           onConfirm={async code => {
-            if (!onEmailConfirm && (!sessionToken || !onGetApillonSessionToken)) {
-              return startRegister();
-            }
-
             setLoading(true);
             handleError();
 
@@ -193,35 +146,22 @@ export default function WalletAuth({
               /**
                * Code check
                */
-              if (onEmailConfirm) {
-                await onEmailConfirm(username, code);
-              } else if (sessionToken || onGetApillonSessionToken) {
-                const token = onGetApillonSessionToken
-                  ? await onGetApillonSessionToken()
-                  : sessionToken;
+              const { data } = await (
+                await fetch(
+                  `${import.meta.env.VITE_APILLON_BASE_URL ?? 'https://api.apillon.io'}/embedded-wallet/otp/validate`,
+                  {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      email: username,
+                      code,
+                    }),
+                  }
+                )
+              ).json();
 
-                if (!token) {
-                  abort('INVALID_APILLON_SESSION_TOKEN');
-                }
-
-                const { data } = await (
-                  await fetch(
-                    `${import.meta.env.VITE_APILLON_BASE_URL ?? 'https://api.apillon.io'}/embedded-wallet/otp/validate`,
-                    {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        token,
-                        email: username,
-                        code,
-                      }),
-                    }
-                  )
-                ).json();
-
-                if (!data) {
-                  throw new Error('Verification code is not valid.');
-                }
+              if (!data) {
+                throw new Error('Verification code is not valid.');
               }
 
               setIsCodeSubmitted(true);
@@ -245,7 +185,7 @@ export default function WalletAuth({
 
       <form onSubmit={ev => onAuth(ev)}>
         <input
-          type={isAuthEmail ? 'email' : 'text'}
+          type="email"
           placeholder={authFormPlaceholder}
           value={username}
           className="w-full mb-8"

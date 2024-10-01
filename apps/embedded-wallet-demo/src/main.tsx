@@ -13,6 +13,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 
 setTimeout(() => {
   initializeApp('#wallet', {
+    clientId: '',
     defaultNetworkId: 1287,
     networks: [
       {
@@ -34,20 +35,5 @@ setTimeout(() => {
         explorerUrl: 'https://www.oklink.com/amoy',
       },
     ],
-
-    onGetApillonSessionToken: async () => {
-      try {
-        const tokenRes = await (
-          await fetch(`http://localhost:3000/session-token`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-          })
-        ).json();
-
-        return tokenRes.data.token;
-      } catch (e) {
-        console.error(e);
-      }
-    },
   });
 }, 5);

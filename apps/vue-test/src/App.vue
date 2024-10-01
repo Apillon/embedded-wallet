@@ -6,7 +6,7 @@ import Test from './Test.vue';
 <template>
   <div>
     <WalletWidget
-      :isAuthEmail="false"
+      clientId=""
       :defaultNetworkId="1287"
       :networks="[
         {

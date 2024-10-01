@@ -16,6 +16,11 @@ export type SignatureCallback = (
 
 export type AppParams = {
   /**
+   * The Apillon integration UUID, obtained from the Apillon Developer Console
+   */
+  clientId: string;
+
+  /**
    * Network ID for network (chain) selected on first use
    */
   defaultNetworkId?: number;
@@ -29,23 +34,6 @@ export type AppParams = {
     ```
    */
   networkConfig?: NetworkConfig;
-
-  /**
-   * Token to be used with Apillon API. (e.g. to generate a signature for contract interaction and to send confirmation emails)
-   *
-   * Be careful that the token will stay valid for entire wallet SDK usage.
-   * If you need to change the token, use 'setSessionToken' method on the wallet object.
-   *
-   * Another option is to use 'onGetApillonSessionToken' callback.
-   */
-  sessionToken?: string;
-
-  /**
-   * A function called when session token is needed for Apillon API. Use this to always ensure a valid token.
-   *
-   * @more sdk/README.md
-   */
-  onGetApillonSessionToken?: () => Promise<string>;
 };
 
 export type AuthData = {

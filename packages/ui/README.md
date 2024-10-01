@@ -10,35 +10,29 @@ There are some UI specific options in addition to all SDK options.
 // Supported networks info, for showing names and links to explorer.
 networks?: { name: string; id: number; rpcUrl: string; explorerUrl: string }[];
 
-// If you want to broadcast the encoded data another way. E.g. via viem/ethers.
+/**
+ * Do not automatically broadcast with SDK after confirming a transaction.
+ *
+ * Useful when using ethers/viem where txs are automatically processed with contract interfaces e.g.
+ */
 disableAutoBroadcastAfterSign?: boolean;
 
-// Leave the "open wallet" button unstyled.
+/**
+ * Remove styles from "open wallet" button
+ */
 disableDefaultActivatorStyle?: boolean;
 
-// Text for login/register input
+/**
+ * Placeholder displayed in input for username/email
+ */
 authFormPlaceholder?: string;
-
-// Set type=email for login/register input
-isAuthEmail?: boolean;
-
-// Skip email confirmation / code check.
-isEmailConfirm?: boolean;
-
-// Executes in auth process, after user enters a valid email. If an error is thrown, the auth process will terminate.
-// Should be used to send a verification code to user.
-// If this is not provided, Apillon service is used.
-onEmailConfirmRequest?: (email: string) => Promise<any>;
-
-// Executes in auth process, during email verification, confirm that entered code is correct.
-// If `onEmailConfirmRequest` is not provided, Apillon service is used.
-onEmailConfirm?: (email: string, code: string) => Promise<any>;
 ```
 
 ```js
 import { initializeApp } from '@apillon/wallet-ui';
 
 initializeApp('#open-wallet-button-selector', {
+  clientId: '',
   disableAutoBroadcastAfterSign: false,
   disableDefaultActivatorStyle: false,
   networks: [

@@ -22,6 +22,10 @@ export function initializeApp(activatorSelector?: string, options?: AppProps) {
     document.body.appendChild(selectedEl);
   }
 
+  if (!options) {
+    options = { clientId: '' };
+  }
+
   ReactDOM.createRoot(selectedEl).render(
     <React.StrictMode>
       <WalletWidget {...options} />

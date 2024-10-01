@@ -26,8 +26,7 @@ class EmbeddedWallet {
   accountManagerContract: WebauthnContract;
   abiCoder = ethers.AbiCoder.defaultAbiCoder();
   events: Emitter<Events>;
-  apillonSessionToken?: string;
-  onGetApillonSessionToken: (() => Promise<string>) | undefined;
+  apillonClientId: string;
 
   defaultNetworkId = 0;
   rpcUrls = {} as { [networkId: number]: string };
@@ -77,8 +76,7 @@ class EmbeddedWallet {
 
     this.events = mitt<Events>();
 
-    this.onGetApillonSessionToken = params?.onGetApillonSessionToken;
-    this.apillonSessionToken = params?.sessionToken;
+    this.apillonClientId = params?.clientId || '';
 
     /**
      * Provider connection events
@@ -326,28 +324,19 @@ class EmbeddedWallet {
 
   // #region Auth helpers
   /**
-   * Default handler for getting signature.
+   * Handler for getting signature.
    *
-   * `sessionToken` or `onGetApillonSessionToken` param must be provided to authenticate
-   * with the signature generating endpoint.
+   * The request is limited to whitelisted domains determined by client integration ID.
    */
   async getApillonSignature(
     gaslessData: Parameters<SignatureCallback>[0]
   ): ReturnType<SignatureCallback> {
-    if (!this.onGetApillonSessionToken) {
-      abort('NO_APILLON_SESSION_TOKEN_CALLBACK');
+    if (!this.apillonClientId) {
+      abort('NO_APILLON_CLIENT_ID');
       return { signature: '', gasLimit: 0, timestamp: 0 };
     }
 
     try {
-      const token = !!this.onGetApillonSessionToken
-        ? await this.onGetApillonSessionToken()
-        : this.apillonSessionToken;
-
-      if (!token) {
-        abort('INVALID_APILLON_SESSION_TOKEN');
-      }
-
       const { data } = await (
         await fetch(
           `${import.meta.env.VITE_APILLON_BASE_URL ?? 'https://api.apillon.io'}/embedded-wallet/signature`,
@@ -355,9 +344,8 @@ class EmbeddedWallet {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              token,
               data: gaslessData,
-              integration_uuid: import.meta.env.VITE_INTEGRATION_UUID
+              integration_uuid: this.apillonClientId,
             }),
           }
         )
@@ -430,16 +418,6 @@ class EmbeddedWallet {
       this.waitForAccountResolver = resolve;
       this.events.emit('providerRequestAccounts', resolve);
     });
-  }
-
-  setSessionToken(token: string) {
-    this.events.emit('dataUpdated', {
-      name: 'sessionToken',
-      newValue: token,
-      oldValue: this.apillonSessionToken,
-    });
-
-    this.apillonSessionToken = token;
   }
   // #endregion
 

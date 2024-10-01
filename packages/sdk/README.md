@@ -21,6 +21,11 @@ Initialize the class once by using `initializeOnWindow()` utility, with optional
 
 ```ts
 /**
+ * The Apillon integration UUID, obtained from the Apillon Developer Console
+ */
+clientId: string;
+
+/**
  * Network ID for network (chain) selected on first use
  */
 defaultNetworkId?: number;
@@ -29,51 +34,9 @@ defaultNetworkId?: number;
  * Configuration of available networks. Oasis Sapphire is always included (ids 23294 and 23295)
 */
 networkConfig?: NetworkConfig;
-
-/**
- * Token to be used with Apillon API. (e.g. to generate a signature for contract interaction and to send confirmation emails)
- *
- * Be careful that the token will stay valid for entire wallet SDK usage.
- * If you need to change the token, use 'setSessionToken' method on the wallet object.
- *
- * Another option is to use 'onGetApillonSessionToken' callback.
- */
-sessionToken?: string;
-
-/**
-* Provide the Apillon session token to be used with Apillon API to generate a signature for contract interaction.
-*
-* @more sdk/README.md
-*/
-onGetApillonSessionToken?: () => Promise<string>;
 ```
 
 The class instance is then available on window (`embeddedWallet`) and can be obtained with the `getEmbeddedWallet()` utility.
-
-### onGetApillonSessionToken
-
-[Apillon](https://api.apillon.io/) is used for generating the signature. However the Apillon backend needs to receive a session token from the dApp. This token can be provided with `onGetApillonSessionToken`.
-
-```ts
-{
-  ...
-  onGetApillonSessionToken: async () => {
-    try {
-      const tokenRes = await (
-        await fetch(`http://localhost:3000/session-token`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-        })
-      ).json();
-
-      return tokenRes.data.token;
-    } catch (e) {
-      console.error(e);
-    }
-  },
-  ...
-}
-```
 
 ### Events
 
@@ -235,6 +198,7 @@ A default wallet UI can be added by using `initializeApp()`. This includes a rea
 import { initializeApp } from '@apillon/wallet-ui';
 
 initializeApp('#wallet', {
+  clientId: '',
   defaultNetworkId: 1287,
   networks: [
     {

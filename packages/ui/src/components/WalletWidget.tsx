@@ -13,6 +13,8 @@ import Logo from './Logo';
 export type AppProps = {
   /**
    * Configuration of available networks. Oasis Sapphire is always included (ids 23294 and 23295).
+   * Gets parsed to `networkConfig` and used in SDK in `wallet.context.tsx`.
+   * 
    * @example
    ```ts
     [
@@ -43,34 +45,6 @@ export type AppProps = {
    * Placeholder displayed in input for username/email
    */
   authFormPlaceholder?: string;
-
-  /**
-   * Use email validation on input for username/email
-   * @default true
-   */
-  isAuthEmail?: boolean;
-
-  /**
-   * Skip email confirmation / code check.
-   * @default true
-   */
-  isEmailConfirm?: boolean;
-
-  /**
-   * Executes in auth process, after user enters a valid email. If an error is thrown, the auth process will terminate.
-   *
-   * Should be used to send a verification code to user.
-   *
-   * If this is not provided, Apillon service is used.
-   */
-  onEmailConfirmRequest?: (email: string) => Promise<any>;
-
-  /**
-   * Executes in auth process, during email verification, confirm that entered code is correct.
-   *
-   * If `onEmailConfirmRequest` is not provided, Apillon service is used.
-   */
-  onEmailConfirm?: (email: string, code: string) => Promise<any>;
 } & AppParams;
 
 function Wallet({
