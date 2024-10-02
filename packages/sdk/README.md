@@ -17,7 +17,7 @@ Typescript support provided with [vite-plugin-dts](https://github.com/qmhc/vite-
 
 SDK is centered around the `EmbeddedWallet` class. This class exposes methods for working with Oasis Sapphire chain authentication.
 
-Initialize the class once by using `initializeOnWindow()` utility, with optional configuration:
+Initialize the class once by using `EmbeddedWalletSDK()` utility, with optional configuration:
 
 ```ts
 /**
@@ -33,7 +33,7 @@ defaultNetworkId?: number;
 /**
  * Configuration of available networks. Oasis Sapphire is always included (ids 23294 and 23295)
 */
-networkConfig?: NetworkConfig;
+networks?: Network[];
 ```
 
 The class instance is then available on window (`embeddedWallet`) and can be obtained with the `getEmbeddedWallet()` utility.
@@ -192,12 +192,12 @@ const testContract = getContract({
 
 ## Wallet UI
 
-A default wallet UI can be added by using `initializeApp()`. This includes a react app that handles logged in state and transaction confirmations etc.
+A default wallet UI can be added by using `EmbeddedWalletUI()`. This includes a react app that handles logged in state and transaction confirmations etc.
 
 ```ts
-import { initializeApp } from '@apillon/wallet-ui';
+import { EmbeddedWalletUI } from '@apillon/wallet-ui';
 
-initializeApp('#wallet', {
+EmbeddedWalletUI('#wallet', {
   clientId: '',
   defaultNetworkId: 1287,
   networks: [

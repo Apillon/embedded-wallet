@@ -7,7 +7,7 @@ import { AppParams } from './types';
 /**
  * Global wallet object.
  */
-export function initializeOnWindow(params?: AppParams) {
+export function EmbeddedWalletSDK(params?: AppParams) {
   if (typeof window !== 'undefined') {
     window[WindowId] = new EmbeddedWallet(params);
     return window[WindowId];

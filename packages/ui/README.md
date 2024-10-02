@@ -2,7 +2,7 @@
 
 This package provides default UI for showing the state of connected account and confirmations on events.
 
-Use `initializeApp()` to initialize SDK and the UI. The UI is done with React and HeadlessUI (tailwind).
+Use `EmbeddedWalletUI()` to initialize SDK and the UI. The UI is done with React and HeadlessUI (tailwind).
 
 There are some UI specific options in addition to all SDK options.
 
@@ -29,9 +29,9 @@ authFormPlaceholder?: string;
 ```
 
 ```js
-import { initializeApp } from '@apillon/wallet-ui';
+import { EmbeddedWalletUI } from '@apillon/wallet-ui';
 
-initializeApp('#open-wallet-button-selector', {
+EmbeddedWalletUI('#open-wallet-button-selector', {
   clientId: '',
   disableAutoBroadcastAfterSign: false,
   disableDefaultActivatorStyle: false,

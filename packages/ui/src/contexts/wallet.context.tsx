@@ -2,15 +2,13 @@ import { ReactNode, createContext, useContext, useEffect, useReducer, useState }
 import {
   AppParams,
   AuthStrategyName,
-  NetworkConfig,
   ErrorMessages,
   WebStorageKeys,
   EmbeddedWallet,
-  initializeOnWindow,
+  EmbeddedWalletSDK,
   SapphireMainnet,
+  Network,
 } from '@apillon/wallet-sdk';
-
-export type Network = { name: string; id: number; rpcUrl: string; explorerUrl: string };
 
 export type WalletScreens =
   | 'main'
@@ -155,19 +153,13 @@ function WalletProvider({
       let w = undefined as EmbeddedWallet | undefined;
 
       if (networks && networks.length) {
-        w = initializeOnWindow({
+        w = EmbeddedWalletSDK({
           ...restOfParams,
+          networks,
           defaultNetworkId: state.networkId || defaultNetworkId,
-          networkConfig: networks.reduce((acc, x) => {
-            acc[x.id] = {
-              rpcUrl: x.rpcUrl,
-              explorerUrl: x.explorerUrl,
-            };
-            return acc;
-          }, {} as NetworkConfig),
         });
       } else {
-        w = initializeOnWindow();
+        w = EmbeddedWalletSDK();
       }
 
       if (w) {

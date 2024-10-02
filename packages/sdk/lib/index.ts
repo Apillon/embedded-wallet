@@ -67,10 +67,10 @@ class EmbeddedWallet {
 
     this.defaultNetworkId = params?.defaultNetworkId || this.defaultNetworkId;
 
-    if (params?.networkConfig) {
-      for (const k in params.networkConfig) {
-        this.rpcUrls[k] = params.networkConfig[k].rpcUrl;
-        this.explorerUrls[k] = params.networkConfig[k].explorerUrl;
+    if (params?.networks) {
+      for (const ntw of params.networks) {
+        this.rpcUrls[ntw.id] = ntw.rpcUrl;
+        this.explorerUrls[ntw.id] = ntw.explorerUrl;
       }
     }
 

@@ -1,5 +1,5 @@
 import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react';
-import { Network, WalletProvider, useWalletContext } from '../contexts/wallet.context';
+import { WalletProvider, useWalletContext } from '../contexts/wallet.context';
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import WalletAuth from './WalletAuth';
 import WalletMain from './WalletMain';
@@ -11,24 +11,6 @@ import Btn from './Btn';
 import Logo from './Logo';
 
 export type AppProps = {
-  /**
-   * Configuration of available networks. Oasis Sapphire is always included (ids 23294 and 23295).
-   * Gets parsed to `networkConfig` and used in SDK in `wallet.context.tsx`.
-   * 
-   * @example
-   ```ts
-    [
-      {
-        name: 'Moonbeam Testnet',
-        id: 1287,
-        rpcUrl: 'https://rpc.testnet.moonbeam.network',
-        explorerUrl: 'https://moonbase.moonscan.io',
-      }
-    ]
-   ```
-   */
-  networks?: Network[];
-
   /**
    * Do not automatically broadcast with SDK after confirming a transaction.
    *

@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
-import { initializeApp } from '@apillon/wallet-ui';
+import { EmbeddedWalletUI } from '@apillon/wallet-ui';
 
 import './index.css';
 
@@ -12,7 +12,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 );
 
 setTimeout(() => {
-  initializeApp('#wallet', {
+  EmbeddedWalletUI('#wallet', {
     clientId: '',
     defaultNetworkId: 1287,
     networks: [

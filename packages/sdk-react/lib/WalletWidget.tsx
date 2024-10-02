@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { initializeApp, AppProps } from '@apillon/wallet-ui';
+import { EmbeddedWalletUI, AppProps } from '@apillon/wallet-ui';
 
 export function WalletWidget({ className, ...params }: AppProps & { className?: string }) {
   const initialized = useRef(false);
@@ -12,7 +12,7 @@ export function WalletWidget({ className, ...params }: AppProps & { className?: 
 
       initialized.current = true;
 
-      initializeApp('#embedded-wallet-activator-react', params);
+      EmbeddedWalletUI('#embedded-wallet-activator-react', params);
     }, 5);
   }, []);
 

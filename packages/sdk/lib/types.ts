@@ -8,7 +8,7 @@ const wacAbi = parseAbi(AccountManagerAbi);
 
 export type WebauthnContract = TypedContract<typeof wacAbi>;
 
-export type NetworkConfig = { [networkId: number]: { rpcUrl: string; explorerUrl: string } };
+export type Network = { name: string; id: number; rpcUrl: string; explorerUrl: string };
 
 export type SignatureCallback = (
   gaslessData: string
@@ -30,10 +30,17 @@ export type AppParams = {
    * 
    * @example
     ```ts 
-    { 1287: { rpcUrl: 'https://rpc.testnet.moonbeam.network', explorerUrl: 'https://moonbase.moonscan.io' } }
+    [
+      {
+        name: 'Moonbeam Testnet',
+        id: 1287,
+        rpcUrl: 'https://rpc.testnet.moonbeam.network',
+        explorerUrl: 'https://moonbase.moonscan.io',
+      }
+    ]
     ```
    */
-  networkConfig?: NetworkConfig;
+  networks?: Network[];
 };
 
 export type AuthData = {
