@@ -14,6 +14,7 @@ export default function WalletAuth({
   const [loading, setLoading] = useState(false);
   const [isCodeScreen, setIsCodeScreen] = useState(false);
   const [isCodeSubmitted, setIsCodeSubmitted] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(false);
 
   async function onAuth(ev: React.FormEvent<HTMLFormElement>) {
     ev.preventDefault();
@@ -42,33 +43,43 @@ export default function WalletAuth({
           });
         }
       } else {
-        /**
-         * Apillon email confirmation
-         */
-        const res = await fetch(
-          `${import.meta.env.VITE_APILLON_BASE_URL ?? 'https://api.apillon.io'}/embedded-wallet/otp/generate`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email: username,
-            }),
-          }
-        );
-
-        console.log(res);
-
-        if (!res.ok || res.status >= 400) {
-          throw new Error('Could not send confirmation email');
+        if (await sendConfirmationEmail()) {
+          setIsCodeScreen(true);
         }
-
-        setIsCodeScreen(true);
       }
     } catch (e) {
       handleError(e);
     }
 
     setLoading(false);
+  }
+
+  async function sendConfirmationEmail() {
+    try {
+      /**
+       * Apillon email confirmation
+       */
+      const res = await fetch(
+        `${import.meta.env.VITE_APILLON_BASE_URL ?? 'https://api.apillon.io'}/embedded-wallet/otp/generate`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: username,
+          }),
+        }
+      );
+
+      console.log(res);
+
+      if (!res.ok || res.status >= 400) {
+        throw new Error('Could not send confirmation email');
+      }
+
+      return true;
+    } catch (e) {
+      handleError(e);
+    }
   }
 
   async function startRegister() {
@@ -136,8 +147,8 @@ export default function WalletAuth({
     return (
       <>
         <ConfirmEmail
-          isCodeSubmitted={isCodeSubmitted}
           loading={loading}
+          resendCooldown={resendCooldown}
           onConfirm={async code => {
             setLoading(true);
             handleError();
@@ -173,7 +184,19 @@ export default function WalletAuth({
               setLoading(false);
             }
           }}
+          onSendAgain={async () => {
+            setLoading(true);
+            handleError();
+
+            if (await sendConfirmationEmail()) {
+              setResendCooldown(true);
+              setTimeout(() => setResendCooldown(false), 30000);
+            }
+
+            setLoading(false);
+          }}
         />
+
         <WalletError show className="mt-6" />
       </>
     );
@@ -204,11 +227,14 @@ export default function WalletAuth({
 
 function ConfirmEmail({
   loading,
+  resendCooldown,
   onConfirm,
+  onSendAgain,
 }: {
-  isCodeSubmitted: boolean;
   loading: boolean;
+  resendCooldown: boolean;
   onConfirm: (code: string) => void;
+  onSendAgain: () => void;
 }) {
   const [code, setCode] = useState('');
 
@@ -313,7 +339,11 @@ function ConfirmEmail({
         ))}
       </div>
 
-      <Btn disabled={loading}>Send again</Btn>
+      <Btn disabled={loading || resendCooldown} onClick={() => onSendAgain()}>
+        Send again
+      </Btn>
+
+      {!!resendCooldown && <p className="mt-2">Email sent!</p>}
     </div>
   );
 }
