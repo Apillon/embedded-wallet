@@ -13,7 +13,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 
 setTimeout(() => {
   EmbeddedWalletUI('#wallet', {
-    clientId: '',
+    clientId: 'YOUR INTEGRATION UUID HERE',
     defaultNetworkId: 1287,
     networks: [
       {

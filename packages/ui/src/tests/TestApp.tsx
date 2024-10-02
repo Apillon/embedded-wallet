@@ -8,7 +8,7 @@ export default function TestApp() {
       <h2>Wallet Widget</h2>
 
       <WalletWidget
-        clientId=""
+        clientId="YOUR INTEGRATION UUID HERE"
         // disableAutoBroadcastAfterSign
         // disableDefaultActivatorStyle
         defaultNetworkId={1287}

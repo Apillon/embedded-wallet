@@ -198,7 +198,7 @@ A default wallet UI can be added by using `EmbeddedWalletUI()`. This includes a 
 import { EmbeddedWalletUI } from '@apillon/wallet-ui';
 
 EmbeddedWalletUI('#wallet', {
-  clientId: '',
+  clientId: 'YOUR INTEGRATION UUID HERE',
   defaultNetworkId: 1287,
   networks: [
     {

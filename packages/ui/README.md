@@ -32,7 +32,7 @@ authFormPlaceholder?: string;
 import { EmbeddedWalletUI } from '@apillon/wallet-ui';
 
 EmbeddedWalletUI('#open-wallet-button-selector', {
-  clientId: '',
+  clientId: 'YOUR INTEGRATION UUID HERE',
   disableAutoBroadcastAfterSign: false,
   disableDefaultActivatorStyle: false,
   networks: [

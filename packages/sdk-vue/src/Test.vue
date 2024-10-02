@@ -8,7 +8,7 @@ const { info } = useAccount();
 <template>
   <div>
     <WalletWidget
-      clientId=""
+      clientId="YOUR INTEGRATION UUID HERE"
       :defaultNetworkId="1287"
       :networks="[
         {

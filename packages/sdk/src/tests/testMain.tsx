@@ -4,7 +4,7 @@ import TestApp from './TestApp.tsx';
 import { EmbeddedWalletSDK } from '../../lib/utils.ts';
 
 EmbeddedWalletSDK({
-  clientId: '',
+  clientId: 'YOUR INTEGRATION UUID HERE',
   defaultNetworkId: 1287,
   networks: [
     {
