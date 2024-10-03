@@ -8,6 +8,7 @@ import {
   EmbeddedWalletSDK,
   SapphireMainnet,
   Network,
+  SapphireTestnet,
 } from '@apillon/wallet-sdk';
 
 export type WalletScreens =
@@ -90,23 +91,21 @@ function WalletProvider({
   networks?: Network[];
 } & AppParams) {
   networks = [
-    {
-      name: 'Oasis Sapphire',
-      id: SapphireMainnet,
-      rpcUrl: 'https://sapphire.oasis.io',
-      explorerUrl: 'https://explorer.oasis.io/mainnet/sapphire',
-    },
+    import.meta.env.VITE_SAPPHIRE_TESTNET
+      ? {
+          name: 'Sapphire Testnet',
+          id: SapphireTestnet,
+          rpcUrl: 'https://testnet.sapphire.oasis.io',
+          explorerUrl: 'https://explorer.oasis.io/testnet/sapphire',
+        }
+      : {
+          name: 'Oasis Sapphire',
+          id: SapphireMainnet,
+          rpcUrl: 'https://sapphire.oasis.io',
+          explorerUrl: 'https://explorer.oasis.io/mainnet/sapphire',
+        },
     ...networks,
   ];
-  // [
-  //   {
-  //     name: 'Sapphire Testnet',
-  //     id: SapphireTestnet,
-  //     rpcUrl: 'https://testnet.sapphire.oasis.io',
-  //     explorerUrl: 'https://explorer.oasis.io/testnet/sapphire',
-  //   },
-  //   ...networks,
-  // ]
 
   const [state, dispatch] = useReducer(reducer, initialState(defaultNetworkId || networks[0].id));
   const [initialized, setInitialized] = useState(false);

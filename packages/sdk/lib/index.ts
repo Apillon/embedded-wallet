@@ -542,14 +542,25 @@ class EmbeddedWallet {
      * Calculate gasPrice if missing
      */
     if (!params.tx.gasPrice) {
-      params.tx.gasPrice = (
-        await this.getRpcProviderForChainId(params.tx.chainId).getFeeData()
-      ).gasPrice;
+      const feeData = await this.getRpcProviderForChainId(params.tx.chainId).getFeeData();
+
+      params.tx.gasPrice = feeData.gasPrice;
+
+      if (feeData.maxPriorityFeePerGas) {
+        params.tx.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
+      }
+
+      if (feeData.maxFeePerGas) {
+        params.tx.maxFeePerGas = feeData.maxFeePerGas;
+      } else {
+        params.tx.maxFeePerGas =
+          BigInt(feeData.gasPrice || 0) * BigInt(2) + (feeData.maxPriorityFeePerGas || 0n);
+      }
     }
 
-    // Seems like this is needed
     if (!params.tx.gasLimit) {
-      params.tx.gasLimit = 1_000_000;
+      const gas = await this.getRpcProviderForChainId(params.tx.chainId).estimateGas(params.tx);
+      params.tx.gasLimit = !!gas ? Math.floor(Number(gas) * 1.01) : 1_000_000;
     }
 
     /**
@@ -560,7 +571,7 @@ class EmbeddedWallet {
      */
     if (
       (params.tx.type === 2 && !params.tx.value) ||
-      ('value' in params.tx && typeof params.tx.value === 'undefined')
+      ('value' in params.tx && (typeof params.tx.value === 'undefined' || params.tx.value === null))
     ) {
       params.tx.value = 0n;
     }
@@ -704,11 +715,30 @@ class EmbeddedWallet {
     ).populateTransaction({
       from: accountAddresses!.publicAddress,
       to: params.contractAddress,
-      gasLimit: 1_000_000,
       value: 0,
       data: contractData,
     });
-    tx.gasPrice = 20_000_000_000; // 20 gwei
+
+    if (!tx.gasPrice) {
+      const feeData = await this.getRpcProviderForChainId(params.chainId).getFeeData();
+      tx.gasPrice = feeData.gasPrice || 20_000_000_000;
+
+      if (feeData.maxPriorityFeePerGas) {
+        tx.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
+      }
+
+      if (feeData.maxFeePerGas) {
+        tx.maxFeePerGas = feeData.maxFeePerGas;
+      } else {
+        tx.maxFeePerGas =
+          BigInt(feeData.gasPrice || 0) * BigInt(2) + (feeData.maxPriorityFeePerGas || 0n);
+      }
+    }
+
+    if (!tx.gasLimit) {
+      const gas = await this.getRpcProviderForChainId(params.chainId).estimateGas(tx);
+      tx.gasLimit = !!gas ? Math.floor(Number(gas) * 1.01) : 1_000_000;
+    }
 
     /**
      * Encode tx data and authenticate it with selected auth strategy through sapphire "Account Manager"
