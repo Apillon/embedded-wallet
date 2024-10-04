@@ -35,7 +35,7 @@ export default function WalletApprove({
   const preClass = 'bg-offwhite/25 p-3 whitespace-pre-wrap break-all rounded-sm mt-2';
 
   return (
-    <>
+    <div className="mt-2">
       {/* Sign Message */}
       {!!signMessage && (
         <div>
@@ -166,6 +166,6 @@ export default function WalletApprove({
           Use another account
         </button>
       </div>
-    </>
+    </div>
   );
 }

@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react';
-import { EmbeddedWallet, WindowId } from '@apillon/wallet-sdk';
+import {
+  abort,
+  EmbeddedWallet,
+  PlainTransactionParams,
+  SignMessageParams,
+  WindowId,
+} from '@apillon/wallet-sdk';
 
 export function useWallet() {
   const [wallet, setWallet] = useState<EmbeddedWallet>();
@@ -20,7 +26,29 @@ export function useWallet() {
   }
 
   return {
-    wallet,
+    wallet: wallet!,
+
+    signMessage: (message: string, options?: SignMessageParams) =>
+      wallet!.signMessage({
+        message,
+        mustConfirm: true,
+        ...options,
+      }),
+
+    sendTransaction: async (tx: PlainTransactionParams['tx'], options?: PlainTransactionParams) => {
+      const res = await wallet!.signPlainTransaction({
+        tx,
+        mustConfirm: true,
+        ...options,
+      });
+
+      if (!res?.signedTxData) {
+        abort('CANT_GET_SIGNED_TX');
+        return;
+      }
+
+      return await wallet!.broadcastTransaction(res.signedTxData, res.chainId);
+    },
   };
 }
 

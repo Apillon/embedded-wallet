@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { useAccount, useContract } from '@apillon/wallet-vue';
+import { useAccount, useContract, WalletWidget } from '@apillon/wallet-vue';
 import { ERC20Abi } from '@apillon/wallet-sdk';
 
 const { info, getBalance } = useAccount();
@@ -25,10 +25,44 @@ async function sendERC20() {
 
   console.log(txHash);
 }
+
+const clientId = import.meta.env.VITE_CLIENT_ID ?? 'YOUR INTEGRATION UUID HERE';
 </script>
 
 <template>
   <div>
+    <WalletWidget
+      :clientId="clientId"
+      :defaultNetworkId="1287"
+      :networks="[
+        {
+          name: 'Moonbeam Testnet',
+          id: 1287,
+          rpcUrl: 'https://rpc.testnet.moonbeam.network',
+          explorerUrl: 'https://moonbase.moonscan.io',
+        },
+        {
+          name: 'Celo Alfajores Testnet',
+          id: 44787,
+          rpcUrl: 'https://alfajores-forno.celo-testnet.org',
+          explorerUrl: 'https://explorer.celo.org/alfajores',
+        },
+        {
+          name: 'Amoy',
+          id: 80002,
+          rpcUrl: 'https://rpc-amoy.polygon.technology',
+          explorerUrl: 'https://www.oklink.com/amoy',
+        },
+      ]"
+    />
+
+    <div
+      :style="{
+        margin: '16px 0',
+        border: 'solid 1px grey',
+      }"
+    />
+
     <p>username: {{ info.username }}</p>
 
     <p>address: {{ info.address }}</p>

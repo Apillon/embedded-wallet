@@ -164,7 +164,7 @@ function Wallet({
        * Transaction submitted to network
        */
       modalContent = (
-        <div className="text-center">
+        <div className="text-center mt-2">
           <h2 className="mb-6">{approvedData.title}</h2>
 
           {!!approvedData.explorerUrl && (

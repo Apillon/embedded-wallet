@@ -521,6 +521,11 @@ class EmbeddedWallet {
       }
     }
 
+    // Data must be BytesLike
+    if (!params.tx.data) {
+      params.tx.data = '0x';
+    }
+
     /**
      * Get nonce if none provided
      */

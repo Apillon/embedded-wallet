@@ -24,6 +24,7 @@ export const Errors = {
   NO_APILLON_SESSION_TOKEN_CALLBACK: 'NO_APILLON_SESSION_TOKEN_CALLBACK',
   INVALID_APILLON_SESSION_TOKEN: 'INVALID_APILLON_SESSION_TOKEN',
   NO_APILLON_CLIENT_ID: 'NO_APILLON_CLIENT_ID',
+  CANT_GET_SIGNED_TX: 'CANT_GET_SIGNED_TX',
 };
 
 export const ErrorMessages = {
@@ -41,4 +42,5 @@ export const ErrorMessages = {
   [Errors.NO_APILLON_SESSION_TOKEN_CALLBACK]: 'Session token callback must be provided',
   [Errors.INVALID_APILLON_SESSION_TOKEN]: 'Session token is not valid',
   [Errors.NO_APILLON_CLIENT_ID]: 'Client ID is not valid',
+  [Errors.CANT_GET_SIGNED_TX]: 'Could not get signed transaction',
 };

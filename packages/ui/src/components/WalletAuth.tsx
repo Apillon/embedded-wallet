@@ -129,7 +129,7 @@ export default function WalletAuth({
 
   if (isCodeSubmitted) {
     return (
-      <div className="text-center">
+      <div className="text-center mt-2">
         <h2 className="mb-12">Email succesfully confirmed.</h2>
 
         <p className="text-xl mb-12">Passkey configuration will now start.</p>

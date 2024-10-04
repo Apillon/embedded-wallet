@@ -182,6 +182,9 @@ function WalletProvider({
     const w = walletRef || wallet;
 
     if (w && state.address) {
+      // wait a bit for w.defaultNetworkId to finalize
+      await new Promise(resolve => setTimeout(resolve, 10));
+
       try {
         const balance = await w?.getAccountBalance(state.address);
         dispatch({ type: 'setValue', payload: { key: 'balance', value: balance } });
