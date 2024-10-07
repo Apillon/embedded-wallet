@@ -9,6 +9,7 @@ import { AppParams, Events, UserRejectedRequestError } from '@apillon/wallet-sdk
 import { TransactionsProvider, useTransactionsContext } from '../contexts/transactions.context';
 import Btn from './Btn';
 import Logo from './Logo';
+import WalletChainChange from './WalletChainChange';
 
 export type AppProps = {
   /**
@@ -29,12 +30,14 @@ export type AppProps = {
   authFormPlaceholder?: string;
 } & AppParams;
 
+const MODAL_TRANSITION_TIME = 200;
+
 function Wallet({
   disableAutoBroadcastAfterSign = false,
   disableDefaultActivatorStyle = false,
   ...restOfProps
 }: AppProps) {
-  const { state, wallet, setScreen, handleError, reloadUserBalance } = useWalletContext();
+  const { state, wallet, setScreen, handleError, reloadUserBalance, dispatch } = useWalletContext();
   const { dispatch: dispatchTx } = useTransactionsContext();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -46,6 +49,10 @@ function Wallet({
     txHash: '',
     explorerUrl: '',
   });
+  const [targetChain, setTargetChain] = useState({
+    chainId: 0,
+    resolve: (_confirmed: boolean) => {},
+  }); // Open switch chain modal if > 0
 
   const approveParams =
     useRef<Partial<Events['txApprove'] & { signature: Events['signatureRequest'] }>>();
@@ -90,7 +97,13 @@ function Wallet({
     const onDataUpdated = (params: Events['dataUpdated']) => {
       if (params.name === 'defaultNetworkId') {
         reloadUserBalance();
+        dispatch({ type: 'setValue', payload: { key: 'networkId', value: params.newValue } });
       }
+    };
+
+    const onRequestChainChange = (params: Events['requestChainChange']) => {
+      setIsModalOpen(true);
+      setTargetChain(params);
     };
 
     if (wallet) {
@@ -99,6 +112,7 @@ function Wallet({
       wallet.events.on('txSubmitted', onTxSubmittedEvent);
       wallet.events.on('providerRequestAccounts', onProviderRequestAccounts);
       wallet.events.on('dataUpdated', onDataUpdated);
+      wallet.events.on('requestChainChange', onRequestChainChange);
     }
 
     return () => {
@@ -108,12 +122,17 @@ function Wallet({
         wallet.events.off('txSubmitted', onTxSubmittedEvent);
         wallet.events.off('providerRequestAccounts', onProviderRequestAccounts);
         wallet.events.off('dataUpdated', onDataUpdated);
+        wallet.events.off('requestChainChange', onRequestChainChange);
       }
     };
   }, [wallet]);
 
   /**
-   * Reset approve screen if closed
+   * On modal close:
+   * - reset approve screen
+   * - reset chainChange data (targetChain)
+   * - reset account login resolver
+   * - set <WalletMain /> screen back to main
    */
   useEffect(() => {
     if (!isModalOpen) {
@@ -121,11 +140,18 @@ function Wallet({
         closeApproveScreen();
       }
 
+      setTimeout(() => {
+        setTargetChain(t => ({
+          ...t,
+          chainId: 0,
+        }));
+      }, MODAL_TRANSITION_TIME);
+
       if (state.walletScreen !== 'main') {
         // Wait for modal transition
         setTimeout(() => {
           setScreen('main');
-        }, 200);
+        }, MODAL_TRANSITION_TIME);
       }
 
       if (wallet && wallet.waitForAccountResolver) {
@@ -135,7 +161,7 @@ function Wallet({
     }
   }, [isModalOpen]);
 
-  function closeApproveScreen() {
+  function closeApproveScreen(isSuccess = false) {
     setIsModalOpen(false);
 
     // Wait for modal transition
@@ -148,7 +174,17 @@ function Wallet({
         txHash: '',
         explorerUrl: '',
       });
-    }, 200);
+
+      if (!isSuccess) {
+        if (approveParams.current?.contractWrite?.reject) {
+          approveParams.current.contractWrite.reject(new UserRejectedRequestError());
+        } else if (approveParams.current?.plain?.reject) {
+          approveParams.current.plain.reject(new UserRejectedRequestError());
+        } else if (approveParams.current?.signature?.reject) {
+          approveParams.current.signature.reject(new UserRejectedRequestError());
+        }
+      }
+    }, MODAL_TRANSITION_TIME);
   }
 
   let modalContent = <></>;
@@ -158,6 +194,29 @@ function Wallet({
      * Login/register
      */
     modalContent = <WalletAuth {...restOfProps} />;
+  } else if (targetChain.chainId > 0) {
+    modalContent = (
+      <WalletChainChange
+        chainId={targetChain.chainId}
+        onSuccess={() => {
+          targetChain.resolve(true);
+          dispatch({ type: 'setValue', payload: { key: 'networkId', value: targetChain.chainId } });
+
+          if (!!txToConfirm || !!messageToSign || !!contractFunctionData) {
+            setTargetChain(t => ({
+              ...t,
+              chainId: 0,
+            }));
+          } else {
+            setIsModalOpen(false);
+          }
+        }}
+        onDecline={() => {
+          targetChain.resolve(false);
+          setIsModalOpen(false);
+        }}
+      />
+    );
   } else if (!!txToConfirm || !!messageToSign || !!contractFunctionData) {
     if (approvedData.title) {
       /**
@@ -180,7 +239,7 @@ function Wallet({
           )}
 
           <div className="mt-12">
-            <Btn onClick={() => closeApproveScreen()}>Close</Btn>
+            <Btn onClick={() => closeApproveScreen(true)}>Close</Btn>
           </div>
         </div>
       );
@@ -204,7 +263,7 @@ function Wallet({
                     authData: { username: state.username },
                   });
 
-                  closeApproveScreen();
+                  closeApproveScreen(true);
                 } else if (approveParams.current.plain) {
                   const res = await wallet?.signPlainTransaction({
                     ...approveParams.current.plain,
@@ -212,7 +271,7 @@ function Wallet({
                   });
 
                   if (disableAutoBroadcastAfterSign) {
-                    closeApproveScreen();
+                    closeApproveScreen(true);
                   } else if (res) {
                     const { signedTxData, chainId } = res;
                     const res2 = await wallet?.broadcastTransaction(
@@ -234,7 +293,7 @@ function Wallet({
                   });
 
                   if (disableAutoBroadcastAfterSign) {
-                    closeApproveScreen();
+                    closeApproveScreen(true);
                   } else if (res) {
                     const { signedTxData, chainId } = res;
                     const res2 = await wallet?.broadcastTransaction(

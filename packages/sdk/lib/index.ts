@@ -507,6 +507,18 @@ class EmbeddedWallet {
       params?.tx?.chainId ? +params.tx.chainId.toString() || 0 : 0
     );
 
+    if (chainId && chainId !== this.defaultNetworkId) {
+      const isChanged = await new Promise(resolve =>
+        this.events.emit('requestChainChange', { chainId, resolve })
+      );
+
+      if (!isChanged) {
+        return abort('CHAIN_CHANGE_FAILED');
+      }
+
+      this.setDefaultNetworkId(chainId);
+    }
+
     params.tx.chainId = chainId;
 
     if (!params.strategy) {
@@ -517,7 +529,7 @@ class EmbeddedWallet {
       if (params.strategy === 'passkey' && this.lastAccount.username) {
         params.authData = { username: this.lastAccount.username };
       } else {
-        abort('AUTHENTICATION_DATA_NOT_PROVIDED');
+        return abort('AUTHENTICATION_DATA_NOT_PROVIDED');
       }
     }
 
@@ -871,9 +883,9 @@ class EmbeddedWallet {
     /**
      * If no chain specified use default from app params
      */
-    if (!chainId && !!this.defaultNetworkId) {
-      chainId = this.defaultNetworkId;
-    }
+    // if (!chainId && !!this.defaultNetworkId) {
+    //   chainId = this.defaultNetworkId;
+    // }
 
     return chainId;
   }

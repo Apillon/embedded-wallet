@@ -63,6 +63,9 @@ wallet.events.on('txSubmitted', tx => {
 - `dataUpdated`
   Emitted after state data changes, e.g. for keeping track of active account
 
+- `requestChainChange`
+  Emitted when tx chainId is different from defaultNetworkId. Must be resolve()'d to continue with the tx execution.
+
 - `providerRequestAccounts`
   Triggered in 'eth_requestAccounts' provider request handler. Payload is resolver fn that should be invoked when user's account is available (after sign in / register)
 

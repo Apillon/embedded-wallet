@@ -1,6 +1,7 @@
 import WalletWidget from '../components/WalletWidget';
 import TestEIP1193 from './TestEIP1193';
 import TestSign from './TestSign';
+import TestTx from './TestTx';
 
 export default function TestApp() {
   return (
@@ -47,6 +48,13 @@ export default function TestApp() {
       <h2>EIP-1193 requests test</h2>
 
       <TestEIP1193 />
+
+      <br />
+      <br />
+
+      <h2>Transaction tests</h2>
+
+      <TestTx />
     </div>
   );
 }

@@ -147,6 +147,12 @@ export type Events = {
   providerRequestAccounts: (address: string) => void;
 
   /**
+   * Emitted when tx chainId is different from defaultNetworkId.
+   * Must be resolve()'d to continue with the tx execution.
+   */
+  requestChainChange: { chainId: number; resolve: (confirmed: boolean) => void };
+
+  /**
    * Provider event
    * @chainId hex
    */
