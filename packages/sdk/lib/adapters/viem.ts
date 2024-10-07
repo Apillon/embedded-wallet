@@ -1,4 +1,4 @@
-import { toAccount } from 'viem/accounts';
+import { LocalAccount, toAccount } from 'viem/accounts';
 import EmbeddedWallet from '..';
 import { abort, getEmbeddedWallet } from '../utils';
 
@@ -16,11 +16,11 @@ class EmbeddedViemAdapter {
     this.wallet = w!;
   }
 
-  getAccount() {
+  getAccount(): LocalAccount {
     return toAccount({
       address: this.wallet.lastAccount.address,
 
-      signMessage: async ({ message }, mustConfirm = false) => {
+      signMessage: async ({ message }, mustConfirm = true) => {
         const res = await this.wallet.signMessage({
           message: message as any,
           strategy: this.wallet.lastAccount.authStrategy,
@@ -37,7 +37,7 @@ class EmbeddedViemAdapter {
         return '0x';
       },
 
-      signTransaction: async (transaction, _serializer, mustConfirm = false) => {
+      signTransaction: async (transaction, _serializer, mustConfirm = true) => {
         const res = await this.wallet.signPlainTransaction({
           strategy: this.wallet.lastAccount.authStrategy,
           authData: {

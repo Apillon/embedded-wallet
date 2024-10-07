@@ -10,9 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@apillon/wallet-react": "*",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "@apillon/wallet-react": "*"
+    "viem": "^2.21.19"
   },
   "devDependencies": {
     "@apillon/wallet-eslint-config": "*",

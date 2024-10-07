@@ -76,7 +76,7 @@ const WalletContext = createContext<
       setWallet: (wallet: EmbeddedWallet) => void;
       reloadUserBalance: (walletRef?: EmbeddedWallet) => void;
       setScreen: (screen: WalletScreens) => void;
-      handleError: (e?: any) => void;
+      handleError: (e?: any) => string;
     }
   | undefined
 >(undefined);
@@ -214,10 +214,10 @@ function WalletProvider({
         setScreen: (s: WalletScreens) =>
           dispatch({ type: 'setValue', payload: { key: 'walletScreen', value: s } }),
         handleError: (e?: any) => {
+          let msg = '';
+
           if (e) {
             console.error(e);
-
-            let msg = '';
 
             if (e?.name) {
               msg = ErrorMessages[e.name];
@@ -235,7 +235,7 @@ function WalletProvider({
               msg = e.message;
             }
 
-            if (msg) {
+            if (msg && msg !== 'already known') {
               dispatch({
                 type: 'setValue',
                 payload: { key: 'displayedError', value: msg },
@@ -244,6 +244,8 @@ function WalletProvider({
           } else {
             dispatch({ type: 'setValue', payload: { key: 'displayedError', value: '' } });
           }
+
+          return msg;
         },
       }}
     >

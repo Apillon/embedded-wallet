@@ -314,7 +314,12 @@ function Wallet({
                   }
                 }
               } catch (e) {
-                handleError(e);
+                const errMsg = handleError(e);
+
+                // Transaction was already broadcast
+                if (errMsg === 'already known') {
+                  closeApproveScreen(true);
+                }
               }
             }
           }}
