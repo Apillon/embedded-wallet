@@ -43,8 +43,7 @@ export function useWallet() {
       });
 
       if (!res?.signedTxData) {
-        abort('CANT_GET_SIGNED_TX');
-        return;
+        return abort('CANT_GET_SIGNED_TX');
       }
 
       return await wallet!.broadcastTransaction(res.signedTxData, res.chainId);
