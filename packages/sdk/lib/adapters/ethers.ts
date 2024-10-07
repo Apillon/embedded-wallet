@@ -31,7 +31,7 @@ class EmbeddedEthersSigner extends ethers.AbstractSigner<ethers.JsonRpcProvider>
 
   override async signTransaction(
     tx: ethers.TransactionRequest,
-    mustConfirm = false
+    mustConfirm = true
   ): Promise<string> {
     const res = await this.wallet.signPlainTransaction({
       strategy: this.wallet.lastAccount.authStrategy,
@@ -45,7 +45,7 @@ class EmbeddedEthersSigner extends ethers.AbstractSigner<ethers.JsonRpcProvider>
     return res?.signedTxData || '';
   }
 
-  override async signMessage(message: string | Uint8Array, mustConfirm = false): Promise<string> {
+  override async signMessage(message: string | Uint8Array, mustConfirm = true): Promise<string> {
     const res = await this.wallet.signMessage({
       message,
       strategy: this.wallet.lastAccount.authStrategy,
