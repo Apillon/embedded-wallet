@@ -141,6 +141,10 @@ function Wallet({
       }
 
       setTimeout(() => {
+        if (targetChain.chainId !== state.networkId && targetChain.resolve) {
+          targetChain.resolve(false);
+        }
+
         setTargetChain(t => ({
           ...t,
           chainId: 0,

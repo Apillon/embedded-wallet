@@ -507,17 +507,7 @@ class EmbeddedWallet {
       params?.tx?.chainId ? +params.tx.chainId.toString() || 0 : 0
     );
 
-    if (chainId && chainId !== this.defaultNetworkId) {
-      const isChanged = await new Promise(resolve =>
-        this.events.emit('requestChainChange', { chainId, resolve })
-      );
-
-      if (!isChanged) {
-        return abort('CHAIN_CHANGE_FAILED');
-      }
-
-      this.setDefaultNetworkId(chainId);
-    }
+    await this.handleNetworkChange(chainId);
 
     params.tx.chainId = chainId;
 
@@ -680,6 +670,8 @@ class EmbeddedWallet {
   async signContractWrite(params: ContractWriteParams) {
     const chainId = this.validateChainId(params.chainId);
 
+    await this.handleNetworkChange(chainId);
+
     if (!params.strategy) {
       params.strategy = this.lastAccount.authStrategy;
     }
@@ -789,6 +781,8 @@ class EmbeddedWallet {
     const chainId = this.validateChainId(params.chainId);
     const ethProvider = this.getRpcProviderForChainId(chainId);
 
+    await this.handleNetworkChange(chainId);
+
     const contract = new ethers.Contract(params.contractAddress, params.contractAbi, ethProvider);
 
     if (params.contractFunctionValues) {
@@ -868,6 +862,24 @@ class EmbeddedWallet {
     }
 
     return false;
+  }
+
+  /**
+   * Send event requestChainChange, wait for it to resolve.
+   * Throws error if chain was not changed.
+   */
+  async handleNetworkChange(chainId?: number) {
+    if (chainId && chainId !== this.defaultNetworkId) {
+      const isChanged = await new Promise(resolve =>
+        this.events.emit('requestChainChange', { chainId, resolve })
+      );
+
+      if (!isChanged) {
+        return abort('CHAIN_CHANGE_FAILED');
+      }
+
+      this.setDefaultNetworkId(chainId);
+    }
   }
 
   /**
