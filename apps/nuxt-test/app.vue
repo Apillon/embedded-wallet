@@ -1,19 +1,14 @@
 <script lang="ts" setup>
 import { useAccount, WalletWidget } from '@apillon/wallet-vue';
-import TestSdk from './TestSdk.vue';
-import TestViem from './TestViem.vue';
-import TestEthers6 from './TestEthers6.vue';
-import TestEthers5 from './TestEthers5.vue';
+import './public/style.css';
 
 const { info } = useAccount();
-
-const clientId = import.meta.env.VITE_CLIENT_ID ?? 'YOUR INTEGRATION UUID HERE';
 </script>
 
 <template>
   <div>
     <WalletWidget
-      :clientId="clientId"
+      :clientId="$config.public.CLIENT_ID"
       :defaultNetworkId="1287"
       :networks="[
         {
@@ -65,5 +60,7 @@ const clientId = import.meta.env.VITE_CLIENT_ID ?? 'YOUR INTEGRATION UUID HERE';
 
       <TestEthers5 />
     </template>
+
+    <NuxtWelcome />
   </div>
 </template>
