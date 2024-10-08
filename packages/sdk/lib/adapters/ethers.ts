@@ -97,6 +97,28 @@ class EmbeddedEthersSigner extends ethers.AbstractSigner<ethers.JsonRpcProvider>
     console.error('EmbeddedEthersSigner#signTypedData Not implemented', { domain, types, value });
     return '';
   }
+
+  /**
+   * @deprecated v5 signer properties
+   */
+  _isSigner = true;
+  async getBalance(blockTag?: ethers.BlockTag) {
+    return await this.provider.getBalance(await this.getAddress(), blockTag);
+  }
+  async getTransactionCount(blockTag?: ethers.BlockTag) {
+    return await this.provider.getTransactionCount(await this.getAddress(), blockTag);
+  }
+  async getChainId() {
+    const network = await this.provider.getNetwork();
+    return network.chainId;
+  }
+  async getGasPrice() {
+    const feeData = await this.provider.getFeeData();
+    return feeData.gasPrice;
+  }
+  async getFeeData() {
+    return await this.provider.getFeeData();
+  }
 }
 
 export { EmbeddedEthersSigner };

@@ -17,10 +17,9 @@ export default function TestSdk() {
   return (
     <div
       style={{
-        display: 'flex',
+        display: 'grid',
         gap: '8px',
-        flexWrap: 'wrap',
-        justifyContent: 'center',
+        gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
       }}
     >
       <button

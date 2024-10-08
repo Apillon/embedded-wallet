@@ -2,6 +2,7 @@ import { useAccount, WalletWidget } from '@apillon/wallet-react';
 import TestSdk from './TestSdk';
 import TestViem from './TestViem';
 import TestEthers6 from './TestEthers6';
+import TestEthers5 from './TestEthers5';
 
 export default function Test() {
   const { username, address } = useAccount();
@@ -55,6 +56,10 @@ export default function Test() {
       <br />
 
       {!!address && <TestEthers6 />}
+
+      <br />
+
+      {!!address && <TestEthers5 />}
     </div>
   );
 }

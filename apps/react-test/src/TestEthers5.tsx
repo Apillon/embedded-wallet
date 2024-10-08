@@ -1,70 +1,90 @@
+import { useWallet } from '@apillon/wallet-react';
+import { EmbeddedEthersSigner } from '@apillon/wallet-sdk';
+import { ethers } from 'ethers5';
+
 export default function TestEthers5() {
+  const { wallet } = useWallet();
+
+  if (!wallet) {
+    return;
+  }
+
+  const signer = new EmbeddedEthersSigner(wallet.getRpcProviderForChainId(1287));
+
+  const contract = new ethers.Contract(
+    '0x67b9DA16d0Adf2dF05F0564c081379479d0448f8',
+    [
+      'function claim() public',
+      'function balanceOf(address) view returns (uint256)',
+      'function transfer(address to, uint256 amount) public returns (bool)',
+    ],
+    signer as any
+  );
+
   return (
     <div
       style={{
-        display: 'flex',
+        display: 'grid',
         gap: '8px',
-        flexWrap: 'wrap',
-        justifyContent: 'center',
+        gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
       }}
     >
-      {/* <button
+      <button
         onClick={async () => {
-          console.log(await signMessage('test massage'));
+          console.log(await signer.signMessage('test massage'));
         }}
       >
-        (SDK) Sign message
-      </button> */}
+        (ethers 5) Sign message
+      </button>
 
-      {/* <button
+      <button
         onClick={async () => {
-          console.log(await getBalance());
+          console.log(await signer.provider.getBalance(await signer.getAddress()));
         }}
       >
-        (SDK) Get native balance
-      </button> */}
+        (ethers 5) Get native balance
+      </button>
 
-      {/* <button
+      <button
         onClick={async () => {
-          const res = await sendTransaction({
+          const res = await signer.sendTransaction({
             to: '0x700cebAA997ecAd7B0797f8f359C621604Cce6Bf',
-            value: '10000000',
+            value: ethers.utils.parseUnits('0.01', 18).toBigInt(),
           });
           console.log(res);
         }}
       >
-        (SDK) Transfer native balance
-      </button> */}
+        (ethers 5) Transfer native balance
+      </button>
 
-      {/* <button
+      <button
         onClick={async () => {
-          console.log(await read('balanceOf', [address]));
+          console.log((await contract.balanceOf(await signer.getAddress())).toString());
         }}
       >
-        (SDK) Contract read (balanceOf)
-      </button> */}
+        (ethers 5) Contract read (balanceOf)
+      </button>
 
-      {/* <button
+      <button
         onClick={async () => {
-          console.log(await write('claim'));
+          console.log(await contract.claim());
         }}
       >
-        (SDK) Contract write (claim)
-      </button> */}
+        (ethers 5) Contract write (claim)
+      </button>
 
-      {/* <button
+      <button
         onClick={async () => {
-          const txHash = await write(
-            'transfer',
-            ['0x700cebAA997ecAd7B0797f8f359C621604Cce6Bf', '10000000'],
-            'React Transfer'
+          const txHash = await contract.transfer(
+            '0x700cebAA997ecAd7B0797f8f359C621604Cce6Bf',
+            ethers.utils.parseUnits('0.01', 18)
           );
 
           console.log(txHash);
         }}
       >
-        (SDK) Contract write (transfer)
-      </button> */}
+        (ethers5) Contract write (transfer)
+      </button>
     </div>
   );
 }
