@@ -7,7 +7,7 @@ import {
   WindowId,
 } from '@apillon/wallet-sdk';
 
-export function useWallet(): any {
+export function useWallet() {
   const wallet = shallowRef<EmbeddedWallet>();
 
   onMounted(() => {

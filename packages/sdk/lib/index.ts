@@ -895,9 +895,9 @@ class EmbeddedWallet {
     /**
      * If no chain specified use default from app params
      */
-    // if (!chainId && !!this.defaultNetworkId) {
-    //   chainId = this.defaultNetworkId;
-    // }
+    if (!chainId && !!this.defaultNetworkId) {
+      chainId = this.defaultNetworkId;
+    }
 
     return chainId;
   }

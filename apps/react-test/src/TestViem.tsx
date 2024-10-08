@@ -55,13 +55,8 @@ export default function TestViem() {
 
       <button
         onClick={async () => {
-          const client = createPublicClient({
-            chain: moonbaseAlpha,
-            transport: http(),
-          });
-
           console.log(
-            await client.getBalance({
+            await publicClient.getBalance({
               address: account.address,
             })
           );

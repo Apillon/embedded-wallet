@@ -1,30 +1,11 @@
 <script lang="ts" setup>
-import { useAccount, useContract, WalletWidget } from '@apillon/wallet-vue';
-import { ERC20Abi } from '@apillon/wallet-sdk';
+import { useAccount, useWallet, WalletWidget } from '@apillon/wallet-vue';
+import TestSdk from './TestSdk.vue';
+import TestViem from './TestViem.vue';
+import TestEthers6 from './TestEthers6.vue';
+import TestEthers5 from './TestEthers5.vue';
 
-const { info, getBalance } = useAccount();
-const { read, write } = useContract({
-  abi: ERC20Abi,
-  address: '0xb1058eD01451B947A836dA3609f88C91804D0663',
-});
-
-async function getBalanceNative() {
-  console.log(await getBalance());
-}
-
-async function getBalanceERC20() {
-  console.log(await read('balanceOf', [info.address]));
-}
-
-async function sendERC20() {
-  const txHash = await write(
-    'transfer',
-    ['0x700cebAA997ecAd7B0797f8f359C621604Cce6Bf', '10000000'],
-    'React Transfer'
-  );
-
-  console.log(txHash);
-}
+const { info } = useAccount();
 
 const clientId = import.meta.env.VITE_CLIENT_ID ?? 'YOUR INTEGRATION UUID HERE';
 </script>
@@ -67,19 +48,22 @@ const clientId = import.meta.env.VITE_CLIENT_ID ?? 'YOUR INTEGRATION UUID HERE';
 
     <p>address: {{ info.address }}</p>
 
-    <div
-      :style="{
-        display: 'flex',
-        gap: '8px',
-        flexWrap: 'wrap',
-        justifyContent: 'center',
-      }"
-    >
-      <button @click="getBalanceNative()">Get balance</button>
+    <br />
 
-      <button @click="getBalanceERC20()">Get ERC20 balance</button>
+    <TestSdk />
 
-      <button @click="sendERC20()">Send ERC20 token</button>
-    </div>
+    <template v-if="info.address">
+      <br />
+
+      <TestViem />
+
+      <br />
+
+      <TestEthers6 />
+
+      <br />
+
+      <TestEthers5 />
+    </template>
   </div>
 </template>
