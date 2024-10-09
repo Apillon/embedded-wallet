@@ -5,7 +5,7 @@ import EmbeddedWallet from '..';
 class EmbeddedEthersSigner extends ethers.AbstractSigner<ethers.JsonRpcProvider> {
   address = '';
   wallet: EmbeddedWallet;
-  override provider: ethers.JsonRpcProvider;
+  // override provider: ethers.JsonRpcProvider;
 
   constructor(provider: ethers.JsonRpcProvider) {
     super(provider);
@@ -17,7 +17,7 @@ class EmbeddedEthersSigner extends ethers.AbstractSigner<ethers.JsonRpcProvider>
     }
 
     this.wallet = w!;
-    this.provider = provider;
+    // this.provider = provider;
   }
 
   override connect(): ethers.Signer {

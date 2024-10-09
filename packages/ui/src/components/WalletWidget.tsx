@@ -13,11 +13,11 @@ import WalletChainChange from './WalletChainChange';
 
 export type AppProps = {
   /**
-   * Do not automatically broadcast with SDK after confirming a transaction.
+   * Automatically broadcast with SDK after confirming a transaction.
    *
-   * Useful when using ethers/viem where txs are automatically processed with contract interfaces e.g.
+   * Useful when signing transaction directly using SDK.
    */
-  disableAutoBroadcastAfterSign?: boolean;
+  broadcastAfterSign?: boolean;
 
   /**
    * Remove styles from "open wallet" button
@@ -33,7 +33,7 @@ export type AppProps = {
 const MODAL_TRANSITION_TIME = 200;
 
 function Wallet({
-  disableAutoBroadcastAfterSign = false,
+  broadcastAfterSign = false,
   disableDefaultActivatorStyle = false,
   ...restOfProps
 }: AppProps) {
@@ -86,8 +86,18 @@ function Wallet({
       setIsModalOpen(true);
     };
 
-    const onTxSubmittedEvent = (params: Events['txSubmitted']) => {
+    const onTxSubmittedEvent = async (params: Events['txSubmitted']) => {
       dispatchTx({ type: 'addTx', payload: params });
+
+      await new Promise(resolve => setTimeout(resolve, MODAL_TRANSITION_TIME * 2));
+
+      setApprovedData({
+        title: 'Transaction submitted',
+        txHash: params.hash,
+        explorerUrl: params.explorerUrl,
+      });
+
+      setIsModalOpen(true);
     };
 
     const onProviderRequestAccounts = () => {
@@ -221,122 +231,108 @@ function Wallet({
         }}
       />
     );
-  } else if (!!txToConfirm || !!messageToSign || !!contractFunctionData) {
-    if (approvedData.title) {
-      /**
-       * Transaction submitted to network
-       */
-      modalContent = (
-        <div className="text-center mt-2">
-          <h2 className="mb-6">{approvedData.title}</h2>
+  } else if (approvedData.title) {
+    /**
+     * Transaction submitted to network
+     */
+    modalContent = (
+      <div className="text-center mt-2">
+        <h2 className="mb-6">{approvedData.title}</h2>
 
-          {!!approvedData.explorerUrl && (
-            <p className="mb-6">
-              <Btn variant="secondary" href={approvedData.explorerUrl} blank>
-                View on explorer
-              </Btn>
-            </p>
-          )}
+        {!!approvedData.explorerUrl && (
+          <p className="mb-6">
+            <Btn variant="secondary" href={approvedData.explorerUrl} blank>
+              View on explorer
+            </Btn>
+          </p>
+        )}
 
-          {!!approvedData.txHash && (
-            <p className="break-all my-3">Transaction hash: {approvedData.txHash}</p>
-          )}
+        {!!approvedData.txHash && (
+          <p className="break-all my-3">Transaction hash: {approvedData.txHash}</p>
+        )}
 
-          <div className="mt-12">
-            <Btn onClick={() => closeApproveScreen(true)}>Close</Btn>
-          </div>
+        <div className="mt-12">
+          <Btn onClick={() => closeApproveScreen(true)}>Close</Btn>
         </div>
-      );
-    } else {
-      /**
-       * Approve tx (authenticate w/ passkey e.g.)
-       */
-      modalContent = (
-        <WalletApprove
-          tx={txToConfirm}
-          signMessage={messageToSign}
-          contractFunctionData={contractFunctionData}
-          onApprove={async () => {
-            if (approveParams.current) {
-              try {
-                handleError();
+      </div>
+    );
+  } else if (!!txToConfirm || !!messageToSign || !!contractFunctionData) {
+    /**
+     * Approve tx (authenticate w/ passkey e.g.)
+     */
+    modalContent = (
+      <WalletApprove
+        tx={txToConfirm}
+        signMessage={messageToSign}
+        contractFunctionData={contractFunctionData}
+        onApprove={async () => {
+          if (approveParams.current) {
+            try {
+              handleError();
 
-                if (approveParams.current.signature) {
-                  await wallet?.signMessage({
-                    ...approveParams.current.signature,
-                    authData: { username: state.username },
-                  });
+              if (approveParams.current.signature) {
+                await wallet?.signMessage({
+                  ...approveParams.current.signature,
+                  authData: { username: state.username },
+                });
 
+                closeApproveScreen(true);
+              } else if (approveParams.current.plain) {
+                const res = await wallet?.signPlainTransaction({
+                  ...approveParams.current.plain,
+                  authData: { username: state.username },
+                });
+
+                if (broadcastAfterSign && res) {
+                  const { signedTxData, chainId } = res;
+                  await wallet?.broadcastTransaction(
+                    signedTxData,
+                    chainId,
+                    approveParams.current.plain.label || 'Transaction'
+                  );
+                } else {
                   closeApproveScreen(true);
-                } else if (approveParams.current.plain) {
-                  const res = await wallet?.signPlainTransaction({
-                    ...approveParams.current.plain,
-                    authData: { username: state.username },
-                  });
-
-                  if (disableAutoBroadcastAfterSign) {
-                    closeApproveScreen(true);
-                  } else if (res) {
-                    const { signedTxData, chainId } = res;
-                    const res2 = await wallet?.broadcastTransaction(
-                      signedTxData,
-                      chainId,
-                      approveParams.current.plain.label || 'Transaction'
-                    );
-
-                    setApprovedData({
-                      title: 'Transaction submitted',
-                      explorerUrl: res2?.txItem.explorerUrl || '',
-                      txHash: res2?.txHash || '',
-                    });
-                  }
-                } else if (approveParams.current.contractWrite) {
-                  const res = await wallet?.signContractWrite({
-                    ...approveParams.current.contractWrite,
-                    authData: { username: state.username },
-                  });
-
-                  if (disableAutoBroadcastAfterSign) {
-                    closeApproveScreen(true);
-                  } else if (res) {
-                    const { signedTxData, chainId } = res;
-                    const res2 = await wallet?.broadcastTransaction(
-                      signedTxData,
-                      chainId,
-                      approveParams.current.contractWrite.label || 'Transaction'
-                    );
-
-                    setApprovedData({
-                      title: 'Transaction submitted',
-                      explorerUrl: res2?.txItem.explorerUrl || '',
-                      txHash: res2?.txHash || '',
-                    });
-                  }
                 }
-              } catch (e) {
-                const errMsg = handleError(e);
+              } else if (approveParams.current.contractWrite) {
+                const res = await wallet?.signContractWrite({
+                  ...approveParams.current.contractWrite,
+                  authData: { username: state.username },
+                });
 
-                // Transaction was already broadcast
-                if (errMsg === 'already known') {
+                if (broadcastAfterSign && res) {
+                  const { signedTxData, chainId } = res;
+                  await wallet?.broadcastTransaction(
+                    signedTxData,
+                    chainId,
+                    approveParams.current.contractWrite.label || 'Transaction'
+                  );
+                } else {
                   closeApproveScreen(true);
                 }
               }
-            }
-          }}
-          onDecline={() => {
-            closeApproveScreen();
+            } catch (e) {
+              const errMsg = handleError(e);
 
-            if (approveParams.current?.contractWrite?.reject) {
-              approveParams.current.contractWrite.reject(new UserRejectedRequestError());
-            } else if (approveParams.current?.plain?.reject) {
-              approveParams.current.plain.reject(new UserRejectedRequestError());
-            } else if (approveParams.current?.signature?.reject) {
-              approveParams.current.signature.reject(new UserRejectedRequestError());
+              // Transaction was already broadcast
+              if (errMsg === 'already known') {
+                closeApproveScreen(true);
+              }
             }
-          }}
-        />
-      );
-    }
+          }
+        }}
+        onDecline={() => {
+          closeApproveScreen();
+
+          if (approveParams.current?.contractWrite?.reject) {
+            approveParams.current.contractWrite.reject(new UserRejectedRequestError());
+          } else if (approveParams.current?.plain?.reject) {
+            approveParams.current.plain.reject(new UserRejectedRequestError());
+          } else if (approveParams.current?.signature?.reject) {
+            approveParams.current.signature.reject(new UserRejectedRequestError());
+          }
+        }}
+      />
+    );
   } else {
     /**
      * Default UI

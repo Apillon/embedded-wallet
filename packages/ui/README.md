@@ -13,9 +13,9 @@ networks?: { name: string; id: number; rpcUrl: string; explorerUrl: string }[];
 /**
  * Do not automatically broadcast with SDK after confirming a transaction.
  *
- * Useful when using ethers/viem where txs are automatically processed with contract interfaces e.g.
+ * Useful when signing transaction directly using SDK.
  */
-disableAutoBroadcastAfterSign?: boolean;
+broadcastAfterSign?: boolean;
 
 /**
  * Remove styles from "open wallet" button
@@ -33,7 +33,7 @@ import { EmbeddedWalletUI } from '@apillon/wallet-ui';
 
 EmbeddedWalletUI('#open-wallet-button-selector', {
   clientId: 'YOUR INTEGRATION UUID HERE',
-  disableAutoBroadcastAfterSign: false,
+  broadcastAfterSign: false,
   disableDefaultActivatorStyle: false,
   networks: [
     {

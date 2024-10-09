@@ -1,17 +1,18 @@
-import WalletWidget from '../components/WalletWidget';
-import TestEIP1193 from './TestEIP1193';
-import TestSign from './TestSign';
-import TestTx from './TestTx';
+'use client';
 
-export default function TestApp() {
+import { useAccount, WalletWidget } from '@apillon/wallet-react';
+import TestSdk from './TestSdk';
+import TestViem from './TestViem';
+import TestEthers6 from './TestEthers6';
+import TestEthers5 from './TestEthers5';
+
+export default function Test() {
+  const { username, address } = useAccount();
+
   return (
     <div>
-      <h2>Wallet Widget</h2>
-
       <WalletWidget
-        clientId="YOUR INTEGRATION UUID HERE"
-        // broadcastAfterSign
-        // disableDefaultActivatorStyle
+        clientId={process.env.NEXT_PUBLIC_CLIENT_ID ?? 'YOUR INTEGRATION UUID HERE'}
         defaultNetworkId={1287}
         networks={[
           {
@@ -35,26 +36,32 @@ export default function TestApp() {
         ]}
       />
 
-      <br />
-      <br />
+      <div
+        style={{
+          margin: '16px 0',
+          border: 'solid 1px grey',
+        }}
+      />
 
-      <h2>Test sign</h2>
+      <p>username: {username}</p>
 
-      <TestSign />
-
-      <br />
-      <br />
-
-      <h2>EIP-1193 requests test</h2>
-
-      <TestEIP1193 />
+      <p>address: {address}</p>
 
       <br />
+
+      <TestSdk />
+
       <br />
 
-      <h2>Transaction tests</h2>
+      {!!address && <TestViem />}
 
-      <TestTx />
+      <br />
+
+      {!!address && <TestEthers6 />}
+
+      <br />
+
+      {!!address && <TestEthers5 />}
     </div>
   );
 }
