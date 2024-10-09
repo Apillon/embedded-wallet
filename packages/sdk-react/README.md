@@ -18,10 +18,12 @@ return <WalletWidget ...props />;
 
 Get the initialized instance of embedded wallet.
 
+Also exposes the most common wallet actions.
+
 ```ts
 import { useWallet } from '@apillon/wallet-react';
 
-const { wallet } = useWallet();
+const { wallet, signMessage, sendTransaction } = useWallet();
 
 console.log(await wallet.userExists('johndoe'));
 ```

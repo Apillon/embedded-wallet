@@ -1,75 +1,23 @@
 # Nuxt 3 Minimal Starter
 
-Look at the [Nuxt 3 documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+## Nuxt + Embedded wallet
 
-## Setup
+When using Vite as the build tool, a Vite plugin is required for running and building Nuxt apps with Embedded Wallet.
+This plugin enables Node API in the browser (eg. Buffer, Crypto).
 
-Make sure to install the dependencies:
-
-```bash
-# npm
-npm install
-
-# pnpm
-pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
+```sh
+npm i -D vite-plugin-node-polyfills
 ```
 
-## Development Server
+```ts
+// nuxt.config.ts
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
-Start the development server on `http://localhost:3000`:
+export default defineNuxtConfig({
+  vite: {
+    plugins: [nodePolyfills()],
+  },
 
-```bash
-# npm
-npm run dev
-
-# pnpm
-pnpm run dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
+  /* ... */
+});
 ```
-
-## Production
-
-Build the application for production:
-
-```bash
-# npm
-npm run build
-
-# pnpm
-pnpm run build
-
-# yarn
-yarn build
-
-# bun
-bun run build
-```
-
-Locally preview production build:
-
-```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm run preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
