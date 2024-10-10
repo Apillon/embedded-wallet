@@ -18,10 +18,12 @@ import { WalletWidget } from '@apillon/wallet-vue';
 
 Get the initialized instance of embedded wallet.
 
+Also exposes the most common wallet actions.
+
 ```ts
 import { useWallet } from '@apillon/wallet-vue';
 
-const { wallet } = useWallet();
+const { wallet, signMessage, sendTransaction } = useWallet();
 
 console.log(await wallet.value.userExists('johndoe'));
 ```

@@ -2,16 +2,14 @@ import { ReactNode, createContext, useContext, useEffect, useReducer, useState }
 import {
   AppParams,
   AuthStrategyName,
-  NetworkConfig,
   ErrorMessages,
   WebStorageKeys,
   EmbeddedWallet,
-  initializeOnWindow,
-  SapphireTestnet,
+  EmbeddedWalletSDK,
   SapphireMainnet,
+  Network,
+  SapphireTestnet,
 } from '@apillon/wallet-sdk';
-
-export type Network = { name: string; id: number; rpcUrl: string; explorerUrl: string };
 
 export type WalletScreens =
   | 'main'
@@ -78,7 +76,7 @@ const WalletContext = createContext<
       setWallet: (wallet: EmbeddedWallet) => void;
       reloadUserBalance: (walletRef?: EmbeddedWallet) => void;
       setScreen: (screen: WalletScreens) => void;
-      handleError: (e?: any) => void;
+      handleError: (e?: any) => string;
     }
   | undefined
 >(undefined);
@@ -92,24 +90,22 @@ function WalletProvider({
   children: ReactNode;
   networks?: Network[];
 } & AppParams) {
-  networks = restOfParams?.test
-    ? [
-        {
+  networks = [
+    import.meta.env.VITE_SAPPHIRE_TESTNET
+      ? {
           name: 'Sapphire Testnet',
           id: SapphireTestnet,
           rpcUrl: 'https://testnet.sapphire.oasis.io',
           explorerUrl: 'https://explorer.oasis.io/testnet/sapphire',
-        },
-        ...networks,
-      ]
-    : [
-        {
+        }
+      : {
           name: 'Oasis Sapphire',
           id: SapphireMainnet,
           rpcUrl: 'https://sapphire.oasis.io',
           explorerUrl: 'https://explorer.oasis.io/mainnet/sapphire',
         },
-      ];
+    ...networks,
+  ];
 
   const [state, dispatch] = useReducer(reducer, initialState(defaultNetworkId || networks[0].id));
   const [initialized, setInitialized] = useState(false);
@@ -156,19 +152,13 @@ function WalletProvider({
       let w = undefined as EmbeddedWallet | undefined;
 
       if (networks && networks.length) {
-        w = initializeOnWindow({
+        w = EmbeddedWalletSDK({
           ...restOfParams,
+          networks,
           defaultNetworkId: state.networkId || defaultNetworkId,
-          networkConfig: networks.reduce((acc, x) => {
-            acc[x.id] = {
-              rpcUrl: x.rpcUrl,
-              explorerUrl: x.explorerUrl,
-            };
-            return acc;
-          }, {} as NetworkConfig),
         });
       } else {
-        w = initializeOnWindow();
+        w = EmbeddedWalletSDK();
       }
 
       if (w) {
@@ -192,6 +182,9 @@ function WalletProvider({
     const w = walletRef || wallet;
 
     if (w && state.address) {
+      // wait a bit for w.defaultNetworkId to finalize
+      await new Promise(resolve => setTimeout(resolve, 10));
+
       try {
         const balance = await w?.getAccountBalance(state.address);
         dispatch({ type: 'setValue', payload: { key: 'balance', value: balance } });
@@ -221,10 +214,10 @@ function WalletProvider({
         setScreen: (s: WalletScreens) =>
           dispatch({ type: 'setValue', payload: { key: 'walletScreen', value: s } }),
         handleError: (e?: any) => {
+          let msg = '';
+
           if (e) {
             console.error(e);
-
-            let msg = '';
 
             if (e?.name) {
               msg = ErrorMessages[e.name];
@@ -242,7 +235,7 @@ function WalletProvider({
               msg = e.message;
             }
 
-            if (msg) {
+            if (msg && msg !== 'already known') {
               dispatch({
                 type: 'setValue',
                 payload: { key: 'displayedError', value: msg },
@@ -251,6 +244,8 @@ function WalletProvider({
           } else {
             dispatch({ type: 'setValue', payload: { key: 'displayedError', value: '' } });
           }
+
+          return msg;
         },
       }}
     >

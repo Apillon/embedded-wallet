@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import { initializeApp, AppProps } from '@apillon/wallet-ui';
+import { EmbeddedWalletUI, AppProps } from '@apillon/wallet-ui';
 import { onMounted } from 'vue';
 
 const props = defineProps<AppProps>();
 
 onMounted(() => {
-  initializeApp('#embedded-wallet-activator-vue', props);
+  EmbeddedWalletUI('#embedded-wallet-activator-vue', props);
 });
 </script>
 

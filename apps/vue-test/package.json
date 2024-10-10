@@ -10,6 +10,9 @@
   },
   "dependencies": {
     "@apillon/wallet-vue": "*",
+    "ethers": "^6.13.3",
+    "ethers5": "npm:ethers@^5.7.2",
+    "viem": "^2.21.19",
     "vue": "^3.4.31"
   },
   "devDependencies": {

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { getEmbeddedWallet, AuthStrategyName, abort } from '@apillon/wallet-sdk';
+import { getEmbeddedWallet, AuthStrategyName } from '@apillon/wallet-sdk';
 import { useWalletContext } from '../contexts/wallet.context';
 import Btn from './Btn';
 import { AppProps } from './WalletWidget';
@@ -7,26 +7,14 @@ import WalletError from './WalletError';
 
 export default function WalletAuth({
   authFormPlaceholder = 'your e-mail@email.com',
-  isAuthEmail = true,
-  isEmailConfirm = true,
-  onEmailConfirmRequest,
-  onEmailConfirm,
-  onGetApillonSessionToken,
-}: Pick<
-  AppProps,
-  | 'authFormPlaceholder'
-  | 'isAuthEmail'
-  | 'isEmailConfirm'
-  | 'onEmailConfirmRequest'
-  | 'onEmailConfirm'
-  | 'onGetApillonSessionToken'
->) {
+}: Pick<AppProps, 'authFormPlaceholder'>) {
   const { dispatch, defaultNetworkId, handleError } = useWalletContext();
 
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
   const [isCodeScreen, setIsCodeScreen] = useState(false);
   const [isCodeSubmitted, setIsCodeSubmitted] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(false);
 
   async function onAuth(ev: React.FormEvent<HTMLFormElement>) {
     ev.preventDefault();
@@ -55,43 +43,8 @@ export default function WalletAuth({
           });
         }
       } else {
-        if (isEmailConfirm && onEmailConfirmRequest) {
-          /**
-           * Register with email confirmation
-           * 1. Send email
-           * 2. Enter code
-           * 3. Setup passkey
-           */
-          await onEmailConfirmRequest(username);
+        if (await sendConfirmationEmail()) {
           setIsCodeScreen(true);
-        } else if (isEmailConfirm && onGetApillonSessionToken) {
-          /**
-           * Apillon email confirmation
-           */
-          const token = await onGetApillonSessionToken();
-
-          if (!token) {
-            abort('INVALID_APILLON_SESSION_TOKEN');
-          }
-
-          await fetch(
-            `${import.meta.env.VITE_APILLON_BASE_URL ?? 'https://api.apillon.io'}/embedded-wallet/otp/generate`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                token,
-                email: username,
-              }),
-            }
-          );
-
-          setIsCodeScreen(true);
-        } else {
-          /**
-           * Just setup passkey
-           */
-          startRegister();
         }
       }
     } catch (e) {
@@ -99,6 +52,34 @@ export default function WalletAuth({
     }
 
     setLoading(false);
+  }
+
+  async function sendConfirmationEmail() {
+    try {
+      /**
+       * Apillon email confirmation
+       */
+      const res = await fetch(
+        `${import.meta.env.VITE_APILLON_BASE_URL ?? 'https://api.apillon.io'}/embedded-wallet/otp/generate`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: username,
+          }),
+        }
+      );
+
+      console.log(res);
+
+      if (!res.ok || res.status >= 400) {
+        throw new Error('Could not send confirmation email');
+      }
+
+      return true;
+    } catch (e) {
+      handleError(e);
+    }
   }
 
   async function startRegister() {
@@ -148,10 +129,8 @@ export default function WalletAuth({
 
   if (isCodeSubmitted) {
     return (
-      <div className="text-center">
-        <h2 className="mb-12">
-          {onEmailConfirmRequest ? 'Email succesfully confirmed.' : 'Welcome'}
-        </h2>
+      <div className="text-center mt-2">
+        <h2 className="mb-12">Email succesfully confirmed.</h2>
 
         <p className="text-xl mb-12">Passkey configuration will now start.</p>
 
@@ -168,13 +147,9 @@ export default function WalletAuth({
     return (
       <>
         <ConfirmEmail
-          isCodeSubmitted={isCodeSubmitted}
           loading={loading}
+          resendCooldown={resendCooldown}
           onConfirm={async code => {
-            if (!onEmailConfirm && !onGetApillonSessionToken) {
-              return startRegister();
-            }
-
             setLoading(true);
             handleError();
 
@@ -182,33 +157,22 @@ export default function WalletAuth({
               /**
                * Code check
                */
-              if (onEmailConfirm) {
-                await onEmailConfirm(username, code);
-              } else if (onGetApillonSessionToken) {
-                const token = await onGetApillonSessionToken();
+              const { data } = await (
+                await fetch(
+                  `${import.meta.env.VITE_APILLON_BASE_URL ?? 'https://api.apillon.io'}/embedded-wallet/otp/validate`,
+                  {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      email: username,
+                      code,
+                    }),
+                  }
+                )
+              ).json();
 
-                if (!token) {
-                  abort('INVALID_APILLON_SESSION_TOKEN');
-                }
-
-                const { data } = await (
-                  await fetch(
-                    `${import.meta.env.VITE_APILLON_BASE_URL ?? 'https://api.apillon.io'}/embedded-wallet/otp/validate`,
-                    {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        token,
-                        email: username,
-                        code,
-                      }),
-                    }
-                  )
-                ).json();
-
-                if (!data) {
-                  throw new Error('Verification code is not valid.');
-                }
+              if (!data) {
+                throw new Error('Verification code is not valid.');
               }
 
               setIsCodeSubmitted(true);
@@ -220,7 +184,19 @@ export default function WalletAuth({
               setLoading(false);
             }
           }}
+          onSendAgain={async () => {
+            setLoading(true);
+            handleError();
+
+            if (await sendConfirmationEmail()) {
+              setResendCooldown(true);
+              setTimeout(() => setResendCooldown(false), 30000);
+            }
+
+            setLoading(false);
+          }}
         />
+
         <WalletError show className="mt-6" />
       </>
     );
@@ -232,7 +208,7 @@ export default function WalletAuth({
 
       <form onSubmit={ev => onAuth(ev)}>
         <input
-          type={isAuthEmail ? 'email' : 'text'}
+          type="email"
           placeholder={authFormPlaceholder}
           value={username}
           className="w-full mb-8"
@@ -251,11 +227,14 @@ export default function WalletAuth({
 
 function ConfirmEmail({
   loading,
+  resendCooldown,
   onConfirm,
+  onSendAgain,
 }: {
-  isCodeSubmitted: boolean;
   loading: boolean;
+  resendCooldown: boolean;
   onConfirm: (code: string) => void;
+  onSendAgain: () => void;
 }) {
   const [code, setCode] = useState('');
 
@@ -277,10 +256,10 @@ function ConfirmEmail({
   function handleInput(e: React.ChangeEvent<HTMLInputElement>, index: number) {
     const input = e.target;
 
-    if (/^[^\d]$/.test(input.value)) {
-      input.value = '';
-      return;
-    }
+    // if (/^[^\d]$/.test(input.value)) {
+    //   input.value = '';
+    //   return;
+    // }
 
     const previousInput = inputRefs[index - 1];
     const nextInput = inputRefs[index + 1];
@@ -360,7 +339,11 @@ function ConfirmEmail({
         ))}
       </div>
 
-      <Btn disabled={loading}>Send again</Btn>
+      <Btn disabled={loading || resendCooldown} onClick={() => onSendAgain()}>
+        Send again
+      </Btn>
+
+      {!!resendCooldown && <p className="mt-2">Email sent!</p>}
     </div>
   );
 }

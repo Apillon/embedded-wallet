@@ -2,6 +2,7 @@
   "private": true,
   "scripts": {
     "build": "turbo build",
+    "build:packages": "turbo build --filter=\"./packages/*\"",
     "dev": "turbo dev",
     "dev:react": "turbo run dev --filter=@apillon/wallet-react",
     "lint": "turbo lint",

@@ -2,7 +2,7 @@
   "name": "@apillon/wallet-sdk",
   "description": "▶◀ Apillon Embedded Wallet SDK ▶◀",
   "private": false,
-  "version": "1.0.0-alpha.2",
+  "version": "1.0.0-alpha.5",
   "type": "module",
   "files": [
     "dist/"
@@ -44,7 +44,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "secp256r1": "^0.0.3",
-    "viem": "^2.16.2"
+    "viem": "^2.21.19"
   },
   "devDependencies": {
     "@apillon/wallet-eslint-config": "*",

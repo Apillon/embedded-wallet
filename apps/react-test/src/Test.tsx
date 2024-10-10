@@ -1,57 +1,65 @@
-import { useAccount, useContract } from '@apillon/wallet-react';
-import { ERC20Abi } from '@apillon/wallet-sdk';
+import { useAccount, WalletWidget } from '@apillon/wallet-react';
+import TestSdk from './TestSdk';
+import TestViem from './TestViem';
+import TestEthers6 from './TestEthers6';
+import TestEthers5 from './TestEthers5';
 
 export default function Test() {
-  const { username, address, getBalance } = useAccount();
-  const { read, write } = useContract({
-    abi: ERC20Abi,
-    address: '0xb1058eD01451B947A836dA3609f88C91804D0663',
-  });
+  const { username, address } = useAccount();
 
   return (
     <div>
+      <WalletWidget
+        clientId={import.meta.env.VITE_CLIENT_ID ?? 'YOUR INTEGRATION UUID HERE'}
+        defaultNetworkId={1287}
+        networks={[
+          {
+            name: 'Moonbeam Testnet',
+            id: 1287,
+            rpcUrl: 'https://rpc.testnet.moonbeam.network',
+            explorerUrl: 'https://moonbase.moonscan.io',
+          },
+          {
+            name: 'Celo Alfajores Testnet',
+            id: 44787,
+            rpcUrl: 'https://alfajores-forno.celo-testnet.org',
+            explorerUrl: 'https://explorer.celo.org/alfajores',
+          },
+          {
+            name: 'Amoy',
+            id: 80002,
+            rpcUrl: 'https://rpc-amoy.polygon.technology',
+            explorerUrl: 'https://www.oklink.com/amoy',
+          },
+        ]}
+      />
+
+      <div
+        style={{
+          margin: '16px 0',
+          border: 'solid 1px grey',
+        }}
+      />
+
       <p>username: {username}</p>
 
       <p>address: {address}</p>
 
-      <div
-        style={{
-          display: 'flex',
-          gap: '8px',
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-        }}
-      >
-        <button
-          onClick={async () => {
-            console.log(await getBalance());
-          }}
-        >
-          Get balance
-        </button>
+      <br />
 
-        <button
-          onClick={async () => {
-            console.log(await read('balanceOf', [address]));
-          }}
-        >
-          Get ERC20 balance
-        </button>
+      <TestSdk />
 
-        <button
-          onClick={async () => {
-            const txHash = await write(
-              'transfer',
-              ['0x700cebAA997ecAd7B0797f8f359C621604Cce6Bf', '10000000'],
-              'React Transfer'
-            );
+      <br />
 
-            console.log(txHash);
-          }}
-        >
-          Send ERC20 token
-        </button>
-      </div>
+      {!!address && <TestViem />}
+
+      <br />
+
+      {!!address && <TestEthers6 />}
+
+      <br />
+
+      {!!address && <TestEthers5 />}
     </div>
   );
 }

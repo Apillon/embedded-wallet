@@ -16,7 +16,9 @@ export default function WalletTransactions() {
   }
 
   return (
-    <div>
+    <div className="mb-8">
+      <h3 className="mb-2">Transactions</h3>
+
       <div className="flex flex-col gap-1 max-h-[134px] overflow-auto pr-2">
         {Object.values(state.txs[address])
           .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
