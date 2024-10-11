@@ -8,7 +8,7 @@ const wacAbi = parseAbi(AccountManagerAbi);
 
 export type WebauthnContract = TypedContract<typeof wacAbi>;
 
-export type NetworkConfig = { [networkId: number]: { rpcUrl: string; explorerUrl: string } };
+export type Network = { name: string; id: number; rpcUrl: string; explorerUrl: string };
 
 export type SignatureCallback = (
   gaslessData: string
@@ -16,15 +16,9 @@ export type SignatureCallback = (
 
 export type AppParams = {
   /**
-   * Use test URLS
-   * - Oasis Sapphire testnet instead of mainnet
+   * The Apillon integration UUID, obtained from the Apillon Developer Console
    */
-  test?: boolean;
-
-  /**
-   * Address for "Account manager" contract on Oasis Sapphire chain
-   */
-  accountManagerAddress?: string;
+  clientId: string;
 
   /**
    * Network ID for network (chain) selected on first use
@@ -36,26 +30,17 @@ export type AppParams = {
    * 
    * @example
     ```ts 
-    { 1287: { rpcUrl: 'https://rpc.testnet.moonbeam.network', explorerUrl: 'https://moonbase.moonscan.io' } }
+    [
+      {
+        name: 'Moonbeam Testnet',
+        id: 1287,
+        rpcUrl: 'https://rpc.testnet.moonbeam.network',
+        explorerUrl: 'https://moonbase.moonscan.io',
+      }
+    ]
     ```
    */
-  networkConfig?: NetworkConfig;
-
-  /**
-   * Provide this callback in configuration and it will be used to get contract values for registration.
-   *
-   * This is useful for controlling gas expenses on account manager contract when registering new wallets.
-   *
-   * @more sdk/README.md
-   */
-  onGetSignature?: SignatureCallback;
-
-  /**
-   * Provide the Apillon session token to be used with Apillon API to generate a signature for contract interaction.
-   *
-   * @more sdk/README.md
-   */
-  onGetApillonSessionToken?: () => Promise<string>; // only used if no `onGetSignature` param is provided
+  networks?: Network[];
 };
 
 export type AuthData = {
@@ -97,7 +82,7 @@ export type UserInfo = {
 };
 
 export type PlainTransactionParams = {
-  strategy: AuthStrategyName;
+  strategy?: AuthStrategyName;
   authData?: AuthData;
   tx: ethers.TransactionLike<ethers.AddressLike>;
   label?: string;
@@ -150,7 +135,7 @@ export type Events = {
   txSubmitted: TransactionItem;
   txDone: TransactionItem; // emitted by UI
   dataUpdated: {
-    name: 'username' | 'address' | 'authStrategy' | 'defaultNetworkId';
+    name: 'username' | 'address' | 'authStrategy' | 'defaultNetworkId' | 'sessionToken';
     newValue: any;
     oldValue: any;
   };
@@ -160,6 +145,12 @@ export type Events = {
    * Receives resolver fn that should be invoked when user's account is available (after sign in / register)
    */
   providerRequestAccounts: (address: string) => void;
+
+  /**
+   * Emitted when tx chainId is different from defaultNetworkId.
+   * Must be resolve()'d to continue with the tx execution.
+   */
+  requestChainChange: { chainId: number; resolve: (confirmed: boolean) => void };
 
   /**
    * Provider event

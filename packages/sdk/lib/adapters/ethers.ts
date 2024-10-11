@@ -5,7 +5,7 @@ import EmbeddedWallet from '..';
 class EmbeddedEthersSigner extends ethers.AbstractSigner<ethers.JsonRpcProvider> {
   address = '';
   wallet: EmbeddedWallet;
-  override provider: ethers.JsonRpcProvider;
+  // override provider: ethers.JsonRpcProvider;
 
   constructor(provider: ethers.JsonRpcProvider) {
     super(provider);
@@ -17,7 +17,7 @@ class EmbeddedEthersSigner extends ethers.AbstractSigner<ethers.JsonRpcProvider>
     }
 
     this.wallet = w!;
-    this.provider = provider;
+    // this.provider = provider;
   }
 
   override connect(): ethers.Signer {
@@ -31,7 +31,7 @@ class EmbeddedEthersSigner extends ethers.AbstractSigner<ethers.JsonRpcProvider>
 
   override async signTransaction(
     tx: ethers.TransactionRequest,
-    mustConfirm = false
+    mustConfirm = true
   ): Promise<string> {
     const res = await this.wallet.signPlainTransaction({
       strategy: this.wallet.lastAccount.authStrategy,
@@ -45,7 +45,7 @@ class EmbeddedEthersSigner extends ethers.AbstractSigner<ethers.JsonRpcProvider>
     return res?.signedTxData || '';
   }
 
-  override async signMessage(message: string | Uint8Array, mustConfirm = false): Promise<string> {
+  override async signMessage(message: string | Uint8Array, mustConfirm = true): Promise<string> {
     const res = await this.wallet.signMessage({
       message,
       strategy: this.wallet.lastAccount.authStrategy,
@@ -96,6 +96,28 @@ class EmbeddedEthersSigner extends ethers.AbstractSigner<ethers.JsonRpcProvider>
   ): Promise<string> {
     console.error('EmbeddedEthersSigner#signTypedData Not implemented', { domain, types, value });
     return '';
+  }
+
+  /**
+   * @deprecated v5 signer properties
+   */
+  _isSigner = true;
+  async getBalance(blockTag?: ethers.BlockTag) {
+    return await this.provider.getBalance(await this.getAddress(), blockTag);
+  }
+  async getTransactionCount(blockTag?: ethers.BlockTag) {
+    return await this.provider.getTransactionCount(await this.getAddress(), blockTag);
+  }
+  async getChainId() {
+    const network = await this.provider.getNetwork();
+    return network.chainId;
+  }
+  async getGasPrice() {
+    const feeData = await this.provider.getFeeData();
+    return feeData.gasPrice;
+  }
+  async getFeeData() {
+    return await this.provider.getFeeData();
   }
 }
 

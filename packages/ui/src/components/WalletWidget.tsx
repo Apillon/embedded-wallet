@@ -1,5 +1,5 @@
 import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react';
-import { Network, WalletProvider, useWalletContext } from '../contexts/wallet.context';
+import { WalletProvider, useWalletContext } from '../contexts/wallet.context';
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import WalletAuth from './WalletAuth';
 import WalletMain from './WalletMain';
@@ -8,30 +8,16 @@ import WalletApprove, { DisplayedContractParams } from './WalletApprove';
 import { AppParams, Events, UserRejectedRequestError } from '@apillon/wallet-sdk';
 import { TransactionsProvider, useTransactionsContext } from '../contexts/transactions.context';
 import Btn from './Btn';
+import Logo from './Logo';
+import WalletChainChange from './WalletChainChange';
 
 export type AppProps = {
   /**
-   * Configuration of available networks. Oasis Sapphire is always included (ids 23294 and 23295).
-   * @example
-   ```ts
-    [
-      {
-        name: 'Moonbeam Testnet',
-        id: 1287,
-        rpcUrl: 'https://rpc.testnet.moonbeam.network',
-        explorerUrl: 'https://moonbase.moonscan.io',
-      }
-    ]
-   ```
-   */
-  networks?: Network[];
-
-  /**
-   * Do not automatically broadcast with SDK after confirming a transaction.
+   * Automatically broadcast with SDK after confirming a transaction.
    *
-   * Useful when using ethers/viem where txs are automatically processed with contract interfaces e.g.
+   * Useful when signing transaction directly using SDK.
    */
-  disableAutoBroadcastAfterSign?: boolean;
+  broadcastAfterSign?: boolean;
 
   /**
    * Remove styles from "open wallet" button
@@ -42,40 +28,16 @@ export type AppProps = {
    * Placeholder displayed in input for username/email
    */
   authFormPlaceholder?: string;
-
-  /**
-   * Use email validation on input for username/email
-   */
-  isAuthEmail?: boolean;
-
-  /**
-   * Skip email confirmation / code check.
-   */
-  isEmailConfirm?: boolean;
-
-  /**
-   * Executes in auth process, after user enters a valid email. If an error is thrown, the auth process will terminate.
-   *
-   * Should be used to send a verification code to user.
-   *
-   * If this is not provided, Apillon service is used.
-   */
-  onEmailConfirmRequest?: (email: string) => Promise<any>;
-
-  /**
-   * Executes in auth process, during email verification, confirm that entered code is correct.
-   *
-   * If `onEmailConfirmRequest` is not provided, Apillon service is used.
-   */
-  onEmailConfirm?: (email: string, code: string) => Promise<any>;
 } & AppParams;
 
+const MODAL_TRANSITION_TIME = 200;
+
 function Wallet({
-  disableAutoBroadcastAfterSign = false,
+  broadcastAfterSign = false,
   disableDefaultActivatorStyle = false,
   ...restOfProps
 }: AppProps) {
-  const { state, wallet, setScreen, handleError, reloadUserBalance } = useWalletContext();
+  const { state, wallet, setScreen, handleError, reloadUserBalance, dispatch } = useWalletContext();
   const { dispatch: dispatchTx } = useTransactionsContext();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -87,6 +49,10 @@ function Wallet({
     txHash: '',
     explorerUrl: '',
   });
+  const [targetChain, setTargetChain] = useState({
+    chainId: 0,
+    resolve: (_confirmed: boolean) => {},
+  }); // Open switch chain modal if > 0
 
   const approveParams =
     useRef<Partial<Events['txApprove'] & { signature: Events['signatureRequest'] }>>();
@@ -120,8 +86,18 @@ function Wallet({
       setIsModalOpen(true);
     };
 
-    const onTxSubmittedEvent = (params: Events['txSubmitted']) => {
+    const onTxSubmittedEvent = async (params: Events['txSubmitted']) => {
       dispatchTx({ type: 'addTx', payload: params });
+
+      await new Promise(resolve => setTimeout(resolve, MODAL_TRANSITION_TIME * 2));
+
+      setApprovedData({
+        title: 'Transaction submitted',
+        txHash: params.hash,
+        explorerUrl: params.explorerUrl,
+      });
+
+      setIsModalOpen(true);
     };
 
     const onProviderRequestAccounts = () => {
@@ -131,7 +107,13 @@ function Wallet({
     const onDataUpdated = (params: Events['dataUpdated']) => {
       if (params.name === 'defaultNetworkId') {
         reloadUserBalance();
+        dispatch({ type: 'setValue', payload: { key: 'networkId', value: params.newValue } });
       }
+    };
+
+    const onRequestChainChange = (params: Events['requestChainChange']) => {
+      setIsModalOpen(true);
+      setTargetChain(params);
     };
 
     if (wallet) {
@@ -140,6 +122,7 @@ function Wallet({
       wallet.events.on('txSubmitted', onTxSubmittedEvent);
       wallet.events.on('providerRequestAccounts', onProviderRequestAccounts);
       wallet.events.on('dataUpdated', onDataUpdated);
+      wallet.events.on('requestChainChange', onRequestChainChange);
     }
 
     return () => {
@@ -149,12 +132,17 @@ function Wallet({
         wallet.events.off('txSubmitted', onTxSubmittedEvent);
         wallet.events.off('providerRequestAccounts', onProviderRequestAccounts);
         wallet.events.off('dataUpdated', onDataUpdated);
+        wallet.events.off('requestChainChange', onRequestChainChange);
       }
     };
   }, [wallet]);
 
   /**
-   * Reset approve screen if closed
+   * On modal close:
+   * - reset approve screen
+   * - reset chainChange data (targetChain)
+   * - reset account login resolver
+   * - set <WalletMain /> screen back to main
    */
   useEffect(() => {
     if (!isModalOpen) {
@@ -162,11 +150,22 @@ function Wallet({
         closeApproveScreen();
       }
 
+      setTimeout(() => {
+        if (targetChain.chainId !== state.networkId && targetChain.resolve) {
+          targetChain.resolve(false);
+        }
+
+        setTargetChain(t => ({
+          ...t,
+          chainId: 0,
+        }));
+      }, MODAL_TRANSITION_TIME);
+
       if (state.walletScreen !== 'main') {
         // Wait for modal transition
         setTimeout(() => {
           setScreen('main');
-        }, 200);
+        }, MODAL_TRANSITION_TIME);
       }
 
       if (wallet && wallet.waitForAccountResolver) {
@@ -176,7 +175,7 @@ function Wallet({
     }
   }, [isModalOpen]);
 
-  function closeApproveScreen() {
+  function closeApproveScreen(isSuccess = false) {
     setIsModalOpen(false);
 
     // Wait for modal transition
@@ -189,7 +188,17 @@ function Wallet({
         txHash: '',
         explorerUrl: '',
       });
-    }, 200);
+
+      if (!isSuccess) {
+        if (approveParams.current?.contractWrite?.reject) {
+          approveParams.current.contractWrite.reject(new UserRejectedRequestError());
+        } else if (approveParams.current?.plain?.reject) {
+          approveParams.current.plain.reject(new UserRejectedRequestError());
+        } else if (approveParams.current?.signature?.reject) {
+          approveParams.current.signature.reject(new UserRejectedRequestError());
+        }
+      }
+    }, MODAL_TRANSITION_TIME);
   }
 
   let modalContent = <></>;
@@ -199,117 +208,131 @@ function Wallet({
      * Login/register
      */
     modalContent = <WalletAuth {...restOfProps} />;
-  } else if (!!txToConfirm || !!messageToSign || !!contractFunctionData) {
-    if (approvedData.title) {
-      /**
-       * Transaction submitted to network
-       */
-      modalContent = (
-        <div className="text-center">
-          <h2 className="mb-6">{approvedData.title}</h2>
+  } else if (targetChain.chainId > 0) {
+    modalContent = (
+      <WalletChainChange
+        chainId={targetChain.chainId}
+        onSuccess={() => {
+          targetChain.resolve(true);
+          dispatch({ type: 'setValue', payload: { key: 'networkId', value: targetChain.chainId } });
 
-          {!!approvedData.explorerUrl && (
-            <p className="mb-6">
-              <Btn variant="secondary" href={approvedData.explorerUrl} blank>
-                View on explorer
-              </Btn>
-            </p>
-          )}
+          if (!!txToConfirm || !!messageToSign || !!contractFunctionData) {
+            setTargetChain(t => ({
+              ...t,
+              chainId: 0,
+            }));
+          } else {
+            setIsModalOpen(false);
+          }
+        }}
+        onDecline={() => {
+          targetChain.resolve(false);
+          setIsModalOpen(false);
+        }}
+      />
+    );
+  } else if (approvedData.title) {
+    /**
+     * Transaction submitted to network
+     */
+    modalContent = (
+      <div className="text-center mt-2">
+        <h2 className="mb-6">{approvedData.title}</h2>
 
-          {!!approvedData.txHash && (
-            <p className="break-all my-3">Transaction hash: {approvedData.txHash}</p>
-          )}
+        {!!approvedData.explorerUrl && (
+          <p className="mb-6">
+            <Btn variant="secondary" href={approvedData.explorerUrl} blank>
+              View on explorer
+            </Btn>
+          </p>
+        )}
 
-          <div className="mt-12">
-            <Btn onClick={() => closeApproveScreen()}>Close</Btn>
-          </div>
+        {!!approvedData.txHash && (
+          <p className="break-all my-3">Transaction hash: {approvedData.txHash}</p>
+        )}
+
+        <div className="mt-12">
+          <Btn onClick={() => closeApproveScreen(true)}>Close</Btn>
         </div>
-      );
-    } else {
-      /**
-       * Approve tx (authenticate w/ passkey e.g.)
-       */
-      modalContent = (
-        <WalletApprove
-          tx={txToConfirm}
-          signMessage={messageToSign}
-          contractFunctionData={contractFunctionData}
-          onApprove={async () => {
-            if (approveParams.current) {
-              try {
-                handleError();
+      </div>
+    );
+  } else if (!!txToConfirm || !!messageToSign || !!contractFunctionData) {
+    /**
+     * Approve tx (authenticate w/ passkey e.g.)
+     */
+    modalContent = (
+      <WalletApprove
+        tx={txToConfirm}
+        signMessage={messageToSign}
+        contractFunctionData={contractFunctionData}
+        onApprove={async () => {
+          if (approveParams.current) {
+            try {
+              handleError();
 
-                if (approveParams.current.signature) {
-                  await wallet?.signMessage({
-                    ...approveParams.current.signature,
-                    authData: { username: state.username },
-                  });
+              if (approveParams.current.signature) {
+                await wallet?.signMessage({
+                  ...approveParams.current.signature,
+                  authData: { username: state.username },
+                });
 
-                  closeApproveScreen();
-                } else if (approveParams.current.plain) {
-                  const res = await wallet?.signPlainTransaction({
-                    ...approveParams.current.plain,
-                    authData: { username: state.username },
-                  });
+                closeApproveScreen(true);
+              } else if (approveParams.current.plain) {
+                const res = await wallet?.signPlainTransaction({
+                  ...approveParams.current.plain,
+                  authData: { username: state.username },
+                });
 
-                  if (disableAutoBroadcastAfterSign) {
-                    closeApproveScreen();
-                  } else if (res) {
-                    const { signedTxData, chainId } = res;
-                    const res2 = await wallet?.broadcastTransaction(
-                      signedTxData,
-                      chainId,
-                      approveParams.current.plain.label || 'Transaction'
-                    );
-
-                    setApprovedData({
-                      title: 'Transaction submitted',
-                      explorerUrl: res2?.txItem.explorerUrl || '',
-                      txHash: res2?.txHash || '',
-                    });
-                  }
-                } else if (approveParams.current.contractWrite) {
-                  const res = await wallet?.signContractWrite({
-                    ...approveParams.current.contractWrite,
-                    authData: { username: state.username },
-                  });
-
-                  if (disableAutoBroadcastAfterSign) {
-                    closeApproveScreen();
-                  } else if (res) {
-                    const { signedTxData, chainId } = res;
-                    const res2 = await wallet?.broadcastTransaction(
-                      signedTxData,
-                      chainId,
-                      approveParams.current.contractWrite.label || 'Transaction'
-                    );
-
-                    setApprovedData({
-                      title: 'Transaction submitted',
-                      explorerUrl: res2?.txItem.explorerUrl || '',
-                      txHash: res2?.txHash || '',
-                    });
-                  }
+                if (broadcastAfterSign && res) {
+                  const { signedTxData, chainId } = res;
+                  await wallet?.broadcastTransaction(
+                    signedTxData,
+                    chainId,
+                    approveParams.current.plain.label || 'Transaction'
+                  );
+                } else {
+                  closeApproveScreen(true);
                 }
-              } catch (e) {
-                handleError(e);
+              } else if (approveParams.current.contractWrite) {
+                const res = await wallet?.signContractWrite({
+                  ...approveParams.current.contractWrite,
+                  authData: { username: state.username },
+                });
+
+                if (broadcastAfterSign && res) {
+                  const { signedTxData, chainId } = res;
+                  await wallet?.broadcastTransaction(
+                    signedTxData,
+                    chainId,
+                    approveParams.current.contractWrite.label || 'Transaction'
+                  );
+                } else {
+                  closeApproveScreen(true);
+                }
+              }
+            } catch (e) {
+              const errMsg = handleError(e);
+
+              // Transaction was already broadcast
+              if (errMsg === 'already known') {
+                closeApproveScreen(true);
               }
             }
-          }}
-          onDecline={() => {
-            closeApproveScreen();
+          }
+        }}
+        onDecline={() => {
+          closeApproveScreen();
 
-            if (approveParams.current?.contractWrite?.reject) {
-              approveParams.current.contractWrite.reject(new UserRejectedRequestError());
-            } else if (approveParams.current?.plain?.reject) {
-              approveParams.current.plain.reject(new UserRejectedRequestError());
-            } else if (approveParams.current?.signature?.reject) {
-              approveParams.current.signature.reject(new UserRejectedRequestError());
-            }
-          }}
-        />
-      );
-    }
+          if (approveParams.current?.contractWrite?.reject) {
+            approveParams.current.contractWrite.reject(new UserRejectedRequestError());
+          } else if (approveParams.current?.plain?.reject) {
+            approveParams.current.plain.reject(new UserRejectedRequestError());
+          } else if (approveParams.current?.signature?.reject) {
+            approveParams.current.signature.reject(new UserRejectedRequestError());
+          }
+        }}
+      />
+    );
   } else {
     /**
      * Default UI
@@ -376,7 +399,7 @@ function Modal({
           >
             <div className="fixed inset-0 w-screen overflow-y-auto p-4">
               <div className="flex items-center justify-center min-h-full">
-                <DialogPanel className="relative max-w-lg w-full min-h-[600px] bg-dark p-8 sm:py-16 sm:px-12 border border-brightdark text-offwhite">
+                <DialogPanel className="relative max-w-lg w-full min-h-[600px] bg-dark p-8 sm:p-12 border border-brightdark text-offwhite flex flex-col">
                   <button className="absolute top-2 right-2" onClick={() => setIsOpen(false)}>
                     <svg
                       width="24"
@@ -394,7 +417,23 @@ function Modal({
                     </svg>
                   </button>
 
+                  <div>
+                    <Logo className="mb-6" />
+                  </div>
+
                   {children}
+
+                  <div className="flex-grow"></div>
+
+                  <p className="text-xs mt-6 text-center">
+                    <a
+                      href="https://apillon.io/"
+                      target="_blank"
+                      className="rounded-sm opacity-50 hover:opacity-100"
+                    >
+                      Powered by ©Apillon
+                    </a>
+                  </p>
                 </DialogPanel>
               </div>
             </div>

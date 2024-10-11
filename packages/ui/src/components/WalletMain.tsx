@@ -14,7 +14,7 @@ export default function WalletMain() {
 
   const back = useMemo<{ key: WalletScreens; label: string }>(() => {
     if (state.walletScreen === 'main') {
-      return { key: 'networks', label: 'Change' };
+      return { key: 'networks', label: '' };
     }
 
     if (state.walletScreen === 'selectToken') {
@@ -26,20 +26,35 @@ export default function WalletMain() {
   return (
     <div>
       {/* Selected network + trigger change screen to network select */}
-      <div className="text-center -mt-4 sm:-mt-8 mb-4">
-        <div className="inline-block opacity-50 hover:opacity-100">
-          <p>
+      <div className="mb-4 -mt-4">
+        <button className="opacity-50 hover:opacity-100" onClick={() => setScreen(back.key)}>
+          <span className="!text-sm !text-offwhite">
             {!!state.networkId && !!networksById[state.networkId]
               ? networksById[state.networkId].name
               : 'No network'}
-          </p>
+          </span>
 
-          <p>
-            <button className="text-sm" onClick={() => setScreen(back.key)}>
+          {!!back.label && (
+            <span className="flex gap-0.5 items-center !text-xs text-left">
+              <svg
+                width="1.5em"
+                height="1.5em"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M20 12H4M4 12L10 6M4 12L10 18"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
               {back.label}
-            </button>
-          </p>
-        </div>
+            </span>
+          )}
+        </button>
       </div>
 
       {/* Error */}
@@ -62,10 +77,7 @@ export default function WalletMain() {
           </div>
 
           {/* Transactions */}
-          <div className="mb-8">
-            <h3 className="mb-2">Transactions</h3>
-            <WalletTransactions />
-          </div>
+          <WalletTransactions />
 
           <Btn
             variant="secondary"
@@ -109,7 +121,7 @@ function AccountInfo({ className }: { className: string }) {
 
   return (
     <div className={className}>
-      <h2 className="break-all mb-1">Hi, {state.username}</h2>
+      <h2 className="break-words mb-1">Hi, {state.username}</h2>
 
       <p title={state.address} className="text-xl">
         <span className="mr-2">{shortHash(state.address)}</span>

@@ -13,7 +13,7 @@ import {
   WebauthnContract,
 } from './types';
 import * as sapphire from '@oasisprotocol/sapphire-paratime';
-import { AccountAbi, AccountManagerAbi, AccountManagerAbiOld } from './abi';
+import { AccountAbi, AccountManagerAbi } from './abi';
 import PasswordStrategy from './strategies/password';
 import PasskeyStrategy from './strategies/passkey';
 import { networkIdIsSapphire, getHashedUsername, abort } from './utils';
@@ -26,10 +26,8 @@ class EmbeddedWallet {
   accountManagerContract: WebauthnContract;
   abiCoder = ethers.AbiCoder.defaultAbiCoder();
   events: Emitter<Events>;
-  onGetSignature: SignatureCallback | undefined;
-  onGetApillonSessionToken: (() => Promise<string>) | undefined;
+  apillonClientId: string;
 
-  isTest = false;
   defaultNetworkId = 0;
   rpcUrls = {} as { [networkId: number]: string };
   rpcProviders = {} as { [networkId: number]: ethers.JsonRpcProvider };
@@ -56,33 +54,29 @@ class EmbeddedWallet {
    */
   constructor(params?: AppParams) {
     const ethSaphProvider = new ethers.JsonRpcProvider(
-      params?.test ? 'https://testnet.sapphire.oasis.io' : 'https://sapphire.oasis.io'
+      import.meta.env.VITE_SAPPHIRE_URL ?? 'https://sapphire.oasis.io'
     );
 
     this.sapphireProvider = sapphire.wrap(ethSaphProvider);
 
     this.accountManagerContract = new ethers.Contract(
-      params?.accountManagerAddress || '0xF35C3eB93c6D3764A7D5efC6e9DEB614779437b1',
-      !params?.onGetSignature && !params?.onGetApillonSessionToken
-        ? AccountManagerAbiOld
-        : AccountManagerAbi,
+      import.meta.env.VITE_ACCOUNT_MANAGER_ADDRESS ?? '0xF35C3eB93c6D3764A7D5efC6e9DEB614779437b1',
+      AccountManagerAbi,
       new ethers.VoidSigner(ethers.ZeroAddress, this.sapphireProvider)
     ) as unknown as WebauthnContract;
 
     this.defaultNetworkId = params?.defaultNetworkId || this.defaultNetworkId;
 
-    if (params?.networkConfig) {
-      for (const k in params.networkConfig) {
-        this.rpcUrls[k] = params.networkConfig[k].rpcUrl;
-        this.explorerUrls[k] = params.networkConfig[k].explorerUrl;
+    if (params?.networks) {
+      for (const ntw of params.networks) {
+        this.rpcUrls[ntw.id] = ntw.rpcUrl;
+        this.explorerUrls[ntw.id] = ntw.explorerUrl;
       }
     }
 
     this.events = mitt<Events>();
 
-    this.isTest = !!params?.test;
-    this.onGetSignature = params?.onGetSignature;
-    this.onGetApillonSessionToken = params?.onGetApillonSessionToken;
+    this.apillonClientId = params?.clientId || '';
 
     /**
      * Provider connection events
@@ -160,39 +154,21 @@ class EmbeddedWallet {
       await this.accountManagerContract.gaspayingAddress()
     );
 
-    let signedTx = '';
+    // Get signature from API (handle gas payments e.g.)
+    const gaslessParams = await this.getApillonSignature(gaslessData);
 
-    if (!!this.onGetSignature || !!this.onGetApillonSessionToken) {
-      /**
-       * Use apillon signature fetch if no custom provided
-       */
-      if (!this.onGetSignature) {
-        this.onGetSignature = this.getApillonSignature;
-      }
-
-      // Get signature from API (handle gas payments e.g.)
-      const gaslessParams = await this.onGetSignature(gaslessData);
-
-      if (!gaslessParams.signature) {
-        abort('CANT_GET_SIGNATURE');
-      }
-
-      signedTx = await this.accountManagerContract.generateGaslessTx(
-        gaslessData,
-        nonce as any,
-        gaslessParams.gasPrice ? BigInt(gaslessParams.gasPrice) : (gasPrice as any),
-        gaslessParams.gasLimit ? BigInt(gaslessParams.gasLimit) : 1_000_000n,
-        BigInt(gaslessParams.timestamp),
-        gaslessParams.signature
-      );
-    } else {
-      // Old ABI / interface -- without additional signature for register
-      signedTx = await (this.accountManagerContract.generateGaslessTx as any)(
-        gaslessData,
-        nonce as any,
-        gasPrice as any
-      );
+    if (!gaslessParams.signature) {
+      abort('CANT_GET_SIGNATURE');
     }
+
+    const signedTx = await this.accountManagerContract.generateGaslessTx(
+      gaslessData,
+      nonce as any,
+      gaslessParams.gasPrice ? BigInt(gaslessParams.gasPrice) : (gasPrice as any),
+      gaslessParams.gasLimit ? BigInt(gaslessParams.gasLimit) : 1_000_000n,
+      BigInt(gaslessParams.timestamp),
+      gaslessParams.signature
+    );
 
     const txHash = await this.sapphireProvider.send('eth_sendRawTransaction', [signedTx]);
 
@@ -348,28 +324,19 @@ class EmbeddedWallet {
 
   // #region Auth helpers
   /**
-   * Default handler for getting signature.
+   * Handler for getting signature.
    *
-   * If no custom `onGetSignature` param is provided, use apillon^tm by default.
-   *
-   * `onGetApillonSessionToken` param must be provided in this case to authenticate
-   * with the signature generating endpoint.
+   * The request is limited to whitelisted domains determined by client integration ID.
    */
   async getApillonSignature(
     gaslessData: Parameters<SignatureCallback>[0]
   ): ReturnType<SignatureCallback> {
-    if (!this.onGetApillonSessionToken) {
-      abort('NO_APILLON_SESSION_TOKEN_CALLBACK');
+    if (!this.apillonClientId) {
+      abort('NO_APILLON_CLIENT_ID');
       return { signature: '', gasLimit: 0, timestamp: 0 };
     }
 
     try {
-      const token = await this.onGetApillonSessionToken();
-
-      if (!token) {
-        abort('INVALID_APILLON_SESSION_TOKEN');
-      }
-
       const { data } = await (
         await fetch(
           `${import.meta.env.VITE_APILLON_BASE_URL ?? 'https://api.apillon.io'}/embedded-wallet/signature`,
@@ -377,8 +344,8 @@ class EmbeddedWallet {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              token,
               data: gaslessData,
+              integration_uuid: this.apillonClientId,
             }),
           }
         )
@@ -460,6 +427,18 @@ class EmbeddedWallet {
       abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
     }
 
+    if (!params.strategy) {
+      params.strategy = this.lastAccount.authStrategy;
+    }
+
+    if (!params.authData) {
+      if (params.strategy === 'passkey' && this.lastAccount.username) {
+        params.authData = { username: this.lastAccount.username };
+      } else {
+        abort('AUTHENTICATION_DATA_NOT_PROVIDED');
+      }
+    }
+
     const AC = new ethers.Interface(AccountAbi);
 
     let data = params.data || '';
@@ -488,14 +467,6 @@ class EmbeddedWallet {
             reject,
           });
         });
-      }
-    }
-
-    if (!params.authData) {
-      if (params.strategy === 'passkey' && this.lastAccount.username) {
-        params.authData = { username: this.lastAccount.username };
-      } else {
-        abort('AUTHENTICATION_DATA_NOT_PROVIDED');
       }
     }
 
@@ -536,7 +507,26 @@ class EmbeddedWallet {
       params?.tx?.chainId ? +params.tx.chainId.toString() || 0 : 0
     );
 
+    await this.handleNetworkChange(chainId);
+
     params.tx.chainId = chainId;
+
+    if (!params.strategy) {
+      params.strategy = this.lastAccount.authStrategy;
+    }
+
+    if (!params.authData) {
+      if (params.strategy === 'passkey' && this.lastAccount.username) {
+        params.authData = { username: this.lastAccount.username };
+      } else {
+        return abort('AUTHENTICATION_DATA_NOT_PROVIDED');
+      }
+    }
+
+    // Data must be BytesLike
+    if (!params.tx.data) {
+      params.tx.data = '0x';
+    }
 
     /**
      * Get nonce if none provided
@@ -559,14 +549,25 @@ class EmbeddedWallet {
      * Calculate gasPrice if missing
      */
     if (!params.tx.gasPrice) {
-      params.tx.gasPrice = (
-        await this.getRpcProviderForChainId(params.tx.chainId).getFeeData()
-      ).gasPrice;
+      const feeData = await this.getRpcProviderForChainId(params.tx.chainId).getFeeData();
+
+      params.tx.gasPrice = feeData.gasPrice;
+
+      if (feeData.maxPriorityFeePerGas) {
+        params.tx.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
+      }
+
+      if (feeData.maxFeePerGas) {
+        params.tx.maxFeePerGas = feeData.maxFeePerGas;
+      } else {
+        params.tx.maxFeePerGas =
+          BigInt(feeData.gasPrice || 0) * BigInt(2) + (feeData.maxPriorityFeePerGas || 0n);
+      }
     }
 
-    // Seems like this is needed
     if (!params.tx.gasLimit) {
-      params.tx.gasLimit = 1_000_000;
+      const gas = await this.getRpcProviderForChainId(params.tx.chainId).estimateGas(params.tx);
+      params.tx.gasLimit = !!gas ? Math.floor(Number(gas) * 1.01) : 1_000_000;
     }
 
     /**
@@ -577,7 +578,7 @@ class EmbeddedWallet {
      */
     if (
       (params.tx.type === 2 && !params.tx.value) ||
-      ('value' in params.tx && typeof params.tx.value === 'undefined')
+      ('value' in params.tx && (typeof params.tx.value === 'undefined' || params.tx.value === null))
     ) {
       params.tx.value = 0n;
     }
@@ -595,10 +596,6 @@ class EmbeddedWallet {
           plain: { ...params, mustConfirm: false, resolve, reject },
         });
       });
-    }
-
-    if (!params.authData) {
-      abort('AUTHENTICATION_DATA_NOT_PROVIDED');
     }
 
     const AC = new ethers.Interface(AccountAbi);
@@ -673,6 +670,20 @@ class EmbeddedWallet {
   async signContractWrite(params: ContractWriteParams) {
     const chainId = this.validateChainId(params.chainId);
 
+    await this.handleNetworkChange(chainId);
+
+    if (!params.strategy) {
+      params.strategy = this.lastAccount.authStrategy;
+    }
+
+    if (!params.authData) {
+      if (params.strategy === 'passkey' && this.lastAccount.username) {
+        params.authData = { username: this.lastAccount.username };
+      } else {
+        abort('AUTHENTICATION_DATA_NOT_PROVIDED');
+      }
+    }
+
     /**
      * Emit 'txApprove' if confirmation is needed.
      * Handle confirmation in UI part of app (call this method again w/o `mustConfirm`).
@@ -686,10 +697,6 @@ class EmbeddedWallet {
           contractWrite: { ...params, mustConfirm: false, resolve, reject },
         });
       });
-    }
-
-    if (!params.authData) {
-      abort('AUTHENTICATION_DATA_NOT_PROVIDED');
     }
 
     const accountAddresses = await this.getAccountAddress(params.authData!.username);
@@ -717,22 +724,37 @@ class EmbeddedWallet {
     ).populateTransaction({
       from: accountAddresses!.publicAddress,
       to: params.contractAddress,
-      gasLimit: 1_000_000,
       value: 0,
       data: contractData,
     });
-    tx.gasPrice = 20_000_000_000; // 20 gwei
+
+    if (!tx.gasPrice) {
+      const feeData = await this.getRpcProviderForChainId(params.chainId).getFeeData();
+      tx.gasPrice = feeData.gasPrice || 20_000_000_000;
+
+      if (feeData.maxPriorityFeePerGas) {
+        tx.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
+      }
+
+      if (feeData.maxFeePerGas) {
+        tx.maxFeePerGas = feeData.maxFeePerGas;
+      } else {
+        tx.maxFeePerGas =
+          BigInt(feeData.gasPrice || 0) * BigInt(2) + (feeData.maxPriorityFeePerGas || 0n);
+      }
+    }
+
+    if (!tx.gasLimit) {
+      const gas = await this.getRpcProviderForChainId(params.chainId).estimateGas(tx);
+      tx.gasLimit = !!gas ? Math.floor(Number(gas) * 1.01) : 1_000_000;
+    }
 
     /**
      * Encode tx data and authenticate it with selected auth strategy through sapphire "Account Manager"
      */
     const AC = new ethers.Interface(AccountAbi);
     const data = AC.encodeFunctionData('signEIP155', [tx]);
-    const res = await this.getProxyForStrategy(
-      params.strategy || this.lastAccount.authStrategy,
-      data,
-      params.authData!
-    );
+    const res = await this.getProxyForStrategy(params.strategy, data, params.authData!);
 
     if (res) {
       const [signedTxData] = AC.decodeFunctionResult('signEIP155', res).toArray();
@@ -758,6 +780,8 @@ class EmbeddedWallet {
   async contractRead(params: ContractReadParams) {
     const chainId = this.validateChainId(params.chainId);
     const ethProvider = this.getRpcProviderForChainId(chainId);
+
+    await this.handleNetworkChange(chainId);
 
     const contract = new ethers.Contract(params.contractAddress, params.contractAbi, ethProvider);
 
@@ -838,6 +862,24 @@ class EmbeddedWallet {
     }
 
     return false;
+  }
+
+  /**
+   * Send event requestChainChange, wait for it to resolve.
+   * Throws error if chain was not changed.
+   */
+  async handleNetworkChange(chainId?: number) {
+    if (chainId && chainId !== this.defaultNetworkId) {
+      const isChanged = await new Promise(resolve =>
+        this.events.emit('requestChainChange', { chainId, resolve })
+      );
+
+      if (!isChanged) {
+        return abort('CHAIN_CHANGE_FAILED');
+      }
+
+      this.setDefaultNetworkId(chainId);
+    }
   }
 
   /**

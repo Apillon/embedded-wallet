@@ -23,6 +23,9 @@ export const Errors = {
   CANT_GET_SIGNATURE: 'CANT_GET_SIGNATURE',
   NO_APILLON_SESSION_TOKEN_CALLBACK: 'NO_APILLON_SESSION_TOKEN_CALLBACK',
   INVALID_APILLON_SESSION_TOKEN: 'INVALID_APILLON_SESSION_TOKEN',
+  NO_APILLON_CLIENT_ID: 'NO_APILLON_CLIENT_ID',
+  CANT_GET_SIGNED_TX: 'CANT_GET_SIGNED_TX',
+  CHAIN_CHANGE_FAILED: 'CHAIN_CHANGE_FAILED',
 };
 
 export const ErrorMessages = {
@@ -33,10 +36,13 @@ export const ErrorMessages = {
   [Errors.NO_LOGIN_PROXY_DATA]: 'No login proxy data',
   [Errors.AUTHENTICATION_DATA_NOT_PROVIDED]: 'Authentication data not provided',
   [Errors.CANT_GET_ACCOUNT_ADDRESS]: "Can't get account address",
-  [Errors.NO_RPC_URL_CONFIGURED_FOR_SELECTED_CHAINID]: 'No rpc url configured for selected chainid',
+  [Errors.NO_RPC_URL_CONFIGURED_FOR_SELECTED_CHAINID]: 'Selected chain is not supported',
   [Errors.CROSS_CHAIN_PROVIDER_NOT_INITIALIZED]: 'Cross chain provider not initialized',
   [Errors.OASIS_WALLET_NOT_INITIALIZED]: 'Embedded wallet not initialized',
   [Errors.CANT_HASH_USERNAME]: "Can't hash username",
   [Errors.NO_APILLON_SESSION_TOKEN_CALLBACK]: 'Session token callback must be provided',
   [Errors.INVALID_APILLON_SESSION_TOKEN]: 'Session token is not valid',
+  [Errors.NO_APILLON_CLIENT_ID]: 'Client ID is not valid',
+  [Errors.CANT_GET_SIGNED_TX]: 'Could not get signed transaction',
+  [Errors.CHAIN_CHANGE_FAILED]: 'Failed to switch chain',
 };
