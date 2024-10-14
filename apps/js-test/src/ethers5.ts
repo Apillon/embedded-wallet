@@ -1,4 +1,4 @@
-import { EmbeddedEthersSigner, getEmbeddedWallet } from '@apillon/wallet-sdk';
+import { EmbeddedEthersSigner } from '@apillon/wallet-sdk';
 import { ethers } from 'ethers5';
 
 start();
@@ -14,9 +14,7 @@ async function start() {
     }, 200);
   });
 
-  const wallet = getEmbeddedWallet();
-
-  const signer = new EmbeddedEthersSigner(wallet!.getRpcProviderForChainId(1287));
+  const signer = new EmbeddedEthersSigner();
 
   const contract = new ethers.Contract(
     '0x67b9DA16d0Adf2dF05F0564c081379479d0448f8',

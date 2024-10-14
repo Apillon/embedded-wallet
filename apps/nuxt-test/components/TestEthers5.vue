@@ -11,7 +11,7 @@ let contract: ethers.Contract;
 
 onMounted(() => {
   if (wallet.value) {
-    signer = new EmbeddedEthersSigner(wallet.value!.getRpcProviderForChainId(1287));
+    signer = new EmbeddedEthersSigner();
 
     contract = new ethers.Contract(
       '0x67b9DA16d0Adf2dF05F0564c081379479d0448f8',

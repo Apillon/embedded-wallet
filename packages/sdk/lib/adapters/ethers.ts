@@ -7,14 +7,14 @@ class EmbeddedEthersSigner extends ethers.AbstractSigner<ethers.JsonRpcProvider>
   wallet: EmbeddedWallet;
   // override provider: ethers.JsonRpcProvider;
 
-  constructor(provider: ethers.JsonRpcProvider) {
-    super(provider);
-
+  constructor(provider?: ethers.JsonRpcProvider) {
     const w = getEmbeddedWallet();
 
     if (!w) {
-      abort('OASIS_WALLET_NOT_INITIALIZED');
+      throw abort('OASIS_WALLET_NOT_INITIALIZED');
     }
+
+    super(provider || w.getRpcProviderForChainId(w.defaultNetworkId));
 
     this.wallet = w!;
     // this.provider = provider;
