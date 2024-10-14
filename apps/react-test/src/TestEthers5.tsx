@@ -83,7 +83,7 @@ export default function TestEthers5() {
           console.log(txHash);
         }}
       >
-        (ethers5) Contract write (transfer)
+        (ethers 5) Contract write (transfer)
       </button>
     </div>
   );

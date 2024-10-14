@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useAccount, useContract, useWallet } from '@apillon/wallet-vue';
 
-const { signMessage, sendTransaction, wallet } = useWallet();
+const { signMessage, sendTransaction } = useWallet();
 
 const { info, getBalance } = useAccount();
 
