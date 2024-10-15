@@ -15,6 +15,7 @@ setTimeout(() => {
   EmbeddedWalletUI('#wallet', {
     clientId: import.meta.env.VITE_CLIENT_ID ?? 'YOUR INTEGRATION UUID HERE',
     defaultNetworkId: 1287,
+    broadcastAfterSign: true,
     networks: [
       {
         name: 'Moonbeam Testnet',
