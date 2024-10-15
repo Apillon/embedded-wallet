@@ -16,7 +16,7 @@ import * as sapphire from '@oasisprotocol/sapphire-paratime';
 import { AccountAbi, AccountManagerAbi } from './abi';
 import PasswordStrategy from './strategies/password';
 import PasskeyStrategy from './strategies/passkey';
-import { networkIdIsSapphire, getHashedUsername, abort } from './utils';
+import { networkIdIsSapphire, getHashedUsername, abort, JsonMultiRpcProvider } from './utils';
 import mitt, { Emitter } from 'mitt';
 import { SapphireMainnet, SapphireTestnet } from './constants';
 import { WalletDisconnectedError } from './adapters/eip1193';
@@ -53,9 +53,12 @@ class EmbeddedWallet {
    * Prepare data for available chains
    */
   constructor(params?: AppParams) {
-    const ethSaphProvider = new ethers.JsonRpcProvider(
-      import.meta.env.VITE_SAPPHIRE_URL ?? 'https://sapphire.oasis.io'
-    );
+    const ethSaphProvider = new JsonMultiRpcProvider([
+      import.meta.env.VITE_SAPPHIRE_URL ?? 'https://sapphire.oasis.io',
+      ...(import.meta.env.VITE_SAPPHIRE_BACKUP_URLS
+        ? import.meta.env.VITE_SAPPHIRE_BACKUP_URLS.replace(/\s/g, '').split(',')
+        : []),
+    ]);
 
     this.sapphireProvider = sapphire.wrap(ethSaphProvider);
 

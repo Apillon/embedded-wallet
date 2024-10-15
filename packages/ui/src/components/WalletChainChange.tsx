@@ -21,10 +21,12 @@ export default function WalletChainChange({
         You have to switch the connected wallet chain to continue with the transaction.
       </p>
 
-      <p>
-        Switching to <strong>{networksById[chainId].name}</strong> (chain ID:{' '}
-        {networksById[chainId].id})
-      </p>
+      {!!chainId && !!networksById?.[chainId] && (
+        <p>
+          Switching to <strong>{networksById[chainId].name}</strong> (chain ID:{' '}
+          {networksById[chainId].id})
+        </p>
+      )}
 
       {/* Error */}
       <WalletError show className="mt-6 -mb-6" />

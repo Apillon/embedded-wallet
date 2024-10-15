@@ -61,53 +61,42 @@ export function abort(e: keyof typeof Errors, message = 'Error') {
   throw err;
 }
 
-export class RetriableJsonRpcProvider extends ethers.JsonRpcProvider {
-  providerList: ethers.JsonRpcProvider[];
+export class JsonMultiRpcProvider extends ethers.JsonRpcProvider {
+  providers: ethers.JsonRpcProvider[] = [];
+  rpcUrls: string[];
   currentIndex = 0;
   error: any;
 
-  constructor(rpcs: string[], chainId: number) {
-    super(rpcs[0], chainId);
+  constructor(rpcUrls: string[], chainId?: number) {
+    super(rpcUrls[0], chainId);
 
-    this.providerList = rpcs.map(url => new ethers.JsonRpcProvider(url, chainId));
+    this.rpcUrls = rpcUrls;
   }
 
-  async send(method: string, params: Array<any>, retry = 0): Promise<any> {
-    // Throw if all providers checked
-    if (retry === this.providerList.length) {
+  async send(method: string, params: Array<any>, tryIndex = 0): Promise<any> {
+    // Throw if all urls checked
+    if (tryIndex === this.rpcUrls.length) {
       const error = this.error;
       this.error = undefined;
       throw new Error(error);
     }
 
     try {
-      const provider = this.selectProvider();
+      if (tryIndex > this.providers.length - 1) {
+        // Initialize new provider
+        const fetchRequest = new ethers.FetchRequest(this.rpcUrls[tryIndex]);
+        fetchRequest.timeout = 15000;
+        this.providers.push(new ethers.JsonRpcProvider(fetchRequest));
+      }
 
-      /**
-       * @TODO set timeout to like 15s, default is 300s
-       * @TODO add another retry cycle
-       * @url https://github.com/ethers-io/ethers.js/issues/4122
-       */
-      return await provider.send(method, params);
+      return await this.providers[tryIndex].send(method, params);
     } catch (error) {
       // store error internally
       this.error = error;
 
-      retry = retry + 1;
+      tryIndex = tryIndex + 1;
 
-      return this.send(method, params, retry);
+      return this.send(method, params, tryIndex);
     }
-  }
-
-  private selectProvider() {
-    if (this.currentIndex === this.providerList.length) {
-      this.currentIndex = 1;
-      return this.providerList[0];
-    }
-
-    const provider = this.providerList[this.currentIndex];
-    this.currentIndex = this.currentIndex + 1;
-
-    return provider;
   }
 }

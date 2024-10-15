@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="/style.css" rel="stylesheet" />
+    <title>Vite + TS</title>
+  </head>
+
+  <body>
+    <div id="app">
+      <div class="card">
+        <div id="wallet">Wall</div>
+
+        <br />
+
+        <div style="display: grid; gap: 8px; grid-template-columns: repeat(3, minmax(0, 1fr));">
+          <button id="sdk-sign">(SDK) Sign message</button>
+
+          <button id="sdk-native-balance">(SDK) Get native balance</button>
+
+          <button id="sdk-native-transfer">(SDK) Transfer native balance</button>
+
+          <button id="sdk-contract-read">(SDK) Contract read (balanceOf)</button>
+
+          <button id="sdk-contract-claim">(SDK) Contract write (claim)</button>
+
+          <button id="sdk-contract-transfer">(SDK) Contract write (transfer)</button>
+        </div>
+
+        <br />
+
+        <div style="display: grid; gap: 8px; grid-template-columns: repeat(3, minmax(0, 1fr));">
+          <button id="viem-sign">(Viem) Sign message</button>
+
+          <button id="viem-native-balance">(Viem) Get native balance</button>
+
+          <button id="viem-native-transfer">(Viem) Transfer native balance</button>
+
+          <button id="viem-contract-read">(Viem) Contract read (balanceOf)</button>
+
+          <button id="viem-contract-claim">(Viem) Contract write (claim)</button>
+
+          <button id="viem-contract-transfer">(Viem) Contract write (transfer)</button>
+        </div>
+
+        <br />
+
+        <div style="display: grid; gap: 8px; grid-template-columns: repeat(3, minmax(0, 1fr));">
+          <button id="ethers6-sign">(ethers 6) Sign message</button>
+
+          <button id="ethers6-native-balance">(ethers 6) Get native balance</button>
+
+          <button id="ethers6-native-transfer">(ethers 6) Transfer native balance</button>
+
+          <button id="ethers6-contract-read">(ethers 6) Contract read (balanceOf)</button>
+
+          <button id="ethers6-contract-claim">(ethers 6) Contract write (claim)</button>
+
+          <button id="ethers6-contract-transfer">(ethers 6) Contract write (transfer)</button>
+        </div>
+
+        <br />
+
+        <div style="display: grid; gap: 8px; grid-template-columns: repeat(3, minmax(0, 1fr));">
+          <button id="ethers5-sign">(ethers 5) Sign message</button>
+
+          <button id="ethers5-native-balance">(ethers 5) Get native balance</button>
+
+          <button id="ethers5-native-transfer">(ethers 5) Transfer native balance</button>
+
+          <button id="ethers5-contract-read">(ethers 5) Contract read (balanceOf)</button>
+
+          <button id="ethers5-contract-claim">(ethers 5) Contract write (claim)</button>
+
+          <button id="ethers5-contract-transfer">(ethers 5) Contract write (transfer)</button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+    <script type="module" src="/src/sdk.ts"></script>
+    <script type="module" src="/src/viem.ts"></script>
+    <script type="module" src="/src/ethers6.ts"></script>
+    <script type="module" src="/src/ethers5.ts"></script>
+  </body>
+</html>

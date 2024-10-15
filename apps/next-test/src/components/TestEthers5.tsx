@@ -9,7 +9,7 @@ export default function TestEthers5() {
     return;
   }
 
-  const signer = new EmbeddedEthersSigner(wallet.getRpcProviderForChainId(1287));
+  const signer = new EmbeddedEthersSigner();
 
   const contract = new ethers.Contract(
     '0x67b9DA16d0Adf2dF05F0564c081379479d0448f8',
@@ -83,7 +83,7 @@ export default function TestEthers5() {
           console.log(txHash);
         }}
       >
-        (ethers5) Contract write (transfer)
+        (ethers 5) Contract write (transfer)
       </button>
     </div>
   );

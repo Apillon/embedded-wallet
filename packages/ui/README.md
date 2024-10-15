@@ -11,7 +11,7 @@ There are some UI specific options in addition to all SDK options.
 networks?: { name: string; id: number; rpcUrl: string; explorerUrl: string }[];
 
 /**
- * Do not automatically broadcast with SDK after confirming a transaction.
+ * Automatically broadcast with SDK after confirming a transaction.
  *
  * Useful when signing transaction directly using SDK.
  */
