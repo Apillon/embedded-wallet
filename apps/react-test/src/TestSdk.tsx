@@ -12,6 +12,7 @@ export default function TestSdk() {
     ],
     address: '0x67b9DA16d0Adf2dF05F0564c081379479d0448f8',
     chainId: 1287,
+    broadcast: true,
   });
 
   return (

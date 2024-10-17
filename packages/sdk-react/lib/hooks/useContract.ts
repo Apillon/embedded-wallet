@@ -7,11 +7,13 @@ export function useContract({
   address,
   chainId,
   mustConfirm = true, //
+  broadcast = false,
 }: {
   abi: any;
   address: string;
   chainId?: number;
   mustConfirm?: boolean;
+  broadcast?: boolean;
 }) {
   const { wallet } = useWallet();
   const { username, authStrategy } = useAccount();
@@ -37,7 +39,7 @@ export function useContract({
       return;
     }
 
-    return await wallet.signContractWrite({
+    const result = await wallet.signContractWrite({
       contractAbi: abi,
       contractAddress: address,
       contractFunctionName: fn,
@@ -48,6 +50,12 @@ export function useContract({
       authData: { username: username },
       mustConfirm,
     });
+
+    if (broadcast && result) {
+      return await wallet.broadcastTransaction(result.signedTxData, result.chainId, label);
+    } else {
+      return result;
+    }
   }
 
   return {

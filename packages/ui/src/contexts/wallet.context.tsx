@@ -1,6 +1,5 @@
 import { ReactNode, createContext, useContext, useEffect, useReducer, useState } from 'react';
 import {
-  AppParams,
   AuthStrategyName,
   ErrorMessages,
   WebStorageKeys,
@@ -10,6 +9,7 @@ import {
   Network,
   SapphireTestnet,
 } from '@apillon/wallet-sdk';
+import { AppProps } from '../main';
 
 export type WalletScreens =
   | 'main'
@@ -19,7 +19,7 @@ export type WalletScreens =
   | 'selectToken'
   | 'receiveToken';
 
-const initialState = (defaultNetworkId = 0) => ({
+const initialState = (defaultNetworkId = 0, appProps: AppProps) => ({
   username: '',
   address: '',
   contractAddress: '',
@@ -28,6 +28,7 @@ const initialState = (defaultNetworkId = 0) => ({
   networkId: defaultNetworkId,
   walletScreen: 'main' as WalletScreens,
   displayedError: '',
+  appProps,
 });
 
 type ContextState = ReturnType<typeof initialState>;
@@ -59,7 +60,7 @@ function reducer(state: ContextState, action: ContextActions) {
         ...action.payload,
       };
     case 'reset':
-      return initialState(state.networkId);
+      return initialState(state.networkId, state.appProps);
     default:
       throw new Error('Unhandled action type.' + JSON.stringify(action));
   }
@@ -89,7 +90,7 @@ function WalletProvider({
 }: {
   children: ReactNode;
   networks?: Network[];
-} & AppParams) {
+} & AppProps) {
   networks = [
     import.meta.env.VITE_SAPPHIRE_TESTNET
       ? {
@@ -107,7 +108,10 @@ function WalletProvider({
     ...networks,
   ];
 
-  const [state, dispatch] = useReducer(reducer, initialState(defaultNetworkId || networks[0].id));
+  const [state, dispatch] = useReducer(
+    reducer,
+    initialState(defaultNetworkId || networks[0].id, { ...restOfParams, defaultNetworkId })
+  );
   const [initialized, setInitialized] = useState(false);
   const [wallet, setWallet] = useState<EmbeddedWallet>();
 
