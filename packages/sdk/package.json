@@ -2,7 +2,7 @@
   "name": "@apillon/wallet-sdk",
   "description": "▶◀ Apillon Embedded Wallet SDK ▶◀",
   "private": false,
-  "version": "1.0.0-alpha.6",
+  "version": "1.0.0-alpha.7",
   "type": "module",
   "files": [
     "dist/"
