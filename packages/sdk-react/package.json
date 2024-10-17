@@ -2,7 +2,7 @@
   "name": "@apillon/wallet-react",
   "description": "▶◀ Apillon Embedded Wallet React UI ▶◀",
   "private": false,
-  "version": "1.0.0-alpha.5",
+  "version": "1.0.0-alpha.6",
   "type": "module",
   "files": [
     "dist/"
