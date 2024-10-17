@@ -70,8 +70,6 @@ export default function WalletAuth({
         }
       );
 
-      console.log(res);
-
       if (!res.ok || res.status >= 400) {
         throw new Error('Could not send confirmation email');
       }

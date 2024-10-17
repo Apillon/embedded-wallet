@@ -74,8 +74,9 @@ export default function WalletTokens() {
 
         try {
           if (!selectedToken.address) {
+            const label = 'Transfer native token';
             // Native token
-            await wallet.signPlainTransaction({
+            const res = await wallet.signPlainTransaction({
               mustConfirm: true,
               strategy: 'passkey',
               tx: {
@@ -84,11 +85,19 @@ export default function WalletTokens() {
                 gasLimit: 1_000_000,
                 value: ethers.parseEther(amount),
               },
-              label: 'Transfer native token',
+              label,
             });
+
+            if (!state.appProps.broadcastAfterSign && res) {
+              return await wallet.broadcastTransaction(res.signedTxData, res.chainId, label);
+            } else {
+              return res;
+            }
           } else {
+            const label = 'Transfer ERC20 token';
+
             // Other ERC20 Token
-            await wallet.signContractWrite({
+            const res = await wallet.signContractWrite({
               mustConfirm: true,
               contractAbi: ERC20Abi,
               contractAddress: selectedToken.address,
@@ -97,8 +106,14 @@ export default function WalletTokens() {
                 receiverAddress,
                 ethers.parseUnits(amount, selectedToken.decimals),
               ],
-              label: 'Transfer ERC20 token',
+              label,
             });
+
+            if (!state.appProps.broadcastAfterSign && res) {
+              return await wallet.broadcastTransaction(res.signedTxData, res.chainId, label);
+            } else {
+              return res;
+            }
           }
         } catch (e) {
           handleError(e);

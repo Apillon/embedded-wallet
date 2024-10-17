@@ -75,7 +75,7 @@ export class JsonMultiRpcProvider extends ethers.JsonRpcProvider {
 
   async send(method: string, params: Array<any>, tryIndex = 0): Promise<any> {
     // Throw if all urls checked
-    if (tryIndex === this.rpcUrls.length) {
+    if (tryIndex >= this.rpcUrls.length) {
       const error = this.error;
       this.error = undefined;
       throw new Error(error);
@@ -94,9 +94,7 @@ export class JsonMultiRpcProvider extends ethers.JsonRpcProvider {
       // store error internally
       this.error = error;
 
-      tryIndex = tryIndex + 1;
-
-      return this.send(method, params, tryIndex);
+      return this.send(method, params, tryIndex + 1);
     }
   }
 }
