@@ -9,7 +9,7 @@ EmbeddedWalletSDK({
   networks: [
     {
       id: 1287,
-      name: 'Moonbeam Testnet',
+      name: 'Moonbase Testnet',
       rpcUrl: 'https://rpc.testnet.moonbeam.network',
       explorerUrl: 'https://moonbase.moonscan.io',
     },

@@ -16,7 +16,7 @@ export default function Test() {
         defaultNetworkId={1287}
         networks={[
           {
-            name: 'Moonbeam Testnet',
+            name: 'Moonbase Testnet',
             id: 1287,
             rpcUrl: 'https://rpc.testnet.moonbeam.network',
             explorerUrl: 'https://moonbase.moonscan.io',

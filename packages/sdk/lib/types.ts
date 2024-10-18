@@ -27,12 +27,12 @@ export type AppParams = {
 
   /**
    * Configuration of available networks. Oasis Sapphire is always included (ids 23294 and 23295)
-   * 
+   *
    * @example
-    ```ts 
+    ```ts
     [
       {
-        name: 'Moonbeam Testnet',
+        name: 'Moonbase Testnet',
         id: 1287,
         rpcUrl: 'https://rpc.testnet.moonbeam.network',
         explorerUrl: 'https://moonbase.moonscan.io',

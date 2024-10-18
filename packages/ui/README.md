@@ -37,7 +37,7 @@ EmbeddedWalletUI('#open-wallet-button-selector', {
   disableDefaultActivatorStyle: false,
   networks: [
     {
-      name: 'Moonbeam Testnet',
+      name: 'Moonbase Testnet',
       id: 1287,
       rpcUrl: 'https://rpc.testnet.moonbeam.network',
       explorerUrl: 'https://moonbase.moonscan.io',
