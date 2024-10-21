@@ -2,19 +2,19 @@
   "name": "@apillon/wallet-react",
   "description": "▶◀ Apillon Embedded Wallet React UI ▶◀",
   "private": false,
-  "version": "1.0.0-alpha.8",
+  "version": "1.0.0-beta.1",
   "type": "module",
   "files": [
     "dist/"
   ],
   "repository": {
     "type": "git",
-    "url": "hhttps://github.com/Apillon/embedded-wallet"
+    "url": "https://github.com/Apillon/embedded-wallet"
   },
   "bugs": {
     "url": "https://github.com/Apillon/embedded-wallet/issues"
   },
-  "homepage": "https://wiki.apillon.io/web3-services/8-embedded-wallets.html",
+  "homepage": "https://wiki.apillon.io/build/12-embedded-wallets-integration.html",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
