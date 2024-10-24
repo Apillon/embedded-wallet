@@ -6,6 +6,15 @@
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
     },
+    "build:sdk": {
+      "inputs": ["packages/sdk/**"],
+      "outputs": ["packages/sdk/dist/**"]
+    },
+    "build:other": {
+      "dependsOn": ["build:sdk"],
+      "inputs": ["packages/*", "!packages/sdk/**"],
+      "outputs": ["packages/*/dist/**"]
+    },
     "lint": {},
     "dev": {
       "cache": false,
