@@ -18,6 +18,12 @@ setTimeout(() => {
     broadcastAfterSign: true,
     networks: [
       {
+        name: 'Sapphire Testnet',
+        id: 23295,
+        rpcUrl: 'https://testnet.sapphire.oasis.io',
+        explorerUrl: 'https://explorer.oasis.io/testnet/sapphire',
+      },
+      {
         name: 'Moonbase Testnet',
         id: 1287,
         rpcUrl: 'https://rpc.testnet.moonbeam.network',

@@ -310,7 +310,7 @@ class EmbeddedWallet {
   }
 
   async getAccountBalance(address: string, networkId = this.defaultNetworkId, decimals = 18) {
-    if (!networkId || networkIdIsSapphire(networkId)) {
+    if (!networkId || (!this.rpcUrls[networkId] && networkIdIsSapphire(networkId))) {
       return ethers.formatUnits((await this.sapphireProvider?.getBalance(address)) || 0n, decimals);
     }
 
@@ -910,7 +910,10 @@ class EmbeddedWallet {
    * If no chainId specified, use sapphire network rpc.
    */
   getRpcProviderForChainId(chainId?: number) {
-    if (!chainId || (chainId && !!networkIdIsSapphire(+chainId.toString()))) {
+    if (
+      !chainId ||
+      (chainId && !this.rpcUrls[chainId] && !!networkIdIsSapphire(+chainId.toString()))
+    ) {
       /**
        * On sapphire network, use sapphire provider
        */
