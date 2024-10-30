@@ -63,7 +63,7 @@ class EmbeddedWallet {
     this.sapphireProvider = sapphire.wrap(ethSaphProvider);
 
     this.accountManagerContract = new ethers.Contract(
-      import.meta.env.VITE_ACCOUNT_MANAGER_ADDRESS ?? '0xF35C3eB93c6D3764A7D5efC6e9DEB614779437b1',
+      import.meta.env.VITE_ACCOUNT_MANAGER_ADDRESS ?? '0x50dE236a7ce372E7a09956087Fb4862CA1a887aA',
       AccountManagerAbi,
       new ethers.VoidSigner(ethers.ZeroAddress, this.sapphireProvider)
     ) as unknown as WebauthnContract;
