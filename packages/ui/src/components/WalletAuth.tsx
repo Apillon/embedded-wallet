@@ -4,9 +4,11 @@ import { useWalletContext } from '../contexts/wallet.context';
 import Btn from './Btn';
 import { AppProps } from './WalletWidget';
 import WalletError from './WalletError';
+import IconCheckmark from './IconCheckmark';
+import IconBird from './IconBird';
 
 export default function WalletAuth({
-  authFormPlaceholder = 'your e-mail@email.com',
+  authFormPlaceholder = 'your e-mail',
 }: Pick<AppProps, 'authFormPlaceholder'>) {
   const { dispatch, defaultNetworkId, handleError } = useWalletContext();
 
@@ -128,11 +130,15 @@ export default function WalletAuth({
   if (isCodeSubmitted) {
     return (
       <div className="text-center mt-2">
-        <h2 className="mb-12">Email succesfully confirmed.</h2>
+        <div className="text-center">
+          <IconCheckmark />
+        </div>
 
-        <p className="text-xl mb-12">Passkey configuration will now start.</p>
+        <h2 className="mb-2">Email succesfully confirmed</h2>
 
-        <Btn loading={loading} onClick={() => startRegister()}>
+        <p className="text-sm text-lightgrey mb-6">Passkey configuration will now start.</p>
+
+        <Btn variant="ghost" loading={loading} className="w-full" onClick={() => startRegister()}>
           Retry
         </Btn>
 
@@ -202,14 +208,18 @@ export default function WalletAuth({
 
   return (
     <div>
-      <h2 className="mb-6">Sign in or Sign up</h2>
+      <h2 className="mb-2">Sign in or Sign up</h2>
+
+      <p className="text-center mb-6 text-sm text-lightgrey">
+        Enter your e-mail to initialize a passkey through your email address.
+      </p>
 
       <form onSubmit={ev => onAuth(ev)}>
         <input
           type="email"
           placeholder={authFormPlaceholder}
           value={username}
-          className="w-full mb-8"
+          className="w-full mb-6"
           onChange={ev => setUsername(ev.target.value)}
         />
 
@@ -310,16 +320,20 @@ function ConfirmEmail({
 
   return (
     <div className="text-center">
-      <p>
-        We just sent a confirmation code to your email. Paste the code below to proceed with account
-        creation.
+      <div className="text-center mb-4">
+        <IconBird />
+      </div>
+
+      <h2 className="mb-2">Check your email</h2>
+
+      <p className="text-lightgrey text-sm mb-2">
+        We have just sent a confirmation code to your email. Paste the code below to proceed with
+        account creation.
       </p>
 
-      <h2 className="my-6">Check your email</h2>
+      <p className="mb-6 font-bold">Enter the 6-digit code you received</p>
 
-      <p className="mb-6">Enter the 6-digit code you received</p>
-
-      <div className="flex gap-2 mb-12 justify-center">
+      <div className="flex gap-2 mb-6 justify-center">
         {[0, 1, 2, 3, 4, 5].map(x => (
           <input
             ref={inputRefs[x]}
@@ -328,7 +342,7 @@ function ConfirmEmail({
             maxLength={1}
             autoFocus={x === 0}
             disabled={loading}
-            className="min-w-0 w-14 h-14"
+            className="min-w-0 w-[3.25rem] h-16 px-2 text-center"
             onFocus={ev => ev.target.select()}
             onKeyDown={ev => handleKeyDown(ev, x)}
             onPaste={ev => handlePaste(ev)}
@@ -337,7 +351,9 @@ function ConfirmEmail({
         ))}
       </div>
 
-      <Btn disabled={loading || resendCooldown} onClick={() => onSendAgain()}>
+      <p className="text-lightgrey text-xs mb-3">Didn't receive e-mail?</p>
+
+      <Btn variant="ghost" disabled={loading || resendCooldown} className="w-full" onClick={() => onSendAgain()}>
         Send again
       </Btn>
 

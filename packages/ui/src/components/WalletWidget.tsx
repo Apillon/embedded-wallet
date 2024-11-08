@@ -10,6 +10,8 @@ import { TransactionsProvider, useTransactionsContext } from '../contexts/transa
 import Btn from './Btn';
 import Logo from './Logo';
 import WalletChainChange from './WalletChainChange';
+import clsx from 'clsx';
+import WalletNetworkWidget from './WalletNetworkWidget';
 
 export type AppProps = {
   /**
@@ -343,7 +345,15 @@ function Wallet({
   return (
     <div>
       <Modal isOpen={isModalOpen} setIsOpen={setIsModalOpen}>
-        {modalContent}
+        <>
+          <div className={clsx(['sm:mb-8 mb-12', !loggedIn ? 'text-center' : 'flex justify-between items-center'])}>
+            <Logo />
+
+            <WalletNetworkWidget />
+          </div>
+
+          {modalContent}
+        </>
       </Modal>
 
       <button
@@ -399,7 +409,7 @@ function Modal({
           >
             <div className="fixed inset-0 w-screen overflow-y-auto p-4">
               <div className="flex items-center justify-center min-h-full">
-                <DialogPanel className="relative max-w-lg w-full min-h-[600px] bg-dark p-8 sm:p-12 border border-brightdark text-offwhite flex flex-col">
+                <DialogPanel className="relative max-w-[440px] w-full min-h-[476px] bg-dark p-8 sm:p-12 border border-brightdark text-offwhite flex flex-col">
                   <button className="absolute top-2 right-2" onClick={() => setIsOpen(false)}>
                     <svg
                       width="24"
@@ -417,10 +427,6 @@ function Modal({
                     </svg>
                   </button>
 
-                  <div>
-                    <Logo className="mb-6" />
-                  </div>
-
                   {children}
 
                   <div className="flex-grow"></div>
@@ -429,7 +435,7 @@ function Modal({
                     <a
                       href="https://apillon.io/"
                       target="_blank"
-                      className="rounded-sm opacity-50 hover:opacity-100"
+                      className="rounded-sm opacity-100 hover:opacity-80"
                     >
                       Powered by ©Apillon
                     </a>

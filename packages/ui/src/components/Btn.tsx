@@ -8,7 +8,7 @@ type Props = {
   className?: string;
   blank?: boolean; // render as <a> with target="_blank"
   self?: boolean; // render as <a> with target="_self"
-  variant?: 'primary' | 'secondary';
+  variant?: 'primary' | 'secondary' | 'ghost';
   minWidth?: string;
   minHeight?: string;
   paddingClass?: string;
@@ -43,10 +43,16 @@ const Btn = forwardRef<HTMLAnchorElement, Props>(
       className,
       'oaw-button relative inline-block rounded-lg text-sm font-bold border-b-[4px] border-t-[4px] border-x-0',
       {
-        'transition-all hover:border-b-blue/50 hover:translate-y-[-2px] focus:translate-y-px focus:border-b-yellow/50':
-          !loading && !disabled,
         'bg-yellow text-dark border-b-yellow border-t-yellow': variant === 'primary',
         'bg-lightdark text-offwhite border-b-lightdark border-t-lightdark': variant === 'secondary',
+        'transition-all hover:border-b-blue/50 hover:translate-y-[-2px] focus:translate-y-px focus:border-b-yellow/50':
+          !loading && !disabled && ['primary', 'secondary'].includes(variant),
+
+        'bg-transparent text-yellow border-t-transparent border-b-transparent shadow-[0_0_0_1px_#313442]':
+          variant === 'ghost',
+        'transition-all hover:border-b-brightdark hover:translate-y-[-2px] focus:translate-y-px':
+          !loading && !disabled && variant === 'ghost',
+
         'opacity-60': disabled,
       }
     );
