@@ -43,11 +43,8 @@ export default function WalletApprove({
         <div>
           <h3 className="mb-6">Sign Message</h3>
 
-          <p className="break-all">
-            You are signing:
-            <br />
-            {signMessage}
-          </p>
+          <p className="text-xs font-bold mb-1">You are signing:</p>
+          <p className="break-all">{signMessage}</p>
         </div>
       )}
 
@@ -97,26 +94,26 @@ export default function WalletApprove({
           <h3 className="mb-6">Approve Contract Transaction</h3>
 
           {!!contractFunctionData.chainId && !!networksById[contractFunctionData.chainId] && (
-            <div>
-              <p className="font-bold text-sm">Chain</p>
+            <div className="mb-3">
+              <p className="font-bold text-xs mb-1">Chain</p>
               {networksById[contractFunctionData.chainId].name}
             </div>
           )}
 
           <div className="mb-3 break-all">
-            <p className="font-bold text-sm">Contract address</p>
+            <p className="font-bold text-xs mb-1">Contract address</p>
             {contractFunctionData.contractAddress}
           </div>
 
           <div className="mb-3 break-all">
-            <p className="font-bold text-sm">Contract function</p>
+            <p className="font-bold text-xs mb-1">Contract function</p>
             {contractFunctionData.contractFunctionName}
           </div>
 
           {!!contractFunctionData.contractFunctionValues &&
             !!contractFunctionData.contractFunctionValues.length && (
               <div className="break-all">
-                <p className="font-bold text-sm">Contract function values</p>
+                <p className="font-bold text-xs mb-1">Contract function values</p>
 
                 <pre className={preClass}>
                   {JSON.stringify(

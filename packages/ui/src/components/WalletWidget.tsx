@@ -12,6 +12,7 @@ import Logo from './Logo';
 import WalletChainChange from './WalletChainChange';
 import clsx from 'clsx';
 import WalletNetworkWidget from './WalletNetworkWidget';
+import IconCheckCircle from './IconCheckCircle';
 
 export type AppProps = {
   /**
@@ -94,7 +95,7 @@ function Wallet({
       await new Promise(resolve => setTimeout(resolve, MODAL_TRANSITION_TIME * 2));
 
       setApprovedData({
-        title: 'Transaction submitted',
+        title: 'Successuflly sent',
         txHash: params.hash,
         explorerUrl: params.explorerUrl,
       });
@@ -177,30 +178,35 @@ function Wallet({
     }
   }, [isModalOpen]);
 
-  function closeApproveScreen(isSuccess = false) {
-    setIsModalOpen(false);
+  function closeApproveScreen(isSuccess = false, closeModal = true) {
+    if (closeModal) {
+      setIsModalOpen(false);
+    }
 
     // Wait for modal transition
-    setTimeout(() => {
-      setTxToConfirm(undefined);
-      setContractFunctionData(undefined);
-      setMessageToSign('');
-      setApprovedData({
-        title: '',
-        txHash: '',
-        explorerUrl: '',
-      });
+    setTimeout(
+      () => {
+        setTxToConfirm(undefined);
+        setContractFunctionData(undefined);
+        setMessageToSign('');
+        setApprovedData({
+          title: '',
+          txHash: '',
+          explorerUrl: '',
+        });
 
-      if (!isSuccess) {
-        if (approveParams.current?.contractWrite?.reject) {
-          approveParams.current.contractWrite.reject(new UserRejectedRequestError());
-        } else if (approveParams.current?.plain?.reject) {
-          approveParams.current.plain.reject(new UserRejectedRequestError());
-        } else if (approveParams.current?.signature?.reject) {
-          approveParams.current.signature.reject(new UserRejectedRequestError());
+        if (!isSuccess) {
+          if (approveParams.current?.contractWrite?.reject) {
+            approveParams.current.contractWrite.reject(new UserRejectedRequestError());
+          } else if (approveParams.current?.plain?.reject) {
+            approveParams.current.plain.reject(new UserRejectedRequestError());
+          } else if (approveParams.current?.signature?.reject) {
+            approveParams.current.signature.reject(new UserRejectedRequestError());
+          }
         }
-      }
-    }, MODAL_TRANSITION_TIME);
+      },
+      closeModal ? MODAL_TRANSITION_TIME : 0
+    );
   }
 
   let modalContent = <></>;
@@ -238,24 +244,34 @@ function Wallet({
      * Transaction submitted to network
      */
     modalContent = (
-      <div className="text-center mt-2">
-        <h2 className="mb-6">{approvedData.title}</h2>
+      <div>
+        <h3 className="mb-4 flex gap-4">
+          <IconCheckCircle />
+          {approvedData.title}
+        </h3>
 
-        {!!approvedData.explorerUrl && (
-          <p className="mb-6">
-            <Btn variant="secondary" href={approvedData.explorerUrl} blank>
-              View on explorer
-            </Btn>
+        {!!approvedData.txHash && (
+          <p className="break-all text-sm text-lightgrey mb-4">
+            Transaction has been completed with the following hash:{' '}
+            <span className="text-offwhite">{approvedData.txHash}</span>
           </p>
         )}
 
-        {!!approvedData.txHash && (
-          <p className="break-all my-3">Transaction hash: {approvedData.txHash}</p>
+        {!!approvedData.explorerUrl && (
+          <p className="text-sm mb-4">
+            <a
+              href={approvedData.explorerUrl}
+              target="_blank"
+              className="text-yellow hover:text-offwhite"
+            >
+              View on blockchain explorer
+            </a>
+          </p>
         )}
 
-        <div className="mt-12">
-          <Btn onClick={() => closeApproveScreen(true)}>Close</Btn>
-        </div>
+        <Btn variant="ghost" className="w-full mt-12" onClick={() => closeApproveScreen(true)}>
+          Close
+        </Btn>
       </div>
     );
   } else if (!!txToConfirm || !!messageToSign || !!contractFunctionData) {
@@ -353,7 +369,13 @@ function Wallet({
             ])}
           >
             <div className="shrink-0">
-              <button className="flex" onClick={() => setScreen('main')}>
+              <button
+                className="flex"
+                onClick={() => {
+                  setScreen('main');
+                  closeApproveScreen(false, false);
+                }}
+              >
                 <Logo />
               </button>
             </div>

@@ -6,6 +6,8 @@ import { AppProps } from './WalletWidget';
 import WalletError from './WalletError';
 import IconCheckmark from './IconCheckmark';
 import IconBird from './IconBird';
+import Spinner from './Spinner';
+import clsx from 'clsx';
 
 export default function WalletAuth({
   authFormPlaceholder = 'your e-mail',
@@ -16,6 +18,7 @@ export default function WalletAuth({
   const [loading, setLoading] = useState(false);
   const [isCodeScreen, setIsCodeScreen] = useState(false);
   const [isCodeSubmitted, setIsCodeSubmitted] = useState(false);
+  const [isConfiguringPasskey, setIsConfiguringPasskey] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(false);
 
   async function onAuth(ev: React.FormEvent<HTMLFormElement>) {
@@ -127,6 +130,28 @@ export default function WalletAuth({
     });
   }
 
+  if (isConfiguringPasskey) {
+    return (
+      <div className="text-center mt-2">
+        <div className={clsx(['text-center mb-4', { invisible: !loading }])}>
+          <Spinner size={56} />
+        </div>
+
+        <h2 className="mb-2">Configuring passkey</h2>
+
+        <p className="text-sm text-lightgrey mb-6">
+          Please complete the passkey configuration with your browser.
+        </p>
+
+        <Btn variant="ghost" disabled={loading} className="w-full" onClick={() => startRegister()}>
+          Retry
+        </Btn>
+
+        <WalletError show className="mt-6" />
+      </div>
+    );
+  }
+
   if (isCodeSubmitted) {
     return (
       <div className="text-center mt-2">
@@ -137,12 +162,6 @@ export default function WalletAuth({
         <h2 className="mb-2">Email succesfully confirmed</h2>
 
         <p className="text-sm text-lightgrey mb-6">Passkey configuration will now start.</p>
-
-        <Btn variant="ghost" loading={loading} className="w-full" onClick={() => startRegister()}>
-          Retry
-        </Btn>
-
-        <WalletError show className="mt-6" />
       </div>
     );
   }
@@ -180,6 +199,7 @@ export default function WalletAuth({
               }
 
               setIsCodeSubmitted(true);
+              setTimeout(() => setIsConfiguringPasskey(true), 1000);
 
               startRegister();
             } catch (e) {
@@ -353,7 +373,12 @@ function ConfirmEmail({
 
       <p className="text-lightgrey text-xs mb-3">Didn't receive e-mail?</p>
 
-      <Btn variant="ghost" disabled={loading || resendCooldown} className="w-full" onClick={() => onSendAgain()}>
+      <Btn
+        variant="ghost"
+        disabled={loading || resendCooldown}
+        className="w-full"
+        onClick={() => onSendAgain()}
+      >
         Send again
       </Btn>
 

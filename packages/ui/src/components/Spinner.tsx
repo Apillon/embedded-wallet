@@ -12,14 +12,10 @@ export default function Spinner({
   return (
     <svg
       style={{
-        margin: `-${size / 2}px 0 0 -${size / 2}px`,
         width: `${size}px`,
         height: `${size}px`,
         animation: 'rotate 2s linear infinite',
         zIndex: 2,
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
       }}
       viewBox="0 0 50 50"
       className={className}

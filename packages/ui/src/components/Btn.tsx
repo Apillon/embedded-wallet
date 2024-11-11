@@ -64,7 +64,10 @@ const Btn = forwardRef<HTMLAnchorElement, Props>(
         {!!loading && (
           <>
             &nbsp;
-            <Spinner color={variant === 'ghost' ? '#F9FF73' : '#141721'} />
+            <Spinner
+              color={variant === 'ghost' ? '#F9FF73' : '#141721'}
+              className="absolute top-1/2 left-1/2 m-[-18px_0_0_-18px]"
+            />
           </>
         )}{' '}
         {!loading && props.children}
