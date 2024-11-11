@@ -9,7 +9,7 @@ export default function TestApp() {
       <h2>Wallet Widget</h2>
 
       <WalletWidget
-        clientId="YOUR INTEGRATION UUID HERE"
+        clientId={import.meta.env.VITE_CLIENT_ID ?? 'YOUR INTEGRATION UUID HERE'}
         // broadcastAfterSign
         // disableDefaultActivatorStyle
         defaultNetworkId={1287}

@@ -19,7 +19,7 @@ type Props = {
 
 const DEFAULT_WIDTH = '160px';
 const DEFAULT_HEIGHT = '40px'; // + borders top/bottom 4px
-const DEFAULT_PADDING = 'px-4 py-2.5';
+const DEFAULT_PADDING = 'px-5 py-2.5';
 
 const Btn = forwardRef<HTMLAnchorElement, Props>(
   (
@@ -53,7 +53,7 @@ const Btn = forwardRef<HTMLAnchorElement, Props>(
         'transition-all hover:border-b-brightdark hover:translate-y-[-2px] focus:translate-y-px':
           !loading && !disabled && variant === 'ghost',
 
-        'opacity-60': disabled,
+        'opacity-60 grayscale': disabled,
       }
     );
 
@@ -64,7 +64,7 @@ const Btn = forwardRef<HTMLAnchorElement, Props>(
         {!!loading && (
           <>
             &nbsp;
-            <Spinner color="#141721" />
+            <Spinner color={variant === 'ghost' ? '#F9FF73' : '#141721'} />
           </>
         )}{' '}
         {!loading && props.children}

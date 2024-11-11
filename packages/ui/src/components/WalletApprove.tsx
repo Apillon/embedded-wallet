@@ -10,6 +10,8 @@ export type DisplayedContractParams = Pick<
   'chainId' | 'contractAddress' | 'contractFunctionName' | 'contractFunctionValues'
 >;
 
+const ExcludedTxKeys = ['data', 'gasLimit', 'nonce', 'maxFeePerGas', 'gasPrice'];
+
 export default function WalletApprove({
   tx,
   signMessage,
@@ -39,7 +41,7 @@ export default function WalletApprove({
       {/* Sign Message */}
       {!!signMessage && (
         <div>
-          <h2 className="mb-6">Sign Message</h2>
+          <h3 className="mb-6">Sign Message</h3>
 
           <p className="break-all">
             You are signing:
@@ -52,39 +54,47 @@ export default function WalletApprove({
       {/* Approve plain TX */}
       {!!tx && (
         <div>
-          <h2 className="mb-6">Approve Transaction</h2>
+          <h3 className="mb-6">Approve Transaction</h3>
 
-          {Object.entries(tx).map(([k, v]) => (
-            <div key={k} className="mb-2 break-all">
-              <p className="font-bold text-sm">{k}</p>
+          {Object.entries(tx)
+            .filter(([k, v]) => {
+              if (k === 'data' && v !== '0x') {
+                return true;
+              }
 
-              <div
-                style={{ maxHeight: '220px' }}
-                className="overflow-auto pr-8 -mr-8 sm:pr-12 sm:-mr-12"
-              >
-                {typeof v === 'bigint' ? (
-                  v.toString()
-                ) : typeof v === 'object' ? (
-                  <pre className={preClass}>
-                    {JSON.stringify(
-                      tx,
-                      (_, value) => (typeof value === 'bigint' ? value.toString() : value),
-                      2
-                    )}
-                  </pre>
-                ) : (
-                  v
-                )}
+              return !ExcludedTxKeys.includes(k);
+            })
+            .map(([k, v]) => (
+              <div key={k} className="mb-2 break-all">
+                <p className="font-bold text-xs">{k}</p>
+
+                <div
+                  style={{ maxHeight: '220px' }}
+                  className="overflow-auto pr-8 -mr-8 sm:pr-12 sm:-mr-12 text-sm"
+                >
+                  {typeof v === 'bigint' ? (
+                    v.toString()
+                  ) : typeof v === 'object' ? (
+                    <pre className={preClass}>
+                      {JSON.stringify(
+                        tx,
+                        (_, value) => (typeof value === 'bigint' ? value.toString() : value),
+                        2
+                      )}
+                    </pre>
+                  ) : (
+                    v
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
         </div>
       )}
 
       {/* Approve contract TX */}
       {!!contractFunctionData && (
         <div>
-          <h2 className="mb-6">Approve Contract Transaction</h2>
+          <h3 className="mb-6">Approve Contract Transaction</h3>
 
           {!!contractFunctionData.chainId && !!networksById[contractFunctionData.chainId] && (
             <div>
@@ -123,10 +133,10 @@ export default function WalletApprove({
       {/* Error */}
       <WalletError show className="mt-6 -mb-6" />
 
-      <div className="mt-12 flex gap-4">
+      <div className="mt-6">
         <Btn
           loading={loading}
-          className="w-full"
+          className="w-full mb-4"
           onClick={async () => {
             setLoading(true);
             await onApprove();
@@ -136,12 +146,12 @@ export default function WalletApprove({
           {approveText}
         </Btn>
 
-        <Btn variant="secondary" disabled={loading} className="w-full" onClick={onDecline}>
+        <Btn variant="ghost" disabled={loading} className="w-full" onClick={onDecline}>
           {declineText}
         </Btn>
       </div>
 
-      <div className="mt-4 text-center">
+      <div className="mt-4 text-center text-xs">
         <button
           onClick={() => {
             wallet?.setAccount({

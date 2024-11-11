@@ -122,36 +122,54 @@ export default function WalletTokens() {
         setLoading(false);
       }}
     >
-      <h2 className="mb-8">Send tokens to address</h2>
+      <h3 className="mb-6">Send</h3>
+
+      <label className="block text-xs font-bold mb-2">
+        Token
+      </label>
 
       <Btn
         variant="secondary"
         className="mb-4 w-full text-left"
         onClick={() => setScreen('selectToken')}
       >
-        Token: {selectedToken.name}
+        {selectedToken.name}
         <br />
         <span className="font-normal">
           Balance: {selectedToken.balance} {selectedToken.symbol}
         </span>
       </Btn>
 
+      <label htmlFor="receiver-wallet" className="block text-xs font-bold mb-2">
+        Wallet
+      </label>
+
       <input
-        placeholder="Receiver address"
+        id="receiver-wallet"
+        placeholder="Paste wallet here"
         value={receiverAddress}
         className="w-full mb-4"
         onChange={ev => setReceiverAddress(ev.target.value)}
       />
 
+      <label htmlFor="send-amount" className="block text-xs font-bold mb-2">
+        Amount
+      </label>
+
       <input
-        placeholder="Amount"
+        id="send-amount"
+        placeholder="0"
         value={amount}
         className="w-full mb-8"
         onChange={ev => setAmount(ev.target.value)}
       />
 
-      <Btn type="submit" className="w-full">
+      <Btn type="submit" className="w-full mb-4">
         Send
+      </Btn>
+
+      <Btn variant="ghost" className="w-full" onClick={() => setScreen('main')}>
+        Cancel
       </Btn>
     </form>
   );
@@ -172,10 +190,38 @@ function SelectToken({ nativeToken }: { nativeToken: TokenInfo }) {
 
   return (
     <div>
-      <h2 className="mb-4">Add token</h2>
+      {/* Select token */}
+      <h3 className="mb-4">Select token</h3>
+
+      <div className="flex flex-col gap-3 mb-8">
+        {tokenList.map(token => (
+          <Btn
+            key={token.address}
+            variant="secondary"
+            disabled={token.address === tokens.selectedToken}
+            className="w-full text-left"
+            onClick={() => {
+              dispatch({
+                type: 'setValue',
+                payload: { key: 'selectedToken', value: token.address },
+              });
+              setScreen('sendToken');
+            }}
+          >
+            Token: {token.name}
+            <br />
+            <span className="font-normal">
+              Balance: {token.balance} {token.symbol}
+            </span>
+          </Btn>
+        ))}
+      </div>
+
+      {/* Add new token */}
+      <h3 className="mb-4">Add token</h3>
 
       <form
-        className="mb-8"
+      className='mb-8'
         onSubmit={async ev => {
           ev.preventDefault();
 
@@ -221,37 +267,15 @@ function SelectToken({ nativeToken }: { nativeToken: TokenInfo }) {
         </Btn>
       </form>
 
-      <h2 className="mb-4">Select token</h2>
-
-      <div className="flex flex-col gap-3">
-        {tokenList.map(token => (
-          <Btn
-            key={token.address}
-            variant="secondary"
-            disabled={token.address === tokens.selectedToken}
-            className="w-full text-left"
-            onClick={() => {
-              dispatch({
-                type: 'setValue',
-                payload: { key: 'selectedToken', value: token.address },
-              });
-              setScreen('sendToken');
-            }}
-          >
-            Token: {token.name}
-            <br />
-            <span className="font-normal">
-              Balance: {token.balance} {token.symbol}
-            </span>
-          </Btn>
-        ))}
-      </div>
+      <Btn variant="ghost" className="w-full" onClick={() => setScreen('sendToken')}>
+        Cancel
+      </Btn>
     </div>
   );
 }
 
 function ReceiveToken() {
-  const { state } = useWalletContext();
+  const { state, setScreen } = useWalletContext();
   const { text: copyText, onCopy } = useCopyToClipboard();
 
   if (!state.address) {
@@ -260,7 +284,9 @@ function ReceiveToken() {
 
   return (
     <div>
-      <div className="p-4 mb-4">
+      <h3 className="mb-6">Receive</h3>
+      
+      <div className="p-4 mb-4 text-center">
         <QRCode
           value={`ethereum:${state.address}`}
           size={256}
@@ -271,8 +297,12 @@ function ReceiveToken() {
 
       <input readOnly value={state.address} className="w-full mb-4" />
 
-      <Btn className="w-full" onClick={() => onCopy(state.address)}>
+      <Btn className="w-full mb-4" onClick={() => onCopy(state.address)}>
         {copyText}
+      </Btn>
+
+      <Btn variant="ghost" className="w-full" onClick={() => setScreen('main')}>
+        Cancel
       </Btn>
     </div>
   );

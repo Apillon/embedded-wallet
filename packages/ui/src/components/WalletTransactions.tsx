@@ -4,8 +4,9 @@ import { useWalletContext } from '../contexts/wallet.context';
 import { shortHash } from '../lib/helpers';
 import clsx from 'clsx';
 import useCopyToClipboard from '../hooks/useCopyToClipboard';
+import IconCopy from './IconCopy';
 
-export default function WalletTransactions() {
+export default function WalletTransactions({ className }: { className?: string }) {
   const {
     state: { address },
   } = useWalletContext();
@@ -16,8 +17,8 @@ export default function WalletTransactions() {
   }
 
   return (
-    <div className="mb-8">
-      <h3 className="mb-2">Transactions</h3>
+    <div className={className}>
+      <h4 className="mb-2">Transactions</h4>
 
       <div className="flex flex-col gap-1 max-h-[134px] overflow-auto pr-2">
         {Object.values(state.txs[address])
@@ -31,7 +32,7 @@ export default function WalletTransactions() {
 }
 
 function Transaction({ tx }: { tx: TransactionItem }) {
-  const { text: copyText, onCopy } = useCopyToClipboard();
+  const { text: copyText, onCopy } = useCopyToClipboard('');
 
   return (
     <div className="rounded-md bg-offwhite/5 px-2 py-1">
@@ -62,7 +63,8 @@ function Transaction({ tx }: { tx: TransactionItem }) {
       <div className="flex justify-between items-end">
         <span title={tx.hash} className="text-sm">
           {shortHash(tx.hash)}{' '}
-          <button className="text-xs" onClick={() => onCopy(tx.hash)}>
+          <button className="text-xs inline-flex items-center" onClick={() => onCopy(tx.hash)}>
+            <IconCopy />
             {copyText}
           </button>
         </span>

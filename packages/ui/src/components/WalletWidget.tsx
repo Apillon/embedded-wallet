@@ -346,10 +346,19 @@ function Wallet({
     <div>
       <Modal isOpen={isModalOpen} setIsOpen={setIsModalOpen}>
         <>
-          <div className={clsx(['sm:mb-8 mb-12', !loggedIn ? 'text-center' : 'flex justify-between items-center'])}>
-            <Logo />
+          <div
+            className={clsx([
+              'sm:mb-8 mb-12',
+              !loggedIn ? 'text-center' : 'flex justify-between items-center',
+            ])}
+          >
+            <div className="shrink-0">
+              <button className="flex" onClick={() => setScreen('main')}>
+                <Logo />
+              </button>
+            </div>
 
-            <WalletNetworkWidget />
+            {!!loggedIn && <WalletNetworkWidget />}
           </div>
 
           {modalContent}

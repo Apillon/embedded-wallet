@@ -235,11 +235,15 @@ function WalletProvider({
               }
             }
 
+            if (!msg && e?.details) {
+              msg = e.details;
+            }
+
             if (!msg && e?.message) {
               msg = e.message;
             }
 
-            if (msg && msg !== 'already known') {
+            if (msg && msg !== 'already known' && msg !== 'Request rejected by user' && e?.code !== 4001) {
               dispatch({
                 type: 'setValue',
                 payload: { key: 'displayedError', value: msg },

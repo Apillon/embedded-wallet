@@ -37,7 +37,12 @@
   }
 
   h3 {
-    @apply font-bold text-xl text-offwhite;
+    @apply font-bold text-xl leading-tight text-offwhite text-center mt-0;
+    font-family: 'New Spirit', serif;
+  }
+
+  h4 {
+    @apply font-bold text-base text-center;
   }
 
   input {
