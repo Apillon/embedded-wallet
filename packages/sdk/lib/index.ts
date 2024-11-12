@@ -850,7 +850,7 @@ class EmbeddedWallet {
   }
 
   setDefaultNetworkId(networkId: number) {
-    if (this.rpcUrls[networkId]) {
+    if (this.rpcUrls[networkId] || networkId === SapphireMainnet || networkId === SapphireTestnet) {
       this.events.emit('dataUpdated', {
         name: 'defaultNetworkId',
         newValue: networkId,
