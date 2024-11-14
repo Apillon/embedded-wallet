@@ -72,7 +72,6 @@ export class JsonMultiRpcProvider extends ethers.JsonRpcProvider {
   error: any;
 
   constructor(rpcUrls: string[], chainId?: number) {
-    rpcUrls[0] += '/123';
     super(rpcUrls[0], chainId);
 
     this.rpcUrls = rpcUrls;
