@@ -5,25 +5,33 @@ import useWallet from './useWallet';
 export function useAccount() {
   const { wallet } = useWallet();
 
-  const [username, setUsername] = useState('');
-  const [address, setAddress] = useState('');
-  const [authStrategy, setAuthStrategy] = useState<AuthStrategyName>('passkey');
+  const [info, setInfo] = useState({
+    username: '',
+    address: '',
+    authStrategy: 'passkey' as AuthStrategyName,
+  });
+
+  // const [username, setUsername] = useState('');
+  // const [address, setAddress] = useState('');
+  // const [authStrategy, setAuthStrategy] = useState<AuthStrategyName>('passkey');
 
   useEffect(() => {
     const onDataUpdated = ({ name, newValue }: Events['dataUpdated']) => {
       if (name === 'username') {
-        setUsername(newValue);
+        setInfo(i => ({ ...i, username: newValue }));
       } else if (name === 'address') {
-        setAddress(newValue);
+        setInfo(i => ({ ...i, address: newValue }));
       } else if (name === 'authStrategy') {
-        setAuthStrategy(newValue);
+        setInfo(i => ({ ...i, authStrategy: newValue }));
       }
     };
 
     if (wallet) {
-      setUsername(wallet.lastAccount.username);
-      setAddress(wallet.lastAccount.address);
-      setAuthStrategy(wallet.lastAccount.authStrategy);
+      setInfo({
+        username: wallet.lastAccount.username,
+        address: wallet.lastAccount.address,
+        authStrategy: wallet.lastAccount.authStrategy,
+      });
 
       wallet.events.on('dataUpdated', onDataUpdated);
     }
@@ -36,13 +44,11 @@ export function useAccount() {
   }, [wallet]);
 
   async function getBalance(networkId = undefined) {
-    return await wallet?.getAccountBalance(address, networkId);
+    return await wallet?.getAccountBalance(info.address, networkId);
   }
 
   return {
-    username,
-    address,
-    authStrategy,
+    info,
     getBalance,
   };
 }

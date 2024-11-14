@@ -7,7 +7,7 @@ import TestEthers6 from './TestEthers6';
 import TestEthers5 from './TestEthers5';
 
 export default function Test() {
-  const { username, address } = useAccount();
+  const { info } = useAccount();
 
   return (
     <div>
@@ -43,9 +43,9 @@ export default function Test() {
         }}
       />
 
-      <p>username: {username}</p>
+      <p>username: {info.username}</p>
 
-      <p>address: {address}</p>
+      <p>address: {info.address}</p>
 
       <br />
 
@@ -53,15 +53,15 @@ export default function Test() {
 
       <br />
 
-      {!!address && <TestViem />}
+      {!!info.address && <TestViem />}
 
       <br />
 
-      {!!address && <TestEthers6 />}
+      {!!info.address && <TestEthers6 />}
 
       <br />
 
-      {!!address && <TestEthers5 />}
+      {!!info.address && <TestEthers5 />}
     </div>
   );
 }

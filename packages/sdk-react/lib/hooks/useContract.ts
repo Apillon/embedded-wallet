@@ -16,7 +16,7 @@ export function useContract({
   broadcast?: boolean;
 }) {
   const { wallet } = useWallet();
-  const { username, authStrategy } = useAccount();
+  const { info } = useAccount();
 
   async function read(fn: string, values?: any[]) {
     if (!wallet) {
@@ -46,8 +46,8 @@ export function useContract({
       contractFunctionValues: values,
       chainId,
       label,
-      strategy: authStrategy,
-      authData: { username: username },
+      strategy: info.authStrategy,
+      authData: { username: info.username },
       mustConfirm,
     });
 

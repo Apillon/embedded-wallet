@@ -9,6 +9,10 @@ export default defineNuxtConfig({
     plugins: [nodePolyfills()],
   },
 
+  build: {
+    transpile: [/@apillon[\\/]wallet-vue/],
+  },
+
   runtimeConfig: {
     public: {
       CLIENT_ID: process.env.VITE_CLIENT_ID || 'YOUR INTEGRATION UUID HERE',

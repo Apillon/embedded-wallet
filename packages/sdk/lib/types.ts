@@ -141,6 +141,11 @@ export type Events = {
   };
 
   /**
+   * Event for UI -- to enable programmatic opening
+   */
+  open: boolean;
+
+  /**
    * Triggered in 'eth_requestAccounts' provider request handler.
    * Receives resolver fn that should be invoked when user's account is available (after sign in / register)
    */

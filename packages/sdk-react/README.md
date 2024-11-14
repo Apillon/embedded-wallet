@@ -35,7 +35,7 @@ Get current connected account info.
 ```ts
 import { useAccount } from '@apillon/wallet-react';
 
-const { username, address, getBalance } = useAccount();
+const { info, getBalance } = useAccount();
 ```
 
 ### useContract

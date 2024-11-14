@@ -1,7 +1,7 @@
 import { useAccount, useContract, useWallet } from '@apillon/wallet-react';
 
 export default function TestSdk() {
-  const { address, getBalance } = useAccount();
+  const { info, getBalance } = useAccount();
   const { signMessage, sendTransaction } = useWallet();
 
   const { read, write } = useContract({
@@ -53,7 +53,7 @@ export default function TestSdk() {
 
       <button
         onClick={async () => {
-          console.log(await read('balanceOf', [address]));
+          console.log(await read('balanceOf', [info.address]));
         }}
       >
         (SDK) Contract read (balanceOf)

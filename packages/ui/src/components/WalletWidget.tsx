@@ -119,6 +119,10 @@ function Wallet({
       setTargetChain(params);
     };
 
+    const onOpen = (params: Events['open']) => {
+      setIsModalOpen(params);
+    };
+
     if (wallet) {
       wallet.events.on('txApprove', onTxApproveEvent);
       wallet.events.on('signatureRequest', onSignatureRequestEvent);
@@ -126,6 +130,7 @@ function Wallet({
       wallet.events.on('providerRequestAccounts', onProviderRequestAccounts);
       wallet.events.on('dataUpdated', onDataUpdated);
       wallet.events.on('requestChainChange', onRequestChainChange);
+      wallet.events.on('open', onOpen);
     }
 
     return () => {
@@ -136,6 +141,7 @@ function Wallet({
         wallet.events.off('providerRequestAccounts', onProviderRequestAccounts);
         wallet.events.off('dataUpdated', onDataUpdated);
         wallet.events.off('requestChainChange', onRequestChainChange);
+        wallet.events.off('open', onOpen);
       }
     };
   }, [wallet]);

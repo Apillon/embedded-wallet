@@ -4,7 +4,8 @@ import { useWalletContext } from '../contexts/wallet.context';
 import Btn from './Btn';
 import { ERC20Abi } from '@apillon/wallet-sdk';
 import { ethers } from 'ethers';
-import QRCode from 'react-qr-code';
+// @ts-ignore
+import { QRCode } from 'react-qr-code';
 import useCopyToClipboard from '../hooks/useCopyToClipboard';
 
 export default function WalletTokens() {
@@ -124,9 +125,7 @@ export default function WalletTokens() {
     >
       <h3 className="mb-6">Send</h3>
 
-      <label className="block text-xs font-bold mb-2">
-        Token
-      </label>
+      <label className="block text-xs font-bold mb-2">Token</label>
 
       <Btn
         variant="secondary"
@@ -221,7 +220,7 @@ function SelectToken({ nativeToken }: { nativeToken: TokenInfo }) {
       <h3 className="mb-4">Add token</h3>
 
       <form
-      className='mb-8'
+        className="mb-8"
         onSubmit={async ev => {
           ev.preventDefault();
 
@@ -285,7 +284,7 @@ function ReceiveToken() {
   return (
     <div>
       <h3 className="mb-6">Receive</h3>
-      
+
       <div className="p-4 mb-4 text-center">
         <QRCode
           value={`ethereum:${state.address}`}
