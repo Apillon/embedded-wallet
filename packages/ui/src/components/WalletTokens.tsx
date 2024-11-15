@@ -117,7 +117,7 @@ export default function WalletTokens() {
             }
           }
         } catch (e) {
-          handleError(e);
+          handleError(e, 'onTokensTransfer');
         }
 
         setLoading(false);
@@ -248,7 +248,7 @@ function SelectToken({ nativeToken }: { nativeToken: TokenInfo }) {
               payload: { owner: state.address, chainId: state.networkId, token: res },
             });
           } catch (e) {
-            handleError(e);
+            handleError(e, 'onTokensAdd');
           }
 
           setLoading(false);

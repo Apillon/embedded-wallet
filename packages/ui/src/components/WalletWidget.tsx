@@ -315,7 +315,7 @@ function Wallet({
                     approveParams.current.plain.label || 'Transaction'
                   );
                 } else {
-                  closeApproveScreen(true);
+                  closeApproveScreen(true, false);
                 }
               } else if (approveParams.current.contractWrite) {
                 const res = await wallet?.signContractWrite({
@@ -331,7 +331,7 @@ function Wallet({
                     approveParams.current.contractWrite.label || 'Transaction'
                   );
                 } else {
-                  closeApproveScreen(true);
+                  closeApproveScreen(true, false);
                 }
               }
             } catch (e) {
@@ -447,7 +447,7 @@ function Modal({
             <div className="fixed inset-0 w-screen overflow-y-auto p-4">
               <div className="flex items-center justify-center min-h-full">
                 <DialogPanel className="relative max-w-[440px] w-full min-h-[476px] bg-dark p-8 sm:p-12 border border-brightdark text-offwhite flex flex-col">
-                  <button className="absolute top-2 right-2" onClick={() => setIsOpen(false)}>
+                  <button className="flex absolute top-2 right-2" onClick={() => setIsOpen(false)}>
                     <svg
                       width="24"
                       height="24"

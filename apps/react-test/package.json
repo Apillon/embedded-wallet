@@ -25,6 +25,7 @@
     "eslint": "^8.57.0",
     "typescript": "^5.2.2",
     "vite": "^5.3.1",
+    "vite-plugin-mkcert": "^1.17.6",
     "vite-plugin-node-polyfills": "^0.22.0"
   }
 }

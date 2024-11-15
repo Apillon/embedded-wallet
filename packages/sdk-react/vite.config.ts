@@ -4,6 +4,7 @@ import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { resolve } from 'path';
 import dts from 'vite-plugin-dts';
 import fs from 'fs';
+import mkcert from 'vite-plugin-mkcert';
 
 function addStyles() {
   return {
@@ -28,6 +29,7 @@ export default defineConfig({
       rollupTypes: true,
     }),
     addStyles(),
+    mkcert(),
   ],
 
   build: {

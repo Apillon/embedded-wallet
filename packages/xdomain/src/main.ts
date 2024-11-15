@@ -2,7 +2,6 @@ import { credentialCreate, credentialGet } from './browser-webauthn';
 
 window.addEventListener('message', ev => {
   if (ev.data.type === 'create') {
-    console.log(ev);
     createPasskey(ev.data.id, ev.data.content);
   } else if (ev.data.type === 'get') {
     getPasskey(ev.data.id, ev.data.content);

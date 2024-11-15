@@ -1,10 +1,11 @@
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
+import mkcert from 'vite-plugin-mkcert';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [nodePolyfills(), vue()],
+  plugins: [nodePolyfills(), vue(), mkcert()],
 
   build: {
     rollupOptions: {

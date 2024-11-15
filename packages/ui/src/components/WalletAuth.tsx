@@ -53,7 +53,7 @@ export default function WalletAuth({
         }
       }
     } catch (e) {
-      handleError(e);
+      handleError(e, 'onAuth');
     }
 
     setLoading(false);
@@ -81,7 +81,7 @@ export default function WalletAuth({
 
       return true;
     } catch (e) {
-      handleError(e);
+      handleError(e, 'sendConfirmationEmail');
     }
   }
 
@@ -99,7 +99,7 @@ export default function WalletAuth({
         setupUserInfo({ username, address: res.publicAddress, authStrategy: 'passkey' });
       }
     } catch (e) {
-      handleError(e);
+      handleError(e, 'startRegister');
     }
 
     setLoading(false);
@@ -203,7 +203,7 @@ export default function WalletAuth({
 
               startRegister();
             } catch (e) {
-              handleError(e);
+              handleError(e, 'confirmEmail');
 
               setLoading(false);
             }
