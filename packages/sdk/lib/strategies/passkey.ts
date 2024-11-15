@@ -1,12 +1,12 @@
 import { ethers } from 'ethers';
-import { credentialCreate, credentialGet } from '../browser-webauthn';
 import { AuthData, AuthStrategy, WebauthnContract } from '../types';
-import { abort, getHashedUsername } from '../utils';
+import { abort, getHashedUsername, getPasskeyIframe } from '../utils';
 
 class PasskeyStrategy implements AuthStrategy {
   async getRegisterData(authData: AuthData) {
     if (!authData.username) {
       abort('NO_USERNAME');
+      return;
     }
 
     const hashedUsername = await getHashedUsername(authData.username);
@@ -16,23 +16,17 @@ class PasskeyStrategy implements AuthStrategy {
       return;
     }
 
-    const cred = await credentialCreate(
-      {
-        name: 'Embedded Wallet Account',
-        id: window.location.hostname,
-      },
-      {
-        id: hashedUsername!,
-        name: authData.username,
-        displayName: authData.username,
-      },
-      crypto.getRandomValues(new Uint8Array(32))
-    );
+    const cred = await getPasskeyIframe()?.create(hashedUsername, authData.username);
+
+    if (!cred) {
+      abort('IFRAME_NOT_INIT');
+      return;
+    }
 
     return {
       hashedUsername,
-      credentialId: cred.id,
-      pubkey: cred.ad.attestedCredentialData!.credentialPublicKey!,
+      credentialId: cred.credentialId,
+      pubkey: cred.pubkey,
       optionalPassword: ethers.ZeroHash,
     };
   }
@@ -40,29 +34,34 @@ class PasskeyStrategy implements AuthStrategy {
   async getProxyResponse(WAC: WebauthnContract, data: string, authData: AuthData) {
     if (!authData.username) {
       abort('NO_USERNAME');
+      return;
     }
 
     const hashedUsername = authData.hashedUsername || (await getHashedUsername(authData.username));
 
     if (!hashedUsername) {
       abort('CANT_HASH_USERNAME');
+      return;
     }
 
     const personalization = await WAC.personalization();
     const credentialIds = await WAC.credentialIdsByUsername(hashedUsername as any);
 
     /**
-     * Request passKey from user
+     * Request passkey from user
      */
-    const credentials = await credentialGet(
-      // binary credential ids
+    const res = await getPasskeyIframe()?.get(
       credentialIds.map((c: any) => ethers.toBeArray(c)),
-      // challenge
       ethers.toBeArray(ethers.sha256(personalization + ethers.sha256(data).slice(2)))
     );
 
+    if (!res) {
+      abort('IFRAME_NOT_INIT');
+      return;
+    }
+
     // @ts-expect-error Types from abi are not correct
-    return await WAC.proxyView(credentials.credentialIdHashed, credentials.resp, data);
+    return await WAC.proxyView(res.credentials.credentialIdHashed, res.credentials.resp, data);
   }
 }
 

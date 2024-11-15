@@ -28,6 +28,20 @@ export default function TestApp() {
         </button>
       </div>
 
+      {/* <h2>Passkey iframe</h2>
+      <div className="row">
+        <button
+          onClick={async () => {
+            const wallet = getEmbeddedWallet();
+
+            const res = await wallet?.passkeyIframe.dosomething();
+            console.log(res);
+          }}
+        >
+          TEST
+        </button>
+      </div> */}
+
       <h2>Trigger ethers test</h2>
       <div className="row">
         <TestEthers />

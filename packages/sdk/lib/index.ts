@@ -20,6 +20,7 @@ import { networkIdIsSapphire, getHashedUsername, abort, JsonMultiRpcProvider } f
 import mitt, { Emitter } from 'mitt';
 import { SapphireMainnet, SapphireTestnet } from './constants';
 import { WalletDisconnectedError } from './adapters/eip1193';
+import { PasskeyIframe } from './iframe';
 
 class EmbeddedWallet {
   sapphireProvider: ethers.JsonRpcProvider;
@@ -27,6 +28,7 @@ class EmbeddedWallet {
   abiCoder = ethers.AbiCoder.defaultAbiCoder();
   events: Emitter<Events>;
   apillonClientId: string;
+  passkeyIframe: PasskeyIframe;
 
   defaultNetworkId = 0;
   rpcUrls = {} as { [networkId: number]: string };
@@ -78,8 +80,8 @@ class EmbeddedWallet {
     }
 
     this.events = mitt<Events>();
-
     this.apillonClientId = params?.clientId || '';
+    this.passkeyIframe = new PasskeyIframe();
 
     /**
      * Provider connection events
