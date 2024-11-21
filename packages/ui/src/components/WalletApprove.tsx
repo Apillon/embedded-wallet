@@ -128,7 +128,7 @@ export default function WalletApprove({
       )}
 
       {/* Error */}
-      <WalletError show className="mt-6 -mb-6" />
+      <WalletError show className="my-6" />
 
       <div className="mt-6">
         <Btn

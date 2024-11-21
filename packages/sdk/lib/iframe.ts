@@ -5,12 +5,12 @@ import { abort } from './utils';
  * This makes wallets with passkeys available across different domains.
  */
 export class PasskeyIframe {
-  src = import.meta.env.VITE_PASSKEY_IFRAME_URL ?? 'DEFAULT APILLON URL';
-  origin = import.meta.env.VITE_PASSKEY_IFRAME_ORIGIN ?? 'DEFAULT APILLON URL';
+  src = import.meta.env.VITE_PASSKEY_IFRAME_URL ?? 'https://app.apillon.io/ew/index.html';
+  origin = import.meta.env.VITE_PASSKEY_IFRAME_ORIGIN ?? 'https://app.apillon.io';
   iframe: HTMLIFrameElement | undefined;
   retryTimeout: ReturnType<typeof setTimeout> | null = null;
   lastEventId = 0; // use this to match iframe response with promise resolvers
-  promises: { id: number; resolve: (v: any) => void }[] = [];
+  promises: { id: number; resolve: (v: any) => void; reject: (e: any) => void }[] = [];
 
   constructor() {
     this.initIframe();
@@ -60,11 +60,16 @@ export class PasskeyIframe {
   }
 
   onResponse(ev: MessageEvent) {
-    if (ev?.data?.type === 'apillon_pk_response') {
+    if (ev?.data?.type === 'apillon_pk_response' || ev?.data?.type === 'apillon_pk_error') {
       const promiseIndex = this.promises.findIndex(x => x.id === ev.data.id);
 
       if (promiseIndex > -1) {
-        this.promises[promiseIndex].resolve(ev.data.content);
+        if (ev.data.type === 'apillon_pk_response') {
+          this.promises[promiseIndex].resolve(ev.data.content);
+        } else {
+          this.promises[promiseIndex].reject(ev.data.content);
+        }
+
         this.promises.splice(promiseIndex, 1);
       }
     }
@@ -97,10 +102,11 @@ export class PasskeyIframe {
     return new Promise<{
       credentialId: Uint8Array;
       pubkey: any;
-    }>(resolve => {
+    }>((resolve, reject) => {
       this.promises.push({
         id,
         resolve,
+        reject,
       });
     });
   }
@@ -139,10 +145,11 @@ export class PasskeyIframe {
           sigS: bigint;
         };
       };
-    }>(resolve => {
+    }>((resolve, reject) => {
       this.promises.push({
         id,
         resolve,
+        reject,
       });
     });
   }
