@@ -13,14 +13,15 @@ export class PasskeyIframe {
   promises: { id: number; resolve: (v: any) => void }[] = [];
 
   constructor() {
-    this.createIframe();
+    this.initIframe();
+    window.addEventListener('message', this.onResponse.bind(this));
   }
 
   /**
-   * Create iframe and iframe event listener.
+   * Create iframe
    * Retry until browser window is available.
    */
-  createIframe() {
+  async initIframe() {
     if (this.retryTimeout) {
       clearTimeout(this.retryTimeout);
     }
@@ -30,24 +31,32 @@ export class PasskeyIframe {
     }
 
     if (!window) {
-      this.retryTimeout = setTimeout(this.createIframe, 500);
+      this.retryTimeout = setTimeout(() => this.initIframe, 500);
       return;
     }
 
     const i = document.createElement('iframe');
+
+    const iframeLoading = new Promise<void>(resolve => {
+      i.addEventListener('load', () => resolve(), { once: true });
+    });
+
     i.setAttribute('src', this.src);
+
     i.setAttribute(
       'allow',
-      `publickey-credentials-create ${this.origin}; publickey-credentials-get ${this.origin}`
+      `publickey-credentials-get ${this.origin}; publickey-credentials-create ${this.origin};`
     );
+
     i.style.width = '1px';
     i.style.height = '1px';
     i.style.display = 'none';
+
     document.body.appendChild(i);
 
     this.iframe = i;
 
-    window.addEventListener('message', this.onResponse.bind(this));
+    await iframeLoading;
   }
 
   onResponse(ev: MessageEvent) {

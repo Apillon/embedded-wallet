@@ -119,7 +119,7 @@ class EmbeddedWallet {
    * Create new "wallet" for username.
    * Creates a new contract for each account on sapphire network.
    */
-  async register(strategy: AuthStrategyName, authData: AuthData) {
+  async register(strategy: AuthStrategyName, authData: AuthData, hashedUsername?: Buffer) {
     if (!this.sapphireProvider) {
       abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
     }
@@ -136,7 +136,7 @@ class EmbeddedWallet {
     if (strategy === 'password') {
       registerData = await new PasswordStrategy().getRegisterData(authData);
     } else if (strategy === 'passkey') {
-      registerData = await new PasskeyStrategy().getRegisterData(authData);
+      registerData = await new PasskeyStrategy().getRegisterData(authData, hashedUsername);
     }
 
     const gaslessData = this.abiCoder.encode(

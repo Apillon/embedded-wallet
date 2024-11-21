@@ -1,6 +1,6 @@
-export default function IconCheckmark() {
+export default function IconCheckmark({ className }: { className?: string }) {
   return (
-    <svg width="64" height="66" viewBox="0 0 64 66" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width="64" height="66" viewBox="0 0 64 66" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
       <g id="Frame" clipPath="url(#clip0_537_6327)">
         <g id="Layer_4">
           <path

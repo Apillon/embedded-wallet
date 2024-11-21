@@ -3,13 +3,15 @@ import { AuthData, AuthStrategy, WebauthnContract } from '../types';
 import { abort, getHashedUsername, getPasskeyIframe } from '../utils';
 
 class PasskeyStrategy implements AuthStrategy {
-  async getRegisterData(authData: AuthData) {
+  async getRegisterData(authData: AuthData, hashedUsername?: Buffer) {
     if (!authData.username) {
       abort('NO_USERNAME');
       return;
     }
 
-    const hashedUsername = await getHashedUsername(authData.username);
+    if (!hashedUsername) {
+      hashedUsername = await getHashedUsername(authData.username);
+    }
 
     if (!hashedUsername) {
       abort('CANT_HASH_USERNAME');

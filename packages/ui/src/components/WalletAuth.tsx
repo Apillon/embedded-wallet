@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { getEmbeddedWallet, AuthStrategyName } from '@apillon/wallet-sdk';
+import { AuthStrategyName, getHashedUsername } from '@apillon/wallet-sdk';
 import { useWalletContext } from '../contexts/wallet.context';
 import Btn from './Btn';
 import { AppProps } from './WalletWidget';
@@ -12,7 +12,7 @@ import clsx from 'clsx';
 export default function WalletAuth({
   authFormPlaceholder = 'your e-mail',
 }: Pick<AppProps, 'authFormPlaceholder'>) {
-  const { dispatch, defaultNetworkId, handleError } = useWalletContext();
+  const { wallet, dispatch, defaultNetworkId, handleError } = useWalletContext();
 
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
@@ -20,6 +20,7 @@ export default function WalletAuth({
   const [isCodeSubmitted, setIsCodeSubmitted] = useState(false);
   const [isConfiguringPasskey, setIsConfiguringPasskey] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(false);
+  const hashedUsername = useRef<Buffer>();
 
   async function onAuth(ev: React.FormEvent<HTMLFormElement>) {
     ev.preventDefault();
@@ -27,8 +28,6 @@ export default function WalletAuth({
     if (!username) {
       return;
     }
-
-    const wallet = getEmbeddedWallet();
 
     setLoading(true);
     handleError();
@@ -91,9 +90,7 @@ export default function WalletAuth({
     handleError();
 
     try {
-      const wallet = getEmbeddedWallet();
-
-      const res = await wallet?.register('passkey', { username });
+      const res = await wallet?.register('passkey', { username }, hashedUsername.current);
 
       if (res) {
         setupUserInfo({ username, address: res.publicAddress, authStrategy: 'passkey' });
@@ -114,8 +111,6 @@ export default function WalletAuth({
     address: string;
     authStrategy: AuthStrategyName;
   }) {
-    const wallet = getEmbeddedWallet();
-
     const balance = (await wallet?.getAccountBalance(address)) || '0';
 
     dispatch({
@@ -134,7 +129,7 @@ export default function WalletAuth({
     return (
       <div className="text-center mt-2">
         <div className={clsx(['text-center mb-4', { invisible: !loading }])}>
-          <Spinner size={56} />
+          <Spinner size={56} className="mx-auto" />
         </div>
 
         <h2 className="mb-2">Configuring passkey</h2>
@@ -156,12 +151,24 @@ export default function WalletAuth({
     return (
       <div className="text-center mt-2">
         <div className="text-center">
-          <IconCheckmark />
+          <IconCheckmark className="mx-auto" />
         </div>
 
         <h2 className="mb-2">Email succesfully confirmed</h2>
 
-        <p className="text-sm text-lightgrey mb-6">Passkey configuration will now start.</p>
+        <p className="text-sm text-lightgrey mb-6">Passkey configuration can now start.</p>
+
+        <Btn
+          variant="primary"
+          disabled={loading}
+          className="w-full"
+          onClick={() => {
+            setIsConfiguringPasskey(true);
+            startRegister();
+          }}
+        >
+          Configure passkey
+        </Btn>
       </div>
     );
   }
@@ -198,15 +205,13 @@ export default function WalletAuth({
                 throw new Error('Verification code is not valid.');
               }
 
+              hashedUsername.current = await getHashedUsername(username);
               setIsCodeSubmitted(true);
-              setTimeout(() => setIsConfiguringPasskey(true), 1000);
-
-              startRegister();
             } catch (e) {
               handleError(e, 'confirmEmail');
-
-              setLoading(false);
             }
+
+            setLoading(false);
           }}
           onSendAgain={async () => {
             setLoading(true);
@@ -341,7 +346,7 @@ function ConfirmEmail({
   return (
     <div className="text-center">
       <div className="text-center mb-4">
-        <IconBird />
+        <IconBird className="mx-auto" />
       </div>
 
       <h2 className="mb-2">Check your email</h2>
