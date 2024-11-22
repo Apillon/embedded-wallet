@@ -1,8 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { WalletWidget } from '../lib/WalletWidget';
+import { useAccount } from '../lib/main';
 
 export function Test() {
+  const { info } = useAccount();
+
   return (
     <>
       <div>
@@ -30,6 +33,10 @@ export function Test() {
             },
           ]}
         />
+
+        <p>username: {info.username}</p>
+
+        <p>address: {info.address}</p>
       </div>
     </>
   );

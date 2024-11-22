@@ -10,6 +10,9 @@ import { TransactionsProvider, useTransactionsContext } from '../contexts/transa
 import Btn from './Btn';
 import Logo from './Logo';
 import WalletChainChange from './WalletChainChange';
+import clsx from 'clsx';
+import WalletNetworkWidget from './WalletNetworkWidget';
+import IconCheckCircle from './IconCheckCircle';
 
 export type AppProps = {
   /**
@@ -92,7 +95,7 @@ function Wallet({
       await new Promise(resolve => setTimeout(resolve, MODAL_TRANSITION_TIME * 2));
 
       setApprovedData({
-        title: 'Transaction submitted',
+        title: 'Successuflly sent',
         txHash: params.hash,
         explorerUrl: params.explorerUrl,
       });
@@ -116,6 +119,10 @@ function Wallet({
       setTargetChain(params);
     };
 
+    const onOpen = (params: Events['open']) => {
+      setIsModalOpen(params);
+    };
+
     if (wallet) {
       wallet.events.on('txApprove', onTxApproveEvent);
       wallet.events.on('signatureRequest', onSignatureRequestEvent);
@@ -123,6 +130,7 @@ function Wallet({
       wallet.events.on('providerRequestAccounts', onProviderRequestAccounts);
       wallet.events.on('dataUpdated', onDataUpdated);
       wallet.events.on('requestChainChange', onRequestChainChange);
+      wallet.events.on('open', onOpen);
     }
 
     return () => {
@@ -133,6 +141,7 @@ function Wallet({
         wallet.events.off('providerRequestAccounts', onProviderRequestAccounts);
         wallet.events.off('dataUpdated', onDataUpdated);
         wallet.events.off('requestChainChange', onRequestChainChange);
+        wallet.events.off('open', onOpen);
       }
     };
   }, [wallet]);
@@ -175,30 +184,35 @@ function Wallet({
     }
   }, [isModalOpen]);
 
-  function closeApproveScreen(isSuccess = false) {
-    setIsModalOpen(false);
+  function closeApproveScreen(isSuccess = false, closeModal = true) {
+    if (closeModal) {
+      setIsModalOpen(false);
+    }
 
     // Wait for modal transition
-    setTimeout(() => {
-      setTxToConfirm(undefined);
-      setContractFunctionData(undefined);
-      setMessageToSign('');
-      setApprovedData({
-        title: '',
-        txHash: '',
-        explorerUrl: '',
-      });
+    setTimeout(
+      () => {
+        setTxToConfirm(undefined);
+        setContractFunctionData(undefined);
+        setMessageToSign('');
+        setApprovedData({
+          title: '',
+          txHash: '',
+          explorerUrl: '',
+        });
 
-      if (!isSuccess) {
-        if (approveParams.current?.contractWrite?.reject) {
-          approveParams.current.contractWrite.reject(new UserRejectedRequestError());
-        } else if (approveParams.current?.plain?.reject) {
-          approveParams.current.plain.reject(new UserRejectedRequestError());
-        } else if (approveParams.current?.signature?.reject) {
-          approveParams.current.signature.reject(new UserRejectedRequestError());
+        if (!isSuccess) {
+          if (approveParams.current?.contractWrite?.reject) {
+            approveParams.current.contractWrite.reject(new UserRejectedRequestError());
+          } else if (approveParams.current?.plain?.reject) {
+            approveParams.current.plain.reject(new UserRejectedRequestError());
+          } else if (approveParams.current?.signature?.reject) {
+            approveParams.current.signature.reject(new UserRejectedRequestError());
+          }
         }
-      }
-    }, MODAL_TRANSITION_TIME);
+      },
+      closeModal ? MODAL_TRANSITION_TIME : 0
+    );
   }
 
   let modalContent = <></>;
@@ -236,24 +250,34 @@ function Wallet({
      * Transaction submitted to network
      */
     modalContent = (
-      <div className="text-center mt-2">
-        <h2 className="mb-6">{approvedData.title}</h2>
+      <div>
+        <h3 className="mb-4 flex gap-4">
+          <IconCheckCircle />
+          {approvedData.title}
+        </h3>
 
-        {!!approvedData.explorerUrl && (
-          <p className="mb-6">
-            <Btn variant="secondary" href={approvedData.explorerUrl} blank>
-              View on explorer
-            </Btn>
+        {!!approvedData.txHash && (
+          <p className="break-all text-sm text-lightgrey mb-4">
+            Transaction has been completed with the following hash:{' '}
+            <span className="text-offwhite">{approvedData.txHash}</span>
           </p>
         )}
 
-        {!!approvedData.txHash && (
-          <p className="break-all my-3">Transaction hash: {approvedData.txHash}</p>
+        {!!approvedData.explorerUrl && (
+          <p className="text-sm mb-4">
+            <a
+              href={approvedData.explorerUrl}
+              target="_blank"
+              className="text-yellow hover:text-offwhite"
+            >
+              View on blockchain explorer
+            </a>
+          </p>
         )}
 
-        <div className="mt-12">
-          <Btn onClick={() => closeApproveScreen(true)}>Close</Btn>
-        </div>
+        <Btn variant="ghost" className="w-full mt-12" onClick={() => closeApproveScreen(true)}>
+          Close
+        </Btn>
       </div>
     );
   } else if (!!txToConfirm || !!messageToSign || !!contractFunctionData) {
@@ -291,7 +315,7 @@ function Wallet({
                     approveParams.current.plain.label || 'Transaction'
                   );
                 } else {
-                  closeApproveScreen(true);
+                  closeApproveScreen(true, false);
                 }
               } else if (approveParams.current.contractWrite) {
                 const res = await wallet?.signContractWrite({
@@ -307,7 +331,7 @@ function Wallet({
                     approveParams.current.contractWrite.label || 'Transaction'
                   );
                 } else {
-                  closeApproveScreen(true);
+                  closeApproveScreen(true, false);
                 }
               }
             } catch (e) {
@@ -343,7 +367,30 @@ function Wallet({
   return (
     <div>
       <Modal isOpen={isModalOpen} setIsOpen={setIsModalOpen}>
-        {modalContent}
+        <>
+          <div
+            className={clsx([
+              'sm:mb-8 mb-12',
+              !loggedIn ? 'text-center' : 'flex justify-between items-center',
+            ])}
+          >
+            <div className="shrink-0">
+              <button
+                className="flex"
+                onClick={() => {
+                  setScreen('main');
+                  closeApproveScreen(false, false);
+                }}
+              >
+                <Logo />
+              </button>
+            </div>
+
+            {!!loggedIn && <WalletNetworkWidget />}
+          </div>
+
+          {modalContent}
+        </>
       </Modal>
 
       <button
@@ -399,8 +446,8 @@ function Modal({
           >
             <div className="fixed inset-0 w-screen overflow-y-auto p-4">
               <div className="flex items-center justify-center min-h-full">
-                <DialogPanel className="relative max-w-lg w-full min-h-[600px] bg-dark p-8 sm:p-12 border border-brightdark text-offwhite flex flex-col">
-                  <button className="absolute top-2 right-2" onClick={() => setIsOpen(false)}>
+                <DialogPanel className="relative max-w-[440px] w-full min-h-[476px] bg-dark p-8 sm:p-12 border border-brightdark text-offwhite flex flex-col">
+                  <button className="flex absolute top-2 right-2" onClick={() => setIsOpen(false)}>
                     <svg
                       width="24"
                       height="24"
@@ -417,10 +464,6 @@ function Modal({
                     </svg>
                   </button>
 
-                  <div>
-                    <Logo className="mb-6" />
-                  </div>
-
                   {children}
 
                   <div className="flex-grow"></div>
@@ -429,7 +472,7 @@ function Modal({
                     <a
                       href="https://apillon.io/"
                       target="_blank"
-                      className="rounded-sm opacity-50 hover:opacity-100"
+                      className="rounded-sm opacity-100 hover:opacity-80"
                     >
                       Powered by ©Apillon
                     </a>

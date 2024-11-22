@@ -8,7 +8,7 @@ type Props = {
   className?: string;
   blank?: boolean; // render as <a> with target="_blank"
   self?: boolean; // render as <a> with target="_self"
-  variant?: 'primary' | 'secondary';
+  variant?: 'primary' | 'secondary' | 'ghost';
   minWidth?: string;
   minHeight?: string;
   paddingClass?: string;
@@ -19,7 +19,7 @@ type Props = {
 
 const DEFAULT_WIDTH = '160px';
 const DEFAULT_HEIGHT = '40px'; // + borders top/bottom 4px
-const DEFAULT_PADDING = 'px-4 py-2.5';
+const DEFAULT_PADDING = 'px-5 py-2.5';
 
 const Btn = forwardRef<HTMLAnchorElement, Props>(
   (
@@ -43,11 +43,17 @@ const Btn = forwardRef<HTMLAnchorElement, Props>(
       className,
       'oaw-button relative inline-block rounded-lg text-sm font-bold border-b-[4px] border-t-[4px] border-x-0',
       {
-        'transition-all hover:border-b-blue/50 hover:translate-y-[-2px] focus:translate-y-px focus:border-b-yellow/50':
-          !loading && !disabled,
         'bg-yellow text-dark border-b-yellow border-t-yellow': variant === 'primary',
         'bg-lightdark text-offwhite border-b-lightdark border-t-lightdark': variant === 'secondary',
-        'opacity-60': disabled,
+        'transition-all hover:border-b-blue/50 hover:translate-y-[-2px] focus:translate-y-px focus:border-b-yellow/50':
+          !loading && !disabled && ['primary', 'secondary'].includes(variant),
+
+        'bg-transparent text-yellow border-t-transparent border-b-transparent shadow-[0_0_0_1px_#313442]':
+          variant === 'ghost',
+        'transition-all hover:border-b-brightdark hover:translate-y-[-2px] focus:translate-y-px':
+          !loading && !disabled && variant === 'ghost',
+
+        'opacity-60 grayscale': disabled,
       }
     );
 
@@ -58,7 +64,10 @@ const Btn = forwardRef<HTMLAnchorElement, Props>(
         {!!loading && (
           <>
             &nbsp;
-            <Spinner color="#141721" />
+            <Spinner
+              color={variant === 'ghost' ? '#F9FF73' : '#141721'}
+              className="absolute top-1/2 left-1/2 m-[-18px_0_0_-18px]"
+            />
           </>
         )}{' '}
         {!loading && props.children}

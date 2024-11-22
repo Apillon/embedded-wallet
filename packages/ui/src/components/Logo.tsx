@@ -1,9 +1,9 @@
 export default function Logo({ className }: { className?: string }) {
   return (
     <svg
-      width="182"
+      width="137"
       height="25"
-      viewBox="0 0 182 25"
+      viewBox="0 0 137 25"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
@@ -17,9 +17,9 @@ export default function Logo({ className }: { className?: string }) {
         </g>
       </g>
       <defs>
-        <clipPath id="clip0_38_1212">
+        {/* <clipPath id="clip0_38_1212">
           <rect width="182" height="24" fill="white" transform="translate(0 0.5)" />
-        </clipPath>
+        </clipPath> */}
         <clipPath id="clip1_38_1212">
           <rect width="137" height="24" fill="white" transform="translate(0 0.5)" />
         </clipPath>

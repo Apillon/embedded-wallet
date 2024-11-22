@@ -26,6 +26,7 @@ export const Errors = {
   NO_APILLON_CLIENT_ID: 'NO_APILLON_CLIENT_ID',
   CANT_GET_SIGNED_TX: 'CANT_GET_SIGNED_TX',
   CHAIN_CHANGE_FAILED: 'CHAIN_CHANGE_FAILED',
+  IFRAME_NOT_INIT: 'IFRAME_NOT_INIT',
 };
 
 export const ErrorMessages = {
@@ -45,4 +46,5 @@ export const ErrorMessages = {
   [Errors.NO_APILLON_CLIENT_ID]: 'Client ID is not valid',
   [Errors.CANT_GET_SIGNED_TX]: 'Could not get signed transaction',
   [Errors.CHAIN_CHANGE_FAILED]: 'Failed to switch chain',
+  [Errors.IFRAME_NOT_INIT]: 'Passkey interface not initialized',
 };

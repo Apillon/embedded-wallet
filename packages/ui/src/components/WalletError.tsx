@@ -19,7 +19,7 @@ export default function WalletError({
   return (
     <div
       className={clsx(
-        'flex gap-2 justify-between items-start py-2 pl-3 pr-2 break-all text-sm text-white bg-red/75 rounded-md overflow-auto',
+        'flex gap-2 justify-between items-start py-2 pl-3 pr-2 break-all text-sm text-white bg-red/75 rounded-md overflow-auto text-left',
         className
       )}
       style={{ maxHeight: '250px' }}
@@ -37,6 +37,7 @@ export default function WalletError({
           viewBox="0 0 24 24"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
+          className="block"
         >
           <path
             fillRule="evenodd"

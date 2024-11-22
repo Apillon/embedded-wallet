@@ -3,6 +3,7 @@ import './TestApp.css';
 import TestEthers from './TestEthers';
 import TestViem from './TestViem';
 import TestAccount from './TestAccount';
+import { getEmbeddedWallet } from '../../lib/utils';
 
 export default function TestApp() {
   return (
@@ -12,6 +13,34 @@ export default function TestApp() {
 
       <h2>Sign message</h2>
       <TestSign />
+
+      <h2>Get native balance (rpc test)</h2>
+      <div className="row">
+        <button
+          onClick={async () => {
+            const wallet = getEmbeddedWallet();
+            console.log(
+              await wallet?.getAccountBalance(wallet.lastAccount.address, wallet.defaultNetworkId)
+            );
+          }}
+        >
+          Get balance
+        </button>
+      </div>
+
+      {/* <h2>Passkey iframe</h2>
+      <div className="row">
+        <button
+          onClick={async () => {
+            const wallet = getEmbeddedWallet();
+
+            const res = await wallet?.passkeyIframe.dosomething();
+            console.log(res);
+          }}
+        >
+          TEST
+        </button>
+      </div> */}
 
       <h2>Trigger ethers test</h2>
       <div className="row">

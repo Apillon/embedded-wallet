@@ -20,6 +20,7 @@ import { networkIdIsSapphire, getHashedUsername, abort, JsonMultiRpcProvider } f
 import mitt, { Emitter } from 'mitt';
 import { SapphireMainnet, SapphireTestnet } from './constants';
 import { WalletDisconnectedError } from './adapters/eip1193';
+import { PasskeyIframe } from './iframe';
 
 class EmbeddedWallet {
   sapphireProvider: ethers.JsonRpcProvider;
@@ -27,6 +28,7 @@ class EmbeddedWallet {
   abiCoder = ethers.AbiCoder.defaultAbiCoder();
   events: Emitter<Events>;
   apillonClientId: string;
+  passkeyIframe: PasskeyIframe;
 
   defaultNetworkId = 0;
   rpcUrls = {} as { [networkId: number]: string };
@@ -78,8 +80,8 @@ class EmbeddedWallet {
     }
 
     this.events = mitt<Events>();
-
     this.apillonClientId = params?.clientId || '';
+    this.passkeyIframe = new PasskeyIframe();
 
     /**
      * Provider connection events
@@ -117,7 +119,7 @@ class EmbeddedWallet {
    * Create new "wallet" for username.
    * Creates a new contract for each account on sapphire network.
    */
-  async register(strategy: AuthStrategyName, authData: AuthData) {
+  async register(strategy: AuthStrategyName, authData: AuthData, hashedUsername?: Buffer) {
     if (!this.sapphireProvider) {
       abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
     }
@@ -134,7 +136,7 @@ class EmbeddedWallet {
     if (strategy === 'password') {
       registerData = await new PasswordStrategy().getRegisterData(authData);
     } else if (strategy === 'passkey') {
-      registerData = await new PasskeyStrategy().getRegisterData(authData);
+      registerData = await new PasskeyStrategy().getRegisterData(authData, hashedUsername);
     }
 
     const gaslessData = this.abiCoder.encode(
@@ -850,7 +852,7 @@ class EmbeddedWallet {
   }
 
   setDefaultNetworkId(networkId: number) {
-    if (this.rpcUrls[networkId]) {
+    if (this.rpcUrls[networkId] || networkId === SapphireMainnet || networkId === SapphireTestnet) {
       this.events.emit('dataUpdated', {
         name: 'defaultNetworkId',
         newValue: networkId,

@@ -3,6 +3,16 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'New Spirit';
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  src:
+    url('./new_spirit_medium-webfont.woff2') format('woff2'),
+    url('./new_spirit_medium-webfont.woff') format('woff');
+}
+
 #oaw-wallet-widget {
   @tailwind base;
 }
@@ -22,11 +32,17 @@
   @apply text-offwhite;
 
   h2 {
-    @apply font-bold text-3xl text-offwhite;
+    @apply font-bold text-[1.75rem] text-offwhite text-center leading-tight;
+    font-family: 'New Spirit', serif;
   }
 
   h3 {
-    @apply font-bold text-xl text-offwhite;
+    @apply font-bold text-xl leading-tight text-offwhite text-center mt-0;
+    font-family: 'New Spirit', serif;
+  }
+
+  h4 {
+    @apply font-bold text-base text-center;
   }
 
   input {
@@ -67,8 +83,8 @@
 .oaw-btn-default-style {
   @apply px-4 py-2 relative inline-block rounded-lg text-sm font-bold
     border-b-[4px] border-t-[4px] border-x-0
-    transition-all hover:border-b-offwhite/50 hover:translate-y-[-2px]
-    focus:translate-y-px focus:border-b-yellow/50
+    transition-all hover:border-b-offwhite/50
+    focus:border-b-yellow/50
     bg-blue text-dark border-b-blue border-t-blue;
 
   min-width: 160px;
@@ -82,11 +98,19 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+.oaw-btn-default-style:hover {
+  transform: translateY(-2px);
+}
+
 #oaw-wallet-widget *:focus,
 #oaw-wallet-widget *:focus-visible,
 .oaw-btn-default-style:focus,
 .oaw-btn-default-style:focus-visible {
   @apply outline outline-2 outline-offset-2 outline-yellow/50;
+}
+
+#oaw-wallet-widget p {
+  margin: 0;
 }
 
 @keyframes rotate {

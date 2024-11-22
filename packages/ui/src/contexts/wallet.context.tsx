@@ -77,7 +77,7 @@ const WalletContext = createContext<
       setWallet: (wallet: EmbeddedWallet) => void;
       reloadUserBalance: (walletRef?: EmbeddedWallet) => void;
       setScreen: (screen: WalletScreens) => void;
-      handleError: (e?: any) => string;
+      handleError: (e?: any, src?: string) => string;
     }
   | undefined
 >(undefined);
@@ -217,11 +217,11 @@ function WalletProvider({
         reloadUserBalance,
         setScreen: (s: WalletScreens) =>
           dispatch({ type: 'setValue', payload: { key: 'walletScreen', value: s } }),
-        handleError: (e?: any) => {
+        handleError: (e?: any, src?: string) => {
           let msg = '';
 
           if (e) {
-            console.error(e);
+            console.error(src ?? '', e);
 
             if (e?.name) {
               msg = ErrorMessages[e.name];
@@ -235,11 +235,20 @@ function WalletProvider({
               }
             }
 
+            if (!msg && e?.details) {
+              msg = e.details;
+            }
+
             if (!msg && e?.message) {
               msg = e.message;
             }
 
-            if (msg && msg !== 'already known') {
+            if (
+              msg &&
+              msg !== 'already known' &&
+              msg !== 'Request rejected by user' &&
+              e?.code !== 4001
+            ) {
               dispatch({
                 type: 'setValue',
                 payload: { key: 'displayedError', value: msg },

@@ -61,10 +61,19 @@ export function abort(e: keyof typeof Errors, message = 'Error') {
   throw err;
 }
 
+export function getPasskeyIframe() {
+  const oaw = getEmbeddedWallet();
+  return oaw?.passkeyIframe;
+}
+
+/**
+ * Extended ethers JsonRpcProvider that accepts multiple rpc urls as backup
+ */
 export class JsonMultiRpcProvider extends ethers.JsonRpcProvider {
   providers: ethers.JsonRpcProvider[] = [];
+  frs: ethers.FetchRequest[] = [];
   rpcUrls: string[];
-  currentIndex = 0;
+  lastIndex = -1;
   error: any;
 
   constructor(rpcUrls: string[], chainId?: number) {
@@ -73,7 +82,27 @@ export class JsonMultiRpcProvider extends ethers.JsonRpcProvider {
     this.rpcUrls = rpcUrls;
   }
 
+  /**
+   * Must override this.
+   * Even if action is started with `send`, this connection gets used in background.
+   */
+  _getConnection(): ethers.FetchRequest {
+    if (this.lastIndex < 0 || this.lastIndex > this.frs.length - 1) {
+      // backup
+      return new ethers.FetchRequest(this.rpcUrls[0]);
+    }
+    return this.frs[this.lastIndex].clone();
+  }
+
+  /**
+   * Switch through all specified rpc urls until one works, or throw error if none works
+   */
   async send(method: string, params: Array<any>, tryIndex = 0): Promise<any> {
+    // Try last working index first
+    if (this.lastIndex > -1) {
+      tryIndex = this.lastIndex;
+    }
+
     // Throw if all urls checked
     if (tryIndex >= this.rpcUrls.length) {
       const error = this.error;
@@ -83,16 +112,30 @@ export class JsonMultiRpcProvider extends ethers.JsonRpcProvider {
 
     try {
       if (tryIndex > this.providers.length - 1) {
-        // Initialize new provider
+        // Initialize new Fetch request & provider
         const fetchRequest = new ethers.FetchRequest(this.rpcUrls[tryIndex]);
         fetchRequest.timeout = 15000;
         this.providers.push(new ethers.JsonRpcProvider(fetchRequest));
+        this.frs.push(fetchRequest);
       }
 
-      return await this.providers[tryIndex].send(method, params);
+      const res = await this.providers[tryIndex].send(method, params);
+
+      // Store last working index
+      this.lastIndex = tryIndex;
+
+      return res;
     } catch (error) {
-      // store error internally
+      // Store error internally
       this.error = error;
+
+      // Start from 0 if last working index fails (and is not 0)
+      if (this.lastIndex > 0) {
+        this.lastIndex = -1;
+        return this.send(method, params, 0);
+      }
+
+      this.lastIndex = -1;
 
       return this.send(method, params, tryIndex + 1);
     }

@@ -24,6 +24,7 @@ export default {
       secondary: '#EEEEEE',
       secondarydark: '#9C9C95',
       lightgrey: '#9D9E91',
+      green: '#A9DC76',
     },
     fontFamily: {
       sans: ['Inter', ...fontFamily.sans],

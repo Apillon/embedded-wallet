@@ -4,8 +4,8 @@ import TestApp from './TestApp.tsx';
 import { EmbeddedWalletSDK } from '../../lib/utils.ts';
 
 EmbeddedWalletSDK({
-  clientId: 'YOUR INTEGRATION UUID HERE',
-  defaultNetworkId: 1287,
+  clientId: import.meta.env.VITE_CLIENT_ID ?? 'YOUR INTEGRATION UUID HERE',
+  defaultNetworkId: 23294,
   networks: [
     {
       id: 1287,
