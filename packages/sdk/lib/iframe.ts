@@ -5,8 +5,7 @@ import { abort } from './utils';
  * This makes wallets with passkeys available across different domains.
  */
 export class PasskeyIframe {
-  src = import.meta.env.VITE_PASSKEY_IFRAME_URL ?? 'https://app.apillon.io/ew/index.html';
-  origin = import.meta.env.VITE_PASSKEY_IFRAME_ORIGIN ?? 'https://app.apillon.io';
+  origin = import.meta.env.VITE_PASSKEY_IFRAME_ORIGIN ?? 'https://passkey.apillon.io';
   iframe: HTMLIFrameElement | undefined;
   retryTimeout: ReturnType<typeof setTimeout> | null = null;
   lastEventId = 0; // use this to match iframe response with promise resolvers
@@ -41,7 +40,7 @@ export class PasskeyIframe {
       i.addEventListener('load', () => resolve(), { once: true });
     });
 
-    i.setAttribute('src', this.src);
+    i.setAttribute('src', this.origin);
 
     i.setAttribute(
       'allow',
