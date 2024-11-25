@@ -1,61 +1,18 @@
 import { abort } from './utils';
 
 /**
- * Use an iframe for passkey to get a consistent RPID.
+ * Use a popup for passkey to get a consistent RPID.
  * This makes wallets with passkeys available across different domains.
  */
-export class PasskeyIframe {
-  origin = import.meta.env.VITE_PASSKEY_IFRAME_ORIGIN ?? 'https://passkey.apillon.io';
-  iframe: HTMLIFrameElement | undefined;
+export class XdomainPasskey {
+  src = import.meta.env.VITE_PASSKEY_IFRAME_ORIGIN ?? 'https://passkey.apillon.io';
+  popup: WindowProxy | null = null;
   retryTimeout: ReturnType<typeof setTimeout> | null = null;
   lastEventId = 0; // use this to match iframe response with promise resolvers
   promises: { id: number; resolve: (v: any) => void; reject: (e: any) => void }[] = [];
 
   constructor() {
-    this.initIframe();
     window.addEventListener('message', this.onResponse.bind(this));
-  }
-
-  /**
-   * Create iframe
-   * Retry until browser window is available.
-   */
-  async initIframe() {
-    if (this.retryTimeout) {
-      clearTimeout(this.retryTimeout);
-    }
-
-    if (!!this.iframe) {
-      return;
-    }
-
-    if (!window) {
-      this.retryTimeout = setTimeout(() => this.initIframe, 500);
-      return;
-    }
-
-    const i = document.createElement('iframe');
-
-    const iframeLoading = new Promise<void>(resolve => {
-      i.addEventListener('load', () => resolve(), { once: true });
-    });
-
-    i.setAttribute('src', this.origin);
-
-    i.setAttribute(
-      'allow',
-      `publickey-credentials-get ${this.origin}; publickey-credentials-create ${this.origin};`
-    );
-
-    i.style.width = '1px';
-    i.style.height = '1px';
-    i.style.display = 'none';
-
-    document.body.appendChild(i);
-
-    this.iframe = i;
-
-    await iframeLoading;
   }
 
   onResponse(ev: MessageEvent) {
@@ -71,6 +28,11 @@ export class PasskeyIframe {
 
         this.promises.splice(promiseIndex, 1);
       }
+
+      if (this.popup) {
+        this.popup.close();
+        this.popup = null;
+      }
     }
   }
 
@@ -79,14 +41,53 @@ export class PasskeyIframe {
     return this.lastEventId;
   }
 
+  openPopup() {
+    if (this.popup) {
+      this.popup.close();
+      this.popup = null;
+    }
+
+    const width = 400;
+    const height = 400;
+
+    this.popup = window.open(
+      this.src,
+      '_blank',
+      [
+        `width=${width}`,
+        `height=${height}`,
+        `left=${Math.round(window.innerWidth / 2 - width / 2)}`,
+        `top=${Math.round(window.innerHeight / 2 - height / 2)}`,
+        `location=false`,
+      ].join(',')
+    );
+
+    // const loading = new Promise<void>(resolve => {
+    //   if (this.popup) {
+    //     this.popup.addEventListener('load', () => resolve(), { once: true });
+    //   } else {
+    //     resolve();
+    //   }
+    // });
+
+    // await loading;
+  }
+
   async create(hashedUsername: Buffer, username: string) {
-    if (!this.iframe) {
+    this.openPopup();
+
+    if (!this.popup) {
       return abort('IFRAME_NOT_INIT');
     }
 
     const id = this.getEventId();
 
-    this.iframe.contentWindow?.postMessage(
+    /**
+     * @TODO Wait for popup window load
+     */
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    this.popup.postMessage(
       {
         type: 'create',
         id,
@@ -95,7 +96,7 @@ export class PasskeyIframe {
           username,
         },
       },
-      this.origin
+      this.src
     );
 
     return new Promise<{
@@ -111,13 +112,15 @@ export class PasskeyIframe {
   }
 
   async get(credentials: Uint8Array[], challenge: Uint8Array) {
-    if (!this.iframe) {
+    this.openPopup();
+
+    if (!this.popup) {
       return abort('IFRAME_NOT_INIT');
     }
 
     const id = this.getEventId();
 
-    this.iframe.contentWindow?.postMessage(
+    this.popup.postMessage(
       {
         type: 'get',
         id,
@@ -126,7 +129,7 @@ export class PasskeyIframe {
           challenge,
         },
       },
-      this.origin
+      this.src
     );
 
     return new Promise<{

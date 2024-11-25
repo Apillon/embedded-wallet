@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 import { AuthData, AuthStrategy, WebauthnContract } from '../types';
-import { abort, getHashedUsername, getPasskeyIframe } from '../utils';
+import { abort, getHashedUsername, getPasskeyXd } from '../utils';
 
 class PasskeyStrategy implements AuthStrategy {
   async getRegisterData(authData: AuthData, hashedUsername?: Buffer) {
@@ -18,7 +18,7 @@ class PasskeyStrategy implements AuthStrategy {
       return;
     }
 
-    const cred = await getPasskeyIframe()?.create(hashedUsername, authData.username);
+    const cred = await getPasskeyXd()?.create(hashedUsername, authData.username);
 
     if (!cred) {
       abort('IFRAME_NOT_INIT');
@@ -52,7 +52,7 @@ class PasskeyStrategy implements AuthStrategy {
     /**
      * Request passkey from user
      */
-    const res = await getPasskeyIframe()?.get(
+    const res = await getPasskeyXd()?.get(
       credentialIds.map((c: any) => ethers.toBeArray(c)),
       ethers.toBeArray(ethers.sha256(personalization + ethers.sha256(data).slice(2)))
     );

@@ -25,7 +25,7 @@ async function createPasskey(
       },
       crypto.getRandomValues(new Uint8Array(32))
     );
-    window.top?.postMessage(
+    window.opener?.postMessage(
       {
         type: 'apillon_pk_response',
         id: eventId,
@@ -37,7 +37,7 @@ async function createPasskey(
       '*'
     );
   } catch (e) {
-    window.top?.postMessage(
+    window.opener?.postMessage(
       {
         type: 'apillon_pk_error',
         id: eventId,
@@ -60,7 +60,7 @@ async function getPasskey(
       content.challenge
     );
 
-    window.top?.postMessage(
+    window.opener?.postMessage(
       {
         type: 'apillon_pk_response',
         id: eventId,
@@ -71,7 +71,7 @@ async function getPasskey(
       '*'
     );
   } catch (e) {
-    window.top?.postMessage(
+    window.opener?.postMessage(
       {
         type: 'apillon_pk_error',
         id: eventId,
