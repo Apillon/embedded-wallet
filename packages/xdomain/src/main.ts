@@ -1,5 +1,9 @@
 import { credentialCreate, credentialGet } from './browser-webauthn';
 
+window.addEventListener('load', () => {
+  window.opener?.postMessage({ type: 'apillon_pk_load' }, '*');
+});
+
 window.addEventListener('message', ev => {
   if (ev.data.type === 'create') {
     createPasskey(ev.data.id, ev.data.content);

@@ -28,7 +28,7 @@ export default function TestApp() {
         </button>
       </div>
 
-      <h2>Passkey iframe</h2>
+      {/* <h2>Passkey iframe</h2>
       <div className="row">
         <button
           onClick={async () => {
@@ -40,7 +40,7 @@ export default function TestApp() {
         >
           TEST
         </button>
-      </div>
+      </div> */}
 
       <h2>Trigger ethers test</h2>
       <div className="row">

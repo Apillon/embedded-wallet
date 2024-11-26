@@ -7,7 +7,7 @@ import { abort } from './utils';
 export class XdomainPasskey {
   src = import.meta.env.VITE_PASSKEY_IFRAME_ORIGIN ?? 'https://passkey.apillon.io';
   popup: WindowProxy | null = null;
-  retryTimeout: ReturnType<typeof setTimeout> | null = null;
+  loadPromise: { resolve: () => void; reject: (e: any) => void } | undefined;
   lastEventId = 0; // use this to match iframe response with promise resolvers
   promises: { id: number; resolve: (v: any) => void; reject: (e: any) => void }[] = [];
 
@@ -33,6 +33,9 @@ export class XdomainPasskey {
         this.popup.close();
         this.popup = null;
       }
+    } else if (ev?.data?.type === 'apillon_pk_load' && this.loadPromise) {
+      this.loadPromise.resolve();
+      this.loadPromise = undefined;
     }
   }
 
@@ -41,7 +44,7 @@ export class XdomainPasskey {
     return this.lastEventId;
   }
 
-  openPopup() {
+  async openPopup() {
     if (this.popup) {
       this.popup.close();
       this.popup = null;
@@ -56,36 +59,27 @@ export class XdomainPasskey {
       [
         `width=${width}`,
         `height=${height}`,
-        `left=${Math.round(window.innerWidth / 2 - width / 2)}`,
-        `top=${Math.round(window.innerHeight / 2 - height / 2)}`,
-        `location=false`,
+        `left=${Math.round(window.innerWidth / 2 + window.screenX - width / 2)}`,
+        `top=${Math.round(window.innerHeight / 2 + window.screenY - height / 2)}`,
+        `location=no`,
+        `resizable=no`,
       ].join(',')
     );
 
-    // const loading = new Promise<void>(resolve => {
-    //   if (this.popup) {
-    //     this.popup.addEventListener('load', () => resolve(), { once: true });
-    //   } else {
-    //     resolve();
-    //   }
-    // });
-
-    // await loading;
+    // Wait for popup window content to load (resolves on `apillon_pk_load` postMessage event)
+    await new Promise<void>((resolve, reject) => {
+      this.loadPromise = { resolve, reject };
+    });
   }
 
   async create(hashedUsername: Buffer, username: string) {
-    this.openPopup();
+    await this.openPopup();
 
     if (!this.popup) {
       return abort('IFRAME_NOT_INIT');
     }
 
     const id = this.getEventId();
-
-    /**
-     * @TODO Wait for popup window load
-     */
-    await new Promise(resolve => setTimeout(resolve, 2000));
 
     this.popup.postMessage(
       {
@@ -112,7 +106,7 @@ export class XdomainPasskey {
   }
 
   async get(credentials: Uint8Array[], challenge: Uint8Array) {
-    this.openPopup();
+    await this.openPopup();
 
     if (!this.popup) {
       return abort('IFRAME_NOT_INIT');
