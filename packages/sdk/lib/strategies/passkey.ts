@@ -21,7 +21,7 @@ class PasskeyStrategy implements AuthStrategy {
     const cred = await getPasskeyXd()?.create(hashedUsername, authData.username);
 
     if (!cred) {
-      abort('IFRAME_NOT_INIT');
+      abort('XDOMAIN_NOT_INIT');
       return;
     }
 
@@ -58,7 +58,7 @@ class PasskeyStrategy implements AuthStrategy {
     );
 
     if (!res) {
-      abort('IFRAME_NOT_INIT');
+      abort('XDOMAIN_NOT_INIT');
       return;
     }
 

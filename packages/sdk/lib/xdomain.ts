@@ -1,3 +1,4 @@
+import { ErrorMessages, Errors } from './constants';
 import { abort } from './utils';
 
 /**
@@ -5,11 +6,12 @@ import { abort } from './utils';
  * This makes wallets with passkeys available across different domains.
  */
 export class XdomainPasskey {
-  src = import.meta.env.VITE_PASSKEY_IFRAME_ORIGIN ?? 'https://passkey.apillon.io';
+  src = import.meta.env.VITE_XDOMAIN_PASSKEY_SRC ?? 'https://passkey.apillon.io';
   popup: WindowProxy | null = null;
   loadPromise: { resolve: () => void; reject: (e: any) => void } | undefined;
   lastEventId = 0; // use this to match iframe response with promise resolvers
   promises: { id: number; resolve: (v: any) => void; reject: (e: any) => void }[] = [];
+  popupCheckInterval: null | ReturnType<typeof setInterval> = null; // monitor if popup was closed
 
   constructor() {
     window.addEventListener('message', this.onResponse.bind(this));
@@ -27,6 +29,11 @@ export class XdomainPasskey {
         }
 
         this.promises.splice(promiseIndex, 1);
+      }
+
+      if (this.popupCheckInterval) {
+        clearInterval(this.popupCheckInterval);
+        this.popupCheckInterval = null;
       }
 
       if (this.popup) {
@@ -50,6 +57,11 @@ export class XdomainPasskey {
       this.popup = null;
     }
 
+    if (this.popupCheckInterval) {
+      clearInterval(this.popupCheckInterval);
+      this.popupCheckInterval = null;
+    }
+
     const width = 400;
     const height = 400;
 
@@ -66,6 +78,33 @@ export class XdomainPasskey {
       ].join(',')
     );
 
+    // Keep checking if popup window was closed
+    this.popupCheckInterval = setInterval(() => {
+      if (this.popup?.closed) {
+        // reject all promises
+        for (const p of this.promises) {
+          p.reject(ErrorMessages[Errors.XDOMIAN_STOPPED]);
+        }
+
+        this.promises = [];
+
+        if (this.loadPromise) {
+          this.loadPromise.reject(ErrorMessages[Errors.XDOMIAN_STOPPED]);
+        }
+
+        if (this.popupCheckInterval) {
+          clearInterval(this.popupCheckInterval);
+          this.popupCheckInterval = null;
+        }
+
+        this.popup = null;
+        this.loadPromise = undefined;
+      } else if (this.popup?.closed === undefined && this.popupCheckInterval) {
+        clearInterval(this.popupCheckInterval);
+        this.popupCheckInterval = null;
+      }
+    }, 500);
+
     // Wait for popup window content to load (resolves on `apillon_pk_load` postMessage event)
     await new Promise<void>((resolve, reject) => {
       this.loadPromise = { resolve, reject };
@@ -76,7 +115,7 @@ export class XdomainPasskey {
     await this.openPopup();
 
     if (!this.popup) {
-      return abort('IFRAME_NOT_INIT');
+      return abort('XDOMAIN_NOT_INIT');
     }
 
     const id = this.getEventId();
@@ -109,7 +148,7 @@ export class XdomainPasskey {
     await this.openPopup();
 
     if (!this.popup) {
-      return abort('IFRAME_NOT_INIT');
+      return abort('XDOMAIN_NOT_INIT');
     }
 
     const id = this.getEventId();

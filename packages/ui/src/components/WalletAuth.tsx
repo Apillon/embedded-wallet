@@ -207,11 +207,14 @@ export default function WalletAuth({
 
               hashedUsername.current = await getHashedUsername(username);
               setIsCodeSubmitted(true);
+
+              await new Promise(resolve => setTimeout(resolve, 333));
+              setIsConfiguringPasskey(true);
+              startRegister();
             } catch (e) {
               handleError(e, 'confirmEmail');
+              setLoading(false);
             }
-
-            setLoading(false);
           }}
           onSendAgain={async () => {
             setLoading(true);
