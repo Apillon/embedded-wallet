@@ -325,6 +325,41 @@ class EmbeddedWallet {
 
     return ethers.formatUnits(await ethProvider.getBalance(address), decimals);
   }
+
+  async getAccountPrivateKey(params: { strategy?: AuthStrategyName; authData?: AuthData } = {}) {
+    if (!this.sapphireProvider) {
+      abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
+    }
+
+    if (!params.strategy) {
+      params.strategy = this.lastAccount.authStrategy;
+    }
+
+    if (!params.authData) {
+      if (params.strategy === 'passkey' && this.lastAccount.username) {
+        params.authData = { username: this.lastAccount.username };
+      } else {
+        abort('AUTHENTICATION_DATA_NOT_PROVIDED');
+      }
+    }
+
+    const AC = new ethers.Interface(AccountAbi);
+    const data = AC.encodeFunctionData('exportPrivateKey', []);
+
+    /**
+     * Authenticate user and sign message
+     */
+    const res = await this.getProxyForStrategy(
+      params.strategy || this.lastAccount.authStrategy,
+      data,
+      params.authData!
+    );
+
+    if (res) {
+      const [exportedPrivateKey] = AC.decodeFunctionResult('exportPrivateKey', res).toArray();
+      return exportedPrivateKey as string;
+    }
+  }
   // #endregion
 
   // #region Auth helpers

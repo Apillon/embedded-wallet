@@ -9,6 +9,11 @@ window.addEventListener('message', ev => {
     createPasskey(ev.data.id, ev.data.content);
   } else if (ev.data.type === 'get') {
     getPasskey(ev.data.id, ev.data.content);
+
+    const st = document.getElementById('statustext');
+    if (st) {
+      st.innerHTML = 'Confirming passkey';
+    }
   }
 });
 

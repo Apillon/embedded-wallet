@@ -42,6 +42,22 @@ export default function TestApp() {
         </button>
       </div> */}
 
+      <h2>PK export</h2>
+      <div className="row">
+        <button
+          onClick={async () => {
+            const wallet = getEmbeddedWallet();
+
+            const res = await wallet?.getAccountPrivateKey({
+              strategy: 'passkey',
+            });
+            console.log(res);
+          }}
+        >
+          TEST
+        </button>
+      </div>
+
       <h2>Trigger ethers test</h2>
       <div className="row">
         <TestEthers />

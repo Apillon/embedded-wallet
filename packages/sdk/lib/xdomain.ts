@@ -42,7 +42,7 @@ export class XdomainPasskey {
         this.popup = null;
       }
 
-      this.isPopupLoaded = true;
+      this.isPopupLoaded = false;
       this.loadPromise = undefined;
     } else if (ev?.data?.type === 'apillon_pk_load') {
       this.isPopupLoaded = true;

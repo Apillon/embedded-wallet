@@ -17,12 +17,14 @@ export type WalletScreens =
   | 'transactions'
   | 'sendToken'
   | 'selectToken'
-  | 'receiveToken';
+  | 'receiveToken'
+  | 'exportPrivateKey';
 
 const initialState = (defaultNetworkId = 0, appProps: AppProps) => ({
   username: '',
   address: '',
   contractAddress: '',
+  privateKey: '',
   balance: '',
   authStrategy: 'passkey' as AuthStrategyName,
   networkId: defaultNetworkId,

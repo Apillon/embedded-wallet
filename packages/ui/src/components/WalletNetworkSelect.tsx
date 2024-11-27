@@ -16,6 +16,10 @@ export default function WalletNetworkSelect() {
 
   return (
     <div>
+      <Btn variant="primary" className="w-full mb-6" onClick={() => setScreen('exportPrivateKey')}>
+        Export private key
+      </Btn>
+
       <Btn
         variant="primary"
         className="w-full mb-6"
