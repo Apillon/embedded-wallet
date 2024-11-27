@@ -27,7 +27,8 @@ export const Errors = {
   CANT_GET_SIGNED_TX: 'CANT_GET_SIGNED_TX',
   CHAIN_CHANGE_FAILED: 'CHAIN_CHANGE_FAILED',
   XDOMAIN_NOT_INIT: 'XDOMAIN_NOT_INIT',
-  XDOMIAN_STOPPED: 'XDOMIAN_STOPPED',
+  XDOMAIN_STOPPED: 'XDOMAIN_STOPPED',
+  XDOMAIN_BLOCKED: 'XDOMAIN_BLOCKED',
 };
 
 export const ErrorMessages = {
@@ -48,5 +49,7 @@ export const ErrorMessages = {
   [Errors.CANT_GET_SIGNED_TX]: 'Could not get signed transaction',
   [Errors.CHAIN_CHANGE_FAILED]: 'Failed to switch chain',
   [Errors.XDOMAIN_NOT_INIT]: 'Passkey interface not initialized',
-  [Errors.XDOMIAN_STOPPED]: 'Passkey configuration stopped, window closed',
+  [Errors.XDOMAIN_STOPPED]: 'Passkey configuration stopped, window closed',
+  [Errors.XDOMAIN_BLOCKED]:
+    'Passkey configuration popup blocked, please allow browser popups to continue',
 };

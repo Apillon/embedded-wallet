@@ -19,7 +19,7 @@ export default function WalletError({
   return (
     <div
       className={clsx(
-        'flex gap-2 justify-between items-start py-2 pl-3 pr-2 break-all text-sm text-white bg-red/75 rounded-md overflow-auto text-left',
+        'flex gap-2 justify-between items-start py-2 pl-3 pr-2 break-words text-sm text-white bg-red/75 rounded-md overflow-auto text-left',
         className
       )}
       style={{ maxHeight: '250px' }}

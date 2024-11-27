@@ -7,7 +7,7 @@ import { abort } from './utils';
  */
 export class XdomainPasskey {
   src = import.meta.env.VITE_XDOMAIN_PASSKEY_SRC ?? 'https://passkey.apillon.io';
-  popup: WindowProxy | null = null;
+  popup: Window | null = null;
   loadPromise: { resolve: () => void; reject: (e: any) => void } | undefined;
   isPopupLoaded = false;
   popupCheckInterval: null | ReturnType<typeof setInterval> = null; // monitor if popup was closed
@@ -90,18 +90,37 @@ export class XdomainPasskey {
       );
     }, 1);
 
+    await new Promise(resolve => setTimeout(resolve, 20));
+
+    // #region Popup blocked checks
+    if (
+      !this.popup ||
+      (this.popup as Window).closed ||
+      typeof (this.popup as Window).closed === 'undefined'
+    ) {
+      return abort('XDOMAIN_BLOCKED');
+    }
+
+    try {
+      (this.popup as Window).focus();
+    } catch (e) {
+      return abort('XDOMAIN_BLOCKED');
+    }
+    // #endregion
+
+    // #region On popup closed handler
     // Keep checking if popup window was closed
     this.popupCheckInterval = setInterval(() => {
       if (this.popup?.closed) {
         // reject all promises
         for (const p of this.promises) {
-          p.reject(ErrorMessages[Errors.XDOMIAN_STOPPED]);
+          p.reject(ErrorMessages[Errors.XDOMAIN_STOPPED]);
         }
 
         this.promises = [];
 
         if (this.loadPromise) {
-          this.loadPromise.reject(ErrorMessages[Errors.XDOMIAN_STOPPED]);
+          this.loadPromise.reject(ErrorMessages[Errors.XDOMAIN_STOPPED]);
         }
 
         if (this.popupCheckInterval) {
@@ -119,6 +138,7 @@ export class XdomainPasskey {
         this.isPopupLoaded = false;
       }
     }, 500);
+    // #endregion
 
     // Wait for popup window content to load (resolves on `apillon_pk_load` postMessage event)
     await new Promise<void>((resolve, reject) => {
