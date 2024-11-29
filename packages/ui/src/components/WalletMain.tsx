@@ -5,9 +5,10 @@ import WalletTransactions from './WalletTransactions';
 import WalletTokens from './WalletTokens';
 import { TokensProvider } from '../contexts/tokens.context';
 import WalletError from './WalletError';
+import WalletPKExport from './WalletPKExport';
 
 export default function WalletMain() {
-  const { state, setScreen } = useWalletContext(); 
+  const { state, setScreen } = useWalletContext();
 
   return (
     <div>
@@ -56,6 +57,8 @@ export default function WalletMain() {
           </TokensProvider>
         </div>
       )}
+
+      {state.walletScreen === 'exportPrivateKey' && <WalletPKExport />}
     </div>
   );
 }

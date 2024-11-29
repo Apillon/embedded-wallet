@@ -257,7 +257,7 @@ function Wallet({
         </h3>
 
         {!!approvedData.txHash && (
-          <p className="break-all text-sm text-lightgrey mb-4">
+          <p className="break-words text-sm text-lightgrey mb-4">
             Transaction has been completed with the following hash:{' '}
             <span className="text-offwhite">{approvedData.txHash}</span>
           </p>

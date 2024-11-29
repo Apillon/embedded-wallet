@@ -51,6 +51,7 @@ export const AccountAbi = [
   'error k256DeriveY_Invalid_Prefix_Error()',
   'error recoverV_Error()',
   'function call(address in_contract, bytes in_data) returns (bytes out_data)',
+  'function exportPrivateKey() view returns (bytes32)',
   'function init(address starterOwner)',
   'function isController(address who) view returns (bool)',
   'function keypairAddress() view returns (address)',

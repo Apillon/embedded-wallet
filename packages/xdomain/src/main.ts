@@ -1,10 +1,19 @@
 import { credentialCreate, credentialGet } from './browser-webauthn';
 
+window.addEventListener('load', () => {
+  window.opener?.postMessage({ type: 'apillon_pk_load' }, '*');
+});
+
 window.addEventListener('message', ev => {
   if (ev.data.type === 'create') {
     createPasskey(ev.data.id, ev.data.content);
   } else if (ev.data.type === 'get') {
     getPasskey(ev.data.id, ev.data.content);
+
+    const st = document.getElementById('statustext');
+    if (st) {
+      st.innerHTML = 'Confirming passkey';
+    }
   }
 });
 
@@ -25,7 +34,7 @@ async function createPasskey(
       },
       crypto.getRandomValues(new Uint8Array(32))
     );
-    window.top?.postMessage(
+    window.opener?.postMessage(
       {
         type: 'apillon_pk_response',
         id: eventId,
@@ -37,7 +46,7 @@ async function createPasskey(
       '*'
     );
   } catch (e) {
-    window.top?.postMessage(
+    window.opener?.postMessage(
       {
         type: 'apillon_pk_error',
         id: eventId,
@@ -60,7 +69,7 @@ async function getPasskey(
       content.challenge
     );
 
-    window.top?.postMessage(
+    window.opener?.postMessage(
       {
         type: 'apillon_pk_response',
         id: eventId,
@@ -71,7 +80,7 @@ async function getPasskey(
       '*'
     );
   } catch (e) {
-    window.top?.postMessage(
+    window.opener?.postMessage(
       {
         type: 'apillon_pk_error',
         id: eventId,

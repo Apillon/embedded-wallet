@@ -34,13 +34,29 @@ export default function TestApp() {
           onClick={async () => {
             const wallet = getEmbeddedWallet();
 
-            const res = await wallet?.passkeyIframe.dosomething();
+            const res = await wallet?.xdomain.create(Buffer.from([1, 2, 3]), 'user');
             console.log(res);
           }}
         >
           TEST
         </button>
       </div> */}
+
+      <h2>PK export</h2>
+      <div className="row">
+        <button
+          onClick={async () => {
+            const wallet = getEmbeddedWallet();
+
+            const res = await wallet?.getAccountPrivateKey({
+              strategy: 'passkey',
+            });
+            console.log(res);
+          }}
+        >
+          TEST
+        </button>
+      </div>
 
       <h2>Trigger ethers test</h2>
       <div className="row">

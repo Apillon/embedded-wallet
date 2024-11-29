@@ -61,9 +61,9 @@ export function abort(e: keyof typeof Errors, message = 'Error') {
   throw err;
 }
 
-export function getPasskeyIframe() {
+export function getPasskeyXd() {
   const oaw = getEmbeddedWallet();
-  return oaw?.passkeyIframe;
+  return oaw?.xdomain;
 }
 
 /**
