@@ -141,3 +141,16 @@ export class JsonMultiRpcProvider extends ethers.JsonRpcProvider {
     }
   }
 }
+
+export function getPasskeyOrigin() {
+  const src = import.meta.env.VITE_XDOMAIN_PASSKEY_SRC ?? 'https://passkey.apillon.io';
+
+  try {
+    const url = new URL(src);
+    return url.hostname;
+  } catch (e) {
+    console.error(e);
+  }
+
+  return `passkey.apillon.io`;
+}

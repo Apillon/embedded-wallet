@@ -34,6 +34,8 @@
     "@noble/curves": "^1.4.0",
     "@oasisprotocol/sapphire-paratime": "^1.3.2",
     "abitype": "^1.0.2",
+    "asn1js": "^3.0.5",
+    "cbor-redux": "^1.0.0",
     "ethers": "^6.13.3",
     "mitt": "^3.0.1",
     "pbkdf2": "^3.1.2",

@@ -11,7 +11,7 @@ createRoot(document.getElementById('root')!).render(
       <div className="flex flex-col min-h-[100svh] justify-center items-center">
         <div className="relative max-w-[440px] w-full min-h-[476px] bg-dark p-8 sm:p-12 border border-brightdark text-offwhite flex flex-col">
           <div className="sm:mb-8 mb-12 text-center">
-            <Logo />
+            <Logo className="inline-block" />
           </div>
 
           <WalletAuth />

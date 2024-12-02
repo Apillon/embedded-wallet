@@ -1,4 +1,9 @@
-import { EmbeddedWallet, EmbeddedWalletSDK, ErrorMessages } from '@apillon/wallet-sdk';
+import {
+  AuthStrategyName,
+  EmbeddedWallet,
+  EmbeddedWalletSDK,
+  ErrorMessages,
+} from '@apillon/wallet-sdk';
 import { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
 import { isValidUrl } from './helpers';
 
@@ -8,6 +13,11 @@ const GlobalContext = createContext<
       setWallet: (wallet: EmbeddedWallet) => void;
       error: string;
       handleError: (e?: any, src?: string) => string;
+      redirectBack: (data: {
+        username: string;
+        address: string;
+        authStrategy: AuthStrategyName;
+      }) => void;
     }
   | undefined
 >(undefined);
@@ -22,14 +32,14 @@ function GlobalProvider({ children }: { children: ReactNode }) {
    * & set referrer url
    */
   useEffect(() => {
-    if (!wallet) {
-      setWallet(EmbeddedWalletSDK());
-    }
-
     if (window.location.search) {
       const urlParams = new URLSearchParams(window.location.search);
-      const referrer = urlParams.get('ref');
 
+      if (!wallet) {
+        setWallet(EmbeddedWalletSDK({ clientId: urlParams.get('clientId') || '' }));
+      }
+
+      const referrer = urlParams.get('ref');
       if (!!isValidUrl(referrer || '')) {
         referrerUrl.current = referrer!;
       }
@@ -42,6 +52,15 @@ function GlobalProvider({ children }: { children: ReactNode }) {
         wallet,
         setWallet,
         error,
+        redirectBack: data => {
+          if (referrerUrl.current) {
+            window.location.replace(
+              `${referrerUrl.current}?${Object.entries(data)
+                .map(([x, y]) => `${x}=${encodeURIComponent(y)}`)
+                .join('&')}`
+            );
+          }
+        },
         handleError: (e?: any, src?: string) => {
           let msg = '';
 

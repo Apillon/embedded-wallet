@@ -9,7 +9,7 @@ import Btn from './Btn';
 import { useGlobalContext } from '../global.context';
 
 export default function WalletAuth() {
-  const { wallet, handleError } = useGlobalContext();
+  const { wallet, handleError, redirectBack } = useGlobalContext();
 
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
@@ -110,10 +110,7 @@ export default function WalletAuth() {
   }) {
     // const balance = (await wallet?.getAccountBalance(address)) || '0';
 
-    /**
-     * @TODO Send back
-     */
-    console.log({
+    redirectBack({
       address,
       username,
       authStrategy,

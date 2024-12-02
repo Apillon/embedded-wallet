@@ -29,6 +29,7 @@ class EmbeddedWallet {
   events: Emitter<Events>;
   apillonClientId: string;
   xdomain: XdomainPasskey;
+  isPasskeyPopup = false;
 
   defaultNetworkId = 0;
   rpcUrls = {} as { [networkId: number]: string };
@@ -82,6 +83,7 @@ class EmbeddedWallet {
     this.events = mitt<Events>();
     this.apillonClientId = params?.clientId || '';
     this.xdomain = new XdomainPasskey();
+    this.isPasskeyPopup = !!params?.isPasskeyPopup;
 
     /**
      * Provider connection events
@@ -136,7 +138,10 @@ class EmbeddedWallet {
     if (strategy === 'password') {
       registerData = await new PasswordStrategy().getRegisterData(authData);
     } else if (strategy === 'passkey') {
-      registerData = await new PasskeyStrategy().getRegisterData(authData, hashedUsername);
+      registerData = await new PasskeyStrategy().getRegisterData(
+        { ...authData, hashedUsername },
+        this.isPasskeyPopup
+      );
     }
 
     const gaslessData = this.abiCoder.encode(
@@ -852,7 +857,8 @@ class EmbeddedWallet {
       return await new PasskeyStrategy().getProxyResponse(
         this.accountManagerContract,
         data,
-        authData
+        authData,
+        this.isPasskeyPopup
       );
     }
   }

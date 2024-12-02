@@ -40,7 +40,8 @@ function Wallet({
   disableDefaultActivatorStyle = false,
   ...restOfProps
 }: AppProps) {
-  const { state, wallet, setScreen, handleError, reloadUserBalance, dispatch } = useWalletContext();
+  const { state, wallet, setScreen, handleError, reloadUserBalance, dispatch, defaultNetworkId } =
+    useWalletContext();
   const { dispatch: dispatchTx } = useTransactionsContext();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -131,6 +132,28 @@ function Wallet({
       wallet.events.on('dataUpdated', onDataUpdated);
       wallet.events.on('requestChainChange', onRequestChainChange);
       wallet.events.on('open', onOpen);
+
+      // Login if account params are in the URL (redirected back from auth gateway)
+      if (window.location.search) {
+        const urlParams = new URLSearchParams(window.location.search);
+
+        if (urlParams.has('address') && urlParams.has('username')) {
+          dispatch({
+            type: 'setState',
+            payload: {
+              address: urlParams.get('address') || '',
+              username: urlParams.get('username') || '',
+              authStrategy: (urlParams.get('authStrategy') || 'passkey') as any,
+              networkId: defaultNetworkId || undefined,
+            },
+          });
+
+          setTimeout(() => {
+            reloadUserBalance();
+            window.location.search = '';
+          }, 50);
+        }
+      }
     }
 
     return () => {
@@ -396,7 +419,18 @@ function Wallet({
       <button
         id="oaw-wallet-widget-btn"
         className={!disableDefaultActivatorStyle ? 'oaw-btn-default-style' : undefined}
-        onClick={() => setIsModalOpen(true)}
+        onClick={() => {
+          const gatewayUrl =
+            import.meta.env.VITE_XDOMAIN_PASSKEY_SRC ?? 'https://passkey.apillon.io';
+
+          if (!loggedIn && gatewayUrl) {
+            window.location.replace(
+              `${gatewayUrl}?ref=${encodeURIComponent(window.location.origin + window.location.pathname)}&clientId=${import.meta.env.VITE_CLIENT_ID ?? ''}`
+            );
+          } else {
+            setIsModalOpen(true);
+          }
+        }}
       >
         {loggedIn ? 'Open wallet' : 'Sign in'}
       </button>

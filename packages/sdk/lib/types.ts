@@ -41,6 +41,11 @@ export type AppParams = {
     ```
    */
   networks?: Network[];
+
+  /**
+   * Use a new window for creating and authenticating with a passkey
+   */
+  isPasskeyPopup?: boolean;
 };
 
 export type AuthData = {
