@@ -45,22 +45,33 @@ async function getPasskey(
   eventId: number,
   content: { credentials: Uint8Array[]; challenge: Uint8Array }
 ) {
-  const credentials = await credentialGet(
-    // binary credential ids
-    content.credentials,
-    // challenge
-    content.challenge
-  );
+  try {
+    const credentials = await credentialGet(
+      // binary credential ids
+      content.credentials,
+      // challenge
+      content.challenge
+    );
 
-  window.top?.postMessage(
-    {
-      type: 'apillon_pk_response',
-      id: eventId,
-      content: {
-        credentials,
+    window.top?.postMessage(
+      {
+        type: 'apillon_pk_response',
+        id: eventId,
+        content: {
+          credentials,
+        },
       },
-    },
-    '*'
-  );
+      '*'
+    );
+  } catch (e) {
+    window.top?.postMessage(
+      {
+        type: 'apillon_pk_error',
+        id: eventId,
+        content: e,
+      },
+      '*'
+    );
+  }
 }
 // #endregion

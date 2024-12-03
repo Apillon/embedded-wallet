@@ -1,4 +1,4 @@
-import { abort } from './utils';
+import { abort, isSafari } from './utils';
 
 /**
  * Iframe for cross domain passkey checks.
@@ -47,9 +47,11 @@ export class XdomainIframe {
     i.setAttribute('src', `${this.src}?clientId=${this.clientId}`);
 
     i.setAttribute('allow', `publickey-credentials-get ${this.src}`);
+    i.style.pointerEvents = 'none';
     i.style.width = '1px';
     i.style.height = '1px';
-    i.style.display = 'none';
+    i.style.overflow = 'hidden';
+    i.style.opacity = '0';
 
     this.iframe = i;
 
@@ -73,6 +75,16 @@ export class XdomainIframe {
         return abort('XDOMAIN_NOT_INIT');
       }
     }
+
+    this.iframe.focus();
+
+    if (isSafari()) {
+      setTimeout(() => {
+        this.iframe?.contentWindow?.focus();
+      }, 10);
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     const id = this.getEventId();
 
