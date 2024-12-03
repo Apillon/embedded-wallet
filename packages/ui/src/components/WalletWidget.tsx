@@ -238,13 +238,26 @@ function Wallet({
     );
   }
 
+  function redirectToGateway() {
+    const gatewayUrl = import.meta.env.VITE_XDOMAIN_PASSKEY_SRC ?? 'https://passkey.apillon.io';
+
+    if (!loggedIn && gatewayUrl) {
+      window.location.replace(
+        `${gatewayUrl}?ref=${encodeURIComponent(window.location.origin + window.location.pathname)}&clientId=${import.meta.env.VITE_CLIENT_ID ?? ''}`
+      );
+      return true;
+    }
+
+    return false;
+  }
+
   let modalContent = <></>;
 
   if (!loggedIn) {
     /**
      * Login/register
      */
-    modalContent = <WalletAuth {...restOfProps} />;
+    modalContent = <WalletAuth {...restOfProps} onGatewayRedirect={() => redirectToGateway()} />;
   } else if (targetChain.chainId > 0) {
     modalContent = (
       <WalletChainChange
@@ -420,14 +433,7 @@ function Wallet({
         id="oaw-wallet-widget-btn"
         className={!disableDefaultActivatorStyle ? 'oaw-btn-default-style' : undefined}
         onClick={() => {
-          const gatewayUrl =
-            import.meta.env.VITE_XDOMAIN_PASSKEY_SRC ?? 'https://passkey.apillon.io';
-
-          if (!loggedIn && gatewayUrl) {
-            window.location.replace(
-              `${gatewayUrl}?ref=${encodeURIComponent(window.location.origin + window.location.pathname)}&clientId=${import.meta.env.VITE_CLIENT_ID ?? ''}`
-            );
-          } else {
+          if (!redirectToGateway()) {
             setIsModalOpen(true);
           }
         }}

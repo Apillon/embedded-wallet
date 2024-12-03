@@ -66,6 +66,11 @@ export function getPasskeyXd() {
   return oaw?.xdomain;
 }
 
+export function getPasskeyXdIframe() {
+  const oaw = getEmbeddedWallet();
+  return oaw?.xiframe;
+}
+
 /**
  * Extended ethers JsonRpcProvider that accepts multiple rpc urls as backup
  */

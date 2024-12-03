@@ -11,7 +11,8 @@ import clsx from 'clsx';
 
 export default function WalletAuth({
   authFormPlaceholder = 'your e-mail',
-}: Pick<AppProps, 'authFormPlaceholder'>) {
+  onGatewayRedirect,
+}: Pick<AppProps, 'authFormPlaceholder'> & { onGatewayRedirect?: () => void }) {
   const { wallet, dispatch, defaultNetworkId, handleError } = useWalletContext();
 
   const [username, setUsername] = useState('');
@@ -242,19 +243,26 @@ export default function WalletAuth({
         Enter your e-mail to initialize a passkey through your email address.
       </p>
 
-      <form onSubmit={ev => onAuth(ev)}>
-        <input
-          type="email"
-          placeholder={authFormPlaceholder}
-          value={username}
-          className="w-full mb-6"
-          onChange={ev => setUsername(ev.target.value)}
-        />
+      {/* @deprecated */}
+      {!onGatewayRedirect && (
+        <form onSubmit={ev => onAuth(ev)}>
+          <input
+            type="email"
+            placeholder={authFormPlaceholder}
+            value={username}
+            className="w-full mb-6"
+            onChange={ev => setUsername(ev.target.value)}
+          />
 
-        <Btn type="submit" loading={loading} className="w-full">
-          Continue
-        </Btn>
-      </form>
+          <Btn type="submit" loading={loading} className="w-full">
+            Continue
+          </Btn>
+        </form>
+      )}
+
+      <Btn loading={loading} className="w-full" onClick={onGatewayRedirect}>
+        Continue
+      </Btn>
 
       <WalletError show className="mt-6" />
     </div>

@@ -4,6 +4,7 @@ import './index.css';
 import { GlobalProvider } from './global.context.tsx';
 import WalletAuth from './components/WalletAuth.tsx';
 import Logo from './components/Logo.tsx';
+import { credentialGet } from '@apillon/wallet-sdk';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -32,3 +33,34 @@ createRoot(document.getElementById('root')!).render(
     </GlobalProvider>
   </StrictMode>
 );
+
+// #region iframe auth
+window.addEventListener('message', ev => {
+  if (ev.data.type === 'get_pk_credentials') {
+    getPasskey(ev.data.id, ev.data.content);
+  }
+});
+
+async function getPasskey(
+  eventId: number,
+  content: { credentials: Uint8Array[]; challenge: Uint8Array }
+) {
+  const credentials = await credentialGet(
+    // binary credential ids
+    content.credentials,
+    // challenge
+    content.challenge
+  );
+
+  window.top?.postMessage(
+    {
+      type: 'apillon_pk_response',
+      id: eventId,
+      content: {
+        credentials,
+      },
+    },
+    '*'
+  );
+}
+// #endregion

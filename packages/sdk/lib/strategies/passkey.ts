@@ -1,6 +1,12 @@
 import { ethers } from 'ethers';
 import { AuthData, AuthStrategy, WebauthnContract } from '../types';
-import { abort, getHashedUsername, getPasskeyOrigin, getPasskeyXd } from '../utils';
+import {
+  abort,
+  getHashedUsername,
+  getPasskeyOrigin,
+  getPasskeyXd,
+  getPasskeyXdIframe,
+} from '../utils';
 import { credentialCreate, credentialGet } from '../browser-webauthn';
 
 class PasskeyStrategy implements AuthStrategy {
@@ -56,7 +62,12 @@ class PasskeyStrategy implements AuthStrategy {
     }
   }
 
-  async getProxyResponse(WAC: WebauthnContract, data: string, authData: AuthData, isPopup = false) {
+  async getProxyResponse(
+    WAC: WebauthnContract,
+    data: string,
+    authData: AuthData,
+    mode: 'default' | 'iframe' | 'popup' = 'default'
+  ) {
     if (!authData.username) {
       abort('NO_USERNAME');
       return;
@@ -75,7 +86,10 @@ class PasskeyStrategy implements AuthStrategy {
     /**
      * Request passkey from user
      */
-    if (isPopup) {
+    if (mode === 'popup') {
+      /**
+       * Popup
+       */
       const res = await getPasskeyXd()?.get(
         credentialIds.map((c: any) => ethers.toBeArray(c)),
         ethers.toBeArray(ethers.sha256(personalization + ethers.sha256(data).slice(2)))
@@ -88,8 +102,27 @@ class PasskeyStrategy implements AuthStrategy {
 
       // @ts-expect-error Types from abi are not correct
       return await WAC.proxyView(res.credentials.credentialIdHashed, res.credentials.resp, data);
+    } else if (mode === 'iframe') {
+      /**
+       * Iframe
+       */
+      const res = await getPasskeyXdIframe()?.get(
+        credentialIds.map((c: any) => ethers.toBeArray(c)),
+        ethers.toBeArray(ethers.sha256(personalization + ethers.sha256(data).slice(2)))
+      );
+
+      if (!res) {
+        abort('XDOMAIN_NOT_INIT');
+        return;
+      }
+
+      // @ts-expect-error Types from abi are not correct
+      return await WAC.proxyView(res.credentials.credentialIdHashed, res.credentials.resp, data);
     } else {
-      const res = await credentialGet(
+      /**
+       * Direct SDK (login on gateway)
+       */
+      const credentials = await credentialGet(
         // binary credential ids
         credentialIds.map((c: any) => ethers.toBeArray(c)),
         // challenge
@@ -98,7 +131,7 @@ class PasskeyStrategy implements AuthStrategy {
       );
 
       // @ts-expect-error Types from abi are not correct
-      return await WAC.proxyView(res.credentials.credentialIdHashed, res.credentials.resp, data);
+      return await WAC.proxyView(credentials.credentialIdHashed, credentials.resp, data);
     }
   }
 }

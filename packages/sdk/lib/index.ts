@@ -21,6 +21,7 @@ import mitt, { Emitter } from 'mitt';
 import { SapphireMainnet, SapphireTestnet } from './constants';
 import { WalletDisconnectedError } from './adapters/eip1193';
 import { XdomainPasskey } from './xdomain';
+import { XdomainIframe } from './xiframe';
 
 class EmbeddedWallet {
   sapphireProvider: ethers.JsonRpcProvider;
@@ -28,8 +29,8 @@ class EmbeddedWallet {
   abiCoder = ethers.AbiCoder.defaultAbiCoder();
   events: Emitter<Events>;
   apillonClientId: string;
-  xdomain: XdomainPasskey;
-  isPasskeyPopup = false;
+  xdomain?: XdomainPasskey;
+  xiframe?: XdomainIframe;
 
   defaultNetworkId = 0;
   rpcUrls = {} as { [networkId: number]: string };
@@ -82,8 +83,14 @@ class EmbeddedWallet {
 
     this.events = mitt<Events>();
     this.apillonClientId = params?.clientId || '';
-    this.xdomain = new XdomainPasskey();
-    this.isPasskeyPopup = !!params?.isPasskeyPopup;
+
+    if (!!params?.isPasskeyPopup) {
+      this.xdomain = new XdomainPasskey();
+    }
+
+    if (!params?.noPasskeyIframe) {
+      this.xiframe = new XdomainIframe(this.apillonClientId);
+    }
 
     /**
      * Provider connection events
@@ -140,7 +147,7 @@ class EmbeddedWallet {
     } else if (strategy === 'passkey') {
       registerData = await new PasskeyStrategy().getRegisterData(
         { ...authData, hashedUsername },
-        this.isPasskeyPopup
+        !!this.xdomain
       );
     }
 
@@ -858,7 +865,7 @@ class EmbeddedWallet {
         this.accountManagerContract,
         data,
         authData,
-        this.isPasskeyPopup
+        !!this.xdomain ? 'popup' : !!this.xiframe ? 'iframe' : 'default'
       );
     }
   }
