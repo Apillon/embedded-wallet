@@ -499,7 +499,7 @@ class EmbeddedWallet {
     if (!data || params.mustConfirm) {
       // maybe check if msg.length !== 66
       if (typeof params.message === 'string' && !params.message.startsWith('0x')) {
-        params.message = ethers.encodeBytes32String(params.message);
+        params.message = ethers.hashMessage(params.message);
       }
 
       data = AC.encodeFunctionData('sign', [params.message]);
