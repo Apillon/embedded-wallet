@@ -91,6 +91,8 @@ export type UserInfo = {
   accountContractAddress: string | ethers.Addressable;
 };
 
+export type AccountWallet = { address: string; index: number; title: string };
+
 export type PlainTransactionParams = {
   strategy?: AuthStrategyName;
   authData?: AuthData;
@@ -145,7 +147,7 @@ export type Events = {
   txSubmitted: TransactionItem;
   txDone: TransactionItem; // emitted by UI
   dataUpdated: {
-    name: 'username' | 'address' | 'authStrategy' | 'defaultNetworkId' | 'sessionToken';
+    name: 'authStrategy' | 'defaultNetworkId' | 'sessionToken' | 'wallets' | 'walletIndex';
     newValue: any;
     oldValue: any;
   };

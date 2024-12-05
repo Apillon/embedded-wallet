@@ -2,6 +2,12 @@ export const WindowId = 'embeddedWallet'; // update "interface Window" manually 
 export const SapphireMainnet = 23294;
 export const SapphireTestnet = 23295;
 
+export const WalletType = {
+  EVM: 0,
+  SUBSTRATE: 1,
+  BITCOIN: 2,
+};
+
 export const WebStorageKeys = {
   WALLET_CONTEXT: 'oaw_context',
   TRANSACTIONS_CONTEXT: 'oaw_transactions',

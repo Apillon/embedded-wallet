@@ -1,5 +1,6 @@
 import { ethers } from 'ethers';
 import {
+  AccountWallet,
   AppParams,
   AuthData,
   AuthStrategyName,
@@ -41,10 +42,10 @@ class EmbeddedWallet {
   } as { [networkId: number]: string };
 
   lastAccount = {
-    username: '',
-    authStrategy: 'passkey' as AuthStrategyName,
-    address: '',
     contractAddress: '',
+    authStrategy: 'passkey' as AuthStrategyName,
+    wallets: [] as AccountWallet[],
+    walletIndex: 0,
   };
 
   /**
@@ -157,7 +158,7 @@ class EmbeddedWallet {
         {
           funcData: this.abiCoder.encode(
             [
-              'tuple(bytes32 hashedUsername, bytes credentialId, tuple(uint8 kty, int8 alg, uint8 crv, uint256 x, uint256 y) pubkey, bytes32 optionalPassword)',
+              'tuple(bytes32 hashedUsername, bytes credentialId, tuple(uint8 kty, int8 alg, uint8 crv, uint256 x, uint256 y) pubkey, bytes32 optionalPassword, tuple(uint8 walletType, bytes32 keypairSecret, string title) wallet)',
             ],
             [registerData]
           ),
@@ -194,14 +195,8 @@ class EmbeddedWallet {
       newValue: strategy,
       oldValue: this.lastAccount.authStrategy,
     });
-    this.events.emit('dataUpdated', {
-      name: 'username',
-      newValue: authData.username,
-      oldValue: this.lastAccount.username,
-    });
 
     this.lastAccount.authStrategy = strategy;
-    this.lastAccount.username = authData.username;
 
     if (await this.waitForTxReceipt(txHash)) {
       return await this.handleAccountAfterAuth(authData.username);
@@ -214,14 +209,17 @@ class EmbeddedWallet {
   async authenticate(strategy: AuthStrategyName, authData: AuthData) {
     if (!this.sapphireProvider) {
       abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
+      return;
     }
 
     if (!this.accountManagerContract) {
       abort('ACCOUNT_MANAGER_CONTRACT_NOT_INITIALIZED');
+      return;
     }
 
     if (!authData.username) {
       abort('NO_USERNAME');
+      return;
     }
 
     const RANDOM_STRING = '0x000000000000000000000000000000000000000000000000000000000000DEAD';
@@ -236,9 +234,20 @@ class EmbeddedWallet {
       hashedUsername,
     });
 
+    console.log(loginData);
+
     if (!loginData) {
       abort('NO_LOGIN_PROXY_DATA');
+      return;
     }
+
+    this.events.emit('dataUpdated', {
+      name: 'authStrategy',
+      newValue: strategy,
+      oldValue: this.lastAccount.authStrategy,
+    });
+
+    this.lastAccount.authStrategy = strategy;
 
     /**
      * Get public key from credentials
@@ -253,73 +262,125 @@ class EmbeddedWallet {
     /**
      * Get public key for username from account manager contract
      */
-    const contractRes = await this.accountManagerContract.getAccount(hashedUsername as any);
-
-    this.events.emit('dataUpdated', {
-      name: 'authStrategy',
-      newValue: strategy,
-      oldValue: this.lastAccount.authStrategy,
-    });
-    this.events.emit('dataUpdated', {
-      name: 'username',
-      newValue: authData.username,
-      oldValue: this.lastAccount.username,
-    });
-
-    this.lastAccount.authStrategy = strategy;
-    this.lastAccount.username = authData.username;
+    const publicAddress = await this.getAccountAddress(authData.username);
 
     /**
      * If keys match -> Auth success, return account addresses
      */
-    if (contractRes.length > 1 && recoveredPublicKey === contractRes[1]) {
+    if (recoveredPublicKey === publicAddress) {
       return await this.handleAccountAfterAuth(authData.username);
     }
   }
 
   /**
-   * Return address for username.
-   * - Public EVM address
-   * - Account contract address (deployed on sapphire)
+   * Return public address for username.
    */
   async getAccountAddress(username?: string) {
     if (!this.sapphireProvider) {
       abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
+      return;
     }
 
     if (!this.accountManagerContract) {
       abort('ACCOUNT_MANAGER_CONTRACT_NOT_INITIALIZED');
+      return;
+    }
+
+    if (!this.lastAccount.wallets.length) {
+      await this.getAccountWallets();
     }
 
     if (!username) {
-      if (this.lastAccount.address) {
-        return {
-          publicAddress: this.lastAccount.address,
-          accountContractAddress: this.lastAccount.contractAddress,
-        };
+      if (this.lastAccount.wallets.length > this.lastAccount.walletIndex) {
+        return this.lastAccount.wallets[this.lastAccount.walletIndex].address;
       }
 
       abort('NO_USERNAME');
+      return;
     }
 
-    const hashedUsername = await getHashedUsername(username);
+    if (this.lastAccount.wallets.length) {
+      const found = this.lastAccount.wallets.findIndex(x => x.title === username);
 
-    const userData = await this.accountManagerContract.getAccount(hashedUsername as any);
+      if (found > -1) {
+        if (found !== this.lastAccount.walletIndex) {
+          this.events.emit('dataUpdated', {
+            name: 'walletIndex',
+            newValue: found,
+            oldValue: this.lastAccount.walletIndex,
+          });
+        }
 
-    if (Array.isArray(userData) && userData.length > 1) {
+        return this.lastAccount.wallets[found].address;
+      }
+    }
+  }
+
+  /**
+   * Get all wallets added on user's account. Requires authentication.
+   */
+  async getAccountWallets(params: { strategy?: AuthStrategyName; authData?: AuthData } = {}) {
+    if (!this.sapphireProvider) {
+      abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
+      return;
+    }
+
+    if (!this.accountManagerContract) {
+      abort('ACCOUNT_MANAGER_CONTRACT_NOT_INITIALIZED');
+      return;
+    }
+
+    if (!params.authData?.username) {
+      if (this.lastAccount.wallets.length) {
+        return this.lastAccount.wallets;
+      }
+
+      abort('NO_USERNAME');
+      return;
+    }
+
+    if (!params.authData) {
+      if (
+        params.strategy === 'passkey' &&
+        this.lastAccount.wallets.length > this.lastAccount.walletIndex
+      ) {
+        params.authData = {
+          username: this.lastAccount.wallets[this.lastAccount.walletIndex].title,
+        };
+      } else {
+        abort('AUTHENTICATION_DATA_NOT_PROVIDED');
+        return;
+      }
+    }
+
+    if (!this.lastAccount.contractAddress) {
+      const hashedUsername = await getHashedUsername(params.authData.username);
+      this.lastAccount.contractAddress = (await this.accountManagerContract.getAccount(
+        hashedUsername as any
+      )) as string;
+    }
+
+    const AC = new ethers.Interface(AccountAbi);
+    const data = AC.encodeFunctionData('getWalletList', []);
+
+    const res = await this.getProxyForStrategy(
+      this.lastAccount.authStrategy,
+      data,
+      params.authData!
+    );
+
+    if (res) {
+      const [accountWallets] = AC.decodeFunctionResult('getWalletList', res).toArray();
+
       this.events.emit('dataUpdated', {
-        name: 'address',
-        newValue: userData[1],
-        oldValue: this.lastAccount.address,
+        name: 'wallets',
+        newValue: accountWallets,
+        oldValue: this.lastAccount.wallets,
       });
 
-      this.lastAccount.address = userData[1] as string;
-      this.lastAccount.contractAddress = userData[0] as string;
+      this.lastAccount.wallets = accountWallets;
 
-      return {
-        publicAddress: userData[1] as string,
-        accountContractAddress: userData[0] as string,
-      };
+      return accountWallets as AccountWallet[];
     }
   }
 
@@ -348,8 +409,13 @@ class EmbeddedWallet {
     }
 
     if (!params.authData) {
-      if (params.strategy === 'passkey' && this.lastAccount.username) {
-        params.authData = { username: this.lastAccount.username };
+      if (
+        params.strategy === 'passkey' &&
+        this.lastAccount.wallets.length > this.lastAccount.walletIndex
+      ) {
+        params.authData = {
+          username: this.lastAccount.wallets[this.lastAccount.walletIndex].title,
+        };
       } else {
         abort('AUTHENTICATION_DATA_NOT_PROVIDED');
       }
@@ -416,16 +482,11 @@ class EmbeddedWallet {
     return { signature: '', gasLimit: 0, timestamp: 0 };
   }
 
-  setAccount(params: {
-    username: string;
-    strategy: AuthStrategyName;
-    address: string;
-    contractAddress: string;
-  }) {
+  setAccount(params: { walletIndex: number; strategy: AuthStrategyName; contractAddress: string }) {
     this.events.emit('dataUpdated', {
-      name: 'username',
-      newValue: params.username,
-      oldValue: this.lastAccount.username,
+      name: 'walletIndex',
+      newValue: params.walletIndex,
+      oldValue: this.lastAccount.walletIndex,
     });
 
     this.events.emit('dataUpdated', {
@@ -434,15 +495,8 @@ class EmbeddedWallet {
       oldValue: this.lastAccount.authStrategy,
     });
 
-    this.events.emit('dataUpdated', {
-      name: 'address',
-      newValue: params.address,
-      oldValue: this.lastAccount.address,
-    });
-
-    this.lastAccount.username = params.username;
+    this.lastAccount.walletIndex = params.walletIndex;
     this.lastAccount.authStrategy = params.strategy;
-    this.lastAccount.address = params.address;
     this.lastAccount.contractAddress = params.contractAddress;
   }
 
@@ -450,12 +504,12 @@ class EmbeddedWallet {
     const addr = await this.getAccountAddress(username);
 
     if (addr && this.waitForAccountResolver) {
-      this.waitForAccountResolver(addr.publicAddress);
+      this.waitForAccountResolver(addr);
       this.waitForAccountResolver = null;
     }
 
     if (addr) {
-      this.events.emit('accountsChanged', [addr.publicAddress]);
+      this.events.emit('accountsChanged', [addr]);
     }
 
     return addr;
@@ -484,8 +538,13 @@ class EmbeddedWallet {
     }
 
     if (!params.authData) {
-      if (params.strategy === 'passkey' && this.lastAccount.username) {
-        params.authData = { username: this.lastAccount.username };
+      if (
+        params.strategy === 'passkey' &&
+        this.lastAccount.wallets.length > this.lastAccount.walletIndex
+      ) {
+        params.authData = {
+          username: this.lastAccount.wallets[this.lastAccount.walletIndex].title,
+        };
       } else {
         abort('AUTHENTICATION_DATA_NOT_PROVIDED');
       }
@@ -568,8 +627,13 @@ class EmbeddedWallet {
     }
 
     if (!params.authData) {
-      if (params.strategy === 'passkey' && this.lastAccount.username) {
-        params.authData = { username: this.lastAccount.username };
+      if (
+        params.strategy === 'passkey' &&
+        this.lastAccount.wallets.length > this.lastAccount.walletIndex
+      ) {
+        params.authData = {
+          username: this.lastAccount.wallets[this.lastAccount.walletIndex].title,
+        };
       } else {
         return abort('AUTHENTICATION_DATA_NOT_PROVIDED');
       }
@@ -585,7 +649,7 @@ class EmbeddedWallet {
      */
     if (!params.tx.nonce) {
       params.tx.nonce = await this.getRpcProviderForChainId(chainId).getTransactionCount(
-        this.lastAccount.address
+        this.lastAccount.wallets[this.lastAccount.walletIndex].address
       );
     }
 
@@ -694,7 +758,7 @@ class EmbeddedWallet {
       hash: txHash,
       label,
       rawData: signedTxData,
-      owner: this.lastAccount.address || 'none',
+      owner: this.lastAccount.wallets[this.lastAccount.walletIndex].address || 'none',
       status: 'pending' as const,
       chainId: chainId || this.defaultNetworkId,
       explorerUrl: this.explorerUrls[chainId || this.defaultNetworkId]
@@ -729,10 +793,16 @@ class EmbeddedWallet {
     }
 
     if (!params.authData) {
-      if (params.strategy === 'passkey' && this.lastAccount.username) {
-        params.authData = { username: this.lastAccount.username };
+      if (
+        params.strategy === 'passkey' &&
+        this.lastAccount.wallets.length > this.lastAccount.walletIndex
+      ) {
+        params.authData = {
+          username: this.lastAccount.wallets[this.lastAccount.walletIndex].title,
+        };
       } else {
         abort('AUTHENTICATION_DATA_NOT_PROVIDED');
+        return;
       }
     }
 
@@ -751,10 +821,11 @@ class EmbeddedWallet {
       });
     }
 
-    const accountAddresses = await this.getAccountAddress(params.authData!.username);
+    const accountAddress = await this.getAccountAddress(params.authData!.username);
 
-    if (!accountAddresses?.publicAddress) {
+    if (!accountAddress) {
       abort('CANT_GET_ACCOUNT_ADDRESS');
+      return;
     }
 
     /**
@@ -771,10 +842,10 @@ class EmbeddedWallet {
      * Prepare transaction
      */
     const tx = await new ethers.VoidSigner(
-      accountAddresses!.publicAddress,
+      accountAddress,
       this.getRpcProviderForChainId(chainId)
     ).populateTransaction({
-      from: accountAddresses!.publicAddress,
+      from: accountAddress,
       to: params.contractAddress,
       value: 0,
       data: contractData,

@@ -8,6 +8,7 @@ import {
   getPasskeyXdIframe,
 } from '../utils';
 import { credentialCreate, credentialGet } from '../browser-webauthn';
+import { WalletType } from '../constants';
 
 class PasskeyStrategy implements AuthStrategy {
   async getRegisterData(authData: AuthData, isPopup = false) {
@@ -25,6 +26,12 @@ class PasskeyStrategy implements AuthStrategy {
       return;
     }
 
+    const wallet = {
+      walletType: WalletType.EVM,
+      keypairSecret: ethers.ZeroHash,
+      title: authData.username,
+    };
+
     if (isPopup) {
       const cred = await getPasskeyXd()?.create(authData.hashedUsername, authData.username);
 
@@ -38,6 +45,7 @@ class PasskeyStrategy implements AuthStrategy {
         credentialId: cred.credentialId,
         pubkey: cred.pubkey,
         optionalPassword: ethers.ZeroHash,
+        wallet,
       };
     } else {
       const cred = await credentialCreate(
@@ -58,6 +66,7 @@ class PasskeyStrategy implements AuthStrategy {
         credentialId: cred.id,
         pubkey: cred.ad.attestedCredentialData!.credentialPublicKey!,
         optionalPassword: ethers.ZeroHash,
+        wallet,
       };
     }
   }

@@ -26,7 +26,7 @@ class EmbeddedEthersSigner extends ethers.AbstractSigner<ethers.JsonRpcProvider>
 
   override async getAddress(): Promise<string> {
     const a = await this.wallet.getAccountAddress();
-    return a?.publicAddress || '';
+    return a || '';
   }
 
   override async signTransaction(
@@ -36,7 +36,7 @@ class EmbeddedEthersSigner extends ethers.AbstractSigner<ethers.JsonRpcProvider>
     const res = await this.wallet.signPlainTransaction({
       strategy: this.wallet.lastAccount.authStrategy,
       authData: {
-        username: this.wallet.lastAccount.username,
+        username: this.wallet.lastAccount.wallets[this.wallet.lastAccount.walletIndex].title,
       },
       mustConfirm,
       tx: await this.populateTransaction(tx),
@@ -50,7 +50,7 @@ class EmbeddedEthersSigner extends ethers.AbstractSigner<ethers.JsonRpcProvider>
       message,
       strategy: this.wallet.lastAccount.authStrategy,
       authData: {
-        username: this.wallet.lastAccount.username,
+        username: this.wallet.lastAccount.wallets[this.wallet.lastAccount.walletIndex].title,
       },
       mustConfirm,
     });

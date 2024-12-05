@@ -3,6 +3,7 @@ import { secp256r1 } from '@noble/curves/p256';
 import { bytesToHex } from '@noble/curves/abstract/utils';
 import { ethers } from 'ethers';
 import { abort, getHashedUsername } from '../utils';
+import { WalletType } from '../constants';
 
 class PasswordStrategy implements AuthStrategy {
   abiCoder = ethers.AbiCoder.defaultAbiCoder();
@@ -36,6 +37,11 @@ class PasswordStrategy implements AuthStrategy {
         y: keyPair.decoded_y,
       },
       optionalPassword: ethers.encodeBytes32String(authData.password!),
+      wallet: {
+        walletType: WalletType.EVM,
+        keypairSecret: ethers.ZeroHash,
+        title: authData.username,
+      },
     };
   }
 
