@@ -55,7 +55,7 @@ function Wallet({
   });
   const [targetChain, setTargetChain] = useState({
     chainId: 0,
-    resolve: (_confirmed: boolean) => {},
+    resolve: (_confirmed: boolean) => { },
   }); // Open switch chain modal if > 0
 
   const approveParams =
@@ -242,7 +242,7 @@ function Wallet({
     const gatewayUrl = import.meta.env.VITE_XDOMAIN_PASSKEY_SRC ?? 'https://passkey.apillon.io';
 
     if (!loggedIn && gatewayUrl) {
-      window.location.href = `${gatewayUrl}?ref=${encodeURIComponent(window.location.origin + window.location.pathname)}&clientId=${import.meta.env.VITE_CLIENT_ID ?? ''}`;
+      window.location.href = `${gatewayUrl}?ref=${encodeURIComponent(window.location.origin + window.location.pathname)}&clientId=${restOfProps.clientId || wallet?.apillonClientId || ''}`;
       return true;
     }
 
