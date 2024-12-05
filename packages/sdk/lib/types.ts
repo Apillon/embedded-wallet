@@ -41,6 +41,16 @@ export type AppParams = {
     ```
    */
   networks?: Network[];
+
+  /**
+   * Use a new window for creating and authenticating with a passkey
+   */
+  isPasskeyPopup?: boolean;
+
+  /**
+   * Iframe uses same wallet code. Set this to prevent implosion.
+   */
+  noPasskeyIframe?: boolean;
 };
 
 export type AuthData = {

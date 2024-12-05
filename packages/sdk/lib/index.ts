@@ -21,6 +21,7 @@ import mitt, { Emitter } from 'mitt';
 import { SapphireMainnet, SapphireTestnet } from './constants';
 import { WalletDisconnectedError } from './adapters/eip1193';
 import { XdomainPasskey } from './xdomain';
+import { XdomainIframe } from './xiframe';
 
 class EmbeddedWallet {
   sapphireProvider: ethers.JsonRpcProvider;
@@ -28,7 +29,8 @@ class EmbeddedWallet {
   abiCoder = ethers.AbiCoder.defaultAbiCoder();
   events: Emitter<Events>;
   apillonClientId: string;
-  xdomain: XdomainPasskey;
+  xdomain?: XdomainPasskey;
+  xiframe?: XdomainIframe;
 
   defaultNetworkId = 0;
   rpcUrls = {} as { [networkId: number]: string };
@@ -81,7 +83,14 @@ class EmbeddedWallet {
 
     this.events = mitt<Events>();
     this.apillonClientId = params?.clientId || '';
-    this.xdomain = new XdomainPasskey();
+
+    if (!!params?.isPasskeyPopup) {
+      this.xdomain = new XdomainPasskey();
+    }
+
+    if (!params?.noPasskeyIframe) {
+      this.xiframe = new XdomainIframe(this.apillonClientId);
+    }
 
     /**
      * Provider connection events
@@ -136,7 +145,10 @@ class EmbeddedWallet {
     if (strategy === 'password') {
       registerData = await new PasswordStrategy().getRegisterData(authData);
     } else if (strategy === 'passkey') {
-      registerData = await new PasskeyStrategy().getRegisterData(authData, hashedUsername);
+      registerData = await new PasskeyStrategy().getRegisterData(
+        { ...authData, hashedUsername },
+        !!this.xdomain
+      );
     }
 
     const gaslessData = this.abiCoder.encode(
@@ -487,7 +499,7 @@ class EmbeddedWallet {
     if (!data || params.mustConfirm) {
       // maybe check if msg.length !== 66
       if (typeof params.message === 'string' && !params.message.startsWith('0x')) {
-        params.message = ethers.encodeBytes32String(params.message);
+        params.message = ethers.hashMessage(params.message);
       }
 
       data = AC.encodeFunctionData('sign', [params.message]);
@@ -852,7 +864,8 @@ class EmbeddedWallet {
       return await new PasskeyStrategy().getProxyResponse(
         this.accountManagerContract,
         data,
-        authData
+        authData,
+        !!this.xdomain ? 'popup' : !!this.xiframe ? 'iframe' : 'default'
       );
     }
   }

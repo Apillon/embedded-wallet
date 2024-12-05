@@ -66,6 +66,11 @@ export function getPasskeyXd() {
   return oaw?.xdomain;
 }
 
+export function getPasskeyXdIframe() {
+  const oaw = getEmbeddedWallet();
+  return oaw?.xiframe;
+}
+
 /**
  * Extended ethers JsonRpcProvider that accepts multiple rpc urls as backup
  */
@@ -140,4 +145,22 @@ export class JsonMultiRpcProvider extends ethers.JsonRpcProvider {
       return this.send(method, params, tryIndex + 1);
     }
   }
+}
+
+export function getPasskeyOrigin() {
+  const src = import.meta.env.VITE_XDOMAIN_PASSKEY_SRC ?? 'https://passkey.apillon.io';
+
+  try {
+    const url = new URL(src);
+    return url.hostname;
+  } catch (e) {
+    console.error(e);
+  }
+
+  return `passkey.apillon.io`;
+}
+
+export function isSafari() {
+  var ua = navigator.userAgent.toLowerCase();
+  return ua.indexOf('safari') != -1 && ua.indexOf('chrome') === -1;
 }

@@ -1,19 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { AuthStrategyName, getHashedUsername } from '@apillon/wallet-sdk';
-import { useWalletContext } from '../contexts/wallet.context';
-import Btn from './Btn';
-import { AppProps } from './WalletWidget';
 import WalletError from './WalletError';
 import IconCheckmark from './IconCheckmark';
 import IconBird from './IconBird';
 import Spinner from './Spinner';
 import clsx from 'clsx';
+import Btn from './Btn';
+import { useGlobalContext } from '../global.context';
 
-export default function WalletAuth({
-  authFormPlaceholder = 'your e-mail',
-  onGatewayRedirect,
-}: Pick<AppProps, 'authFormPlaceholder'> & { onGatewayRedirect?: () => void }) {
-  const { wallet, dispatch, defaultNetworkId, handleError } = useWalletContext();
+export default function WalletAuth() {
+  const { wallet, handleError, redirectBack } = useGlobalContext();
 
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
@@ -112,17 +108,12 @@ export default function WalletAuth({
     address: string;
     authStrategy: AuthStrategyName;
   }) {
-    const balance = (await wallet?.getAccountBalance(address)) || '0';
+    // const balance = (await wallet?.getAccountBalance(address)) || '0';
 
-    dispatch({
-      type: 'setState',
-      payload: {
-        address,
-        username,
-        balance,
-        authStrategy,
-        networkId: defaultNetworkId || undefined,
-      },
+    redirectBack({
+      address,
+      username,
+      authStrategy,
     });
   }
 
@@ -243,26 +234,19 @@ export default function WalletAuth({
         Enter your e-mail to initialize a passkey through your email address.
       </p>
 
-      {/* @deprecated */}
-      {!onGatewayRedirect && (
-        <form onSubmit={ev => onAuth(ev)}>
-          <input
-            type="email"
-            placeholder={authFormPlaceholder}
-            value={username}
-            className="w-full mb-6"
-            onChange={ev => setUsername(ev.target.value)}
-          />
+      <form onSubmit={ev => onAuth(ev)}>
+        <input
+          type="email"
+          placeholder="your e-mail"
+          value={username}
+          className="w-full mb-6"
+          onChange={ev => setUsername(ev.target.value)}
+        />
 
-          <Btn type="submit" loading={loading} className="w-full">
-            Continue
-          </Btn>
-        </form>
-      )}
-
-      <Btn loading={loading} className="w-full" onClick={onGatewayRedirect}>
-        Continue
-      </Btn>
+        <Btn type="submit" loading={loading} className="w-full">
+          Continue
+        </Btn>
+      </form>
 
       <WalletError show className="mt-6" />
     </div>
