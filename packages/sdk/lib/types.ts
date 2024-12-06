@@ -79,8 +79,9 @@ export interface AuthStrategy {
   getProxyResponse(
     WAC: WebauthnContract,
     data: string,
-    authData: AuthData
-  ): Promise<ethers.BytesLike | undefined>;
+    authData: AuthData,
+    useOtherAccountMethod?: 'addWallet'
+  ): Promise<any>;
 }
 
 export type AuthStrategyName = 'password' | 'passkey';
@@ -92,8 +93,10 @@ export type UserInfo = {
   accountContractAddress: string | ethers.Addressable;
 };
 
+export type AccountWalletTypes = (typeof WalletType)[keyof typeof WalletType];
+
 export type AccountWallet = {
-  walletType: (typeof WalletType)[keyof typeof WalletType];
+  walletType: AccountWalletTypes;
   address: string;
   title: string;
   index: number;

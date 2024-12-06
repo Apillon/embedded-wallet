@@ -4,6 +4,7 @@ import TestEthers from './TestEthers';
 import TestViem from './TestViem';
 import TestAccount from './TestAccount';
 import { getEmbeddedWallet } from '../../lib/utils';
+import TestWallet from './TestWallet';
 
 export default function TestApp() {
   return (
@@ -30,6 +31,9 @@ export default function TestApp() {
           Get balance
         </button>
       </div>
+
+      <h2>Create/import wallet</h2>
+      <TestWallet />
 
       {/* <h2>Passkey iframe</h2>
       <div className="row">

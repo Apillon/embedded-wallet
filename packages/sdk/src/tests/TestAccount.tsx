@@ -1,19 +1,22 @@
 import { useState } from 'react';
 import { getEmbeddedWallet } from '../../lib/utils';
 
-export default function TestAccount() {
-  const [username, setUsername] = useState('test4');
+export default function TestAccount({ pw = false }: { pw?: boolean }) {
+  const [username, setUsername] = useState('test7');
   const [password, setPassword] = useState('1234');
 
   return (
     <div className="row">
       <input type="text" value={username} onChange={ev => setUsername(ev.target.value)} />
-      <input type="text" value={password} onChange={ev => setPassword(ev.target.value)} />
+      {!!pw && <input type="text" value={password} onChange={ev => setPassword(ev.target.value)} />}
 
       <button
         onClick={async () => {
           const w = getEmbeddedWallet();
-          console.log(await w?.authenticate('password', { username, password }));
+          if (pw) {
+            console.log(await w?.authenticate('password', { username, password }));
+          }
+          console.log(await w?.authenticate('passkey', { username }));
         }}
       >
         Login
@@ -22,7 +25,10 @@ export default function TestAccount() {
       <button
         onClick={async () => {
           const w = getEmbeddedWallet();
-          console.log(await w?.register('password', { username, password }));
+          if (pw) {
+            console.log(await w?.register('password', { username, password }));
+          }
+          console.log(await w?.register('passkey', { username }));
         }}
       >
         Register

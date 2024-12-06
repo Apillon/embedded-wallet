@@ -75,6 +75,7 @@ class PasskeyStrategy implements AuthStrategy {
     WAC: WebauthnContract,
     data: string,
     authData: AuthData,
+    useOtherAccountMethod?: 'addWallet', // use other methods on account manager contract than proxyView
     mode: 'default' | 'iframe' | 'popup' = 'default'
   ) {
     if (!authData.username) {
@@ -109,7 +110,16 @@ class PasskeyStrategy implements AuthStrategy {
         return;
       }
 
-      // @ts-expect-error Types from abi are not correct
+      if (useOtherAccountMethod === 'addWallet') {
+        return await WAC.addWallet({
+          credentialIdHashed: res.credentials.credentialIdHashed,
+          // @ts-expect-error AbiTypes
+          resp: res.credentials.resp,
+          data,
+        });
+      }
+
+      // @ts-expect-error AbiTypes
       return await WAC.proxyView(res.credentials.credentialIdHashed, res.credentials.resp, data);
     } else if (mode === 'iframe') {
       /**
@@ -125,7 +135,16 @@ class PasskeyStrategy implements AuthStrategy {
         return;
       }
 
-      // @ts-expect-error Types from abi are not correct
+      if (useOtherAccountMethod === 'addWallet') {
+        return await WAC.addWallet({
+          credentialIdHashed: res.credentials.credentialIdHashed,
+          // @ts-expect-error AbiTypes
+          resp: res.credentials.resp,
+          data,
+        });
+      }
+
+      // @ts-expect-error AbiTypes
       return await WAC.proxyView(res.credentials.credentialIdHashed, res.credentials.resp, data);
     } else {
       /**
@@ -139,7 +158,16 @@ class PasskeyStrategy implements AuthStrategy {
         getPasskeyOrigin()
       );
 
-      // @ts-expect-error Types from abi are not correct
+      if (useOtherAccountMethod === 'addWallet') {
+        return await WAC.addWallet({
+          credentialIdHashed: credentials.credentialIdHashed,
+          // @ts-expect-error AbiTypes
+          resp: credentials.resp,
+          data,
+        });
+      }
+
+      // @ts-expect-error AbiTypes
       return await WAC.proxyView(credentials.credentialIdHashed, credentials.resp, data);
     }
   }

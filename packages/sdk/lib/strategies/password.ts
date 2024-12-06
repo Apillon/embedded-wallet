@@ -45,7 +45,12 @@ class PasswordStrategy implements AuthStrategy {
     };
   }
 
-  async getProxyResponse(WAC: WebauthnContract, data: string, authData: AuthData) {
+  async getProxyResponse(
+    WAC: WebauthnContract,
+    data: string,
+    authData: AuthData,
+    useOtherAccountMethod?: 'addWallet' // use other methods on account manager contract than proxyView
+  ) {
     if (!authData.username) {
       abort('NO_USERNAME');
     }
@@ -64,6 +69,14 @@ class PasswordStrategy implements AuthStrategy {
       ['bytes32', 'bytes'],
       [ethers.encodeBytes32String(authData.password!), data]
     );
+
+    if (useOtherAccountMethod === 'addWallet') {
+      return await WAC.addWalletPassword({
+        hashedUsername: hashedUsername as any,
+        digest,
+        data,
+      });
+    }
 
     return await WAC.proxyViewPassword(hashedUsername as any, digest, data);
   }

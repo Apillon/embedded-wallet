@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
 import {
   AccountWallet,
+  AccountWalletTypes,
   AppParams,
   AuthData,
   AuthStrategyName,
@@ -19,7 +20,7 @@ import PasswordStrategy from './strategies/password';
 import PasskeyStrategy from './strategies/passkey';
 import { networkIdIsSapphire, getHashedUsername, abort, JsonMultiRpcProvider } from './utils';
 import mitt, { Emitter } from 'mitt';
-import { SapphireMainnet, SapphireTestnet } from './constants';
+import { SapphireMainnet, SapphireTestnet, WalletType } from './constants';
 import { WalletDisconnectedError } from './adapters/eip1193';
 import { XdomainPasskey } from './xdomain';
 import { XdomainIframe } from './xiframe';
@@ -330,6 +331,64 @@ class EmbeddedWallet {
     abort('CANT_GET_ACCOUNT_ADDRESS');
   }
 
+  async getAccountBalance(address: string, networkId = this.defaultNetworkId, decimals = 18) {
+    if (!networkId || (!this.rpcUrls[networkId] && networkIdIsSapphire(networkId))) {
+      return ethers.formatUnits((await this.sapphireProvider?.getBalance(address)) || 0n, decimals);
+    }
+
+    if (!this.rpcUrls[networkId]) {
+      return '0';
+    }
+
+    const ethProvider =
+      this.rpcProviders[networkId] || new ethers.JsonRpcProvider(this.rpcUrls[networkId]);
+
+    return ethers.formatUnits(await ethProvider.getBalance(address), decimals);
+  }
+
+  async getAccountPrivateKey(
+    params: { strategy?: AuthStrategyName; authData?: AuthData; walletIndex?: number } = {}
+  ) {
+    if (!this.sapphireProvider) {
+      abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
+    }
+
+    if (!params.strategy) {
+      params.strategy = this.lastAccount.authStrategy;
+    }
+
+    if (!params.authData) {
+      if (params.strategy === 'passkey' && this.lastAccount.username) {
+        params.authData = {
+          username: this.lastAccount.username,
+        };
+      } else {
+        abort('AUTHENTICATION_DATA_NOT_PROVIDED');
+      }
+    }
+
+    const AC = new ethers.Interface(AccountAbi);
+    const data = AC.encodeFunctionData('exportPrivateKey', [
+      params.walletIndex || this.lastAccount.walletIndex,
+    ]);
+
+    /**
+     * Authenticate user and sign message
+     */
+    const res = await this.getProxyForStrategy(
+      params.strategy || this.lastAccount.authStrategy,
+      data,
+      params.authData!
+    );
+
+    if (res) {
+      const [exportedPrivateKey] = AC.decodeFunctionResult('exportPrivateKey', res).toArray();
+      return exportedPrivateKey as string;
+    }
+  }
+  // #endregion
+
+  // #region Account wallets
   /**
    * Get all wallets added on user's account. Requires authentication.
    */
@@ -407,30 +466,32 @@ class EmbeddedWallet {
     }
   }
 
-  async getAccountBalance(address: string, networkId = this.defaultNetworkId, decimals = 18) {
-    if (!networkId || (!this.rpcUrls[networkId] && networkIdIsSapphire(networkId))) {
-      return ethers.formatUnits((await this.sapphireProvider?.getBalance(address)) || 0n, decimals);
-    }
-
-    if (!this.rpcUrls[networkId]) {
-      return '0';
-    }
-
-    const ethProvider =
-      this.rpcProviders[networkId] || new ethers.JsonRpcProvider(this.rpcUrls[networkId]);
-
-    return ethers.formatUnits(await ethProvider.getBalance(address), decimals);
-  }
-
-  async getAccountPrivateKey(
-    params: { strategy?: AuthStrategyName; authData?: AuthData; walletIndex?: number } = {}
-  ) {
+  /**
+   * Add new wallet or import from privateKey
+   */
+  async addAccountWallet(params: {
+    title: string;
+    walletType?: AccountWalletTypes;
+    privateKey?: string;
+    authData?: AuthData;
+    strategy?: AuthStrategyName;
+  }) {
     if (!this.sapphireProvider) {
       abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
+      return;
+    }
+
+    if (!this.accountManagerContract) {
+      abort('ACCOUNT_MANAGER_CONTRACT_NOT_INITIALIZED');
+      return;
     }
 
     if (!params.strategy) {
       params.strategy = this.lastAccount.authStrategy;
+    }
+
+    if (!params.walletType) {
+      params.walletType = WalletType.EVM;
     }
 
     if (!params.authData) {
@@ -440,27 +501,98 @@ class EmbeddedWallet {
         };
       } else {
         abort('AUTHENTICATION_DATA_NOT_PROVIDED');
+        return;
       }
     }
 
-    const AC = new ethers.Interface(AccountAbi);
-    const data = AC.encodeFunctionData('exportPrivateKey', [
-      params.walletIndex || this.lastAccount.walletIndex,
-    ]);
-
-    /**
-     * Authenticate user and sign message
-     */
-    const res = await this.getProxyForStrategy(
-      params.strategy || this.lastAccount.authStrategy,
-      data,
-      params.authData!
+    const data = this.abiCoder.encode(
+      ['tuple(uint256 walletType, bytes32 keypairSecret, string title)'],
+      [
+        {
+          walletType: params.walletType,
+          keypairSecret: params.privateKey || ethers.ZeroHash,
+          title: params.title,
+        },
+      ]
     );
 
+    const res = await this.getProxyForStrategy(params.strategy, data, params.authData, 'addWallet');
+
+    console.log(res);
+
     if (res) {
-      const [exportedPrivateKey] = AC.decodeFunctionResult('exportPrivateKey', res).toArray();
-      return exportedPrivateKey as string;
+      // Refresh wallets?
+      return 'ok';
     }
+
+    abort('CANT_GET_WALLET_ADDRESS');
+  }
+
+  async updateAccountWalletTitle(params: {
+    walletIndex?: number;
+    title: string;
+    authData?: AuthData;
+    strategy?: AuthStrategyName;
+  }) {
+    if (!this.sapphireProvider) {
+      abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
+      return;
+    }
+
+    if (!this.accountManagerContract) {
+      abort('ACCOUNT_MANAGER_CONTRACT_NOT_INITIALIZED');
+      return;
+    }
+
+    if (!params.strategy) {
+      params.strategy = this.lastAccount.authStrategy;
+    }
+
+    if (!params.walletIndex) {
+      params.walletIndex = this.lastAccount.walletIndex;
+    }
+
+    if (!params.authData) {
+      if (params.strategy === 'passkey' && this.lastAccount.username) {
+        params.authData = {
+          username: this.lastAccount.username,
+        };
+      } else {
+        abort('AUTHENTICATION_DATA_NOT_PROVIDED');
+        return;
+      }
+    }
+
+    const label = 'Wallet name change';
+
+    const res = await this.signContractWrite({
+      authData: params.authData,
+      strategy: params.strategy,
+      walletIndex: params.walletIndex,
+      label,
+      contractAddress: this.lastAccount.contractAddress,
+      contractAbi: AccountAbi,
+      contractFunctionName: 'updateTitle',
+      contractFunctionValues: [params.walletIndex, params.title],
+      chainId: (import.meta.env.VITE_SAPPHIRE_URL ?? '').includes('testnet')
+        ? SapphireTestnet
+        : SapphireMainnet,
+    });
+
+    if (res) {
+      await this.broadcastTransaction(res?.signedTxData, res?.chainId, label);
+
+      /**
+       * Maybe wait for tx
+       */
+      // if (await this.waitForTxReceipt(txHash)) {
+      //   //
+      // }
+
+      this.lastAccount.wallets[params.walletIndex].title = params.title;
+    }
+
+    abort('WALLET_TITLE_UPDATE_FAILED');
   }
   // #endregion
 
@@ -620,11 +752,7 @@ class EmbeddedWallet {
     /**
      * Authenticate user and sign message
      */
-    const res = await this.getProxyForStrategy(
-      params.strategy || this.lastAccount.authStrategy,
-      data,
-      params.authData!
-    );
+    const res = await this.getProxyForStrategy(params.strategy, data, params.authData!);
 
     if (res) {
       const [signedRSV] = AC.decodeFunctionResult('sign', res).toArray();
@@ -961,7 +1089,12 @@ class EmbeddedWallet {
   /**
    * Helper for triggering different auth strategies
    */
-  async getProxyForStrategy(strategy: AuthStrategyName, data: any, authData: AuthData) {
+  async getProxyForStrategy(
+    strategy: AuthStrategyName,
+    data: any,
+    authData: AuthData,
+    useOtherAccountMethod?: 'addWallet'
+  ): Promise<any> {
     if (!this.accountManagerContract) {
       abort('ACCOUNT_MANAGER_CONTRACT_NOT_INITIALIZED');
     }
@@ -970,13 +1103,15 @@ class EmbeddedWallet {
       return await new PasswordStrategy().getProxyResponse(
         this.accountManagerContract,
         data,
-        authData
+        authData,
+        useOtherAccountMethod
       );
     } else if (strategy === 'passkey') {
       return await new PasskeyStrategy().getProxyResponse(
         this.accountManagerContract,
         data,
         authData,
+        useOtherAccountMethod,
         !!this.xdomain ? 'popup' : !!this.xiframe ? 'iframe' : 'default'
       );
     }
