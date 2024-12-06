@@ -43,6 +43,7 @@ class EmbeddedWallet {
 
   lastAccount = {
     contractAddress: '',
+    username: '',
     authStrategy: 'passkey' as AuthStrategyName,
     wallets: [] as AccountWallet[],
     walletIndex: 0,
@@ -196,10 +197,17 @@ class EmbeddedWallet {
       oldValue: this.lastAccount.authStrategy,
     });
 
+    this.events.emit('dataUpdated', {
+      name: 'username',
+      newValue: authData.username,
+      oldValue: this.lastAccount.username,
+    });
+
     this.lastAccount.authStrategy = strategy;
+    this.lastAccount.username = authData.username;
 
     if (await this.waitForTxReceipt(txHash)) {
-      return await this.handleAccountAfterAuth(authData.username);
+      return await this.handleAccountAfterAuth(authData);
     }
   }
 
@@ -227,14 +235,12 @@ class EmbeddedWallet {
     const hashedUsername = await getHashedUsername(authData.username);
 
     const AC = new ethers.Interface(AccountAbi);
-    const data = AC.encodeFunctionData('sign', [RANDOM_STRING]);
+    const data = AC.encodeFunctionData('sign', [0, RANDOM_STRING]);
 
     const loginData = await this.getProxyForStrategy(strategy, data, {
       ...authData,
       hashedUsername,
     });
-
-    console.log(loginData);
 
     if (!loginData) {
       abort('NO_LOGIN_PROXY_DATA');
@@ -246,8 +252,14 @@ class EmbeddedWallet {
       newValue: strategy,
       oldValue: this.lastAccount.authStrategy,
     });
+    this.events.emit('dataUpdated', {
+      name: 'username',
+      newValue: authData.username,
+      oldValue: this.lastAccount.username,
+    });
 
     this.lastAccount.authStrategy = strategy;
+    this.lastAccount.username = authData.username;
 
     /**
      * Get public key from credentials
@@ -262,20 +274,20 @@ class EmbeddedWallet {
     /**
      * Get public key for username from account manager contract
      */
-    const publicAddress = await this.getAccountAddress(authData.username);
+    const publicAddress = await this.getAccountAddress(authData);
 
     /**
      * If keys match -> Auth success, return account addresses
      */
     if (recoveredPublicKey === publicAddress) {
-      return await this.handleAccountAfterAuth(authData.username);
+      return await this.handleAccountAfterAuth(authData);
     }
   }
 
   /**
    * Return public address for username.
    */
-  async getAccountAddress(username?: string) {
+  async getAccountAddress(authData?: AuthData) {
     if (!this.sapphireProvider) {
       abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
       return;
@@ -287,10 +299,10 @@ class EmbeddedWallet {
     }
 
     if (!this.lastAccount.wallets.length) {
-      await this.getAccountWallets();
+      await this.getAccountWallets({ authData });
     }
 
-    if (!username) {
+    if (!authData?.username) {
       if (this.lastAccount.wallets.length > this.lastAccount.walletIndex) {
         return this.lastAccount.wallets[this.lastAccount.walletIndex].address;
       }
@@ -300,20 +312,22 @@ class EmbeddedWallet {
     }
 
     if (this.lastAccount.wallets.length) {
-      const found = this.lastAccount.wallets.findIndex(x => x.title === username);
+      if (this.lastAccount.wallets.length > this.lastAccount.walletIndex) {
+        return this.lastAccount.wallets[this.lastAccount.walletIndex].address;
+      } else {
+        this.events.emit('dataUpdated', {
+          name: 'walletIndex',
+          newValue: 0,
+          oldValue: this.lastAccount.walletIndex,
+        });
 
-      if (found > -1) {
-        if (found !== this.lastAccount.walletIndex) {
-          this.events.emit('dataUpdated', {
-            name: 'walletIndex',
-            newValue: found,
-            oldValue: this.lastAccount.walletIndex,
-          });
-        }
+        this.lastAccount.walletIndex = 0;
 
-        return this.lastAccount.wallets[found].address;
+        return this.lastAccount.wallets[this.lastAccount.walletIndex].address;
       }
     }
+
+    abort('CANT_GET_ACCOUNT_ADDRESS');
   }
 
   /**
@@ -330,22 +344,14 @@ class EmbeddedWallet {
       return;
     }
 
-    if (!params.authData?.username) {
-      if (this.lastAccount.wallets.length) {
-        return this.lastAccount.wallets;
-      }
-
-      abort('NO_USERNAME');
-      return;
+    if (this.lastAccount.wallets.length) {
+      return this.lastAccount.wallets;
     }
 
     if (!params.authData) {
-      if (
-        params.strategy === 'passkey' &&
-        this.lastAccount.wallets.length > this.lastAccount.walletIndex
-      ) {
+      if (params.strategy === 'passkey' && this.lastAccount.username) {
         params.authData = {
-          username: this.lastAccount.wallets[this.lastAccount.walletIndex].title,
+          username: this.lastAccount.username,
         };
       } else {
         abort('AUTHENTICATION_DATA_NOT_PROVIDED');
@@ -372,15 +378,32 @@ class EmbeddedWallet {
     if (res) {
       const [accountWallets] = AC.decodeFunctionResult('getWalletList', res).toArray();
 
-      this.events.emit('dataUpdated', {
-        name: 'wallets',
-        newValue: accountWallets,
-        oldValue: this.lastAccount.wallets,
-      });
+      if (Array.isArray(accountWallets) && accountWallets.length) {
+        const mapped = accountWallets
+          .map((x, index) =>
+            Array.isArray(x) && x.length >= 3
+              ? ({
+                  walletType: +(x[0] as bigint).toString(),
+                  address: x[1],
+                  title: x[2],
+                  index,
+                } as AccountWallet)
+              : undefined
+          )
+          .filter(x => !!x);
 
-      this.lastAccount.wallets = accountWallets;
+        this.events.emit('dataUpdated', {
+          name: 'wallets',
+          newValue: mapped,
+          oldValue: this.lastAccount.wallets,
+        });
 
-      return accountWallets as AccountWallet[];
+        this.lastAccount.wallets = mapped;
+
+        return mapped as AccountWallet[];
+      }
+
+      abort('CANT_GET_ACCOUNT_WALLETS');
     }
   }
 
@@ -399,7 +422,9 @@ class EmbeddedWallet {
     return ethers.formatUnits(await ethProvider.getBalance(address), decimals);
   }
 
-  async getAccountPrivateKey(params: { strategy?: AuthStrategyName; authData?: AuthData } = {}) {
+  async getAccountPrivateKey(
+    params: { strategy?: AuthStrategyName; authData?: AuthData; walletIndex?: number } = {}
+  ) {
     if (!this.sapphireProvider) {
       abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
     }
@@ -409,12 +434,9 @@ class EmbeddedWallet {
     }
 
     if (!params.authData) {
-      if (
-        params.strategy === 'passkey' &&
-        this.lastAccount.wallets.length > this.lastAccount.walletIndex
-      ) {
+      if (params.strategy === 'passkey' && this.lastAccount.username) {
         params.authData = {
-          username: this.lastAccount.wallets[this.lastAccount.walletIndex].title,
+          username: this.lastAccount.username,
         };
       } else {
         abort('AUTHENTICATION_DATA_NOT_PROVIDED');
@@ -422,7 +444,9 @@ class EmbeddedWallet {
     }
 
     const AC = new ethers.Interface(AccountAbi);
-    const data = AC.encodeFunctionData('exportPrivateKey', []);
+    const data = AC.encodeFunctionData('exportPrivateKey', [
+      params.walletIndex || this.lastAccount.walletIndex,
+    ]);
 
     /**
      * Authenticate user and sign message
@@ -482,7 +506,18 @@ class EmbeddedWallet {
     return { signature: '', gasLimit: 0, timestamp: 0 };
   }
 
-  setAccount(params: { walletIndex: number; strategy: AuthStrategyName; contractAddress: string }) {
+  setAccount(params: {
+    username: string;
+    walletIndex: number;
+    strategy: AuthStrategyName;
+    contractAddress: string;
+  }) {
+    this.events.emit('dataUpdated', {
+      name: 'username',
+      newValue: params.username,
+      oldValue: this.lastAccount.username,
+    });
+
     this.events.emit('dataUpdated', {
       name: 'walletIndex',
       newValue: params.walletIndex,
@@ -495,13 +530,14 @@ class EmbeddedWallet {
       oldValue: this.lastAccount.authStrategy,
     });
 
+    this.lastAccount.username = params.username;
     this.lastAccount.walletIndex = params.walletIndex;
     this.lastAccount.authStrategy = params.strategy;
     this.lastAccount.contractAddress = params.contractAddress;
   }
 
-  async handleAccountAfterAuth(username: string) {
-    const addr = await this.getAccountAddress(username);
+  async handleAccountAfterAuth(authData: AuthData) {
+    const addr = await this.getAccountAddress(authData);
 
     if (addr && this.waitForAccountResolver) {
       this.waitForAccountResolver(addr);
@@ -538,12 +574,9 @@ class EmbeddedWallet {
     }
 
     if (!params.authData) {
-      if (
-        params.strategy === 'passkey' &&
-        this.lastAccount.wallets.length > this.lastAccount.walletIndex
-      ) {
+      if (params.strategy === 'passkey' && this.lastAccount.username) {
         params.authData = {
-          username: this.lastAccount.wallets[this.lastAccount.walletIndex].title,
+          username: this.lastAccount.username,
         };
       } else {
         abort('AUTHENTICATION_DATA_NOT_PROVIDED');
@@ -561,7 +594,10 @@ class EmbeddedWallet {
         params.message = ethers.hashMessage(params.message);
       }
 
-      data = AC.encodeFunctionData('sign', [params.message]);
+      data = AC.encodeFunctionData('sign', [
+        params.walletIndex || this.lastAccount.walletIndex,
+        params.message,
+      ]);
 
       /**
        * Emits 'signatureRequest' if confirmation is needed.
@@ -626,13 +662,14 @@ class EmbeddedWallet {
       params.strategy = this.lastAccount.authStrategy;
     }
 
+    if (!params.walletIndex) {
+      params.walletIndex = this.lastAccount.walletIndex;
+    }
+
     if (!params.authData) {
-      if (
-        params.strategy === 'passkey' &&
-        this.lastAccount.wallets.length > this.lastAccount.walletIndex
-      ) {
+      if (params.strategy === 'passkey' && this.lastAccount.username) {
         params.authData = {
-          username: this.lastAccount.wallets[this.lastAccount.walletIndex].title,
+          username: this.lastAccount.username,
         };
       } else {
         return abort('AUTHENTICATION_DATA_NOT_PROVIDED');
@@ -715,7 +752,10 @@ class EmbeddedWallet {
     }
 
     const AC = new ethers.Interface(AccountAbi);
-    const data = AC.encodeFunctionData('signEIP155', [params.tx]);
+    const data = AC.encodeFunctionData('signEIP155', [
+      params.walletIndex || this.lastAccount.walletIndex,
+      params.tx,
+    ]);
 
     /**
      * Authenticate user and sign transaction
@@ -792,18 +832,26 @@ class EmbeddedWallet {
       params.strategy = this.lastAccount.authStrategy;
     }
 
+    if (!params.walletIndex) {
+      params.walletIndex = this.lastAccount.walletIndex;
+    }
+
     if (!params.authData) {
-      if (
-        params.strategy === 'passkey' &&
-        this.lastAccount.wallets.length > this.lastAccount.walletIndex
-      ) {
+      if (params.strategy === 'passkey' && this.lastAccount.username) {
         params.authData = {
-          username: this.lastAccount.wallets[this.lastAccount.walletIndex].title,
+          username: this.lastAccount.username,
         };
       } else {
         abort('AUTHENTICATION_DATA_NOT_PROVIDED');
         return;
       }
+    }
+
+    const accountAddress = this.lastAccount.wallets[params.walletIndex]?.address;
+
+    if (!accountAddress) {
+      abort('CANT_GET_ACCOUNT_ADDRESS');
+      return;
     }
 
     /**
@@ -819,13 +867,6 @@ class EmbeddedWallet {
           contractWrite: { ...params, mustConfirm: false, resolve, reject },
         });
       });
-    }
-
-    const accountAddress = await this.getAccountAddress(params.authData!.username);
-
-    if (!accountAddress) {
-      abort('CANT_GET_ACCOUNT_ADDRESS');
-      return;
     }
 
     /**
@@ -876,7 +917,7 @@ class EmbeddedWallet {
      * Encode tx data and authenticate it with selected auth strategy through sapphire "Account Manager"
      */
     const AC = new ethers.Interface(AccountAbi);
-    const data = AC.encodeFunctionData('signEIP155', [tx]);
+    const data = AC.encodeFunctionData('signEIP155', [params.walletIndex, tx]);
     const res = await this.getProxyForStrategy(params.strategy, data, params.authData!);
 
     if (res) {
@@ -1059,6 +1100,10 @@ class EmbeddedWallet {
 
       return ethProvider;
     }
+  }
+
+  getGaspayingAddress() {
+    return this.accountManagerContract.gaspayingAddress();
   }
   // #endregion
 }

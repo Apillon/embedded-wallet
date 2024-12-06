@@ -20,7 +20,10 @@ export default function TestApp() {
           onClick={async () => {
             const wallet = getEmbeddedWallet();
             console.log(
-              await wallet?.getAccountBalance(wallet.lastAccount.address, wallet.defaultNetworkId)
+              await wallet?.getAccountBalance(
+                wallet.lastAccount.wallets[wallet.lastAccount.walletIndex].address,
+                wallet.defaultNetworkId
+              )
             );
           }}
         >

@@ -3,6 +3,7 @@ import { AccountManagerAbi } from './abi';
 import { TypedContract } from 'ethers-abitype';
 import { ethers } from 'ethers';
 import { ProviderRpcError } from 'viem';
+import { WalletType } from './constants';
 
 const wacAbi = parseAbi(AccountManagerAbi);
 
@@ -91,11 +92,17 @@ export type UserInfo = {
   accountContractAddress: string | ethers.Addressable;
 };
 
-export type AccountWallet = { address: string; index: number; title: string };
+export type AccountWallet = {
+  walletType: (typeof WalletType)[keyof typeof WalletType];
+  address: string;
+  title: string;
+  index: number;
+};
 
 export type PlainTransactionParams = {
   strategy?: AuthStrategyName;
   authData?: AuthData;
+  walletIndex?: number;
   tx: ethers.TransactionLike<ethers.AddressLike>;
   label?: string;
   mustConfirm?: boolean;
@@ -106,6 +113,7 @@ export type PlainTransactionParams = {
 export type SignMessageParams = {
   strategy?: AuthStrategyName;
   authData?: AuthData;
+  walletIndex?: number;
   message: ethers.BytesLike | string;
   data?: string;
   mustConfirm?: boolean;
@@ -124,6 +132,7 @@ export type ContractReadParams = {
 export type ContractWriteParams = {
   strategy?: AuthStrategyName;
   authData?: AuthData;
+  walletIndex?: number;
   label?: string;
   mustConfirm?: boolean;
   resolve?: (result: { signedTxData: any; chainId?: number }) => void;
@@ -147,7 +156,13 @@ export type Events = {
   txSubmitted: TransactionItem;
   txDone: TransactionItem; // emitted by UI
   dataUpdated: {
-    name: 'authStrategy' | 'defaultNetworkId' | 'sessionToken' | 'wallets' | 'walletIndex';
+    name:
+      | 'username'
+      | 'authStrategy'
+      | 'defaultNetworkId'
+      | 'sessionToken'
+      | 'wallets'
+      | 'walletIndex';
     newValue: any;
     oldValue: any;
   };
