@@ -505,24 +505,70 @@ class EmbeddedWallet {
       }
     }
 
-    const data = this.abiCoder.encode(
-      ['tuple(uint256 walletType, bytes32 keypairSecret, string title)'],
-      [
+    // const data = this.abiCoder.encode(
+    //   ['tuple(uint256 walletType, bytes32 keypairSecret, string title)'],
+    //   [
+    // {
+    //   walletType: params.walletType,
+    //   keypairSecret: params.privateKey || ethers.ZeroHash,
+    //   title: params.title,
+    // },
+    //   ]
+    // );
+
+    const label = 'Add new wallet';
+
+    /**
+     * @TODO Add new method in strategies/any.ts -> proxyWrite
+     * - takes encoded data
+     * - get authentication data
+     * - use everything to make contract call
+     * - wait for tx receipt (optional - another param)
+     *
+     * @TODO Remove `useOtherAccountMethod` in `getProxyResponse`
+     */
+
+    const res = await this.signContractWrite({
+      authData: params.authData,
+      strategy: params.strategy,
+      label,
+      contractAddress: await this.accountManagerContract.getAddress(),
+      contractAbi: AccountManagerAbi,
+      contractFunctionName: 'addWallet',
+      contractFunctionValues: [
         {
           walletType: params.walletType,
           keypairSecret: params.privateKey || ethers.ZeroHash,
           title: params.title,
         },
-      ]
-    );
+      ],
+      chainId: (import.meta.env.VITE_SAPPHIRE_URL ?? '').includes('testnet')
+        ? SapphireTestnet
+        : SapphireMainnet,
+    });
 
-    const res = await this.getProxyForStrategy(params.strategy, data, params.authData, 'addWallet');
+    // const res = await this.getProxyForStrategy(params.strategy, data, params.authData, 'addWallet');
+
+    // console.log(res);
+
+    // if (res) {
+    //   // Refresh wallets?
+    //   return 'ok';
+    // }
 
     console.log(res);
 
     if (res) {
-      // Refresh wallets?
-      return 'ok';
+      const { txHash } = await this.broadcastTransaction(res?.signedTxData, res?.chainId, label);
+
+      console.log('broadcasted');
+
+      /**
+       * Maybe wait for tx
+       */
+      if (await this.waitForTxReceipt(txHash)) {
+        console.log('done!');
+      }
     }
 
     abort('CANT_GET_WALLET_ADDRESS');
