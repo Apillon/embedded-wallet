@@ -3,7 +3,7 @@ import { AccountManagerAbi } from './abi';
 import { TypedContract } from 'ethers-abitype';
 import { ethers } from 'ethers';
 import { ProviderRpcError } from 'viem';
-import { WalletType } from './constants';
+import { ProxyWriteFunctionsByStrategy, WalletType } from './constants';
 
 const wacAbi = parseAbi(AccountManagerAbi);
 
@@ -76,13 +76,18 @@ export type RegisterData = {
 export interface AuthStrategy {
   getRegisterData(authData: AuthData): Promise<RegisterData | undefined>;
 
-  getProxyResponse(
-    WAC: WebauthnContract,
+  getProxyResponse(data: string, authData: AuthData): Promise<any>;
+
+  proxyWrite(
+    functionName: keyof typeof ProxyWriteFunctionsByStrategy,
     data: string,
     authData: AuthData,
-    useOtherAccountMethod?: 'addWallet'
+    txLabel?: string,
+    dontWait?: boolean
   ): Promise<any>;
 }
+
+export type AuthPasskeyMode = 'default' | 'iframe' | 'popup';
 
 export type AuthStrategyName = 'password' | 'passkey';
 

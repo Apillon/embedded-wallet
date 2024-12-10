@@ -20,13 +20,19 @@ import PasswordStrategy from './strategies/password';
 import PasskeyStrategy from './strategies/passkey';
 import { networkIdIsSapphire, getHashedUsername, abort, JsonMultiRpcProvider } from './utils';
 import mitt, { Emitter } from 'mitt';
-import { SapphireMainnet, SapphireTestnet, WalletType } from './constants';
+import {
+  ProxyWriteFunctionsByStrategy,
+  SapphireMainnet,
+  SapphireTestnet,
+  WalletType,
+} from './constants';
 import { WalletDisconnectedError } from './adapters/eip1193';
 import { XdomainPasskey } from './xdomain';
 import { XdomainIframe } from './xiframe';
 
 class EmbeddedWallet {
   sapphireProvider: ethers.JsonRpcProvider;
+  accountManagerAddress: string;
   accountManagerContract: WebauthnContract;
   abiCoder = ethers.AbiCoder.defaultAbiCoder();
   events: Emitter<Events>;
@@ -68,9 +74,11 @@ class EmbeddedWallet {
     ]);
 
     this.sapphireProvider = sapphire.wrap(ethSaphProvider);
+    this.accountManagerAddress =
+      import.meta.env.VITE_ACCOUNT_MANAGER_ADDRESS ?? '0x50dE236a7ce372E7a09956087Fb4862CA1a887aA';
 
     this.accountManagerContract = new ethers.Contract(
-      import.meta.env.VITE_ACCOUNT_MANAGER_ADDRESS ?? '0x50dE236a7ce372E7a09956087Fb4862CA1a887aA',
+      this.accountManagerAddress,
       AccountManagerAbi,
       new ethers.VoidSigner(ethers.ZeroAddress, this.sapphireProvider)
     ) as unknown as WebauthnContract;
@@ -146,9 +154,9 @@ class EmbeddedWallet {
      * Authentication method
      */
     if (strategy === 'password') {
-      registerData = await new PasswordStrategy().getRegisterData(authData);
+      registerData = await new PasswordStrategy(this).getRegisterData(authData);
     } else if (strategy === 'passkey') {
-      registerData = await new PasskeyStrategy().getRegisterData(
+      registerData = await new PasskeyStrategy(this).getRegisterData(
         { ...authData, hashedUsername },
         !!this.xdomain
       );
@@ -505,70 +513,27 @@ class EmbeddedWallet {
       }
     }
 
-    // const data = this.abiCoder.encode(
-    //   ['tuple(uint256 walletType, bytes32 keypairSecret, string title)'],
-    //   [
-    // {
-    //   walletType: params.walletType,
-    //   keypairSecret: params.privateKey || ethers.ZeroHash,
-    //   title: params.title,
-    // },
-    //   ]
-    // );
-
-    const label = 'Add new wallet';
-
-    /**
-     * @TODO Add new method in strategies/any.ts -> proxyWrite
-     * - takes encoded data
-     * - get authentication data
-     * - use everything to make contract call
-     * - wait for tx receipt (optional - another param)
-     *
-     * @TODO Remove `useOtherAccountMethod` in `getProxyResponse`
-     */
-
-    const res = await this.signContractWrite({
-      authData: params.authData,
-      strategy: params.strategy,
-      label,
-      contractAddress: await this.accountManagerContract.getAddress(),
-      contractAbi: AccountManagerAbi,
-      contractFunctionName: 'addWallet',
-      contractFunctionValues: [
+    const data = this.abiCoder.encode(
+      ['tuple(uint256 walletType, bytes32 keypairSecret, string title)'],
+      [
         {
           walletType: params.walletType,
           keypairSecret: params.privateKey || ethers.ZeroHash,
           title: params.title,
         },
-      ],
-      chainId: (import.meta.env.VITE_SAPPHIRE_URL ?? '').includes('testnet')
-        ? SapphireTestnet
-        : SapphireMainnet,
-    });
+      ]
+    );
 
-    // const res = await this.getProxyForStrategy(params.strategy, data, params.authData, 'addWallet');
-
-    // console.log(res);
-
-    // if (res) {
-    //   // Refresh wallets?
-    //   return 'ok';
-    // }
-
-    console.log(res);
+    const res = await this.proxyWriteForStrategy(
+      params.strategy,
+      'addWallet',
+      data,
+      params.authData,
+      'Add new account'
+    );
 
     if (res) {
-      const { txHash } = await this.broadcastTransaction(res?.signedTxData, res?.chainId, label);
-
-      console.log('broadcasted');
-
-      /**
-       * Maybe wait for tx
-       */
-      if (await this.waitForTxReceipt(txHash)) {
-        console.log('done!');
-      }
+      console.log(res);
     }
 
     abort('CANT_GET_WALLET_ADDRESS');
@@ -1138,26 +1103,52 @@ class EmbeddedWallet {
   async getProxyForStrategy(
     strategy: AuthStrategyName,
     data: any,
-    authData: AuthData,
-    useOtherAccountMethod?: 'addWallet'
+    authData: AuthData
   ): Promise<any> {
     if (!this.accountManagerContract) {
       abort('ACCOUNT_MANAGER_CONTRACT_NOT_INITIALIZED');
     }
 
     if (strategy === 'password') {
-      return await new PasswordStrategy().getProxyResponse(
-        this.accountManagerContract,
+      return await new PasswordStrategy(this).getProxyResponse(data, authData);
+    } else if (strategy === 'passkey') {
+      return await new PasskeyStrategy(this).getProxyResponse(
         data,
         authData,
-        useOtherAccountMethod
+        !!this.xdomain ? 'popup' : !!this.xiframe ? 'iframe' : 'default'
+      );
+    }
+  }
+
+  async proxyWriteForStrategy(
+    strategy: AuthStrategyName,
+    functionName: keyof typeof ProxyWriteFunctionsByStrategy,
+    data: any,
+    authData: AuthData,
+    txLabel?: string,
+    dontWait = false
+  ): Promise<any> {
+    if (!this.accountManagerContract) {
+      abort('ACCOUNT_MANAGER_CONTRACT_NOT_INITIALIZED');
+    }
+
+    const functionNameForStrategy = ProxyWriteFunctionsByStrategy[functionName][strategy];
+
+    if (strategy === 'password') {
+      return await new PasswordStrategy(this).proxyWrite(
+        data,
+        functionNameForStrategy,
+        authData,
+        txLabel,
+        dontWait
       );
     } else if (strategy === 'passkey') {
-      return await new PasskeyStrategy().getProxyResponse(
-        this.accountManagerContract,
+      return await new PasskeyStrategy(this).proxyWrite(
         data,
+        functionNameForStrategy,
         authData,
-        useOtherAccountMethod,
+        txLabel,
+        dontWait,
         !!this.xdomain ? 'popup' : !!this.xiframe ? 'iframe' : 'default'
       );
     }

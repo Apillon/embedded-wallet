@@ -62,3 +62,14 @@ export const ErrorMessages = {
   [Errors.XDOMAIN_BLOCKED]:
     'Passkey configuration popup blocked, please allow browser popups to continue',
 };
+
+export const ProxyWriteFunctionsByStrategy = {
+  addWallet: {
+    passkey: 'addWallet',
+    password: 'addWalletPassword',
+  },
+  manageCredential: {
+    passkey: 'manageCredential',
+    password: 'manageCredentialPassword',
+  },
+} as const;
