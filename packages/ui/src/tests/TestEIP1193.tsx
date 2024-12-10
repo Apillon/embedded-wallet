@@ -25,7 +25,7 @@ export default function TestEIP1193() {
             if (w?.lastAccount.address) {
               const res = await p.request({
                 method: 'eth_sign',
-                params: [w?.lastAccount.address, `0xTest message`],
+                params: [w?.lastAccount.address, `Test message` as `0x${string}`],
               });
               console.log(res);
             }
