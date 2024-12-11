@@ -5,6 +5,7 @@ import TestViem from './TestViem';
 import TestAccount from './TestAccount';
 import { getEmbeddedWallet } from '../../lib/utils';
 import TestWallet from './TestWallet';
+import TestExport from './TestExport';
 
 export default function TestApp() {
   return (
@@ -51,20 +52,7 @@ export default function TestApp() {
       </div> */}
 
       <h2>PK export</h2>
-      <div className="row">
-        <button
-          onClick={async () => {
-            const wallet = getEmbeddedWallet();
-
-            const res = await wallet?.getAccountPrivateKey({
-              strategy: 'passkey',
-            });
-            console.log(res);
-          }}
-        >
-          TEST
-        </button>
-      </div>
+      <TestExport />
 
       <h2>Trigger ethers test</h2>
       <div className="row">

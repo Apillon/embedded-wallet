@@ -409,7 +409,8 @@ class EmbeddedWallet {
   }
 
   /**
-   * Add new wallet or import from privateKey
+   * Add new wallet or import from privateKey.
+   * Returns tx hash on success.
    */
   async addAccountWallet(params: {
     title: string;
@@ -467,7 +468,7 @@ class EmbeddedWallet {
     );
 
     if (res) {
-      return res;
+      return res as string;
     }
 
     abort('CANT_GET_WALLET_ADDRESS');
