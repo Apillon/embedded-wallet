@@ -34,6 +34,6 @@ const { info } = useAccount();
 
     <p>username: {{ info.username }}</p>
 
-    <p>address: {{ info.address }}</p>
+    <p>address: {{ info.activeWallet }}</p>
   </div>
 </template>

@@ -39,7 +39,6 @@ export default function WalletAuth() {
         if (address) {
           setupUserInfo({
             username,
-            address: address.publicAddress,
             authStrategy: 'passkey',
           });
         }
@@ -87,10 +86,10 @@ export default function WalletAuth() {
     handleError();
 
     try {
-      const res = await wallet?.register('passkey', { username }, hashedUsername.current);
+      const res = await wallet?.register('passkey', { username }, hashedUsername.current, false);
 
       if (res) {
-        setupUserInfo({ username, address: res.publicAddress, authStrategy: 'passkey' });
+        setupUserInfo({ username, authStrategy: 'passkey' });
       }
     } catch (e) {
       handleError(e, 'startRegister');
@@ -101,17 +100,14 @@ export default function WalletAuth() {
 
   async function setupUserInfo({
     username,
-    address,
     authStrategy,
   }: {
     username: string;
-    address: string;
     authStrategy: AuthStrategyName;
   }) {
     // const balance = (await wallet?.getAccountBalance(address)) || '0';
 
     redirectBack({
-      address,
       username,
       authStrategy,
     });

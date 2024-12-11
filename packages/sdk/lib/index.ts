@@ -138,8 +138,15 @@ class EmbeddedWallet {
   /**
    * Create new "wallet" for username.
    * Creates a new contract for each account on sapphire network.
+   *
+   * @param skipAccountWallets  Dont make another request for listing the wallets on account
    */
-  async register(strategy: AuthStrategyName, authData: AuthData, hashedUsername?: Buffer) {
+  async register(
+    strategy: AuthStrategyName,
+    authData: AuthData,
+    hashedUsername?: Buffer,
+    skipAccountWallets = false
+  ) {
     if (!this.sapphireProvider) {
       abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
     }
@@ -201,6 +208,10 @@ class EmbeddedWallet {
     const txHash = await this.sapphireProvider.send('eth_sendRawTransaction', [signedTx]);
 
     if (await this.waitForTxReceipt(txHash)) {
+      if (skipAccountWallets) {
+        return '';
+      }
+
       return await this.finalizeAccountAuth(strategy, authData);
     }
   }
@@ -353,7 +364,7 @@ class EmbeddedWallet {
       params.strategy = this.lastAccount.authStrategy;
     }
 
-    if (!params.authData) {
+    if (!params.authData || !params.authData.username) {
       if (params.strategy === 'passkey' && this.lastAccount.username) {
         params.authData = {
           username: this.lastAccount.username,
@@ -369,6 +380,12 @@ class EmbeddedWallet {
       this.lastAccount.contractAddress = (await this.accountManagerContract.getAccount(
         hashedUsername as any
       )) as string;
+
+      this.events.emit('dataUpdated', {
+        name: 'contractAddress',
+        newValue: this.lastAccount.contractAddress,
+        oldValue: '',
+      });
     }
 
     const AC = new ethers.Interface(AccountAbi);
@@ -611,6 +628,16 @@ class EmbeddedWallet {
     this.lastAccount.walletIndex = params.walletIndex;
     this.lastAccount.authStrategy = params.strategy;
     this.lastAccount.contractAddress = params.contractAddress;
+  }
+
+  setWallets(wallets: AccountWallet[]) {
+    this.events.emit('dataUpdated', {
+      name: 'wallets',
+      newValue: wallets,
+      oldValue: this.lastAccount.wallets,
+    });
+
+    this.lastAccount.wallets = wallets;
   }
 
   /**

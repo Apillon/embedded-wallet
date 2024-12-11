@@ -28,7 +28,7 @@ export default function WalletNetworkSelect() {
 
           wallet?.setAccount({
             username: '',
-            address: '',
+            walletIndex: 0,
             contractAddress: '',
             strategy: 'passkey',
           });

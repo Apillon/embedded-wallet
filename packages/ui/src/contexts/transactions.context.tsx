@@ -95,10 +95,7 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState());
   const [initialized, setInitialized] = useState(false);
 
-  const {
-    state: { address: accountAddress },
-    reloadUserBalance,
-  } = useWalletContext();
+  const { activeWallet, reloadUserBalance } = useWalletContext();
 
   useEffect(() => {
     if (initialized) {
@@ -127,15 +124,15 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (
-      accountAddress &&
-      state.txs[accountAddress] &&
-      Object.keys(state.txs[accountAddress]).length
+      activeWallet &&
+      state.txs[activeWallet.address] &&
+      Object.keys(state.txs[activeWallet.address]).length
     ) {
-      for (const h of Object.keys(state.txs[accountAddress])) {
+      for (const h of Object.keys(state.txs[activeWallet.address])) {
         checkTransaction(h);
       }
     }
-  }, [accountAddress, state.txs]);
+  }, [activeWallet, state.txs]);
 
   /**
    * Check if transaction is already finalized in store.
@@ -144,7 +141,7 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
    * the transaction is mined.
    */
   async function checkTransaction(txHash: string) {
-    if (!accountAddress) {
+    if (!activeWallet) {
       return;
     }
 
@@ -160,7 +157,7 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
       throw new Error('Provider not initialized. ' + txHash);
     }
 
-    const tx = state.txs[accountAddress]?.[txHash];
+    const tx = state.txs[activeWallet.index]?.[txHash];
 
     // Tx doesnt exist, is done, or is already pending
     if (

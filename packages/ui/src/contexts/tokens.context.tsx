@@ -88,7 +88,7 @@ const TokensContext = createContext<
 function TokensProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState());
   const [initialized, setInitialized] = useState(false);
-  const { state: walletState, wallet } = useWalletContext();
+  const { state: walletState, wallet, activeWallet } = useWalletContext();
 
   useEffect(() => {
     if (initialized) {
@@ -104,22 +104,25 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
         const restored = JSON.parse(stored);
         dispatch({ type: 'setState', payload: restored });
 
-        if (Array.isArray(restored?.list?.[walletState.address]?.[walletState.networkId])) {
-          restored.list[walletState.address][walletState.networkId].forEach(
+        if (
+          !!activeWallet &&
+          Array.isArray(restored?.list?.[activeWallet?.address || '']?.[walletState.networkId])
+        ) {
+          restored.list[activeWallet.address][walletState.networkId].forEach(
             async (t: TokenInfo) => {
               if (wallet) {
                 const res = await wallet.contractRead({
                   contractAddress: t.address,
                   contractAbi: ERC20Abi,
                   contractFunctionName: 'balanceOf',
-                  contractFunctionValues: [walletState.address],
+                  contractFunctionValues: [activeWallet.address],
                 });
 
                 if (res) {
                   dispatch({
                     type: 'updateToken',
                     payload: {
-                      owner: walletState.address,
+                      owner: activeWallet.address,
                       chainId: walletState.networkId,
                       token: {
                         ...t,
@@ -143,7 +146,7 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   async function getTokenDetails(address: string) {
-    if (wallet) {
+    if (wallet && activeWallet) {
       const [name, symbol, decimals, balance] = await Promise.all([
         wallet.contractRead({
           contractAddress: address,
@@ -164,7 +167,7 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
           contractAddress: address,
           contractAbi: ERC20Abi,
           contractFunctionName: 'balanceOf',
-          contractFunctionValues: [walletState.address],
+          contractFunctionValues: [activeWallet.address],
         }),
       ]);
 

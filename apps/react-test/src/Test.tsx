@@ -43,7 +43,7 @@ export default function Test() {
 
       <p>username: {info.username}</p>
 
-      <p>address: {info.address}</p>
+      <p>address: {info?.activeWallet?.address}</p>
 
       <br />
 
@@ -51,15 +51,15 @@ export default function Test() {
 
       <br />
 
-      {!!info.address && <TestViem />}
+      {!!info?.activeWallet?.address && <TestViem />}
 
       <br />
 
-      {!!info.address && <TestEthers6 />}
+      {!!info?.activeWallet?.address && <TestEthers6 />}
 
       <br />
 
-      {!!info.address && <TestEthers5 />}
+      {!!info?.activeWallet?.address && <TestEthers5 />}
     </div>
   );
 }

@@ -43,7 +43,6 @@ export default function WalletAuth({
         if (address) {
           setupUserInfo({
             username,
-            address: address.publicAddress,
             authStrategy: 'passkey',
           });
         }
@@ -94,7 +93,7 @@ export default function WalletAuth({
       const res = await wallet?.register('passkey', { username }, hashedUsername.current);
 
       if (res) {
-        setupUserInfo({ username, address: res.publicAddress, authStrategy: 'passkey' });
+        setupUserInfo({ username, authStrategy: 'passkey' });
       }
     } catch (e) {
       handleError(e, 'startRegister');
@@ -105,25 +104,34 @@ export default function WalletAuth({
 
   async function setupUserInfo({
     username,
-    address,
     authStrategy,
   }: {
     username: string;
-    address: string;
     authStrategy: AuthStrategyName;
   }) {
-    const balance = (await wallet?.getAccountBalance(address)) || '0';
+    // const balance = (await wallet?.getAccountBalance(address)) || '0';
 
     dispatch({
       type: 'setState',
       payload: {
-        address,
+        walletIndex: 0,
         username,
-        balance,
         authStrategy,
         networkId: defaultNetworkId || undefined,
       },
     });
+
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    if (wallet?.lastAccount.wallets) {
+      dispatch({
+        type: 'setValue',
+        payload: {
+          key: 'accountWallets',
+          value: wallet?.lastAccount.wallets,
+        },
+      });
+    }
   }
 
   if (isConfiguringPasskey) {

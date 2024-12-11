@@ -9,7 +9,7 @@ import { QRCode } from 'react-qr-code';
 import useCopyToClipboard from '../hooks/useCopyToClipboard';
 
 export default function WalletTokens() {
-  const { state, networksById, setScreen, wallet, handleError } = useWalletContext();
+  const { state, networksById, activeWallet, setScreen, wallet, handleError } = useWalletContext();
   const { state: tokens } = useTokensContext();
 
   const [receiverAddress, setReceiverAddress] = useState('');
@@ -22,14 +22,14 @@ export default function WalletTokens() {
       name: `${networksById?.[state.networkId]?.name} ETH`,
       symbol: 'ETH',
       decimals: 18,
-      balance: state.balance,
+      balance: activeWallet?.balance || '',
     }),
-    [state.balance, state.networkId]
+    [activeWallet?.balance, state.networkId]
   );
 
   const selectedToken = useMemo<TokenInfo>(() => {
     if (tokens.selectedToken) {
-      const userTokens = tokens.list[state.address][state.networkId];
+      const userTokens = tokens.list?.[activeWallet?.address || '']?.[state.networkId];
 
       if (userTokens) {
         const found = userTokens.find(x => x.address === tokens.selectedToken);
@@ -175,15 +175,15 @@ export default function WalletTokens() {
 }
 
 function SelectToken({ nativeToken }: { nativeToken: TokenInfo }) {
-  const { state, setScreen, handleError } = useWalletContext();
+  const { state, activeWallet, setScreen, handleError } = useWalletContext();
   const { state: tokens, dispatch, getTokenDetails } = useTokensContext();
 
   const [address, setAddress] = useState('');
   const [loading, setLoading] = useState(false);
 
   const tokenList = useMemo<TokenInfo[]>(() => {
-    return Array.isArray(tokens.list[state.address]?.[state.networkId])
-      ? [nativeToken, ...tokens.list[state.address][state.networkId]]
+    return Array.isArray(tokens.list[activeWallet?.address || '']?.[state.networkId])
+      ? [nativeToken, ...tokens.list[activeWallet?.address || ''][state.networkId]]
       : [nativeToken];
   }, [tokens.list]);
 
@@ -243,9 +243,13 @@ function SelectToken({ nativeToken }: { nativeToken: TokenInfo }) {
               throw new Error('Could not get token details');
             }
 
+            if (!activeWallet?.address) {
+              throw new Error('Could not get user wallet address');
+            }
+
             dispatch({
               type: 'updateToken',
-              payload: { owner: state.address, chainId: state.networkId, token: res },
+              payload: { owner: activeWallet.address, chainId: state.networkId, token: res },
             });
           } catch (e) {
             handleError(e, 'onTokensAdd');
@@ -274,10 +278,10 @@ function SelectToken({ nativeToken }: { nativeToken: TokenInfo }) {
 }
 
 function ReceiveToken() {
-  const { state, setScreen } = useWalletContext();
+  const { activeWallet, setScreen } = useWalletContext();
   const { text: copyText, onCopy } = useCopyToClipboard();
 
-  if (!state.address) {
+  if (!activeWallet?.address) {
     return <></>;
   }
 
@@ -287,16 +291,16 @@ function ReceiveToken() {
 
       <div className="p-4 mb-4 text-center">
         <QRCode
-          value={`ethereum:${state.address}`}
+          value={`ethereum:${activeWallet.address}`}
           size={256}
           style={{ height: 'auto', maxWidth: '100%', width: '256px', margin: '0 auto' }}
           viewBox={`0 0 256 256`}
         />
       </div>
 
-      <input readOnly value={state.address} className="w-full mb-4" />
+      <input readOnly value={activeWallet.address} className="w-full mb-4" />
 
-      <Btn className="w-full mb-4" onClick={() => onCopy(state.address)}>
+      <Btn className="w-full mb-4" onClick={() => onCopy(activeWallet.address)}>
         {copyText}
       </Btn>
 

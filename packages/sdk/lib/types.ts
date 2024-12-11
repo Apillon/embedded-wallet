@@ -176,7 +176,9 @@ export type Events = {
       | 'defaultNetworkId'
       | 'sessionToken'
       | 'wallets'
-      | 'walletIndex';
+      | 'walletIndex'
+      | 'address'
+      | 'contractAddress';
     newValue: any;
     oldValue: any;
   };

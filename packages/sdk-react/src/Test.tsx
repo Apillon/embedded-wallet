@@ -36,7 +36,7 @@ export function Test() {
 
         <p>username: {info.username}</p>
 
-        <p>address: {info.address}</p>
+        <p>address: {JSON.stringify(info.activeWallet)}</p>
       </div>
     </>
   );

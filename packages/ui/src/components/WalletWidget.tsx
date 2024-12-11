@@ -13,6 +13,7 @@ import WalletChainChange from './WalletChainChange';
 import clsx from 'clsx';
 import WalletNetworkWidget from './WalletNetworkWidget';
 import IconCheckCircle from './IconCheckCircle';
+import WalletLoad from './WalletLoad';
 
 export type AppProps = {
   /**
@@ -40,8 +41,16 @@ function Wallet({
   disableDefaultActivatorStyle = false,
   ...restOfProps
 }: AppProps) {
-  const { state, wallet, setScreen, handleError, reloadUserBalance, dispatch, defaultNetworkId } =
-    useWalletContext();
+  const {
+    state,
+    wallet,
+    setScreen,
+    handleError,
+    loadAccountWallets,
+    reloadUserBalance,
+    dispatch,
+    defaultNetworkId,
+  } = useWalletContext();
   const { dispatch: dispatchTx } = useTransactionsContext();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -55,13 +64,14 @@ function Wallet({
   });
   const [targetChain, setTargetChain] = useState({
     chainId: 0,
-    resolve: (_confirmed: boolean) => { },
+    resolve: (_confirmed: boolean) => {},
   }); // Open switch chain modal if > 0
 
   const approveParams =
     useRef<Partial<Events['txApprove'] & { signature: Events['signatureRequest'] }>>();
 
-  const loggedIn = state.username && state.address;
+  const loggedIn = !!state.username;
+  const hasWallets = !!state.accountWallets.length;
 
   /**
    * Handle wallet SDK Events
@@ -112,6 +122,8 @@ function Wallet({
       if (params.name === 'defaultNetworkId') {
         reloadUserBalance();
         dispatch({ type: 'setValue', payload: { key: 'networkId', value: params.newValue } });
+      } else if (params.name === 'contractAddress') {
+        dispatch({ type: 'setValue', payload: { key: 'contractAddress', value: params.newValue } });
       }
     };
 
@@ -137,20 +149,25 @@ function Wallet({
       if (window.location.search) {
         const urlParams = new URLSearchParams(window.location.search);
 
-        if (urlParams.has('address') && urlParams.has('username')) {
+        if (urlParams.has('username')) {
+          const loginData = {
+            username: urlParams.get('username') || '',
+            authStrategy: (urlParams.get('authStrategy') || 'passkey') as any,
+            networkId: defaultNetworkId || undefined,
+          };
+
           dispatch({
             type: 'setState',
-            payload: {
-              address: urlParams.get('address') || '',
-              username: urlParams.get('username') || '',
-              authStrategy: (urlParams.get('authStrategy') || 'passkey') as any,
-              networkId: defaultNetworkId || undefined,
-            },
+            payload: loginData,
           });
 
           setTimeout(() => {
-            reloadUserBalance();
-            window.location.search = '';
+            loadAccountWallets(loginData.authStrategy, loginData.username);
+
+            const url = new URL(window.location.href);
+            url.searchParams.delete('username');
+            url.searchParams.delete('authStrategy');
+            window.history.replaceState(null, '', url.toString());
           }, 50);
         }
       }
@@ -391,6 +408,11 @@ function Wallet({
         }}
       />
     );
+  } else if (!hasWallets) {
+    /**
+     * Must load wallets (authenticate again)
+     */
+    modalContent = <WalletLoad />;
   } else {
     /**
      * Default UI
@@ -436,7 +458,24 @@ function Wallet({
           }
         }}
       >
-        {loggedIn ? 'Open wallet' : 'Sign in'}
+        {state.loadingWallets ? (
+          <span>&hellip;</span>
+        ) : // <span
+        //   style={{
+        //     position: 'absolute',
+        //     top: '50%',
+        //     left: '50%',
+        //     transform: 'translate(-50%, -50%)',
+        //     marginTop: '1px',
+        //   }}
+        // >
+        //   <Spinner />
+        // </span>
+        loggedIn ? (
+          'Open wallet'
+        ) : (
+          'Sign in'
+        )}
       </button>
     </div>
   );

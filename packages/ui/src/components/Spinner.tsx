@@ -1,13 +1,17 @@
+import { CSSProperties } from 'react';
+
 export default function Spinner({
   size = 36,
   width = 2,
   color = 'currentColor',
   className,
+  style,
 }: {
   size?: number;
   width?: number;
   color?: string;
   className?: string;
+  style?: CSSProperties;
 }) {
   return (
     <svg
@@ -16,6 +20,7 @@ export default function Spinner({
         height: `${size}px`,
         animation: 'rotate 2s linear infinite',
         zIndex: 2,
+        ...style,
       }}
       viewBox="0 0 50 50"
       className={className}

@@ -46,13 +46,13 @@ const clientId = import.meta.env.VITE_CLIENT_ID ?? 'YOUR INTEGRATION UUID HERE';
 
     <p>username: {{ info.username }}</p>
 
-    <p>address: {{ info.address }}</p>
+    <p>address: {{ info?.activeWallet?.address }}</p>
 
     <br />
 
     <TestSdk />
 
-    <template v-if="info.address">
+    <template v-if="info?.activeWallet?.address">
       <br />
 
       <TestViem />

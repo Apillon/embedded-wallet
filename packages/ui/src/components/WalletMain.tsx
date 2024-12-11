@@ -8,7 +8,7 @@ import WalletError from './WalletError';
 import WalletPKExport from './WalletPKExport';
 
 export default function WalletMain() {
-  const { state, setScreen } = useWalletContext();
+  const { state, activeWallet, setScreen } = useWalletContext();
 
   return (
     <div>
@@ -19,9 +19,9 @@ export default function WalletMain() {
         <div>
           {/* Account info: username, address, balance */}
           <div className="text-center mb-5">
-            <h3 className="break-words mb-4">Welcome {state.username}!</h3>
+            <h3 className="break-words mb-4">Welcome {activeWallet?.title || state.username}!</h3>
 
-            <p className="font-bold">Your balance: {state.balance} ETH</p>
+            <p className="font-bold">Your balance: {activeWallet?.balance || 0} ETH</p>
           </div>
 
           {/* Actions: send/receive */}

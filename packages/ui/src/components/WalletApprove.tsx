@@ -153,7 +153,7 @@ export default function WalletApprove({
           onClick={() => {
             wallet?.setAccount({
               username: '',
-              address: '',
+              walletIndex: 0,
               contractAddress: '',
               strategy: 'passkey',
             });
@@ -162,9 +162,8 @@ export default function WalletApprove({
               type: 'setState',
               payload: {
                 username: '',
-                address: '',
+                walletIndex: 0,
                 contractAddress: '',
-                balance: '',
                 authStrategy: 'passkey',
               },
             });

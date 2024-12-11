@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AuthStrategyName, Events } from '@apillon/wallet-sdk';
+import { AccountWallet, AuthStrategyName, Events } from '@apillon/wallet-sdk';
 import useWallet from './useWallet';
 
 export function useAccount() {
@@ -7,7 +7,7 @@ export function useAccount() {
 
   const [info, setInfo] = useState({
     username: '',
-    address: '',
+    activeWallet: undefined as AccountWallet | undefined,
     authStrategy: 'passkey' as AuthStrategyName,
   });
 
@@ -19,8 +19,8 @@ export function useAccount() {
     const onDataUpdated = ({ name, newValue }: Events['dataUpdated']) => {
       if (name === 'username') {
         setInfo(i => ({ ...i, username: newValue }));
-      } else if (name === 'address') {
-        setInfo(i => ({ ...i, address: newValue }));
+      } else if (name === 'walletIndex') {
+        setInfo(i => ({ ...i, activeWallet: wallet.lastAccount.wallets[newValue] }));
       } else if (name === 'authStrategy') {
         setInfo(i => ({ ...i, authStrategy: newValue }));
       }
@@ -29,7 +29,7 @@ export function useAccount() {
     if (wallet) {
       setInfo({
         username: wallet.lastAccount.username,
-        address: wallet.lastAccount.address,
+        activeWallet: wallet.lastAccount.wallets[wallet.lastAccount.walletIndex],
         authStrategy: wallet.lastAccount.authStrategy,
       });
 
@@ -44,7 +44,11 @@ export function useAccount() {
   }, [wallet]);
 
   async function getBalance(networkId = undefined) {
-    return await wallet?.getAccountBalance(info.address, networkId);
+    if (!info.activeWallet) {
+      return '0';
+    }
+
+    return await wallet?.getAccountBalance(info.activeWallet.address, networkId);
   }
 
   return {

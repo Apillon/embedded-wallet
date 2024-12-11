@@ -7,12 +7,10 @@ import useCopyToClipboard from '../hooks/useCopyToClipboard';
 import IconCopy from './IconCopy';
 
 export default function WalletTransactions({ className }: { className?: string }) {
-  const {
-    state: { address },
-  } = useWalletContext();
+  const { activeWallet } = useWalletContext();
   const { state } = useTransactionsContext();
 
-  if (!address || !state.txs[address]) {
+  if (!activeWallet?.address || !state.txs[activeWallet.address]) {
     return <></>;
   }
 
@@ -21,7 +19,7 @@ export default function WalletTransactions({ className }: { className?: string }
       <h4 className="mb-2">Transactions</h4>
 
       <div className="flex flex-col gap-1 max-h-[134px] overflow-auto pr-2">
-        {Object.values(state.txs[address])
+        {Object.values(state.txs[activeWallet.address])
           .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
           .map(tx => (
             <Transaction key={tx.hash} tx={tx} />
