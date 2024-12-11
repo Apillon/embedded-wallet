@@ -1,13 +1,8 @@
 import { ethers } from 'ethers';
-import { AuthData, AuthPasskeyMode, AuthStrategy } from '../types';
+import { AuthData, AuthPasskeyMode, AuthProxyWriteFns, AuthStrategy } from '../types';
 import { abort, getHashedUsername, getPasskeyOrigin } from '../utils';
 import { credentialCreate, credentialGet } from '../browser-webauthn';
-import {
-  ProxyWriteFunctionsByStrategy,
-  SapphireMainnet,
-  SapphireTestnet,
-  WalletType,
-} from '../constants';
+import { SapphireMainnet, SapphireTestnet, WalletType } from '../constants';
 import EmbeddedWallet from '..';
 import { AccountManagerAbi } from '../abi';
 
@@ -103,7 +98,7 @@ class PasskeyStrategy implements AuthStrategy {
   }
 
   async proxyWrite(
-    functionName: keyof typeof ProxyWriteFunctionsByStrategy,
+    functionName: AuthProxyWriteFns,
     data: string,
     authData: AuthData,
     txLabel?: string,

@@ -1,14 +1,9 @@
-import { AuthData, AuthStrategy } from '../types';
+import { AuthData, AuthProxyWriteFns, AuthStrategy } from '../types';
 import { secp256r1 } from '@noble/curves/p256';
 import { bytesToHex } from '@noble/curves/abstract/utils';
 import { ethers } from 'ethers';
 import { abort, getHashedUsername } from '../utils';
-import {
-  ProxyWriteFunctionsByStrategy,
-  SapphireMainnet,
-  SapphireTestnet,
-  WalletType,
-} from '../constants';
+import { SapphireMainnet, SapphireTestnet, WalletType } from '../constants';
 import EmbeddedWallet from '..';
 import { AccountManagerAbi } from '../abi';
 
@@ -85,7 +80,7 @@ class PasswordStrategy implements AuthStrategy {
   }
 
   async proxyWrite(
-    functionName: keyof typeof ProxyWriteFunctionsByStrategy,
+    functionName: AuthProxyWriteFns,
     data: string,
     authData: AuthData,
     txLabel?: string,

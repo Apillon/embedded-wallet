@@ -29,7 +29,7 @@ export default function TestWallet() {
               privateKey: !!pk ? pk : undefined,
               // strategy: 'password',
               // authData: {
-              //   username: 'test1',
+              //   username: 'test8',
               //   password: '1234',
               // },
             });
@@ -53,6 +53,11 @@ export default function TestWallet() {
             w?.updateAccountWalletTitle({
               walletIndex: updatedIndex,
               title: updatedTitle,
+              // strategy: 'password',
+              // authData: {
+              //   username: 'test8',
+              //   password: '1234',
+              // },
             });
           }}
         >

@@ -11,6 +11,7 @@ export default function TestApp() {
     <div>
       <h2>Setup account</h2>
       <TestAccount />
+      <TestAccount pw />
 
       <h2>Sign message</h2>
       <TestSign />

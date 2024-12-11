@@ -200,23 +200,8 @@ class EmbeddedWallet {
 
     const txHash = await this.sapphireProvider.send('eth_sendRawTransaction', [signedTx]);
 
-    this.events.emit('dataUpdated', {
-      name: 'authStrategy',
-      newValue: strategy,
-      oldValue: this.lastAccount.authStrategy,
-    });
-
-    this.events.emit('dataUpdated', {
-      name: 'username',
-      newValue: authData.username,
-      oldValue: this.lastAccount.username,
-    });
-
-    this.lastAccount.authStrategy = strategy;
-    this.lastAccount.username = authData.username;
-
     if (await this.waitForTxReceipt(txHash)) {
-      return await this.handleAccountAfterAuth(authData);
+      return await this.finalizeAccountAuth(strategy, authData);
     }
   }
 
@@ -239,64 +224,13 @@ class EmbeddedWallet {
       return;
     }
 
-    const RANDOM_STRING = '0x000000000000000000000000000000000000000000000000000000000000DEAD';
-
-    const hashedUsername = await getHashedUsername(authData.username);
-
-    const AC = new ethers.Interface(AccountAbi);
-    const data = AC.encodeFunctionData('sign', [0, RANDOM_STRING]);
-
-    const loginData = await this.getProxyForStrategy(strategy, data, {
-      ...authData,
-      hashedUsername,
-    });
-
-    if (!loginData) {
-      abort('NO_LOGIN_PROXY_DATA');
-      return;
-    }
-
-    this.events.emit('dataUpdated', {
-      name: 'authStrategy',
-      newValue: strategy,
-      oldValue: this.lastAccount.authStrategy,
-    });
-    this.events.emit('dataUpdated', {
-      name: 'username',
-      newValue: authData.username,
-      oldValue: this.lastAccount.username,
-    });
-
-    this.lastAccount.authStrategy = strategy;
-    this.lastAccount.username = authData.username;
-
-    /**
-     * Get public key from credentials
-     */
-    const [[r, s, v]] = AC.decodeFunctionResult('sign', loginData!).toArray();
-    const recoveredPublicKey = ethers.recoverAddress(RANDOM_STRING, {
-      r,
-      s,
-      v,
-    });
-
-    /**
-     * Get public key for username from account manager contract
-     */
-    const publicAddress = await this.getAccountAddress(authData);
-
-    /**
-     * If keys match -> Auth success, return account addresses
-     */
-    if (recoveredPublicKey === publicAddress) {
-      return await this.handleAccountAfterAuth(authData);
-    }
+    return await this.finalizeAccountAuth(strategy, authData);
   }
 
   /**
    * Return public address for username.
    */
-  async getAccountAddress(authData?: AuthData) {
+  async getAccountAddress(strategy?: AuthStrategyName, authData?: AuthData) {
     if (!this.sapphireProvider) {
       abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
       return;
@@ -308,7 +242,7 @@ class EmbeddedWallet {
     }
 
     if (!this.lastAccount.wallets.length) {
-      await this.getAccountWallets({ authData });
+      await this.getAccountWallets({ authData, strategy });
     }
 
     if (!authData?.username) {
@@ -415,6 +349,10 @@ class EmbeddedWallet {
       return this.lastAccount.wallets;
     }
 
+    if (!params.strategy) {
+      params.strategy = this.lastAccount.authStrategy;
+    }
+
     if (!params.authData) {
       if (params.strategy === 'passkey' && this.lastAccount.username) {
         params.authData = {
@@ -436,11 +374,7 @@ class EmbeddedWallet {
     const AC = new ethers.Interface(AccountAbi);
     const data = AC.encodeFunctionData('getWalletList', []);
 
-    const res = await this.getProxyForStrategy(
-      this.lastAccount.authStrategy,
-      data,
-      params.authData!
-    );
+    const res = await this.getProxyForStrategy(params.strategy, data, params.authData!);
 
     if (res) {
       const [accountWallets] = AC.decodeFunctionResult('getWalletList', res).toArray();
@@ -533,7 +467,7 @@ class EmbeddedWallet {
     );
 
     if (res) {
-      console.log(res);
+      return res;
     }
 
     abort('CANT_GET_WALLET_ADDRESS');
@@ -579,7 +513,7 @@ class EmbeddedWallet {
     const res = await this.signContractWrite({
       authData: params.authData,
       strategy: params.strategy,
-      walletIndex: params.walletIndex,
+      walletIndex: this.lastAccount.walletIndex,
       label,
       contractAddress: this.lastAccount.contractAddress,
       contractAbi: AccountAbi,
@@ -593,14 +527,13 @@ class EmbeddedWallet {
     if (res) {
       await this.broadcastTransaction(res?.signedTxData, res?.chainId, label);
 
-      /**
-       * Maybe wait for tx
-       */
       // if (await this.waitForTxReceipt(txHash)) {
       //   //
       // }
 
       this.lastAccount.wallets[params.walletIndex].title = params.title;
+
+      return params.title;
     }
 
     abort('WALLET_TITLE_UPDATE_FAILED');
@@ -679,8 +612,13 @@ class EmbeddedWallet {
     this.lastAccount.contractAddress = params.contractAddress;
   }
 
-  async handleAccountAfterAuth(authData: AuthData) {
-    const addr = await this.getAccountAddress(authData);
+  /**
+   * Get a wallet address for account and pass it to listeners.
+   * Update the stored lastAccount.
+   * This process includes getting all wallets (getAccountWallets) which requires authentication (when no cache is available).
+   */
+  async finalizeAccountAuth(strategy: AuthStrategyName, authData: AuthData) {
+    const addr = await this.getAccountAddress(strategy, authData);
 
     if (addr && this.waitForAccountResolver) {
       this.waitForAccountResolver(addr);
@@ -690,6 +628,20 @@ class EmbeddedWallet {
     if (addr) {
       this.events.emit('accountsChanged', [addr]);
     }
+
+    this.events.emit('dataUpdated', {
+      name: 'authStrategy',
+      newValue: strategy,
+      oldValue: this.lastAccount.authStrategy,
+    });
+    this.events.emit('dataUpdated', {
+      name: 'username',
+      newValue: authData.username,
+      oldValue: this.lastAccount.username,
+    });
+
+    this.lastAccount.authStrategy = strategy;
+    this.lastAccount.username = authData.username;
 
     return addr;
   }
@@ -1136,16 +1088,16 @@ class EmbeddedWallet {
 
     if (strategy === 'password') {
       return await new PasswordStrategy(this).proxyWrite(
-        data,
         functionNameForStrategy,
+        data,
         authData,
         txLabel,
         dontWait
       );
     } else if (strategy === 'passkey') {
       return await new PasskeyStrategy(this).proxyWrite(
-        data,
         functionNameForStrategy,
+        data,
         authData,
         txLabel,
         dontWait,

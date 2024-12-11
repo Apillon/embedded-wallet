@@ -73,13 +73,19 @@ export type RegisterData = {
   optionalPassword: string;
 };
 
+type AllValuesOf<T> = T extends any ? T[keyof T] : never;
+
+export type AuthProxyWriteFns = AllValuesOf<
+  (typeof ProxyWriteFunctionsByStrategy)[keyof typeof ProxyWriteFunctionsByStrategy]
+>;
+
 export interface AuthStrategy {
   getRegisterData(authData: AuthData): Promise<RegisterData | undefined>;
 
   getProxyResponse(data: string, authData: AuthData): Promise<any>;
 
   proxyWrite(
-    functionName: keyof typeof ProxyWriteFunctionsByStrategy,
+    functionName: AuthProxyWriteFns,
     data: string,
     authData: AuthData,
     txLabel?: string,

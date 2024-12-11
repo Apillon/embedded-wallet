@@ -15,8 +15,9 @@ export default function TestAccount({ pw = false }: { pw?: boolean }) {
           const w = getEmbeddedWallet();
           if (pw) {
             console.log(await w?.authenticate('password', { username, password }));
+          } else {
+            console.log(await w?.authenticate('passkey', { username }));
           }
-          console.log(await w?.authenticate('passkey', { username }));
         }}
       >
         Login
@@ -27,8 +28,9 @@ export default function TestAccount({ pw = false }: { pw?: boolean }) {
           const w = getEmbeddedWallet();
           if (pw) {
             console.log(await w?.register('password', { username, password }));
+          } else {
+            console.log(await w?.register('passkey', { username }));
           }
-          console.log(await w?.register('passkey', { username }));
         }}
       >
         Register
