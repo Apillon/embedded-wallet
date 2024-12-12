@@ -6,6 +6,9 @@ import WalletTokens from './WalletTokens';
 import { TokensProvider } from '../contexts/tokens.context';
 import WalletError from './WalletError';
 import WalletPKExport from './WalletPKExport';
+import WalletAccounts from './WalletAccounts';
+import AccountsAdd from './AccountsAdd';
+import AccountsReload from './AccountsReload';
 
 export default function WalletMain() {
   const { state, activeWallet, setScreen } = useWalletContext();
@@ -59,6 +62,9 @@ export default function WalletMain() {
       )}
 
       {state.walletScreen === 'exportPrivateKey' && <WalletPKExport />}
+      {state.walletScreen === 'selectAccounts' && <WalletAccounts />}
+      {state.walletScreen === 'addAccount' && <AccountsAdd />}
+      {state.walletScreen === 'reloadAccounts' && <AccountsReload />}
     </div>
   );
 }

@@ -1,14 +1,12 @@
+import { useWalletContext } from '../contexts/wallet.context';
 import Btn from './Btn';
 import Spinner from './Spinner';
-import { useWalletContext } from '../contexts/wallet.context';
 
-export default function WalletLoad() {
+export default function AccountsReload() {
   const { loadAccountWallets, state } = useWalletContext();
 
   return (
-    <div className="mt-2">
-      <h2 className="mb-6">Accounts unavailable</h2>
-
+    <div>
       <div className="text-center mb-4">
         <Spinner size={56} className="mx-auto" />
       </div>
@@ -23,7 +21,7 @@ export default function WalletLoad() {
         className="w-full"
         onClick={() => loadAccountWallets()}
       >
-        Retry
+        Reload
       </Btn>
     </div>
   );

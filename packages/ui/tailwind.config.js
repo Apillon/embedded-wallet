@@ -20,6 +20,7 @@ export default {
       dark: '#141721',
       primary: '#141721',
       lightdark: '#1E212B',
+      primarylight: '#1E212B',
       primarydark: '#06080F',
       secondary: '#EEEEEE',
       secondarydark: '#9C9C95',

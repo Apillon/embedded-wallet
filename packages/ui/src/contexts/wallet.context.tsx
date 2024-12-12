@@ -27,7 +27,11 @@ export type WalletScreens =
   | 'sendToken'
   | 'selectToken'
   | 'receiveToken'
-  | 'exportPrivateKey';
+  | 'exportPrivateKey'
+  | 'selectAccounts'
+  | 'addAccount'
+  | 'importAccount'
+  | 'reloadAccounts';
 
 type AccountWalletEx = AccountWallet & { balance: string };
 
@@ -241,6 +245,7 @@ function WalletProvider({
     if (state.loadingWallets) {
       return;
     }
+
     dispatch({ type: 'setValue', payload: { key: 'loadingWallets', value: true } });
 
     try {
@@ -248,6 +253,7 @@ function WalletProvider({
         (await wallet?.getAccountWallets({
           strategy: strategy || state.authStrategy,
           authData: { username: username || state.username },
+          reload: true,
         })) || [];
 
       dispatch({ type: 'setValue', payload: { key: 'accountWallets', value: wallets || [] } });
@@ -261,6 +267,7 @@ function WalletProvider({
       return wallets;
     } catch (e) {
       console.error('loadAccountWallets', e);
+      handleError(e);
     }
 
     dispatch({ type: 'setValue', payload: { key: 'loadingWallets', value: false } });
@@ -291,6 +298,50 @@ function WalletProvider({
     }
   }
 
+  function handleError(e?: any, src?: string) {
+    let msg = '';
+
+    if (e) {
+      console.error(src ?? '', e);
+
+      if (e?.name) {
+        msg = ErrorMessages[e.name];
+      }
+
+      if (!msg && e?.error) {
+        if (e?.error?.message) {
+          msg = e.error.message;
+        } else if (typeof e.error === 'string') {
+          msg = e.error;
+        }
+      }
+
+      if (!msg && e?.details) {
+        msg = e.details;
+      }
+
+      if (!msg && e?.message) {
+        msg = e.message;
+      }
+
+      if (
+        msg &&
+        msg !== 'already known' &&
+        msg !== 'Request rejected by user' &&
+        e?.code !== 4001
+      ) {
+        dispatch({
+          type: 'setValue',
+          payload: { key: 'displayedError', value: msg },
+        });
+      }
+    } else {
+      dispatch({ type: 'setValue', payload: { key: 'displayedError', value: '' } });
+    }
+
+    return msg;
+  }
+
   return (
     <WalletContext.Provider
       value={{
@@ -312,49 +363,7 @@ function WalletProvider({
         reloadUserBalance,
         setScreen: (s: WalletScreens) =>
           dispatch({ type: 'setValue', payload: { key: 'walletScreen', value: s } }),
-        handleError: (e?: any, src?: string) => {
-          let msg = '';
-
-          if (e) {
-            console.error(src ?? '', e);
-
-            if (e?.name) {
-              msg = ErrorMessages[e.name];
-            }
-
-            if (!msg && e?.error) {
-              if (e?.error?.message) {
-                msg = e.error.message;
-              } else if (typeof e.error === 'string') {
-                msg = e.error;
-              }
-            }
-
-            if (!msg && e?.details) {
-              msg = e.details;
-            }
-
-            if (!msg && e?.message) {
-              msg = e.message;
-            }
-
-            if (
-              msg &&
-              msg !== 'already known' &&
-              msg !== 'Request rejected by user' &&
-              e?.code !== 4001
-            ) {
-              dispatch({
-                type: 'setValue',
-                payload: { key: 'displayedError', value: msg },
-              });
-            }
-          } else {
-            dispatch({ type: 'setValue', payload: { key: 'displayedError', value: '' } });
-          }
-
-          return msg;
-        },
+        handleError,
       }}
     >
       {children}

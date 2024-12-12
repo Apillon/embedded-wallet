@@ -344,8 +344,11 @@ class EmbeddedWallet {
   // #region Account wallets
   /**
    * Get all wallets added on user's account. Requires authentication.
+   * @param reload Ignore cache and get wallets from contract again
    */
-  async getAccountWallets(params: { strategy?: AuthStrategyName; authData?: AuthData } = {}) {
+  async getAccountWallets(
+    params: { strategy?: AuthStrategyName; authData?: AuthData; reload?: boolean } = {}
+  ) {
     if (!this.sapphireProvider) {
       abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
       return;
@@ -356,7 +359,7 @@ class EmbeddedWallet {
       return;
     }
 
-    if (this.lastAccount.wallets.length) {
+    if (!params.reload && this.lastAccount.wallets.length) {
       return this.lastAccount.wallets;
     }
 
@@ -601,33 +604,51 @@ class EmbeddedWallet {
   }
 
   setAccount(params: {
-    username: string;
-    walletIndex: number;
-    strategy: AuthStrategyName;
-    contractAddress: string;
+    username?: string;
+    walletIndex?: number;
+    strategy?: AuthStrategyName;
+    contractAddress?: string;
   }) {
-    this.events.emit('dataUpdated', {
-      name: 'username',
-      newValue: params.username,
-      oldValue: this.lastAccount.username,
-    });
+    if (params.username && params.username !== this.lastAccount.username) {
+      this.events.emit('dataUpdated', {
+        name: 'username',
+        newValue: params.username,
+        oldValue: this.lastAccount.username,
+      });
+      this.lastAccount.username = params.username;
+    }
 
-    this.events.emit('dataUpdated', {
-      name: 'walletIndex',
-      newValue: params.walletIndex,
-      oldValue: this.lastAccount.walletIndex,
-    });
+    if (
+      typeof params.walletIndex !== 'undefined' &&
+      params.walletIndex >= 0 &&
+      params.walletIndex !== this.lastAccount.walletIndex
+    ) {
+      this.events.emit('dataUpdated', {
+        name: 'walletIndex',
+        newValue: params.walletIndex,
+        oldValue: this.lastAccount.walletIndex,
+      });
+      this.lastAccount.walletIndex = params.walletIndex;
+    }
 
-    this.events.emit('dataUpdated', {
-      name: 'authStrategy',
-      newValue: params.strategy,
-      oldValue: this.lastAccount.authStrategy,
-    });
+    if (params.strategy && params.strategy !== this.lastAccount.authStrategy) {
+      this.events.emit('dataUpdated', {
+        name: 'authStrategy',
+        newValue: params.strategy,
+        oldValue: this.lastAccount.authStrategy,
+      });
+      this.lastAccount.authStrategy = params.strategy;
+    }
 
-    this.lastAccount.username = params.username;
-    this.lastAccount.walletIndex = params.walletIndex;
-    this.lastAccount.authStrategy = params.strategy;
-    this.lastAccount.contractAddress = params.contractAddress;
+    if (params.contractAddress && params.contractAddress !== this.lastAccount.contractAddress) {
+      this.events.emit('dataUpdated', {
+        name: 'authStrategy',
+        newValue: params.contractAddress,
+        oldValue: this.lastAccount.contractAddress,
+      });
+
+      this.lastAccount.contractAddress = params.contractAddress;
+    }
   }
 
   setWallets(wallets: AccountWallet[]) {
