@@ -55,6 +55,10 @@ export default function WalletAccounts() {
         Import private key into new account
       </Btn>
 
+      <Btn variant="primary" className="w-full mb-6" onClick={() => setScreen('renameAccount')}>
+        Rename active account
+      </Btn>
+
       <Btn variant="ghost" className="w-full mb-6" onClick={() => setScreen('reloadAccounts')}>
         Reload accounts
       </Btn>

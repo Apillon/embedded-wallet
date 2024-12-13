@@ -10,6 +10,7 @@ import WalletAccounts from './WalletAccounts';
 import AccountsAdd from './AccountsAdd';
 import AccountsReload from './AccountsReload';
 import AccountsImport from './AccountsImport';
+import AccountsRename from './AccountsRename';
 
 export default function WalletMain() {
   const { state, activeWallet, setScreen } = useWalletContext();
@@ -67,6 +68,7 @@ export default function WalletMain() {
       {state.walletScreen === 'addAccount' && <AccountsAdd />}
       {state.walletScreen === 'reloadAccounts' && <AccountsReload />}
       {state.walletScreen === 'importAccount' && <AccountsImport />}
+      {state.walletScreen === 'renameAccount' && <AccountsRename />}
     </div>
   );
 }

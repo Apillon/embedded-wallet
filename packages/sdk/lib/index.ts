@@ -552,7 +552,15 @@ class EmbeddedWallet {
       //   //
       // }
 
+      const snap = { ...this.lastAccount.wallets };
+
       this.lastAccount.wallets[params.walletIndex].title = params.title;
+
+      this.events.emit('dataUpdated', {
+        name: 'wallets',
+        oldValue: snap,
+        newValue: this.lastAccount.wallets,
+      });
 
       return params.title;
     }

@@ -37,7 +37,7 @@ export default function AccountsImport() {
 
       <Select
         value={type}
-        title="Select type"
+        label="Select type"
         options={[
           { label: 'Private Key', value: 'pk' },
           { label: 'JSON File', value: 'json' },
@@ -65,7 +65,7 @@ export default function AccountsImport() {
           Cancel
         </Btn>
 
-        <Btn variant="primary" onClick={() => importAccount()}>
+        <Btn variant="primary" loading={loading} onClick={() => importAccount()}>
           Import
         </Btn>
       </div>
