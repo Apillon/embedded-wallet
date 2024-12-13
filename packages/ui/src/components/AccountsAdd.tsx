@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { useState } from 'react';
 import Btn from './Btn';
 import { useWalletContext } from '../contexts/wallet.context';
+import Input from './Input';
 
 const walletTypeOptions = [
   {
@@ -73,9 +74,8 @@ export default function AccountsAdd() {
           ))}
         </div>
 
-        <p className="mb-3 font-bold text-sm">Account name</p>
-
-        <input
+        <Input
+          label="Account name"
           placeholder="Enter Account name (for personal reference)"
           value={title}
           className="w-full mb-6"

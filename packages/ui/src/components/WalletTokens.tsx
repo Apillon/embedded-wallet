@@ -7,6 +7,7 @@ import { ethers } from 'ethers';
 // @ts-ignore
 import { QRCode } from 'react-qr-code';
 import useCopyToClipboard from '../hooks/useCopyToClipboard';
+import Input from './Input';
 
 export default function WalletTokens() {
   const { state, networksById, activeWallet, setScreen, wallet, handleError } = useWalletContext();
@@ -139,24 +140,16 @@ export default function WalletTokens() {
         </span>
       </Btn>
 
-      <label htmlFor="receiver-wallet" className="block text-xs font-bold mb-2">
-        Wallet
-      </label>
-
-      <input
-        id="receiver-wallet"
+      <Input
+        label="Wallet"
         placeholder="Paste wallet here"
         value={receiverAddress}
         className="w-full mb-4"
         onChange={ev => setReceiverAddress(ev.target.value)}
       />
 
-      <label htmlFor="send-amount" className="block text-xs font-bold mb-2">
-        Amount
-      </label>
-
-      <input
-        id="send-amount"
+      <Input
+        label="Amount"
         placeholder="0"
         value={amount}
         className="w-full mb-8"
@@ -258,8 +251,9 @@ function SelectToken({ nativeToken }: { nativeToken: TokenInfo }) {
           setLoading(false);
         }}
       >
-        <input
-          placeholder="Token address"
+        <Input
+          label="Token address"
+          placeholder="Address of token to add"
           value={address}
           className="w-full mb-4"
           onChange={ev => setAddress(ev.target.value)}
@@ -298,7 +292,7 @@ function ReceiveToken() {
         />
       </div>
 
-      <input readOnly value={activeWallet.address} className="w-full mb-4" />
+      <Input readOnly value={activeWallet.address} className="w-full mb-4" />
 
       <Btn className="w-full mb-4" onClick={() => onCopy(activeWallet.address)}>
         {copyText}

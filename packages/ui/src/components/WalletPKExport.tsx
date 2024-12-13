@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useWalletContext } from '../contexts/wallet.context';
 import Btn from './Btn';
 import useCopyToClipboard from '../hooks/useCopyToClipboard';
+import Input from './Input';
 
 export default function WalletPKExport() {
   const { state, dispatch, wallet, setScreen } = useWalletContext();
@@ -37,7 +38,7 @@ export default function WalletPKExport() {
 
       {!!state.privateKey && (
         <>
-          <input readOnly value={state.privateKey} className="w-full mb-4" />
+          <Input readOnly value={state.privateKey} className="w-full mb-4" />
 
           <Btn className="w-full mb-6" onClick={() => onCopy(state.privateKey)}>
             {copyText}

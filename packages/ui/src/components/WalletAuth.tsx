@@ -8,6 +8,7 @@ import IconCheckmark from './IconCheckmark';
 import IconBird from './IconBird';
 import Spinner from './Spinner';
 import clsx from 'clsx';
+import Input from './Input';
 
 export default function WalletAuth({
   authFormPlaceholder = 'your e-mail',
@@ -254,7 +255,7 @@ export default function WalletAuth({
       {/* @deprecated */}
       {!onGatewayRedirect && (
         <form onSubmit={ev => onAuth(ev)}>
-          <input
+          <Input
             type="email"
             placeholder={authFormPlaceholder}
             value={username}
@@ -386,7 +387,7 @@ function ConfirmEmail({
             maxLength={1}
             autoFocus={x === 0}
             disabled={loading}
-            className="min-w-0 w-[3.25rem] h-16 px-2 text-center"
+            className="min-w-0 w-[3.25rem] h-16 px-2 text-center rounded-lg border border-brightdark focus:border-lightgrey"
             onFocus={ev => ev.target.select()}
             onKeyDown={ev => handleKeyDown(ev, x)}
             onPaste={ev => handlePaste(ev)}
