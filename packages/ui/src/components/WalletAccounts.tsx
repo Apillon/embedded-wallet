@@ -31,8 +31,6 @@ export default function WalletAccounts() {
                 return;
               }
 
-              console.log(aw.index);
-
               wallet?.setAccount({ walletIndex: aw.index });
               dispatch({ type: 'setValue', payload: { key: 'walletIndex', value: aw.index } });
             }}

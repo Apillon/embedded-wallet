@@ -64,6 +64,7 @@ function Wallet({
   });
   const [targetChain, setTargetChain] = useState({
     chainId: 0,
+    modalWasOpen: false, // was the wallet modal open when chainChange was triggered?
     resolve: (_confirmed: boolean) => {},
   }); // Open switch chain modal if > 0
 
@@ -127,11 +128,6 @@ function Wallet({
       }
     };
 
-    const onRequestChainChange = (params: Events['requestChainChange']) => {
-      setIsModalOpen(true);
-      setTargetChain(params);
-    };
-
     const onOpen = (params: Events['open']) => {
       setIsModalOpen(params);
     };
@@ -142,7 +138,6 @@ function Wallet({
       wallet.events.on('txSubmitted', onTxSubmittedEvent);
       wallet.events.on('providerRequestAccounts', onProviderRequestAccounts);
       wallet.events.on('dataUpdated', onDataUpdated);
-      wallet.events.on('requestChainChange', onRequestChainChange);
       wallet.events.on('open', onOpen);
 
       // Login if account params are in the URL (redirected back from auth gateway)
@@ -180,11 +175,30 @@ function Wallet({
         wallet.events.off('txSubmitted', onTxSubmittedEvent);
         wallet.events.off('providerRequestAccounts', onProviderRequestAccounts);
         wallet.events.off('dataUpdated', onDataUpdated);
-        wallet.events.off('requestChainChange', onRequestChainChange);
         wallet.events.off('open', onOpen);
       }
     };
   }, [wallet]);
+
+  /**
+   * Handle requestChainChange separately because of extra dependency
+   */
+  useEffect(() => {
+    const onRequestChainChange = (params: Events['requestChainChange']) => {
+      setTargetChain({ ...params, modalWasOpen: isModalOpen });
+      setIsModalOpen(true);
+    };
+
+    if (wallet) {
+      wallet.events.on('requestChainChange', onRequestChainChange);
+    }
+
+    return () => {
+      if (wallet) {
+        wallet.events.off('requestChainChange', onRequestChainChange);
+      }
+    };
+  }, [wallet, isModalOpen]);
 
   /**
    * On modal close:
@@ -192,6 +206,7 @@ function Wallet({
    * - reset chainChange data (targetChain)
    * - reset account login resolver
    * - set <WalletMain /> screen back to main
+   * - reset displayed error
    */
   useEffect(() => {
     if (!isModalOpen) {
@@ -206,8 +221,11 @@ function Wallet({
 
         setTargetChain(t => ({
           ...t,
+          modalWasOpen: false,
           chainId: 0,
         }));
+
+        dispatch({ type: 'setValue', payload: { key: 'displayedError', value: '' } });
       }, MODAL_TRANSITION_TIME);
 
       if (state.walletScreen !== 'main') {
@@ -273,29 +291,6 @@ function Wallet({
      * Login/register
      */
     modalContent = <WalletAuth {...restOfProps} onGatewayRedirect={() => redirectToGateway()} />;
-  } else if (targetChain.chainId > 0) {
-    modalContent = (
-      <WalletChainChange
-        chainId={targetChain.chainId}
-        onSuccess={() => {
-          targetChain.resolve(true);
-          dispatch({ type: 'setValue', payload: { key: 'networkId', value: targetChain.chainId } });
-
-          if (!!txToConfirm || !!messageToSign || !!contractFunctionData) {
-            setTargetChain(t => ({
-              ...t,
-              chainId: 0,
-            }));
-          } else {
-            setIsModalOpen(false);
-          }
-        }}
-        onDecline={() => {
-          targetChain.resolve(false);
-          setIsModalOpen(false);
-        }}
-      />
-    );
   } else if (approvedData.title) {
     /**
      * Transaction submitted to network
@@ -445,7 +440,51 @@ function Wallet({
             {!!loggedIn && <WalletNetworkWidget />}
           </div>
 
-          {modalContent}
+          {/* Change chain content is rendered in addition to other content -- to preserve last state */}
+          {targetChain.chainId > 0 && (
+            <div>
+              <WalletChainChange
+                chainId={targetChain.chainId}
+                onSuccess={() => {
+                  targetChain.resolve(true);
+                  dispatch({
+                    type: 'setValue',
+                    payload: { key: 'networkId', value: targetChain.chainId },
+                  });
+
+                  if (
+                    targetChain.modalWasOpen ||
+                    !!txToConfirm ||
+                    !!messageToSign ||
+                    !!contractFunctionData
+                  ) {
+                    setTargetChain(t => ({
+                      ...t,
+                      modalWasOpen: false,
+                      chainId: 0,
+                    }));
+                  } else {
+                    setIsModalOpen(false);
+                  }
+                }}
+                onDecline={() => {
+                  targetChain.resolve(false);
+
+                  if (!targetChain.modalWasOpen) {
+                    setIsModalOpen(false);
+                  } else {
+                    setTargetChain(t => ({
+                      ...t,
+                      modalWasOpen: false,
+                      chainId: 0,
+                    }));
+                  }
+                }}
+              />
+            </div>
+          )}
+
+          <div className={clsx({ hidden: targetChain.chainId > 0 })}>{modalContent}</div>
         </>
       </Modal>
 

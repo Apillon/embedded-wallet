@@ -10,7 +10,6 @@ import {
 import {
   AuthStrategyName,
   ErrorMessages,
-  WebStorageKeys,
   EmbeddedWallet,
   EmbeddedWalletSDK,
   SapphireMainnet,
@@ -19,6 +18,8 @@ import {
   AccountWallet,
 } from '@apillon/wallet-sdk';
 import { AppProps } from '../main';
+import { WebStorageKeys } from '../lib/constants';
+import { logToStorage } from '../lib/helpers';
 
 export type WalletScreens =
   | 'main'
@@ -41,7 +42,7 @@ const initialState = (defaultNetworkId = 0, appProps: AppProps) => ({
   walletIndex: 0,
   accountWallets: [] as AccountWalletEx[],
   contractAddress: '',
-  privateKey: '',
+  privateKeys: {} as { [walletAddress: string]: string },
   authStrategy: 'passkey' as AuthStrategyName,
   networkId: defaultNetworkId,
   walletScreen: 'main' as WalletScreens,
@@ -170,7 +171,7 @@ function WalletProvider({
        * Exclude some state variables from being saved
        */
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { walletScreen, displayedError, loadingWallets, ...save } = state;
+      const { walletScreen, displayedError, loadingWallets, privateKeys, ...save } = state;
 
       localStorage.setItem(WebStorageKeys.WALLET_CONTEXT, JSON.stringify(save));
     }
@@ -324,6 +325,8 @@ function WalletProvider({
       if (!msg && e?.message) {
         msg = e.message;
       }
+
+      logToStorage(msg);
 
       if (
         msg &&

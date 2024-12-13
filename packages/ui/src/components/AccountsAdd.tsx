@@ -82,7 +82,7 @@ export default function AccountsAdd() {
           onChange={ev => setTitle(ev.target.value)}
         />
 
-        <Btn type="submit" className="w-full">
+        <Btn type="submit" loading={loading} className="w-full">
           Create account
         </Btn>
       </form>

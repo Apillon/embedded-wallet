@@ -8,12 +8,6 @@ export const WalletType = {
   BITCOIN: 2,
 } as const;
 
-export const WebStorageKeys = {
-  WALLET_CONTEXT: 'oaw_context',
-  TRANSACTIONS_CONTEXT: 'oaw_transactions',
-  TOKENS_CONTEXT: 'oaw_tokens',
-};
-
 export const Errors = {
   SAPPHIRE_PROVIDER_NOT_INITIALIZED: 'OAW_SAPPHIRE_PROVIDER_NOT_INITIALIZED',
   ACCOUNT_MANAGER_CONTRACT_NOT_INITIALIZED: 'OAW_ACCOUNT_MANAGER_CONTRACT_NOT_INITIALIZED',

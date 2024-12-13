@@ -5,16 +5,20 @@ import useCopyToClipboard from '../hooks/useCopyToClipboard';
 import Input from './Input';
 
 export default function WalletPKExport() {
-  const { state, dispatch, wallet, setScreen } = useWalletContext();
+  const { state, dispatch, wallet, setScreen, activeWallet } = useWalletContext();
   const { text: copyText, onCopy } = useCopyToClipboard();
 
   const [loading, setLoading] = useState(false);
+
+  if (!activeWallet?.address) {
+    return <></>;
+  }
 
   return (
     <div>
       <h3 className="mb-6">Export private key</h3>
 
-      {!state.privateKey && (
+      {!state.privateKeys[activeWallet.address] && (
         <Btn
           variant="primary"
           loading={loading}
@@ -27,7 +31,13 @@ export default function WalletPKExport() {
             setLoading(true);
 
             const pk = await wallet?.getAccountPrivateKey({ strategy: 'passkey' });
-            dispatch({ type: 'setState', payload: { privateKey: pk } });
+            dispatch({
+              type: 'setValue',
+              payload: {
+                key: 'privateKeys',
+                value: { ...state.privateKeys, [activeWallet.address]: pk },
+              },
+            });
 
             setLoading(false);
           }}
@@ -36,11 +46,14 @@ export default function WalletPKExport() {
         </Btn>
       )}
 
-      {!!state.privateKey && (
+      {!!state.privateKeys[activeWallet.address] && (
         <>
-          <Input readOnly value={state.privateKey} className="w-full mb-4" />
+          <Input readOnly value={state.privateKeys[activeWallet.address]} className="w-full mb-4" />
 
-          <Btn className="w-full mb-6" onClick={() => onCopy(state.privateKey)}>
+          <Btn
+            className="w-full mb-6"
+            onClick={() => onCopy(state.privateKeys[activeWallet.address])}
+          >
             {copyText}
           </Btn>
         </>

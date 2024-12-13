@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useReducer, useState } from 'react';
-import { getEmbeddedWallet, WebStorageKeys, TransactionItem } from '@apillon/wallet-sdk';
+import { getEmbeddedWallet, TransactionItem } from '@apillon/wallet-sdk';
 import { useWalletContext } from './wallet.context';
+import { WebStorageKeys } from '../lib/constants';
 
 const initialState = () => ({
   txs: {} as { [ownerAddress: string]: { [txHash: string]: TransactionItem } },
