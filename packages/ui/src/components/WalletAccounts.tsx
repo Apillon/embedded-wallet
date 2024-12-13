@@ -2,6 +2,7 @@ import clsx from 'clsx';
 import { useWalletContext } from '../contexts/wallet.context';
 import { shortHash } from '../lib/helpers';
 import Btn from './Btn';
+import { useEffect } from 'react';
 
 export default function WalletAccounts() {
   const {
@@ -9,7 +10,12 @@ export default function WalletAccounts() {
     state: { accountWallets, walletIndex },
     dispatch,
     setScreen,
+    reloadAccountBalances,
   } = useWalletContext();
+
+  useEffect(() => {
+    reloadAccountBalances(accountWallets.map(x => x.address));
+  }, []);
 
   return (
     <div>
@@ -36,7 +42,9 @@ export default function WalletAccounts() {
             }}
           >
             <div>
-              <p className="text-sm font-bold text-offwhite mb-1.5">{aw.title}</p>
+              <p className="text-sm font-bold text-offwhite mb-1.5">
+                {aw.title} -- {aw.balance}
+              </p>
               <p className="text-xs text-lightgrey">{shortHash(aw.address)}</p>
             </div>
           </button>

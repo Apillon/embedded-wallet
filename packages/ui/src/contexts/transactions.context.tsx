@@ -96,7 +96,7 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState());
   const [initialized, setInitialized] = useState(false);
 
-  const { activeWallet, reloadUserBalance } = useWalletContext();
+  const { activeWallet, reloadAccountBalances } = useWalletContext();
 
   useEffect(() => {
     if (initialized) {
@@ -201,7 +201,7 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
         const failed = ev && !isNaN(ev.status) && ev.status === 0;
 
         // Reload balance on every tx
-        reloadUserBalance();
+        reloadAccountBalances();
 
         // Finalize tx, also remove persist if tx failed
         dispatch({
@@ -238,7 +238,7 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Reload balance on every tx
-      reloadUserBalance();
+      reloadAccountBalances();
 
       wallet.events.emit('txDone', tx);
     }

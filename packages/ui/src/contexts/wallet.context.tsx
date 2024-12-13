@@ -114,7 +114,7 @@ const WalletContext = createContext<
         strategy?: AuthStrategyName,
         username?: string
       ) => Promise<AccountWallet[] | undefined>;
-      reloadUserBalance: (address?: string) => Promise<string | undefined>;
+      reloadAccountBalances: (addresses?: string[]) => Promise<boolean | undefined>;
       setScreen: (screen: WalletScreens) => void;
       handleError: (e?: any, src?: string) => string;
     }
@@ -214,7 +214,6 @@ function WalletProvider({
 
       if (w) {
         setWallet(w);
-        // reloadUserBalance(w);
 
         w.setAccount({
           username: state.username,
@@ -234,9 +233,8 @@ function WalletProvider({
    * - account change
    */
   useEffect(() => {
-    console.log('re-balance');
     if (state.walletIndex < state.accountWallets.length) {
-      reloadUserBalance(state.accountWallets[state.walletIndex].address);
+      reloadAccountBalances([state.accountWallets[state.walletIndex].address]);
     }
   }, [state.username, state.walletIndex, state.accountWallets.length]);
 
@@ -275,26 +273,40 @@ function WalletProvider({
     dispatch({ type: 'setValue', payload: { key: 'loadingWallets', value: false } });
   }
 
-  /**
-   * Reload balance for address. If no address, use activeWallet's address
-   */
-  async function reloadUserBalance(address?: string) {
-    if (!address) {
-      address = activeWallet?.address;
-
-      if (!address) {
+  async function reloadAccountBalances(addresses?: string[]) {
+    if (!addresses) {
+      if (!activeWallet?.address) {
         return;
       }
+
+      addresses = [activeWallet.address];
     }
 
-    await new Promise(resolve => setTimeout(resolve, 10));
-
     try {
-      const balance = await wallet?.getAccountBalance(address);
+      const balances = await Promise.all(
+        addresses.map(async address => {
+          const balance = await wallet?.getAccountBalance(address);
 
-      dispatch({ type: 'setBalance', payload: { address, balance } });
+          return {
+            address,
+            balance,
+          };
+        })
+      );
 
-      return balance;
+      const updatedWallets = [...state.accountWallets];
+
+      balances.forEach(b => {
+        const found = updatedWallets.findIndex(x => x.address === b.address);
+
+        if (found > -1) {
+          updatedWallets[found].balance = b.balance || '0';
+        }
+      });
+
+      dispatch({ type: 'setValue', payload: { key: 'accountWallets', value: updatedWallets } });
+
+      return true;
     } catch (e) {
       console.error('Reloading balance', e);
     }
@@ -364,7 +376,7 @@ function WalletProvider({
         wallet,
         setWallet,
         loadAccountWallets,
-        reloadUserBalance,
+        reloadAccountBalances,
         setScreen: (s: WalletScreens) =>
           dispatch({ type: 'setValue', payload: { key: 'walletScreen', value: s } }),
         handleError,

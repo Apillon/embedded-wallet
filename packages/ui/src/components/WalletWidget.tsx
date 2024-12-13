@@ -47,7 +47,7 @@ function Wallet({
     setScreen,
     handleError,
     loadAccountWallets,
-    reloadUserBalance,
+    reloadAccountBalances,
     dispatch,
     defaultNetworkId,
   } = useWalletContext();
@@ -121,7 +121,7 @@ function Wallet({
 
     const onDataUpdated = (params: Events['dataUpdated']) => {
       if (params.name === 'defaultNetworkId') {
-        reloadUserBalance();
+        reloadAccountBalances();
         dispatch({ type: 'setValue', payload: { key: 'networkId', value: params.newValue } });
       } else if (params.name === 'contractAddress') {
         dispatch({ type: 'setValue', payload: { key: 'contractAddress', value: params.newValue } });
@@ -239,6 +239,9 @@ function Wallet({
         wallet.waitForAccountResolver('');
         wallet.waitForAccountResolver = null;
       }
+    } else {
+      // Reload balance on widget open
+      reloadAccountBalances();
     }
   }, [isModalOpen]);
 
