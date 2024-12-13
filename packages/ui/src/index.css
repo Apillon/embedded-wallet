@@ -45,9 +45,9 @@
     @apply font-bold text-base text-center;
   }
 
-  input {
+  /* input {
     @apply rounded-lg border border-lightgrey/25 bg-lightdark text-offwhite px-5 py-3 outline-none focus:border-lightgrey;
-  }
+  } */
 
   a {
     @apply text-offwhite;
@@ -72,9 +72,9 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-#oaw-wallet-widget input::placeholder {
+/* #oaw-wallet-widget input::placeholder {
   @apply text-lightgrey;
-}
+} */
 
 #oaw-wallet-widget ::selection {
   @apply text-primary bg-offwhite;

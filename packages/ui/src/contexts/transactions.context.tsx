@@ -157,7 +157,7 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
       throw new Error('Provider not initialized. ' + txHash);
     }
 
-    const tx = state.txs[activeWallet.index]?.[txHash];
+    const tx = state.txs[activeWallet.address]?.[txHash];
 
     // Tx doesnt exist, is done, or is already pending
     if (

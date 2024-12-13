@@ -51,6 +51,10 @@ export default function WalletAccounts() {
         Add new account
       </Btn>
 
+      <Btn variant="primary" className="w-full mb-6" onClick={() => setScreen('importAccount')}>
+        Import private key into new account
+      </Btn>
+
       <Btn variant="ghost" className="w-full mb-6" onClick={() => setScreen('reloadAccounts')}>
         Reload accounts
       </Btn>
