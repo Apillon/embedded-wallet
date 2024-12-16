@@ -270,7 +270,6 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
  * Check if transaction is for a contract call that changes user's wallets
  */
 function isAccountWalletsTx(tx?: TransactionItem) {
-  console.log(tx);
   return (
     tx?.internalLabel &&
     [

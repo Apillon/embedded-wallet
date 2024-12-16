@@ -172,7 +172,8 @@ function WalletProvider({
        * Exclude some state variables from being saved
        */
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { walletScreen, displayedError, loadingWallets, privateKeys, ...save } = state;
+      const { walletScreen, displayedError, loadingWallets, privateKeys, appProps, ...save } =
+        state;
 
       localStorage.setItem(WebStorageKeys.WALLET_CONTEXT, JSON.stringify(save));
     }

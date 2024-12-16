@@ -68,7 +68,7 @@ function Transaction({ tx }: { tx: TransactionItem }) {
         </span>
 
         <span title={new Date(tx.createdAt).toISOString()} className="text-xs">
-          {new Date(tx.createdAt).toISOString().slice(0, -5).replace('T', ' ')}
+          {new Date(tx.createdAt).toLocaleString()}
         </span>
       </div>
     </div>
