@@ -12,6 +12,7 @@ import {
   RegisterData,
   SignMessageParams,
   SignatureCallback,
+  TransactionItem,
   WebauthnContract,
 } from './types';
 import * as sapphire from '@oasisprotocol/sapphire-paratime';
@@ -546,7 +547,12 @@ class EmbeddedWallet {
     });
 
     if (res) {
-      await this.broadcastTransaction(res?.signedTxData, res?.chainId, label);
+      await this.broadcastTransaction(
+        res?.signedTxData,
+        res?.chainId,
+        label,
+        `updateAccountWalletTitle`
+      );
 
       // if (await this.waitForTxReceipt(txHash)) {
       //   //
@@ -934,7 +940,8 @@ class EmbeddedWallet {
   async broadcastTransaction(
     signedTxData: ethers.BytesLike,
     chainId?: number,
-    label = 'Transaction'
+    label = 'Transaction',
+    internalLabel?: string
   ) {
     /**
      * Broadcast transaction
@@ -953,7 +960,8 @@ class EmbeddedWallet {
         ? `${this.explorerUrls[chainId || this.defaultNetworkId]}/tx/${txHash}`
         : '',
       createdAt: Date.now(),
-    };
+      internalLabel,
+    } as TransactionItem;
 
     this.events.emit('txSubmitted', txItem);
 

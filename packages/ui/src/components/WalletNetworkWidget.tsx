@@ -41,7 +41,10 @@ export default function WalletNetworkWidget() {
         <IconEthereum />
 
         <span
-          className={clsx(['w-2 h-2 rounded-full bg-green', 'absolute right-2 bottom-1.5'])}
+          className={clsx(
+            'w-2 h-2 rounded-full absolute right-2 bottom-1.5',
+            state.isAccountWalletsStale ? 'bg-red' : 'bg-green'
+          )}
         ></span>
       </button>
     </div>

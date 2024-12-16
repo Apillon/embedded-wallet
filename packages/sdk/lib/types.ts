@@ -162,6 +162,7 @@ export type TransactionItem = {
   chainId: number;
   explorerUrl: string;
   createdAt: number; // timestamp
+  internalLabel?: string;
 };
 
 export type Events = {

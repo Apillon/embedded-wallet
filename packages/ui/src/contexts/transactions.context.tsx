@@ -87,7 +87,7 @@ const TransactionsContext = createContext<
   | {
       state: ContextState;
       dispatch: (action: ContextActions) => void;
-      checkTransaction: (txHash: string) => void;
+      checkTransaction: (txHash: string, txData?: TransactionItem) => void;
     }
   | undefined
 >(undefined);
@@ -96,7 +96,7 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState());
   const [initialized, setInitialized] = useState(false);
 
-  const { activeWallet, reloadAccountBalances } = useWalletContext();
+  const { activeWallet, reloadAccountBalances, dispatch: dispatchWallet } = useWalletContext();
 
   useEffect(() => {
     if (initialized) {
@@ -129,8 +129,8 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
       state.txs[activeWallet.address] &&
       Object.keys(state.txs[activeWallet.address]).length
     ) {
-      for (const h of Object.keys(state.txs[activeWallet.address])) {
-        checkTransaction(h);
+      for (const tx of Object.values(state.txs[activeWallet.address])) {
+        checkTransaction(tx.hash, tx);
       }
     }
   }, [activeWallet, state.txs]);
@@ -141,7 +141,7 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
    * otherwise attach a listener to provider that updates when
    * the transaction is mined.
    */
-  async function checkTransaction(txHash: string) {
+  async function checkTransaction(txHash: string, txData?: TransactionItem) {
     if (!activeWallet) {
       return;
     }
@@ -212,6 +212,14 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
           },
         });
 
+        // set wallets data to stale if needed
+        if (!failed && isAccountWalletsTx(txData)) {
+          dispatchWallet({
+            type: 'setValue',
+            payload: { key: 'isAccountWalletsStale', value: true },
+          });
+        }
+
         wallet.events.emit('txDone', tx);
       });
     } else {
@@ -226,6 +234,13 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
             status: 'confirmed',
           },
         });
+
+        if (isAccountWalletsTx(txData)) {
+          dispatchWallet({
+            type: 'setValue',
+            payload: { key: 'isAccountWalletsStale', value: true },
+          });
+        }
       } else {
         // Tx failed
         dispatch({
@@ -248,6 +263,23 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
     <TransactionsContext.Provider value={{ state, dispatch, checkTransaction }}>
       {children}
     </TransactionsContext.Provider>
+  );
+}
+
+/**
+ * Check if transaction is for a contract call that changes user's wallets
+ */
+function isAccountWalletsTx(tx?: TransactionItem) {
+  console.log(tx);
+  return (
+    tx?.internalLabel &&
+    [
+      'proxyWrite_addWallet',
+      'proxyWrite_addWalletPassword',
+      'proxyWrite_manageCredential',
+      'proxyWrite_manageCredentialPassword',
+      'updateAccountWalletTitle',
+    ].includes(tx.internalLabel)
   );
 }
 

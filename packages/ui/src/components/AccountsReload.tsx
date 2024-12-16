@@ -7,12 +7,14 @@ export default function AccountsReload() {
 
   return (
     <div>
+      <h2 className="mb-6">Accounts out of date</h2>
+
       <div className="text-center mb-4">
         <Spinner size={56} className="mx-auto" />
       </div>
 
-      <p className="text-sm text-lightgrey mb-6">
-        Please authenticate again to load your accounts.
+      <p className="text-sm text-lightgrey mb-6 text-center">
+        Please authenticate to load your accounts.
       </p>
 
       <Btn

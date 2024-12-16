@@ -107,7 +107,7 @@ function Wallet({
       await new Promise(resolve => setTimeout(resolve, MODAL_TRANSITION_TIME * 2));
 
       setApprovedData({
-        title: 'Successuflly sent',
+        title: 'Successfully sent',
         txHash: params.hash,
         explorerUrl: params.explorerUrl,
       });

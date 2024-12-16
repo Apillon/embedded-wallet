@@ -41,6 +41,7 @@ const initialState = (defaultNetworkId = 0, appProps: AppProps) => ({
   username: '',
   walletIndex: 0,
   accountWallets: [] as AccountWalletEx[],
+  isAccountWalletsStale: false,
   contractAddress: '',
   privateKeys: {} as { [walletAddress: string]: string },
   authStrategy: 'passkey' as AuthStrategyName,
@@ -263,6 +264,8 @@ function WalletProvider({
       }
 
       dispatch({ type: 'setValue', payload: { key: 'loadingWallets', value: false } });
+      dispatch({ type: 'setValue', payload: { key: 'isAccountWalletsStale', value: false } });
+      reloadAccountBalances(wallets.map(w => w.address));
 
       return wallets;
     } catch (e) {

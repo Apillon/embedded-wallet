@@ -13,10 +13,19 @@ import AccountsImport from './AccountsImport';
 import AccountsRename from './AccountsRename';
 
 export default function WalletMain() {
-  const { state, activeWallet, setScreen } = useWalletContext();
+  const { state, activeWallet, setScreen, loadAccountWallets } = useWalletContext();
 
   return (
     <div>
+      {!!state.isAccountWalletsStale && (
+        <div className="flex gap-2 justify-between items-start py-2 px-3 break-words text-sm text-white bg-blue/75 rounded-md overflow-auto text-left mb-8">
+          <span>Accounts are stale</span>
+          <a href="#" className="font-bold" onClick={() => loadAccountWallets()}>
+            {state.loadingWallets ? '...' : 'Reload'}
+          </a>
+        </div>
+      )}
+
       {/* Error */}
       <WalletError show className="mb-6" />
 

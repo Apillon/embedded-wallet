@@ -35,7 +35,11 @@ export function useWallet() {
         ...options,
       }),
 
-    sendTransaction: async (tx: PlainTransactionParams['tx'], options?: PlainTransactionParams) => {
+    sendTransaction: async (
+      tx: PlainTransactionParams['tx'],
+      options?: PlainTransactionParams,
+      internalLabel?: string
+    ) => {
       const res = await wallet!.signPlainTransaction({
         tx,
         mustConfirm: true,
@@ -46,7 +50,7 @@ export function useWallet() {
         return abort('CANT_GET_SIGNED_TX');
       }
 
-      return await wallet!.broadcastTransaction(res.signedTxData, res.chainId);
+      return await wallet!.broadcastTransaction(res.signedTxData, res.chainId, internalLabel);
     },
   };
 }

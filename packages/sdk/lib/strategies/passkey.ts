@@ -147,7 +147,8 @@ class PasskeyStrategy implements AuthStrategy {
       const { txHash } = await this.wallet.broadcastTransaction(
         res?.signedTxData,
         res?.chainId,
-        txLabel
+        txLabel,
+        `proxyWrite_${functionName}`
       );
 
       if (dontWait) {
