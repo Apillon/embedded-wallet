@@ -86,7 +86,7 @@ export default function WalletAuth() {
     handleError();
 
     try {
-      const res = await wallet?.register('passkey', { username }, hashedUsername.current, false);
+      const res = await wallet?.register('passkey', { username }, hashedUsername.current, true);
 
       if (res) {
         setupUserInfo({ username, authStrategy: 'passkey' });

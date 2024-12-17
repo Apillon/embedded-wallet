@@ -252,7 +252,14 @@ export default function WalletAuth({
         Enter your e-mail to initialize a passkey through your email address.
       </p>
 
-      {/* @deprecated */}
+      {/* Auth w/ redirect */}
+      {!!onGatewayRedirect && (
+        <Btn loading={loading} className="w-full" onClick={onGatewayRedirect}>
+          Continue
+        </Btn>
+      )}
+
+      {/* Auth w/o redirect */}
       {!onGatewayRedirect && (
         <form onSubmit={ev => onAuth(ev)}>
           <Input
@@ -268,10 +275,6 @@ export default function WalletAuth({
           </Btn>
         </form>
       )}
-
-      <Btn loading={loading} className="w-full" onClick={onGatewayRedirect}>
-        Continue
-      </Btn>
 
       <WalletError show className="mt-6" />
     </div>

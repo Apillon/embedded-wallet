@@ -46,7 +46,7 @@ export type AppParams = {
   /**
    * Use a new window for creating and authenticating with a passkey
    */
-  isPasskeyPopup?: boolean;
+  passkeyAuthMode?: AuthPasskeyMode;
 
   /**
    * Iframe uses same wallet code. Set this to prevent implosion.
@@ -93,7 +93,7 @@ export interface AuthStrategy {
   ): Promise<any>;
 }
 
-export type AuthPasskeyMode = 'default' | 'iframe' | 'popup';
+export type AuthPasskeyMode = 'redirect' | 'iframe' | 'popup' | 'standalone';
 
 export type AuthStrategyName = 'password' | 'passkey';
 

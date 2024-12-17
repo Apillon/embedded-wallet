@@ -9,7 +9,7 @@ import { AccountManagerAbi } from '../abi';
 class PasskeyStrategy implements AuthStrategy {
   constructor(public wallet: EmbeddedWallet) {}
 
-  async getRegisterData(authData: AuthData, isPopup = false) {
+  async getRegisterData(authData: AuthData) {
     if (!authData.username) {
       abort('NO_USERNAME');
       return;
@@ -24,13 +24,13 @@ class PasskeyStrategy implements AuthStrategy {
       return;
     }
 
-    const wallet = {
+    const newWallet = {
       walletType: WalletType.EVM,
       keypairSecret: ethers.ZeroHash,
       title: authData.username,
     };
 
-    if (isPopup) {
+    if (this.wallet.xdomain?.mode === 'popup') {
       const cred = await this.wallet.xdomain?.create(authData.hashedUsername, authData.username);
 
       if (!cred) {
@@ -43,7 +43,7 @@ class PasskeyStrategy implements AuthStrategy {
         credentialId: cred.credentialId,
         pubkey: cred.pubkey,
         optionalPassword: ethers.ZeroHash,
-        wallet,
+        wallet: newWallet,
       };
     } else {
       const cred = await credentialCreate(
@@ -64,12 +64,12 @@ class PasskeyStrategy implements AuthStrategy {
         credentialId: cred.id,
         pubkey: cred.ad.attestedCredentialData!.credentialPublicKey!,
         optionalPassword: ethers.ZeroHash,
-        wallet,
+        wallet: newWallet,
       };
     }
   }
 
-  async getProxyResponse(data: string, authData: AuthData, mode: AuthPasskeyMode = 'default') {
+  async getProxyResponse(data: string, authData: AuthData) {
     if (!authData.username) {
       abort('NO_USERNAME');
       return;
@@ -82,7 +82,11 @@ class PasskeyStrategy implements AuthStrategy {
       return;
     }
 
-    const cred = await this.getPasskeyForMode(mode, hashedUsername, data);
+    const cred = await this.getPasskeyForMode(
+      this.wallet?.xdomain?.mode || 'standalone',
+      hashedUsername,
+      data
+    );
 
     if (!cred) {
       abort('XDOMAIN_NOT_INIT');
@@ -102,8 +106,7 @@ class PasskeyStrategy implements AuthStrategy {
     data: string,
     authData: AuthData,
     txLabel?: string,
-    dontWait = false,
-    mode: 'default' | 'iframe' | 'popup' = 'default'
+    dontWait = false
   ) {
     if (!authData.username) {
       abort('NO_USERNAME');
@@ -117,7 +120,11 @@ class PasskeyStrategy implements AuthStrategy {
       return;
     }
 
-    const cred = await this.getPasskeyForMode(mode, hashedUsername, data);
+    const cred = await this.getPasskeyForMode(
+      this.wallet?.xdomain?.mode || 'standalone',
+      hashedUsername,
+      data
+    );
 
     if (!cred) {
       abort('XDOMAIN_NOT_INIT');
@@ -172,19 +179,8 @@ class PasskeyStrategy implements AuthStrategy {
       ethers.sha256(personalization + ethers.sha256(data).slice(2))
     );
 
-    if (mode === 'popup') {
+    if (mode === 'popup' || mode === 'redirect' || mode === 'iframe') {
       const res = await this.wallet.xdomain?.get(credentials, challenge);
-
-      if (!res) {
-        return;
-      }
-
-      return {
-        credentialIdHashed: res.credentials.credentialIdHashed,
-        resp: res.credentials.resp,
-      };
-    } else if (mode === 'iframe') {
-      const res = await this.wallet.xiframe?.get(credentials, challenge);
 
       if (!res) {
         return;

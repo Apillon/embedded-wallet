@@ -29,7 +29,6 @@ import {
 } from './constants';
 import { WalletDisconnectedError } from './adapters/eip1193';
 import { XdomainPasskey } from './xdomain';
-import { XdomainIframe } from './xiframe';
 
 class EmbeddedWallet {
   sapphireProvider: ethers.JsonRpcProvider;
@@ -39,7 +38,6 @@ class EmbeddedWallet {
   events: Emitter<Events>;
   apillonClientId: string;
   xdomain?: XdomainPasskey;
-  xiframe?: XdomainIframe;
 
   defaultNetworkId = 0;
   rpcUrls = {} as { [networkId: number]: string };
@@ -96,13 +94,7 @@ class EmbeddedWallet {
     this.events = mitt<Events>();
     this.apillonClientId = params?.clientId || '';
 
-    if (!!params?.isPasskeyPopup) {
-      this.xdomain = new XdomainPasskey();
-    }
-
-    if (!params?.noPasskeyIframe) {
-      this.xiframe = new XdomainIframe(this.apillonClientId);
-    }
+    this.xdomain = new XdomainPasskey(this.apillonClientId, params?.passkeyAuthMode);
 
     /**
      * Provider connection events
@@ -164,10 +156,10 @@ class EmbeddedWallet {
     if (strategy === 'password') {
       registerData = await new PasswordStrategy(this).getRegisterData(authData);
     } else if (strategy === 'passkey') {
-      registerData = await new PasskeyStrategy(this).getRegisterData(
-        { ...authData, hashedUsername },
-        !!this.xdomain
-      );
+      registerData = await new PasskeyStrategy(this).getRegisterData({
+        ...authData,
+        hashedUsername,
+      });
     }
 
     const gaslessData = this.abiCoder.encode(
@@ -1129,11 +1121,7 @@ class EmbeddedWallet {
     if (strategy === 'password') {
       return await new PasswordStrategy(this).getProxyResponse(data, authData);
     } else if (strategy === 'passkey') {
-      return await new PasskeyStrategy(this).getProxyResponse(
-        data,
-        authData,
-        !!this.xdomain ? 'popup' : !!this.xiframe ? 'iframe' : 'default'
-      );
+      return await new PasskeyStrategy(this).getProxyResponse(data, authData);
     }
   }
 
@@ -1165,8 +1153,7 @@ class EmbeddedWallet {
         data,
         authData,
         txLabel,
-        dontWait,
-        !!this.xdomain ? 'popup' : !!this.xiframe ? 'iframe' : 'default'
+        dontWait
       );
     }
   }

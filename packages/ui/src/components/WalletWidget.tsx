@@ -39,6 +39,7 @@ const MODAL_TRANSITION_TIME = 200;
 function Wallet({
   broadcastAfterSign = false,
   disableDefaultActivatorStyle = false,
+  passkeyAuthMode = 'redirect',
   ...restOfProps
 }: AppProps) {
   const {
@@ -280,7 +281,9 @@ function Wallet({
     const gatewayUrl = import.meta.env.VITE_XDOMAIN_PASSKEY_SRC ?? 'https://passkey.apillon.io';
 
     if (!loggedIn && gatewayUrl) {
-      window.location.href = `${gatewayUrl}?ref=${encodeURIComponent(window.location.origin + window.location.pathname)}&clientId=${restOfProps.clientId || wallet?.apillonClientId || ''}`;
+      window.location.href = `${gatewayUrl}?ref=${encodeURIComponent(
+        window.location.origin + window.location.pathname
+      )}&clientId=${restOfProps.clientId || wallet?.apillonClientId || ''}`;
       return true;
     }
 
@@ -293,7 +296,12 @@ function Wallet({
     /**
      * Login/register
      */
-    modalContent = <WalletAuth {...restOfProps} onGatewayRedirect={() => redirectToGateway()} />;
+    modalContent = (
+      <WalletAuth
+        {...restOfProps}
+        onGatewayRedirect={passkeyAuthMode === 'redirect' ? () => redirectToGateway() : undefined}
+      />
+    );
   } else if (approvedData.title) {
     /**
      * Transaction submitted to network
@@ -495,7 +503,7 @@ function Wallet({
         id="oaw-wallet-widget-btn"
         className={!disableDefaultActivatorStyle ? 'oaw-btn-default-style' : undefined}
         onClick={() => {
-          if (!redirectToGateway()) {
+          if (passkeyAuthMode !== 'redirect' || !redirectToGateway()) {
             setIsModalOpen(true);
           }
         }}
