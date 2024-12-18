@@ -35,6 +35,7 @@ export default function WalletNetworkSelect() {
             walletIndex: 0,
             contractAddress: '',
             strategy: 'passkey',
+            wallets: [],
           });
 
           setScreen('main');

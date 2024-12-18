@@ -19,6 +19,22 @@ export default function WalletAuth() {
   const [resendCooldown, setResendCooldown] = useState(false);
   const hashedUsername = useRef<Buffer>();
 
+  useEffect(() => {
+    /**
+     * The confirmation email has already been sent if username query is set
+     */
+    if (window.location.search) {
+      const urlParams = new URLSearchParams(window.location.search);
+
+      const u = urlParams.get('username') || '';
+
+      if (!!u) {
+        setUsername(u);
+        setIsCodeScreen(true);
+      }
+    }
+  }, []);
+
   async function onAuth(ev: React.FormEvent<HTMLFormElement>) {
     ev.preventDefault();
 
@@ -88,7 +104,7 @@ export default function WalletAuth() {
     try {
       const res = await wallet?.register('passkey', { username }, hashedUsername.current, true);
 
-      if (res) {
+      if (typeof res !== 'undefined') {
         setupUserInfo({ username, authStrategy: 'passkey' });
       }
     } catch (e) {
@@ -105,8 +121,6 @@ export default function WalletAuth() {
     username: string;
     authStrategy: AuthStrategyName;
   }) {
-    // const balance = (await wallet?.getAccountBalance(address)) || '0';
-
     redirectBack({
       username,
       authStrategy,

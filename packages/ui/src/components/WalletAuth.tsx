@@ -13,7 +13,7 @@ import Input from './Input';
 export default function WalletAuth({
   authFormPlaceholder = 'your e-mail',
   onGatewayRedirect,
-}: Pick<AppProps, 'authFormPlaceholder'> & { onGatewayRedirect?: () => void }) {
+}: Pick<AppProps, 'authFormPlaceholder'> & { onGatewayRedirect?: (username?: string) => void }) {
   const { wallet, dispatch, defaultNetworkId, handleError } = useWalletContext();
 
   const [username, setUsername] = useState('');
@@ -49,7 +49,11 @@ export default function WalletAuth({
         }
       } else {
         if (await sendConfirmationEmail()) {
-          setIsCodeScreen(true);
+          if (!!onGatewayRedirect) {
+            onGatewayRedirect(username);
+          } else {
+            setIsCodeScreen(true);
+          }
         }
       }
     } catch (e) {
@@ -252,29 +256,19 @@ export default function WalletAuth({
         Enter your e-mail to initialize a passkey through your email address.
       </p>
 
-      {/* Auth w/ redirect */}
-      {!!onGatewayRedirect && (
-        <Btn loading={loading} className="w-full" onClick={onGatewayRedirect}>
+      <form onSubmit={ev => onAuth(ev)}>
+        <Input
+          type="email"
+          placeholder={authFormPlaceholder}
+          value={username}
+          className="w-full mb-6"
+          onChange={ev => setUsername(ev.target.value)}
+        />
+
+        <Btn type="submit" loading={loading} className="w-full">
           Continue
         </Btn>
-      )}
-
-      {/* Auth w/o redirect */}
-      {!onGatewayRedirect && (
-        <form onSubmit={ev => onAuth(ev)}>
-          <Input
-            type="email"
-            placeholder={authFormPlaceholder}
-            value={username}
-            className="w-full mb-6"
-            onChange={ev => setUsername(ev.target.value)}
-          />
-
-          <Btn type="submit" loading={loading} className="w-full">
-            Continue
-          </Btn>
-        </form>
-      )}
+      </form>
 
       <WalletError show className="mt-6" />
     </div>

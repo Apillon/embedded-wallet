@@ -228,6 +228,8 @@ class EmbeddedWallet {
       return;
     }
 
+    await this.getAccountWallets({ authData, strategy, reload: true });
+
     return await this.finalizeAccountAuth(strategy, authData);
   }
 
@@ -614,8 +616,9 @@ class EmbeddedWallet {
     walletIndex?: number;
     strategy?: AuthStrategyName;
     contractAddress?: string;
+    wallets?: AccountWallet[];
   }) {
-    if (params.username && params.username !== this.lastAccount.username) {
+    if (typeof params.username !== 'undefined' && params.username !== this.lastAccount.username) {
       this.events.emit('dataUpdated', {
         name: 'username',
         newValue: params.username,
@@ -637,7 +640,10 @@ class EmbeddedWallet {
       this.lastAccount.walletIndex = params.walletIndex;
     }
 
-    if (params.strategy && params.strategy !== this.lastAccount.authStrategy) {
+    if (
+      typeof params.strategy !== 'undefined' &&
+      params.strategy !== this.lastAccount.authStrategy
+    ) {
       this.events.emit('dataUpdated', {
         name: 'authStrategy',
         newValue: params.strategy,
@@ -646,7 +652,10 @@ class EmbeddedWallet {
       this.lastAccount.authStrategy = params.strategy;
     }
 
-    if (params.contractAddress && params.contractAddress !== this.lastAccount.contractAddress) {
+    if (
+      typeof params.contractAddress !== 'undefined' &&
+      params.contractAddress !== this.lastAccount.contractAddress
+    ) {
       this.events.emit('dataUpdated', {
         name: 'authStrategy',
         newValue: params.contractAddress,
@@ -654,6 +663,19 @@ class EmbeddedWallet {
       });
 
       this.lastAccount.contractAddress = params.contractAddress;
+    }
+
+    if (
+      Array.isArray(params.wallets) &&
+      params.wallets.length !== this.lastAccount.wallets.length
+    ) {
+      this.events.emit('dataUpdated', {
+        name: 'wallets',
+        newValue: params.wallets,
+        oldValue: this.lastAccount.wallets,
+      });
+
+      this.lastAccount.wallets = [...params.wallets];
     }
   }
 
