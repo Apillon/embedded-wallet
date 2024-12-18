@@ -93,7 +93,13 @@ export interface AuthStrategy {
   ): Promise<any>;
 }
 
-export type AuthPasskeyMode = 'redirect' | 'iframe' | 'popup' | 'standalone';
+export type AuthPasskeyMode =
+  | 'redirect'
+  | 'iframe'
+  | 'popup'
+  | 'tab_process'
+  | 'tab_form'
+  | 'standalone';
 
 export type AuthStrategyName = 'password' | 'passkey';
 

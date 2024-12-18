@@ -302,8 +302,11 @@ function Wallet({
     modalContent = (
       <WalletAuth
         {...restOfProps}
+        passkeyAuthMode={passkeyAuthMode}
         onGatewayRedirect={
-          passkeyAuthMode === 'redirect' ? (u?: string) => redirectToGateway(u) : undefined
+          ['redirect', 'tab_form'].includes(passkeyAuthMode)
+            ? (u?: string) => redirectToGateway(u)
+            : undefined
         }
       />
     );

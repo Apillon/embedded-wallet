@@ -1,5 +1,5 @@
 import { ErrorMessages, Errors } from './constants';
-import { AuthPasskeyMode } from './types';
+import { AuthPasskeyMode, AuthStrategyName } from './types';
 import { abort, isSafari } from './utils';
 
 /**
@@ -92,7 +92,7 @@ export class XdomainPasskey {
     await iframeLoading;
   }
 
-  async openPopup() {
+  async openPopup(username: string) {
     if (this.popup) {
       this.popup.close();
       this.popup = null;
@@ -110,16 +110,23 @@ export class XdomainPasskey {
       const height = 400;
 
       this.popup = window.open(
-        this.src + '?popup=1',
+        this.mode === 'tab_form'
+          ? `${this.src}?tab=1&${[
+              `clientId=${this.clientId}`,
+              `username=${encodeURIComponent(username || '')}`,
+            ].join('&')}`
+          : `${this.src}`,
         '_blank',
-        [
-          `width=${width}`,
-          `height=${height}`,
-          `left=${Math.round(window.innerWidth / 2 + window.screenX - width / 2)}`,
-          `top=${Math.round(window.innerHeight / 2 + window.screenY - height / 2)}`,
-          `location=no`,
-          `resizable=no`,
-        ].join(',')
+        this.mode === 'tab_process' || this.mode === 'tab_form'
+          ? undefined
+          : [
+              `width=${width}`,
+              `height=${height}`,
+              `left=${Math.round(window.innerWidth / 2 + window.screenX - width / 2)}`,
+              `top=${Math.round(window.innerHeight / 2 + window.screenY - height / 2)}`,
+              `location=no`,
+              `resizable=no`,
+            ].join(',')
       );
     }, 1);
 
@@ -187,7 +194,7 @@ export class XdomainPasskey {
    * Create credentials through popup window. Not available in iframe!
    */
   async create(hashedUsername: Buffer, username: string) {
-    await this.openPopup();
+    await this.openPopup(username);
 
     if (!this.popup) {
       return abort('XDOMAIN_NOT_INIT');
@@ -210,6 +217,35 @@ export class XdomainPasskey {
     return new Promise<{
       credentialId: Uint8Array;
       pubkey: any;
+    }>((resolve, reject) => {
+      this.promises.push({
+        id,
+        resolve,
+        reject,
+      });
+    });
+  }
+
+  async createViaTab(username: string) {
+    await this.openPopup(username);
+
+    if (!this.popup) {
+      return abort('XDOMAIN_NOT_INIT');
+    }
+
+    const id = this.getEventId();
+
+    this.popup.postMessage(
+      {
+        type: 'save_pk_event_id',
+        id,
+      },
+      this.src
+    );
+
+    return new Promise<{
+      username: string;
+      authStrategy: AuthStrategyName;
     }>((resolve, reject) => {
       this.promises.push({
         id,

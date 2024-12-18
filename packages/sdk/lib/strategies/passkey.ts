@@ -30,7 +30,7 @@ class PasskeyStrategy implements AuthStrategy {
       title: authData.username,
     };
 
-    if (this.wallet.xdomain?.mode === 'popup') {
+    if (this.wallet.xdomain?.mode === 'popup' || this.wallet.xdomain?.mode === 'tab_process') {
       const cred = await this.wallet.xdomain?.create(authData.hashedUsername, authData.username);
 
       if (!cred) {
@@ -179,7 +179,7 @@ class PasskeyStrategy implements AuthStrategy {
       ethers.sha256(personalization + ethers.sha256(data).slice(2))
     );
 
-    if (mode === 'popup' || mode === 'redirect' || mode === 'iframe') {
+    if (['popup', 'redirect', 'iframe', 'tab_process', 'tab_form'].includes(mode)) {
       const res = await this.wallet.xdomain?.get(credentials, challenge);
 
       if (!res) {

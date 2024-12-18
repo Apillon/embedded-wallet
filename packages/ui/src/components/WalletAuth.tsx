@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { AuthStrategyName, getHashedUsername } from '@apillon/wallet-sdk';
+import { abort, AuthStrategyName, getHashedUsername } from '@apillon/wallet-sdk';
 import { useWalletContext } from '../contexts/wallet.context';
 import Btn from './Btn';
 import { AppProps } from './WalletWidget';
@@ -12,9 +12,13 @@ import Input from './Input';
 
 export default function WalletAuth({
   authFormPlaceholder = 'your e-mail',
+  passkeyAuthMode,
   onGatewayRedirect,
-}: Pick<AppProps, 'authFormPlaceholder'> & { onGatewayRedirect?: (username?: string) => void }) {
-  const { wallet, dispatch, defaultNetworkId, handleError } = useWalletContext();
+}: Pick<AppProps, 'authFormPlaceholder' | 'passkeyAuthMode'> & {
+  onGatewayRedirect?: (username?: string) => void;
+}) {
+  const { wallet, dispatch, defaultNetworkId, handleError, loadAccountWallets } =
+    useWalletContext();
 
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
@@ -49,7 +53,20 @@ export default function WalletAuth({
         }
       } else {
         if (await sendConfirmationEmail()) {
-          if (!!onGatewayRedirect) {
+          if (passkeyAuthMode === 'tab_form') {
+            if (!wallet?.xdomain) {
+              throw abort('XDOMAIN_NOT_INIT');
+            }
+
+            setIsConfiguringPasskey(true);
+
+            const res = await wallet.xdomain.createViaTab(username);
+
+            if (res) {
+              await loadAccountWallets(res.authStrategy, res.username);
+              setupUserInfo({ username, authStrategy: 'passkey' });
+            }
+          } else if (!!onGatewayRedirect) {
             onGatewayRedirect(username);
           } else {
             setIsCodeScreen(true);
@@ -95,7 +112,18 @@ export default function WalletAuth({
     handleError();
 
     try {
-      const res = await wallet?.register('passkey', { username }, hashedUsername.current);
+      let res: any;
+
+      if (passkeyAuthMode === 'tab_form') {
+        if (!wallet?.xdomain) {
+          throw abort('XDOMAIN_NOT_INIT');
+        }
+
+        res = await wallet.xdomain.createViaTab(username);
+        await loadAccountWallets(res.authStrategy, res.username);
+      } else {
+        res = await wallet?.register('passkey', { username }, hashedUsername.current);
+      }
 
       if (res) {
         setupUserInfo({ username, authStrategy: 'passkey' });

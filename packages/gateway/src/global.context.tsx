@@ -22,6 +22,7 @@ function GlobalProvider({ children }: { children: ReactNode }) {
   const [wallet, setWallet] = useState<EmbeddedWallet>();
   const [error, setError] = useState('');
   const referrerUrl = useRef('');
+  const isTab = useRef(false); // is app running in tab/popup -> close self on end
 
   /**
    * Initialize Oasis Wallet App SDK
@@ -41,6 +42,8 @@ function GlobalProvider({ children }: { children: ReactNode }) {
       if (!!isValidUrl(referrer || '')) {
         referrerUrl.current = referrer!;
       }
+
+      isTab.current = urlParams.has('tab');
     }
   }, []);
 
@@ -51,7 +54,16 @@ function GlobalProvider({ children }: { children: ReactNode }) {
         setWallet,
         error,
         redirectBack: data => {
-          if (referrerUrl.current) {
+          if (isTab.current) {
+            window.opener?.postMessage(
+              {
+                type: 'apillon_pk_response',
+                id: +(sessionStorage.getItem('event_id') || 0),
+                content: data,
+              },
+              '*'
+            );
+          } else if (referrerUrl.current) {
             window.location.replace(
               `${referrerUrl.current}?${Object.entries(data)
                 .map(([x, y]) => `${x}=${encodeURIComponent(y)}`)

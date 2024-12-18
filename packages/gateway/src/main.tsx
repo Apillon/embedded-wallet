@@ -48,6 +48,8 @@ window.addEventListener('message', ev => {
     getPasskey(ev.data.id, ev.data.content);
   } else if (ev.data.type === 'create_pk_credentials') {
     createPasskey(ev.data.id, ev.data.content);
+  } else if (ev.data.type === 'save_pk_event_id') {
+    sessionStorage.setItem('event_id', ev.data.id);
   }
 });
 
