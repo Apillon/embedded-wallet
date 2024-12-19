@@ -47,19 +47,11 @@ h4 {
   @apply font-bold text-base text-center;
 }
 
-input {
-  @apply rounded-lg border border-lightgrey/25 bg-lightdark text-offwhite px-5 py-3 outline-none focus:border-lightgrey;
-}
-
 a {
   @apply text-offwhite;
 }
 
 #root {
-  input::placeholder {
-    @apply text-lightgrey;
-  }
-
   ::selection {
     @apply text-primary bg-offwhite;
   }

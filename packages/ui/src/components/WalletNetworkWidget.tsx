@@ -14,11 +14,11 @@ export default function WalletNetworkWidget() {
   }
 
   return (
-    <div className="flex bg-lightdark rounded-md h-10">
+    <div className="flex bg-lightdark rounded-lg h-10">
       {/* User wallet address */}
       <button
         title={activeWallet.address}
-        className="oaw-button py-1 pl-3 pr-1.5 flex items-center min-w-0"
+        className="oaw-button-plain !py-1 !pl-3 !pr-1.5 flex items-center min-w-0 !rounded-lg"
         onClick={() => onCopy(activeWallet.address)}
       >
         <span className="truncate text-lightgrey text-xs w-[70px]">{activeWallet.address}</span>
@@ -35,7 +35,7 @@ export default function WalletNetworkWidget() {
             ? networksById[state.networkId].name
             : 'No network'
         }
-        className="oaw-button block py-1 px-1 min-w-0 relative"
+        className="oaw-button-plain block !p-1 min-w-0 relative !rounded-lg"
         onClick={() => setScreen(state.walletScreen === 'networks' ? 'main' : 'networks')}
       >
         <IconEthereum />

@@ -7,6 +7,7 @@ import Spinner from './Spinner';
 import clsx from 'clsx';
 import Btn from './Btn';
 import { useGlobalContext } from '../global.context';
+import Input from './Input';
 
 export default function WalletAuth() {
   const { wallet, handleError, redirectBack } = useGlobalContext();
@@ -245,7 +246,7 @@ export default function WalletAuth() {
       </p>
 
       <form onSubmit={ev => onAuth(ev)}>
-        <input
+        <Input
           type="email"
           placeholder="your e-mail"
           value={username}
@@ -372,7 +373,7 @@ function ConfirmEmail({
             maxLength={1}
             autoFocus={x === 0}
             disabled={loading}
-            className="min-w-0 w-[3.25rem] h-16 px-2 text-center"
+            className="min-w-0 w-[3.25rem] h-16 px-2 text-center rounded-lg border border-brightdark focus:border-lightgrey"
             onFocus={ev => ev.target.select()}
             onKeyDown={ev => handleKeyDown(ev, x)}
             onPaste={ev => handlePaste(ev)}

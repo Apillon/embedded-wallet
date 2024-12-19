@@ -61,7 +61,10 @@ function Transaction({ tx }: { tx: TransactionItem }) {
       <div className="flex justify-between items-end">
         <span title={tx.hash} className="text-sm">
           {shortHash(tx.hash)}{' '}
-          <button className="text-xs inline-flex items-center" onClick={() => onCopy(tx.hash)}>
+          <button
+            className="text-xs inline-flex items-center oaw-button-plain"
+            onClick={() => onCopy(tx.hash)}
+          >
             <IconCopy />
             {copyText}
           </button>

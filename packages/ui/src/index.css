@@ -45,19 +45,11 @@
     @apply font-bold text-base text-center;
   }
 
-  /* input {
-    @apply rounded-lg border border-lightgrey/25 bg-lightdark text-offwhite px-5 py-3 outline-none focus:border-lightgrey;
-  } */
-
   a {
     @apply text-offwhite;
   }
 
-  /* button {
-    @apply text-lightgrey cursor-pointer bg-transparent border-none hover:text-offwhite;
-  } */
-
-  button:not(.oaw-button) {
+  .oaw-button-plain {
     @apply text-lightgrey cursor-pointer bg-transparent border-none hover:text-offwhite p-0 rounded-sm min-w-0 min-h-0 font-normal transform-none;
   }
 }
@@ -71,10 +63,6 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-
-/* #oaw-wallet-widget input::placeholder {
-  @apply text-lightgrey;
-} */
 
 #oaw-wallet-widget ::selection {
   @apply text-primary bg-offwhite;

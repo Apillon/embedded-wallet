@@ -446,7 +446,7 @@ function Wallet({
           >
             <div className="shrink-0">
               <button
-                className="flex"
+                className="flex oaw-button-plain"
                 onClick={() => {
                   setScreen('main');
                   closeApproveScreen(false, false);
@@ -578,7 +578,10 @@ function Modal({
             <div className="fixed inset-0 w-screen overflow-y-auto p-4">
               <div className="flex items-center justify-center min-h-full">
                 <DialogPanel className="relative max-w-[440px] w-full min-h-[476px] bg-dark p-8 sm:p-12 border border-brightdark text-offwhite flex flex-col">
-                  <button className="flex absolute top-2 right-2" onClick={() => setIsOpen(false)}>
+                  <button
+                    className="flex absolute top-2 right-2 oaw-button-plain"
+                    onClick={() => setIsOpen(false)}
+                  >
                     <svg
                       width="24"
                       height="24"
