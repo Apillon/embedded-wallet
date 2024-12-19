@@ -296,6 +296,30 @@ export default function WalletAuth({
         <Btn type="submit" loading={loading} className="w-full">
           Continue
         </Btn>
+
+        <button
+          type="button"
+          className="oaw-button-plain mt-3 text-xs text-center w-full rounded-sm opacity-100 hover:opacity-80"
+          onClick={() => {
+            dispatch({
+              type: 'setValue',
+              payload: { key: 'displayedError', value: '' },
+            });
+
+            if (!username) {
+              dispatch({
+                type: 'setValue',
+                payload: { key: 'displayedError', value: 'Enter your email' },
+              });
+
+              return;
+            }
+
+            setIsCodeScreen(true);
+          }}
+        >
+          I have a login code
+        </button>
       </form>
 
       <WalletError show className="mt-6" />

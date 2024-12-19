@@ -28,7 +28,7 @@ export default function WalletError({
 
       <button
         title="Dismiss"
-        className="!text-white/50 hover:!text-white -mt-0.5 shrink-0"
+        className="oaw-button-plain !text-white/50 hover:!text-white -mt-0.5 shrink-0"
         onClick={() => handleError()}
       >
         <svg
