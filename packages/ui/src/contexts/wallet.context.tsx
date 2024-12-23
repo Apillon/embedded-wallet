@@ -266,6 +266,7 @@ function WalletProvider({
 
       dispatch({ type: 'setValue', payload: { key: 'loadingWallets', value: false } });
       dispatch({ type: 'setValue', payload: { key: 'isAccountWalletsStale', value: false } });
+      dispatch({ type: 'setValue', payload: { key: 'displayedError', value: '' } });
       reloadAccountBalances(wallets.map(w => w.address));
 
       return wallets;

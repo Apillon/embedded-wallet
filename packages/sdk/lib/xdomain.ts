@@ -115,7 +115,7 @@ export class XdomainPasskey {
               `clientId=${this.clientId}`,
               `username=${encodeURIComponent(username || '')}`,
             ].join('&')}`
-          : `${this.src}`,
+          : `${this.src}?popup=1`,
         '_blank',
         this.mode === 'tab_process' || this.mode === 'tab_form'
           ? undefined

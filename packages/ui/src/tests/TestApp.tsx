@@ -11,7 +11,7 @@ export default function TestApp() {
       <WalletWidget
         clientId={import.meta.env.VITE_CLIENT_ID ?? 'YOUR INTEGRATION UUID HERE'}
         broadcastAfterSign
-        passkeyAuthMode="tab_form"
+        passkeyAuthMode="tab_process"
         // disableDefaultActivatorStyle
         defaultNetworkId={1287}
         networks={[

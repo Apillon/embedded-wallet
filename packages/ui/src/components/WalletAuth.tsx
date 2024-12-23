@@ -28,8 +28,12 @@ export default function WalletAuth({
   const [resendCooldown, setResendCooldown] = useState(false);
   const hashedUsername = useRef<Buffer>();
 
-  async function onAuth(ev: React.FormEvent<HTMLFormElement>) {
-    ev.preventDefault();
+  /**
+   * @param onlyLogin Just check that user has logged in, don't try to register if login fails.
+   * @returns `true` if login is successful
+   */
+  async function onAuth(onlyLogin = false, ev?: React.FormEvent<HTMLFormElement>) {
+    ev?.preventDefault();
 
     if (!username) {
       return;
@@ -50,8 +54,10 @@ export default function WalletAuth({
             username,
             authStrategy: 'passkey',
           });
+
+          return true;
         }
-      } else {
+      } else if (!onlyLogin) {
         if (await sendConfirmationEmail()) {
           if (passkeyAuthMode === 'tab_form') {
             if (!wallet?.xdomain) {
@@ -180,7 +186,19 @@ export default function WalletAuth({
           Please complete the passkey configuration with your browser.
         </p>
 
-        <Btn variant="ghost" disabled={loading} className="w-full" onClick={() => startRegister()}>
+        <Btn
+          variant="ghost"
+          disabled={loading}
+          className="w-full"
+          onClick={async () => {
+            /**
+             * Check if account exists already (and log in) first
+             */
+            if (!(await onAuth(true))) {
+              startRegister();
+            }
+          }}
+        >
           Retry
         </Btn>
 
@@ -284,7 +302,7 @@ export default function WalletAuth({
         Enter your e-mail to initialize a passkey through your email address.
       </p>
 
-      <form onSubmit={ev => onAuth(ev)}>
+      <form onSubmit={ev => onAuth(false, ev)}>
         <Input
           type="email"
           placeholder={authFormPlaceholder}
