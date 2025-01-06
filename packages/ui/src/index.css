@@ -32,7 +32,7 @@
   @apply text-offwhite;
 
   h2 {
-    @apply font-bold text-[1.75rem] text-offwhite text-center leading-tight;
+    @apply font-medium text-[1.75rem] text-offwhite text-center leading-tight;
     font-family: 'New Spirit', serif;
   }
 

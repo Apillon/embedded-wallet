@@ -118,6 +118,10 @@ const WalletContext = createContext<
       reloadAccountBalances: (addresses?: string[]) => Promise<boolean | undefined>;
       setScreen: (screen: WalletScreens) => void;
       handleError: (e?: any, src?: string) => string;
+      setStateValue: <T extends keyof ReturnType<typeof initialState>>(
+        key: T,
+        value: ReturnType<typeof initialState>[T]
+      ) => void;
     }
   | undefined
 >(undefined);
@@ -240,6 +244,13 @@ function WalletProvider({
     }
   }, [state.username, state.walletIndex, state.accountWallets.length]);
 
+  function setStateValue<T extends keyof ReturnType<typeof initialState>>(
+    key: T,
+    value: ReturnType<typeof initialState>[T]
+  ) {
+    dispatch({ type: 'setValue', payload: { key, value } });
+  }
+
   /**
    * Load all wallet accounts for user. Requires auth
    */
@@ -248,7 +259,7 @@ function WalletProvider({
       return;
     }
 
-    dispatch({ type: 'setValue', payload: { key: 'loadingWallets', value: true } });
+    setStateValue('loadingWallets', true);
 
     try {
       const wallets =
@@ -258,15 +269,19 @@ function WalletProvider({
           reload: true,
         })) || [];
 
-      dispatch({ type: 'setValue', payload: { key: 'accountWallets', value: wallets || [] } });
+      setStateValue(
+        'accountWallets',
+        (wallets || []).map(x => ({ ...x, balance: '0' }))
+      );
 
       if (state.walletIndex < wallets.length) {
         wallet?.events.emit('accountsChanged', [wallets[state.walletIndex].address]);
       }
 
-      dispatch({ type: 'setValue', payload: { key: 'loadingWallets', value: false } });
-      dispatch({ type: 'setValue', payload: { key: 'isAccountWalletsStale', value: false } });
-      dispatch({ type: 'setValue', payload: { key: 'displayedError', value: '' } });
+      setStateValue('loadingWallets', false);
+      setStateValue('isAccountWalletsStale', false);
+      setStateValue('displayedError', '');
+
       reloadAccountBalances(wallets.map(w => w.address));
 
       return wallets;
@@ -275,7 +290,7 @@ function WalletProvider({
       handleError(e);
     }
 
-    dispatch({ type: 'setValue', payload: { key: 'loadingWallets', value: false } });
+    setStateValue('loadingWallets', false);
   }
 
   async function reloadAccountBalances(addresses?: string[]) {
@@ -309,7 +324,7 @@ function WalletProvider({
         }
       });
 
-      dispatch({ type: 'setValue', payload: { key: 'accountWallets', value: updatedWallets } });
+      setStateValue('accountWallets', updatedWallets);
 
       return true;
     } catch (e) {
@@ -351,13 +366,10 @@ function WalletProvider({
         msg !== 'Request rejected by user' &&
         e?.code !== 4001
       ) {
-        dispatch({
-          type: 'setValue',
-          payload: { key: 'displayedError', value: msg },
-        });
+        setStateValue('displayedError', msg);
       }
     } else {
-      dispatch({ type: 'setValue', payload: { key: 'displayedError', value: '' } });
+      setStateValue('displayedError', '');
     }
 
     return msg;
@@ -382,9 +394,9 @@ function WalletProvider({
         setWallet,
         loadAccountWallets,
         reloadAccountBalances,
-        setScreen: (s: WalletScreens) =>
-          dispatch({ type: 'setValue', payload: { key: 'walletScreen', value: s } }),
+        setScreen: (s: WalletScreens) => setStateValue('walletScreen', s),
         handleError,
+        setStateValue,
       }}
     >
       {children}

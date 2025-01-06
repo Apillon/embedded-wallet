@@ -1,19 +1,18 @@
 import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react';
 import { WalletProvider, useWalletContext } from '../contexts/wallet.context';
 import { ReactNode, useEffect, useRef, useState } from 'react';
-import WalletAuth from './WalletAuth';
 import WalletMain from './WalletMain';
 import { ethers } from 'ethers';
 import WalletApprove, { DisplayedContractParams } from './WalletApprove';
 import { AppParams, Events, UserRejectedRequestError } from '@apillon/wallet-sdk';
 import { TransactionsProvider, useTransactionsContext } from '../contexts/transactions.context';
 import Btn from './Btn';
-import Logo from './Logo';
 import WalletChainChange from './WalletChainChange';
 import clsx from 'clsx';
-import WalletNetworkWidget from './WalletNetworkWidget';
 import IconCheckCircle from './IconCheckCircle';
 import WalletLoad from './WalletLoad';
+import { AuthProvider } from '../contexts/auth.context';
+import Auth from './Auth/Auth';
 
 export type AppProps = {
   /**
@@ -36,12 +35,7 @@ export type AppProps = {
 
 const MODAL_TRANSITION_TIME = 200;
 
-function Wallet({
-  broadcastAfterSign = false,
-  disableDefaultActivatorStyle = false,
-  passkeyAuthMode = 'redirect',
-  ...restOfProps
-}: AppProps) {
+function Wallet({ broadcastAfterSign = false, disableDefaultActivatorStyle = false }: AppProps) {
   const {
     state,
     wallet,
@@ -277,22 +271,6 @@ function Wallet({
     );
   }
 
-  function redirectToGateway(username?: string) {
-    const gatewayUrl = import.meta.env.VITE_XDOMAIN_PASSKEY_SRC ?? 'https://passkey.apillon.io';
-
-    if (!loggedIn && gatewayUrl) {
-      window.location.href = `${gatewayUrl}?${[
-        `ref=${encodeURIComponent(window.location.origin + window.location.pathname)}`,
-        `clientId=${restOfProps.clientId || wallet?.apillonClientId || ''}`,
-        `username=${encodeURIComponent(username || '')}`,
-      ].join('&')}`;
-
-      return true;
-    }
-
-    return false;
-  }
-
   let modalContent = <></>;
 
   if (!loggedIn) {
@@ -300,15 +278,9 @@ function Wallet({
      * Login/register
      */
     modalContent = (
-      <WalletAuth
-        {...restOfProps}
-        passkeyAuthMode={passkeyAuthMode}
-        onGatewayRedirect={
-          ['redirect', 'tab_form'].includes(passkeyAuthMode)
-            ? (u?: string) => redirectToGateway(u)
-            : undefined
-        }
-      />
+      <AuthProvider>
+        <Auth />
+      </AuthProvider>
     );
   } else if (approvedData.title) {
     /**
@@ -438,7 +410,7 @@ function Wallet({
     <div>
       <Modal isOpen={isModalOpen} setIsOpen={setIsModalOpen}>
         <>
-          <div
+          {/* <div
             className={clsx([
               'sm:mb-8 mb-12',
               !loggedIn ? 'text-center' : 'flex justify-between items-center',
@@ -457,7 +429,7 @@ function Wallet({
             </div>
 
             {!!loggedIn && <WalletNetworkWidget />}
-          </div>
+          </div> */}
 
           {/* Change chain content is rendered in addition to other content -- to preserve last state */}
           {targetChain.chainId > 0 && (
@@ -622,10 +594,24 @@ function Modal({
 }
 
 export default function WalletWidget(props: AppProps) {
+  let props2 = { ...props } as AppProps;
+
+  if (!props2) {
+    props2 = { clientId: '' };
+  }
+
+  if (!props2.passkeyAuthMode) {
+    props2.passkeyAuthMode = 'redirect';
+  }
+
+  if (!props2.authFormPlaceholder) {
+    props2.authFormPlaceholder = 'your e-mail';
+  }
+
   return (
-    <WalletProvider {...props}>
+    <WalletProvider {...props2}>
       <TransactionsProvider>
-        <Wallet {...props} />
+        <Wallet {...props2} />
       </TransactionsProvider>
     </WalletProvider>
   );
