@@ -1,9 +1,9 @@
 import clsx from 'clsx';
-import IconEthereum from './IconEthereum';
-import IconCopy from './IconCopy';
-import { useWalletContext } from '../contexts/wallet.context';
-import useCopyToClipboard from '../hooks/useCopyToClipboard';
-import IconCheckSmall from './IconCheckSmall';
+import { useWalletContext } from '../../contexts/wallet.context';
+import useCopyToClipboard from '../../hooks/useCopyToClipboard';
+import IconEthereum from '../ui/IconEthereum';
+import IconCopy from '../ui/IconCopy';
+import IconCheckSmall from '../ui/IconCheckSmall';
 
 export default function WalletNetworkWidget() {
   const { state, activeWallet, networksById, setScreen } = useWalletContext();

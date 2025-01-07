@@ -1,7 +1,7 @@
 import clsx from 'clsx';
-import { useWalletContext } from '../contexts/wallet.context';
-import { shortHash } from '../lib/helpers';
-import Btn from './Btn';
+import { useWalletContext } from '../../contexts/wallet.context';
+import { shortHash } from '../../lib/helpers';
+import Btn from '../ui/Btn';
 import { useEffect } from 'react';
 
 export default function WalletAccounts() {

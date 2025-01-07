@@ -1,6 +1,6 @@
 import { useAuthContext } from '../../contexts/auth.context';
-import Btn from '../Btn';
-import Spinner from '../Spinner';
+import Btn from '../ui/Btn';
+import Spinner from '../ui/Spinner';
 import AuthTitle from './AuthTitle';
 
 export default () => {

@@ -1,5 +1,5 @@
-import { useWalletContext } from '../contexts/wallet.context';
-import Btn from './Btn';
+import { useWalletContext } from '../../contexts/wallet.context';
+import Btn from '../ui/Btn';
 
 export default function WalletNetworkSelect() {
   const { state, dispatch, networks, wallet, setScreen } = useWalletContext();

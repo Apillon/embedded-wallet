@@ -1,10 +1,10 @@
 import { TransactionItem } from '@apillon/wallet-sdk';
-import { useTransactionsContext } from '../contexts/transactions.context';
-import { useWalletContext } from '../contexts/wallet.context';
-import { shortHash } from '../lib/helpers';
 import clsx from 'clsx';
-import useCopyToClipboard from '../hooks/useCopyToClipboard';
-import IconCopy from './IconCopy';
+import { useTransactionsContext } from '../../contexts/transactions.context';
+import { useWalletContext } from '../../contexts/wallet.context';
+import { shortHash } from '../../lib/helpers';
+import useCopyToClipboard from '../../hooks/useCopyToClipboard';
+import IconCopy from '../ui/IconCopy';
 
 export default function WalletTransactions({ className }: { className?: string }) {
   const { activeWallet } = useWalletContext();

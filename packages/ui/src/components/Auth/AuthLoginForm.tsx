@@ -1,7 +1,7 @@
 import { useAuthContext } from '../../contexts/auth.context';
 import { useWalletContext } from '../../contexts/wallet.context';
-import Btn from '../Btn';
-import Input from '../Input';
+import Btn from '../ui/Btn';
+import Input from '../ui/Input';
 import AuthTitle from './AuthTitle';
 
 export default () => {

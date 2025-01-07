@@ -1,9 +1,9 @@
 import { AccountWalletTypes, WalletType } from '@apillon/wallet-sdk';
 import clsx from 'clsx';
 import { useState } from 'react';
-import Btn from './Btn';
-import { useWalletContext } from '../contexts/wallet.context';
-import Input from './Input';
+import Btn from '../ui/Btn';
+import { useWalletContext } from '../../contexts/wallet.context';
+import Input from '../ui/Input';
 
 const walletTypeOptions = [
   {

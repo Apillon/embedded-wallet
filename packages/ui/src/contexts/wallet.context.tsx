@@ -47,6 +47,8 @@ const initialState = (defaultNetworkId = 0, appProps: AppProps) => ({
   authStrategy: 'passkey' as AuthStrategyName,
   networkId: defaultNetworkId,
   walletScreen: 'main' as WalletScreens,
+  walletScreenHistory: [] as WalletScreens[],
+  isOpen: false, // is wallet modal displayed
   displayedError: '',
   appProps,
   loadingWallets: false,
@@ -71,11 +73,26 @@ type ContextActions =
 
 function reducer(state: ContextState, action: ContextActions) {
   switch (action.type) {
-    case 'setValue':
+    case 'setValue': {
+      const walletScreenHistory = [...state.walletScreenHistory];
+
+      if (action.payload.key === 'walletScreen') {
+        if (
+          walletScreenHistory.length > 1 &&
+          walletScreenHistory[walletScreenHistory.length - 2] === action.payload.value
+        ) {
+          walletScreenHistory.pop();
+        } else {
+          walletScreenHistory.push(action.payload.value);
+        }
+      }
+
       return {
         ...state,
+        walletScreenHistory,
         [action.payload.key]: action.payload.value,
       };
+    }
     case 'setState':
       return {
         ...state,

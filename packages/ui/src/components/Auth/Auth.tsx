@@ -1,6 +1,6 @@
 import AuthLoginForm from './AuthLoginForm';
-import Logo from '../Logo';
-import WalletError from '../WalletError';
+import Logo from '../ui/Logo';
+import WalletError from '../ui/Error';
 import { useAuthContext } from '../../contexts/auth.context';
 
 export default ({ className }: { className?: string }) => {

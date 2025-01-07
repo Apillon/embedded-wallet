@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react';
-import { TokenInfo, useTokensContext } from '../contexts/tokens.context';
-import { useWalletContext } from '../contexts/wallet.context';
-import Btn from './Btn';
-import { ERC20Abi } from '@apillon/wallet-sdk';
 import { ethers } from 'ethers';
+import { ERC20Abi } from '@apillon/wallet-sdk';
+import { TokenInfo, useTokensContext } from '../../contexts/tokens.context';
+import { useWalletContext } from '../../contexts/wallet.context';
+import useCopyToClipboard from '../../hooks/useCopyToClipboard';
+import Btn from '../ui/Btn';
+import Input from '../ui/Input';
 // @ts-ignore
 import { QRCode } from 'react-qr-code';
-import useCopyToClipboard from '../hooks/useCopyToClipboard';
-import Input from './Input';
 
 export default function WalletTokens() {
   const { state, networksById, activeWallet, setScreen, wallet, handleError } = useWalletContext();

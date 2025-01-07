@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useWalletContext } from '../contexts/wallet.context';
-import Btn from './Btn';
-import Input from './Input';
+import { useWalletContext } from '../../contexts/wallet.context';
+import Btn from '../ui/Btn';
+import Input from '../ui/Input';
 
 export default function AccountsRename() {
   const {

@@ -1,7 +1,7 @@
 import clsx from 'clsx';
-import { useWalletContext } from '../contexts/wallet.context';
+import { useWalletContext } from '../../contexts/wallet.context';
 
-export default function WalletError({
+export default function Error({
   text,
   show,
   className,

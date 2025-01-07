@@ -1,8 +1,8 @@
-import Btn from './Btn';
-import Spinner from './Spinner';
-import { useWalletContext } from '../contexts/wallet.context';
+import Btn from '../ui/Btn';
+import Spinner from '../ui/Spinner';
+import { useWalletContext } from '../../contexts/wallet.context';
 
-export default function WalletLoad() {
+export default () => {
   const { loadAccountWallets, state, dispatch, setScreen, wallet } = useWalletContext();
 
   return (
@@ -48,4 +48,4 @@ export default function WalletLoad() {
       </Btn>
     </div>
   );
-}
+};

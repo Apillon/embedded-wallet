@@ -1,6 +1,6 @@
-import { useWalletContext } from '../contexts/wallet.context';
-import Btn from './Btn';
-import Spinner from './Spinner';
+import { useWalletContext } from '../../contexts/wallet.context';
+import Btn from '../ui/Btn';
+import Spinner from '../ui/Spinner';
 
 export default function AccountsReload() {
   const { loadAccountWallets, state } = useWalletContext();

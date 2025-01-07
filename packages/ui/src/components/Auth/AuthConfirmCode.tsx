@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import IconBird from '../IconBird';
+import IconBird from '../ui/IconBird';
+import Btn from '../ui/Btn';
 import AuthTitle from './AuthTitle';
 import { useAuthContext } from '../../contexts/auth.context';
-import Btn from '../Btn';
 import { useWalletContext } from '../../contexts/wallet.context';
 
 export default () => {

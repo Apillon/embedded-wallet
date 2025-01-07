@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { useWalletContext } from '../contexts/wallet.context';
-import Btn from './Btn';
-import useCopyToClipboard from '../hooks/useCopyToClipboard';
-import Input from './Input';
+import { useWalletContext } from '../../contexts/wallet.context';
+import Btn from '../ui/Btn';
+import Input from '../ui/Input';
+import useCopyToClipboard from '../../hooks/useCopyToClipboard';
 
-export default function WalletPKExport() {
+export default () => {
   const { state, dispatch, wallet, setScreen, activeWallet } = useWalletContext();
   const { text: copyText, onCopy } = useCopyToClipboard();
 
@@ -64,4 +64,4 @@ export default function WalletPKExport() {
       </Btn>
     </div>
   );
-}
+};

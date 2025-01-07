@@ -1,18 +1,13 @@
-import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react';
 import { WalletProvider, useWalletContext } from '../contexts/wallet.context';
-import { ReactNode, useEffect, useRef, useState } from 'react';
-import WalletMain from './WalletMain';
-import { ethers } from 'ethers';
-import WalletApprove, { DisplayedContractParams } from './WalletApprove';
+import { useEffect } from 'react';
 import { AppParams, Events, UserRejectedRequestError } from '@apillon/wallet-sdk';
-import { TransactionsProvider, useTransactionsContext } from '../contexts/transactions.context';
-import Btn from './Btn';
-import WalletChainChange from './WalletChainChange';
-import clsx from 'clsx';
-import IconCheckCircle from './IconCheckCircle';
-import WalletLoad from './WalletLoad';
+import { TransactionsProvider } from '../contexts/transactions.context';
 import { AuthProvider } from '../contexts/auth.context';
 import Auth from './Auth/Auth';
+import Modal, { MODAL_TRANSITION_TIME } from './ui/Modal';
+import { ApproveProvider, useApproveContext } from '../contexts/approve.context';
+import WalletLayout from './Wallet/WalletLayout';
+import WalletUnavailable from './Wallet/WalletUnavailable';
 
 export type AppProps = {
   /**
@@ -33,107 +28,42 @@ export type AppProps = {
   authFormPlaceholder?: string;
 } & AppParams;
 
-const MODAL_TRANSITION_TIME = 200;
-
-function Wallet({ broadcastAfterSign = false, disableDefaultActivatorStyle = false }: AppProps) {
+function Main({ disableDefaultActivatorStyle = false }: AppProps) {
   const {
     state,
     wallet,
-    setScreen,
-    handleError,
     loadAccountWallets,
     reloadAccountBalances,
     dispatch,
     defaultNetworkId,
+    setStateValue: setForWallet,
   } = useWalletContext();
-  const { dispatch: dispatchTx } = useTransactionsContext();
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [txToConfirm, setTxToConfirm] = useState<ethers.TransactionLike<ethers.AddressLike>>();
-  const [contractFunctionData, setContractFunctionData] = useState<DisplayedContractParams>();
-  const [messageToSign, setMessageToSign] = useState('');
-  const [approvedData, setApprovedData] = useState({
-    title: '',
-    txHash: '',
-    explorerUrl: '',
-  });
-  const [targetChain, setTargetChain] = useState({
-    chainId: 0,
-    modalWasOpen: false, // was the wallet modal open when chainChange was triggered?
-    resolve: (_confirmed: boolean) => {},
-  }); // Open switch chain modal if > 0
-
-  const approveParams =
-    useRef<Partial<Events['txApprove'] & { signature: Events['signatureRequest'] }>>();
+  const { state: approveState, dispatch: dispatchApprove } = useApproveContext();
 
   const loggedIn = !!state.username;
   const hasWallets = !!state.accountWallets.length;
 
   /**
    * Handle wallet SDK Events
+   * and auto login if redirected from gateway
    */
   useEffect(() => {
-    const onTxApproveEvent = (params: Events['txApprove']) => {
-      if (params.plain) {
-        setTxToConfirm(params.plain?.tx);
-        approveParams.current = params;
-        setIsModalOpen(true);
-      } else if (params.contractWrite) {
-        setContractFunctionData({
-          chainId: params.contractWrite.chainId,
-          contractAddress: params.contractWrite.contractAddress,
-          contractFunctionName: params.contractWrite.contractFunctionName,
-          contractFunctionValues: params.contractWrite.contractFunctionValues,
-        });
-        approveParams.current = params;
-        setIsModalOpen(true);
-      }
-    };
-
-    const onSignatureRequestEvent = (params: Events['signatureRequest']) => {
-      setMessageToSign(params.message as string);
-      approveParams.current = { signature: params };
-      setIsModalOpen(true);
-    };
-
-    const onTxSubmittedEvent = async (params: Events['txSubmitted']) => {
-      dispatchTx({ type: 'addTx', payload: params });
-
-      await new Promise(resolve => setTimeout(resolve, MODAL_TRANSITION_TIME * 2));
-
-      setApprovedData({
-        title: 'Successfully sent',
-        txHash: params.hash,
-        explorerUrl: params.explorerUrl,
-      });
-
-      setIsModalOpen(true);
-    };
-
-    const onProviderRequestAccounts = () => {
-      setIsModalOpen(true);
+    const onOpen = (params: Events['open']) => {
+      setForWallet('isOpen', params);
     };
 
     const onDataUpdated = (params: Events['dataUpdated']) => {
       if (params.name === 'defaultNetworkId') {
         reloadAccountBalances();
-        dispatch({ type: 'setValue', payload: { key: 'networkId', value: params.newValue } });
+        setForWallet('networkId', params.newValue);
       } else if (params.name === 'contractAddress') {
-        dispatch({ type: 'setValue', payload: { key: 'contractAddress', value: params.newValue } });
+        setForWallet('contractAddress', params.newValue);
       }
     };
 
-    const onOpen = (params: Events['open']) => {
-      setIsModalOpen(params);
-    };
-
     if (wallet) {
-      wallet.events.on('txApprove', onTxApproveEvent);
-      wallet.events.on('signatureRequest', onSignatureRequestEvent);
-      wallet.events.on('txSubmitted', onTxSubmittedEvent);
-      wallet.events.on('providerRequestAccounts', onProviderRequestAccounts);
-      wallet.events.on('dataUpdated', onDataUpdated);
       wallet.events.on('open', onOpen);
+      wallet.events.on('dataUpdated', onDataUpdated);
 
       // Login if account params are in the URL (redirected back from auth gateway)
       if (window.location.search) {
@@ -165,431 +95,101 @@ function Wallet({ broadcastAfterSign = false, disableDefaultActivatorStyle = fal
 
     return () => {
       if (wallet) {
-        wallet.events.off('txApprove', onTxApproveEvent);
-        wallet.events.off('signatureRequest', onSignatureRequestEvent);
-        wallet.events.off('txSubmitted', onTxSubmittedEvent);
-        wallet.events.off('providerRequestAccounts', onProviderRequestAccounts);
-        wallet.events.off('dataUpdated', onDataUpdated);
         wallet.events.off('open', onOpen);
+        wallet.events.off('dataUpdated', onDataUpdated);
       }
     };
   }, [wallet]);
 
   /**
-   * Handle requestChainChange separately because of extra dependency
-   */
-  useEffect(() => {
-    const onRequestChainChange = (params: Events['requestChainChange']) => {
-      setTargetChain({ ...params, modalWasOpen: isModalOpen });
-      setIsModalOpen(true);
-    };
-
-    if (wallet) {
-      wallet.events.on('requestChainChange', onRequestChainChange);
-    }
-
-    return () => {
-      if (wallet) {
-        wallet.events.off('requestChainChange', onRequestChainChange);
-      }
-    };
-  }, [wallet, isModalOpen]);
-
-  /**
    * On modal close:
-   * - reset approve screen
    * - reset chainChange data (targetChain)
-   * - reset account login resolver
-   * - set <WalletMain /> screen back to main
+   * - reset approve screen data
    * - reset displayed error
+   * - set screen back to main
+   * - reset account login resolver
    */
   useEffect(() => {
-    if (!isModalOpen) {
-      if (!!txToConfirm || !!messageToSign || !!contractFunctionData) {
-        closeApproveScreen();
-      }
-
+    if (!state.isOpen) {
       setTimeout(() => {
-        if (targetChain.chainId !== state.networkId && targetChain.resolve) {
-          targetChain.resolve(false);
+        // Reject pending approve promises
+        if (
+          approveState.targetChain?.chainId !== state.networkId &&
+          approveState.targetChain?.resolve
+        ) {
+          approveState.targetChain.resolve(false);
         }
 
-        setTargetChain(t => ({
-          ...t,
-          modalWasOpen: false,
-          chainId: 0,
-        }));
+        if (!approveState.successInfo?.title) {
+          if (approveState.approveParams?.contractWrite?.reject) {
+            approveState.approveParams.contractWrite.reject(new UserRejectedRequestError());
+          } else if (approveState.approveParams?.plain?.reject) {
+            approveState.approveParams.plain.reject(new UserRejectedRequestError());
+          } else if (approveState.approveParams?.signature?.reject) {
+            approveState.approveParams.signature.reject(new UserRejectedRequestError());
+          }
+        }
 
-        dispatch({ type: 'setValue', payload: { key: 'displayedError', value: '' } });
+        // Reset approve state
+        dispatchApprove({ type: 'reset' });
+
+        // Reset error
+        setForWallet('displayedError', '');
+
+        // Reset screen state
+        setForWallet('walletScreen', 'main');
+        setForWallet('walletScreenHistory', []);
       }, MODAL_TRANSITION_TIME);
 
-      if (state.walletScreen !== 'main') {
-        // Wait for modal transition
-        setTimeout(() => {
-          setScreen('main');
-        }, MODAL_TRANSITION_TIME);
-      }
-
+      // Reset account login resolver
       if (wallet && wallet.waitForAccountResolver) {
         wallet.waitForAccountResolver('');
         wallet.waitForAccountResolver = null;
       }
     } else {
+      setForWallet('walletScreenHistory', ['main']);
+
       // Reload balance on widget open
       reloadAccountBalances();
     }
-  }, [isModalOpen]);
+  }, [state.isOpen]);
 
-  function closeApproveScreen(isSuccess = false, closeModal = true) {
-    if (closeModal) {
-      setIsModalOpen(false);
-    }
-
-    // Wait for modal transition
-    setTimeout(
-      () => {
-        setTxToConfirm(undefined);
-        setContractFunctionData(undefined);
-        setMessageToSign('');
-        setApprovedData({
-          title: '',
-          txHash: '',
-          explorerUrl: '',
-        });
-
-        if (!isSuccess) {
-          if (approveParams.current?.contractWrite?.reject) {
-            approveParams.current.contractWrite.reject(new UserRejectedRequestError());
-          } else if (approveParams.current?.plain?.reject) {
-            approveParams.current.plain.reject(new UserRejectedRequestError());
-          } else if (approveParams.current?.signature?.reject) {
-            approveParams.current.signature.reject(new UserRejectedRequestError());
-          }
-        }
-      },
-      closeModal ? MODAL_TRANSITION_TIME : 0
-    );
-  }
-
-  let modalContent = <></>;
-
-  if (!loggedIn) {
+  function content() {
     /**
      * Login/register
      */
-    modalContent = (
-      <AuthProvider>
-        <Auth />
-      </AuthProvider>
-    );
-  } else if (approvedData.title) {
-    /**
-     * Transaction submitted to network
-     */
-    modalContent = (
-      <div>
-        <h3 className="mb-4 flex gap-4">
-          <IconCheckCircle />
-          {approvedData.title}
-        </h3>
+    if (!loggedIn) {
+      return (
+        <AuthProvider>
+          <Auth />
+        </AuthProvider>
+      );
+    }
 
-        {!!approvedData.txHash && (
-          <p className="break-words text-sm text-lightgrey mb-4">
-            Transaction has been completed with the following hash:{' '}
-            <span className="text-offwhite">{approvedData.txHash}</span>
-          </p>
-        )}
-
-        {!!approvedData.explorerUrl && (
-          <p className="text-sm mb-4">
-            <a
-              href={approvedData.explorerUrl}
-              target="_blank"
-              className="text-yellow hover:text-offwhite"
-            >
-              View on blockchain explorer
-            </a>
-          </p>
-        )}
-
-        <Btn variant="ghost" className="w-full mt-12" onClick={() => closeApproveScreen(true)}>
-          Close
-        </Btn>
-      </div>
-    );
-  } else if (!!txToConfirm || !!messageToSign || !!contractFunctionData) {
-    /**
-     * Approve tx (authenticate w/ passkey e.g.)
-     */
-    modalContent = (
-      <WalletApprove
-        tx={txToConfirm}
-        signMessage={messageToSign}
-        contractFunctionData={contractFunctionData}
-        onApprove={async () => {
-          if (approveParams.current) {
-            try {
-              handleError();
-
-              if (approveParams.current.signature) {
-                await wallet?.signMessage({
-                  ...approveParams.current.signature,
-                  authData: { username: state.username },
-                });
-
-                closeApproveScreen(true);
-              } else if (approveParams.current.plain) {
-                const res = await wallet?.signPlainTransaction({
-                  ...approveParams.current.plain,
-                  authData: { username: state.username },
-                });
-
-                if (broadcastAfterSign && res) {
-                  const { signedTxData, chainId } = res;
-                  await wallet?.broadcastTransaction(
-                    signedTxData,
-                    chainId,
-                    approveParams.current.plain.label || 'Transaction'
-                  );
-                } else {
-                  closeApproveScreen(true, false);
-                }
-              } else if (approveParams.current.contractWrite) {
-                const res = await wallet?.signContractWrite({
-                  ...approveParams.current.contractWrite,
-                  authData: { username: state.username },
-                });
-
-                if (broadcastAfterSign && res) {
-                  const { signedTxData, chainId } = res;
-                  await wallet?.broadcastTransaction(
-                    signedTxData,
-                    chainId,
-                    approveParams.current.contractWrite.label || 'Transaction'
-                  );
-                } else {
-                  closeApproveScreen(true, false);
-                }
-              }
-            } catch (e) {
-              const errMsg = handleError(e);
-
-              // Transaction was already broadcast
-              if (errMsg === 'already known') {
-                closeApproveScreen(true);
-              }
-            }
-          }
-        }}
-        onDecline={() => {
-          closeApproveScreen();
-
-          if (approveParams.current?.contractWrite?.reject) {
-            approveParams.current.contractWrite.reject(new UserRejectedRequestError());
-          } else if (approveParams.current?.plain?.reject) {
-            approveParams.current.plain.reject(new UserRejectedRequestError());
-          } else if (approveParams.current?.signature?.reject) {
-            approveParams.current.signature.reject(new UserRejectedRequestError());
-          }
-        }}
-      />
-    );
-  } else if (!hasWallets) {
     /**
      * Must load wallets (authenticate again)
      */
-    modalContent = <WalletLoad />;
-  } else {
-    /**
-     * Default UI
-     */
-    modalContent = <WalletMain />;
+    if (!hasWallets) {
+      return <WalletUnavailable />;
+    }
+
+    return <WalletLayout />;
   }
 
   return (
     <div>
-      <Modal isOpen={isModalOpen} setIsOpen={setIsModalOpen}>
-        <>
-          {/* <div
-            className={clsx([
-              'sm:mb-8 mb-12',
-              !loggedIn ? 'text-center' : 'flex justify-between items-center',
-            ])}
-          >
-            <div className="shrink-0">
-              <button
-                className="flex oaw-button-plain"
-                onClick={() => {
-                  setScreen('main');
-                  closeApproveScreen(false, false);
-                }}
-              >
-                <Logo />
-              </button>
-            </div>
-
-            {!!loggedIn && <WalletNetworkWidget />}
-          </div> */}
-
-          {/* Change chain content is rendered in addition to other content -- to preserve last state */}
-          {targetChain.chainId > 0 && (
-            <div>
-              <WalletChainChange
-                chainId={targetChain.chainId}
-                onSuccess={() => {
-                  targetChain.resolve(true);
-                  dispatch({
-                    type: 'setValue',
-                    payload: { key: 'networkId', value: targetChain.chainId },
-                  });
-
-                  if (
-                    targetChain.modalWasOpen ||
-                    !!txToConfirm ||
-                    !!messageToSign ||
-                    !!contractFunctionData
-                  ) {
-                    setTargetChain(t => ({
-                      ...t,
-                      modalWasOpen: false,
-                      chainId: 0,
-                    }));
-                  } else {
-                    setIsModalOpen(false);
-                  }
-                }}
-                onDecline={() => {
-                  targetChain.resolve(false);
-
-                  if (!targetChain.modalWasOpen) {
-                    setIsModalOpen(false);
-                  } else {
-                    setTargetChain(t => ({
-                      ...t,
-                      modalWasOpen: false,
-                      chainId: 0,
-                    }));
-                  }
-                }}
-              />
-            </div>
-          )}
-
-          <div className={clsx({ hidden: targetChain.chainId > 0 })}>{modalContent}</div>
-        </>
+      <Modal isOpen={state.isOpen} setIsOpen={v => setForWallet('isOpen', v)}>
+        {content()}
       </Modal>
 
       <button
         id="oaw-wallet-widget-btn"
         className={!disableDefaultActivatorStyle ? 'oaw-btn-default-style' : undefined}
-        onClick={() => setIsModalOpen(true)}
+        onClick={() => setForWallet('isOpen', true)}
       >
-        {state.loadingWallets ? (
-          <span>&hellip;</span>
-        ) : // <span
-        //   style={{
-        //     position: 'absolute',
-        //     top: '50%',
-        //     left: '50%',
-        //     transform: 'translate(-50%, -50%)',
-        //     marginTop: '1px',
-        //   }}
-        // >
-        //   <Spinner />
-        // </span>
-        loggedIn ? (
-          'Open wallet'
-        ) : (
-          'Sign in'
-        )}
+        {state.loadingWallets ? <span>&hellip;</span> : loggedIn ? 'Open wallet' : 'Sign in'}
       </button>
     </div>
-  );
-}
-
-function Modal({
-  children,
-  isOpen,
-  setIsOpen,
-}: {
-  children: ReactNode;
-  isOpen: boolean;
-  setIsOpen: (to: boolean) => void;
-}) {
-  return (
-    <>
-      <Transition show={isOpen}>
-        <Dialog
-          id="oaw-wallet-widget"
-          open={isOpen}
-          style={{
-            position: 'relative',
-            zIndex: '10001',
-          }}
-          onClose={() => setIsOpen(false)}
-        >
-          <TransitionChild
-            enter="ease-out duration-300"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <div className="fixed inset-0 bg-black/50" aria-hidden="true" />
-          </TransitionChild>
-
-          <TransitionChild
-            enter="ease-out duration-300"
-            enterFrom="opacity-0 scale-95"
-            enterTo="opacity-100 scale-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100 scale-100"
-            leaveTo="opacity-0 scale-95"
-          >
-            <div className="fixed inset-0 w-screen overflow-y-auto p-4">
-              <div className="flex items-center justify-center min-h-full">
-                <DialogPanel className="relative max-w-[440px] w-full min-h-[476px] bg-dark p-8 sm:p-12 border border-brightdark text-offwhite flex flex-col">
-                  <button
-                    className="flex absolute top-2 right-2 oaw-button-plain"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <svg
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        clipRule="evenodd"
-                        d="M12 10.6569L6.34317 5L4.92896 6.41421L10.5858 12.0711L4.92898 17.7279L6.3432 19.1421L12 13.4853L17.6569 19.1421L19.0711 17.7279L13.4143 12.0711L19.0711 6.41421L17.6569 5L12 10.6569Z"
-                        fill="#9C9C95"
-                      />
-                    </svg>
-                  </button>
-
-                  {children}
-
-                  <div className="flex-grow"></div>
-
-                  <p className="text-xs mt-6 text-center">
-                    <a
-                      href="https://apillon.io/"
-                      target="_blank"
-                      className="rounded-sm opacity-100 hover:opacity-80"
-                    >
-                      Powered by ©Apillon
-                    </a>
-                  </p>
-                </DialogPanel>
-              </div>
-            </div>
-          </TransitionChild>
-        </Dialog>
-      </Transition>
-    </>
   );
 }
 
@@ -611,7 +211,9 @@ export default function WalletWidget(props: AppProps) {
   return (
     <WalletProvider {...props2}>
       <TransactionsProvider>
-        <Wallet {...props2} />
+        <ApproveProvider>
+          <Main {...props2} />
+        </ApproveProvider>
       </TransactionsProvider>
     </WalletProvider>
   );

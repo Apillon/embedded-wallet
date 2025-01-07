@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import Select from './Select';
-import Input from './Input';
-import Btn from './Btn';
-import { useWalletContext } from '../contexts/wallet.context';
+import Select from '../ui/Select';
+import Input from '../ui/Input';
+import Btn from '../ui/Btn';
+import { useWalletContext } from '../../contexts/wallet.context';
 
 export default function AccountsImport() {
   const { wallet, setScreen, handleError } = useWalletContext();
