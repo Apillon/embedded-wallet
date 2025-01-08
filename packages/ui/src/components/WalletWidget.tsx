@@ -41,7 +41,6 @@ function Main({ disableDefaultActivatorStyle = false }: AppProps) {
   const { state: approveState, dispatch: dispatchApprove } = useApproveContext();
 
   const loggedIn = !!state.username;
-  const hasWallets = !!state.accountWallets.length;
 
   /**
    * Handle wallet SDK Events
@@ -169,7 +168,7 @@ function Main({ disableDefaultActivatorStyle = false }: AppProps) {
     /**
      * Must load wallets (authenticate again)
      */
-    if (!hasWallets) {
+    if (!state.accountWallets.length) {
       return <WalletUnavailable />;
     }
 
@@ -178,7 +177,7 @@ function Main({ disableDefaultActivatorStyle = false }: AppProps) {
 
   return (
     <div>
-      <Modal isOpen={state.isOpen} setIsOpen={v => setForWallet('isOpen', v)}>
+      <Modal isOpen={state.isOpen} isAuth={!loggedIn} setIsOpen={v => setForWallet('isOpen', v)}>
         {content()}
       </Modal>
 

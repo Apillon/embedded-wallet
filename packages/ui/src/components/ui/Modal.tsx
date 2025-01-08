@@ -1,15 +1,18 @@
 import { ReactNode } from 'react';
 import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react';
+import clsx from 'clsx';
 
 export const MODAL_TRANSITION_TIME = 200;
 
 export default ({
   children,
   isOpen,
+  isAuth = false,
   setIsOpen,
 }: {
   children: ReactNode;
   isOpen: boolean;
+  isAuth?: boolean;
   setIsOpen: (to: boolean) => void;
 }) => (
   <>
@@ -44,7 +47,12 @@ export default ({
         >
           <div className="fixed inset-0 w-screen overflow-y-auto p-4">
             <div className="flex items-center justify-center min-h-full">
-              <DialogPanel className="relative max-w-[440px] w-full min-h-[476px] bg-dark p-8 sm:p-12 border border-brightdark text-offwhite flex flex-col">
+              <DialogPanel
+                className={clsx(
+                  'relative min-w-[400px] w-full min-h-[380px] bg-dark border border-brightdark text-offwhite flex flex-col',
+                  isAuth ? 'max-w-[445px]' : 'max-w-[400px]'
+                )}
+              >
                 <button
                   className="flex absolute top-2 right-2 oaw-button-plain"
                   onClick={() => setIsOpen(false)}
@@ -69,7 +77,7 @@ export default ({
 
                 <div className="flex-grow"></div>
 
-                <p className="text-xs mt-6 text-center">
+                <p className={clsx('text-xs px-8 text-center', isAuth ? 'pb-8 sm:pb-12' : 'pb-6')}>
                   <a
                     href="https://apillon.io/"
                     target="_blank"

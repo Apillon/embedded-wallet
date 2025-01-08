@@ -2,6 +2,10 @@ import AuthLoginForm from './AuthLoginForm';
 import Logo from '../ui/Logo';
 import WalletError from '../ui/Error';
 import { useAuthContext } from '../../contexts/auth.context';
+import AuthConfiguringPasskey from './AuthConfiguringPasskey';
+import AuthConfirmCode from './AuthConfirmCode';
+import AuthCodeSubmitted from './AuthCodeSubmitted';
+import clsx from 'clsx';
 
 export default ({ className }: { className?: string }) => {
   const {
@@ -9,19 +13,25 @@ export default ({ className }: { className?: string }) => {
   } = useAuthContext();
 
   function currentScreen() {
-    if (screen === 'configuringPasskey') {
-      return <AuthLoginForm />;
+    switch (screen) {
+      case 'confirmCode':
+        return <AuthConfirmCode />;
+      case 'codeSubmitted':
+        return <AuthCodeSubmitted />;
+      case 'configuringPasskey':
+        return <AuthConfiguringPasskey />;
+      case 'loginForm':
+      default:
+        return <AuthLoginForm />;
     }
-    return <AuthLoginForm />;
   }
 
   return (
-    <div className={className}>
+    <div className={clsx('p-8 sm:p-12', className)}>
       <div className="text-center mb-12">
-        <Logo />
+        <Logo className="inline-block" />
       </div>
 
-      {/* 'loginForm' | 'confirmCode' | 'codeSubmitted' | 'configuringPasskey' */}
       {currentScreen()}
 
       <WalletError show className="mt-6" />

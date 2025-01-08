@@ -1,6 +1,6 @@
 import { useAuthContext } from '../../contexts/auth.context';
 import Btn from '../ui/Btn';
-import Spinner from '../ui/Spinner';
+import Loader from '../ui/Loader';
 import AuthTitle from './AuthTitle';
 
 export default () => {
@@ -15,7 +15,7 @@ export default () => {
       <AuthTitle
         title="Configuring passkey"
         description="Please complete the passkey configuration with your browser."
-        header={loading ? <Spinner size={56} className="mx-auto" /> : <></>}
+        header={loading ? <Loader size={56} /> : <></>}
       />
 
       <Btn

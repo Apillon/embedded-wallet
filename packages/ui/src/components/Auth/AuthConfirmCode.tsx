@@ -16,6 +16,7 @@ export default () => {
 
   const [code, setCode] = useState('');
   const [resendCooldown, setResendCooldown] = useState(false);
+  const [isExpired, setIsExpired] = useState(false);
 
   const inputRefs = [
     useRef<HTMLInputElement>(null),
@@ -118,6 +119,12 @@ export default () => {
         throw new Error('Verification code is not valid.');
       }
 
+      // Not implemented, backend doesn't return specific error codes
+      if (data.error === 'EXPIRED') {
+        setIsExpired(true);
+        throw new Error('Verification code is not valid.');
+      }
+
       // hashedUsername.current = await getHashedUsername(username);
       setForAuth('screen', 'codeSubmitted');
 
@@ -146,13 +153,28 @@ export default () => {
   return (
     <>
       <AuthTitle
-        title="Check your email"
-        description="We have just sent a confirmation code to your email. Paste the code below to proceed with
-        account creation."
-        header={<IconBird className="mx-auto" />}
+        title={isExpired ? 'Code expired' : 'Check your email'}
+        description={
+          isExpired
+            ? 'Please resend a confirmation code to your email.'
+            : 'We have just sent a confirmation code to your email. Paste the code below to proceed with account creation.'
+        }
+        header={!isExpired ? <IconBird className="mx-auto" /> : undefined}
+        titleClass={isExpired ? 'text-red' : ''}
       />
 
-      <p className="mb-6 font-bold">Enter the 6-digit code you received</p>
+      {!!isExpired && (
+        <Btn
+          variant="primary"
+          disabled={loading || resendCooldown}
+          className="w-full mb-6"
+          onClick={() => onSendAgain()}
+        >
+          Send again
+        </Btn>
+      )}
+
+      <p className="mb-6 font-bold text-center">Enter the 6-digit code you received</p>
 
       <div className="flex gap-2 mb-6 justify-center">
         {[0, 1, 2, 3, 4, 5].map(x => (
@@ -163,7 +185,7 @@ export default () => {
             maxLength={1}
             autoFocus={x === 0}
             disabled={loading}
-            className="min-w-0 w-[3.25rem] h-16 px-2 text-center rounded-lg border border-brightdark focus:border-lightgrey"
+            className="min-w-0 w-[3.25rem] h-16 px-2 text-center rounded-lg border border-brightdark font-bold focus:border-lightgrey"
             onFocus={ev => ev.target.select()}
             onKeyDown={ev => handleKeyDown(ev, x)}
             onPaste={ev => handlePaste(ev)}
@@ -172,16 +194,18 @@ export default () => {
         ))}
       </div>
 
-      <p className="text-lightgrey text-xs mb-3">Didn't receive e-mail?</p>
+      <p className="text-lightgrey text-xs mb-3 text-center">Didn't receive e-mail?</p>
 
-      <Btn
-        variant="ghost"
-        disabled={loading || resendCooldown}
-        className="w-full"
-        onClick={() => onSendAgain()}
-      >
-        Send again
-      </Btn>
+      {!isExpired && (
+        <Btn
+          variant="ghost"
+          disabled={loading || resendCooldown}
+          className="w-full"
+          onClick={() => onSendAgain()}
+        >
+          Send again
+        </Btn>
+      )}
 
       {!!resendCooldown && <p className="mt-2">Email sent!</p>}
     </>

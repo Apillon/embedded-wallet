@@ -30,7 +30,13 @@ export default {
     fontFamily: {
       sans: ['Inter', ...fontFamily.sans],
     },
-    extend: {},
+    extend: {
+      fontSize: {
+        xs: ['0.75rem', 1.66],
+        sm: ['0.875rem', 1.72],
+        base: ['1rem', 1.625],
+      },
+    },
   },
   plugins: [],
 };

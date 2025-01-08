@@ -1,6 +1,6 @@
 import Btn from '../ui/Btn';
-import Spinner from '../ui/Spinner';
 import { useWalletContext } from '../../contexts/wallet.context';
+import Loader from '../ui/Loader';
 
 export default () => {
   const { loadAccountWallets, state, dispatch, setScreen, wallet } = useWalletContext();
@@ -10,7 +10,7 @@ export default () => {
       <h2 className="mb-6">Accounts unavailable</h2>
 
       <div className="text-center mb-4">
-        <Spinner size={56} className="mx-auto" />
+        <Loader size={56} />
       </div>
 
       <p className="text-sm text-lightgrey mb-6">

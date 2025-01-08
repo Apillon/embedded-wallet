@@ -18,7 +18,7 @@ export default () => {
       />
 
       <Btn
-        variant="primary"
+        variant="ghost"
         disabled={loading}
         className="w-full"
         onClick={() => {

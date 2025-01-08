@@ -1,6 +1,6 @@
 import { forwardRef } from 'react';
 import clsx from 'clsx';
-import Spinner from './Spinner';
+import Loader from './Loader';
 
 type Props = {
   children?: React.ReactNode;
@@ -64,8 +64,8 @@ const Btn = forwardRef<HTMLAnchorElement, Props>(
         {!!loading && (
           <>
             &nbsp;
-            <Spinner
-              color={variant === 'ghost' ? '#F9FF73' : '#141721'}
+            <Loader
+              fill={variant === 'ghost' ? '#F9FF73' : '#141721'}
               className="absolute top-1/2 left-1/2 m-[-18px_0_0_-18px]"
             />
           </>
