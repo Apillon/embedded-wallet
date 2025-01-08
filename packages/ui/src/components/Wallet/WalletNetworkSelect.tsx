@@ -16,15 +16,7 @@ export default function WalletNetworkSelect() {
 
   return (
     <div>
-      <Btn variant="primary" className="w-full mb-6" onClick={() => setScreen('selectAccounts')}>
-        Accounts
-      </Btn>
-
-      <Btn variant="primary" className="w-full mb-6" onClick={() => setScreen('exportPrivateKey')}>
-        Export private key
-      </Btn>
-
-      <Btn
+      {/* <Btn
         variant="primary"
         className="w-full mb-6"
         onClick={() => {
@@ -42,9 +34,7 @@ export default function WalletNetworkSelect() {
         }}
       >
         Disconnect wallet
-      </Btn>
-
-      <h2 className="mb-4">Select network</h2>
+      </Btn> */}
 
       <div className="flex flex-col gap-3 mb-6">
         {networks.map(network => (

@@ -20,18 +20,21 @@ export default function TestApp() {
             id: 1287,
             rpcUrl: 'https://rpc.testnet.moonbeam.network',
             explorerUrl: 'https://moonbase.moonscan.io',
+            imageUrl: 'https://cryptologos.cc/logos/moonbeam-glmr-logo.png?v=022',
           },
           {
             name: 'Celo Alfajores Testnet',
             id: 44787,
             rpcUrl: 'https://alfajores-forno.celo-testnet.org',
             explorerUrl: 'https://explorer.celo.org/alfajores',
+            imageUrl: 'https://cryptologos.cc/logos/celo-celo-logo.png?v=022',
           },
           {
             name: 'Amoy',
             id: 80002,
             rpcUrl: 'https://rpc-amoy.polygon.technology',
             explorerUrl: 'https://www.oklink.com/amoy',
+            imageUrl: 'https://cryptologos.cc/logos/polygon-matic-logo.png?v=022',
           },
         ]}
       />

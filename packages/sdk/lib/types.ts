@@ -9,7 +9,15 @@ const wacAbi = parseAbi(AccountManagerAbi);
 
 export type WebauthnContract = TypedContract<typeof wacAbi>;
 
-export type Network = { name: string; id: number; rpcUrl: string; explorerUrl: string };
+export type Network = {
+  name: string;
+  id: number;
+  rpcUrl: string;
+  explorerUrl: string;
+  imageUrl?: string;
+  currencySymbol?: string;
+  currencDecimals?: number;
+};
 
 export type SignatureCallback = (
   gaslessData: string

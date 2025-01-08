@@ -1,6 +1,5 @@
 import { useWalletContext } from '../../contexts/wallet.context';
 import IconChevron from '../ui/IconChevron';
-import ethLogo from '../../assets/eth_logo.svg';
 import apillonLogo from '../../assets/apillon.svg';
 import IconVdots from '../ui/IconVdots';
 import clsx from 'clsx';
@@ -13,6 +12,7 @@ export default () => {
     state: { username, networkId },
     networksById,
     activeWallet,
+    setScreen,
   } = useWalletContext();
 
   const { text: copyText, onCopy } = useCopyToClipboard('', '+');
@@ -25,9 +25,13 @@ export default () => {
         <button
           className="oaw-button-plain !rounded-md !bg-deepdark flex items-center gap-2.5 !py-1 !px-2"
           title={network?.name}
+          onClick={() => setScreen('networks')}
         >
           <img
-            src={(network as any)?.logo || ethLogo}
+            src={
+              network?.imageUrl ||
+              'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
+            }
             alt={network?.name}
             className="w-5 h-5 rounded-full"
           />

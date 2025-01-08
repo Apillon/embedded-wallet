@@ -20,6 +20,7 @@ import {
 import { AppProps } from '../main';
 import { WebStorageKeys } from '../lib/constants';
 import { logToStorage } from '../lib/helpers';
+import oasisLogo from '../assets/oasis.svg';
 
 export type WalletScreens =
   | 'main'
@@ -159,12 +160,14 @@ function WalletProvider({
           id: SapphireTestnet,
           rpcUrl: 'https://testnet.sapphire.oasis.io',
           explorerUrl: 'https://explorer.oasis.io/testnet/sapphire',
+          imageUrl: oasisLogo,
         }
       : {
           name: 'Oasis Sapphire',
           id: SapphireMainnet,
           rpcUrl: 'https://sapphire.oasis.io',
           explorerUrl: 'https://explorer.oasis.io/mainnet/sapphire',
+          imageUrl: oasisLogo,
         },
     ...networks,
   ];

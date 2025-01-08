@@ -6,6 +6,7 @@ import { shortHash } from '../../lib/helpers';
 import useCopyToClipboard from '../../hooks/useCopyToClipboard';
 import IconCopy from '../ui/IconCopy';
 import IconCheckSmall from '../ui/IconCheckSmall';
+import dayjs from 'dayjs';
 
 export default function WalletTransactions({ className }: { className?: string }) {
   const { activeWallet } = useWalletContext();
@@ -33,7 +34,7 @@ function Transaction({ tx }: { tx: TransactionItem }) {
 
   return (
     <div className="rounded-lg bg-primarylight px-4 py-2">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center mb-1">
         <span className="font-bold text-sm text-offwhite">
           <a
             href={tx.explorerUrl || '#'}
@@ -74,8 +75,10 @@ function Transaction({ tx }: { tx: TransactionItem }) {
           </span>
         </button>
 
-        <span title={new Date(tx.createdAt).toISOString()} className="text-xs">
-          {new Date(tx.createdAt).toLocaleString()}
+        <span title={new Date(tx.createdAt).toISOString()} className="text-xs text-lightgrey">
+          {dayjs(tx.createdAt).format(
+            tx.createdAt > Date.now() - 86400 * 1e3 ? 'HH:mm' : 'MMM D, YYYY'
+          )}
         </span>
       </div>
     </div>
