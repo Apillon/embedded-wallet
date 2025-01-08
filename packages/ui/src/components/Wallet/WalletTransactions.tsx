@@ -5,6 +5,7 @@ import { useWalletContext } from '../../contexts/wallet.context';
 import { shortHash } from '../../lib/helpers';
 import useCopyToClipboard from '../../hooks/useCopyToClipboard';
 import IconCopy from '../ui/IconCopy';
+import IconCheckSmall from '../ui/IconCheckSmall';
 
 export default function WalletTransactions({ className }: { className?: string }) {
   const { activeWallet } = useWalletContext();
@@ -16,9 +17,7 @@ export default function WalletTransactions({ className }: { className?: string }
 
   return (
     <div className={className}>
-      <h4 className="mb-2">Transactions</h4>
-
-      <div className="flex flex-col gap-1 max-h-[134px] overflow-auto pr-2">
+      <div className="flex flex-col gap-2 max-h-[278px] overflow-auto pr-2">
         {Object.values(state.txs[activeWallet.address])
           .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
           .map(tx => (
@@ -30,12 +29,12 @@ export default function WalletTransactions({ className }: { className?: string }
 }
 
 function Transaction({ tx }: { tx: TransactionItem }) {
-  const { text: copyText, onCopy } = useCopyToClipboard('');
+  const { text: copyText, onCopy } = useCopyToClipboard('', '+');
 
   return (
-    <div className="rounded-md bg-offwhite/5 px-2 py-1">
+    <div className="rounded-lg bg-primarylight px-4 py-2">
       <div className="flex justify-between items-center">
-        <span className="font-bold text-sm">
+        <span className="font-bold text-sm text-offwhite">
           <a
             href={tx.explorerUrl || '#'}
             target="_blank"
@@ -43,32 +42,37 @@ function Transaction({ tx }: { tx: TransactionItem }) {
             className="rounded-sm"
           >
             {tx.label}
-            &nbsp; &#8599;
           </a>
         </span>
 
         <span
-          className={clsx('text-sm', {
-            'text-[#FF6188]': tx.status === 'failed',
-            'text-[#A9DC76]': tx.status === 'confirmed',
-            'text-[#F7AF39]': tx.status === 'pending',
-          })}
+          className={clsx(
+            'font-ibm text-[10px] font-bold text-center uppercase text-deepdark',
+            'px-2.5 py-1 min-h-6 rounded-full',
+            {
+              'bg-[#F00]': tx.status === 'failed',
+              'bg-[#A9DC76]': tx.status === 'confirmed',
+              'bg-[#F7AF39]': tx.status === 'pending',
+            }
+          )}
         >
           {tx.status}
         </span>
       </div>
 
       <div className="flex justify-between items-end">
-        <span title={tx.hash} className="text-sm">
-          {shortHash(tx.hash)}{' '}
-          <button
-            className="text-xs inline-flex items-center oaw-button-plain"
-            onClick={() => onCopy(tx.hash)}
-          >
-            <IconCopy />
-            {copyText}
-          </button>
-        </span>
+        <button
+          className="text-xs inline-flex items-center oaw-button-plain gap-1"
+          onClick={() => onCopy(tx.hash)}
+        >
+          <span title={tx.hash} className="text-xs text-ellipsis">
+            {shortHash(tx.hash)}{' '}
+          </span>
+
+          <span className={clsx(['shrink-0 pl-0.5', { 'text-green': copyText === '+' }])}>
+            {copyText === '+' ? <IconCheckSmall /> : <IconCopy />}
+          </span>
+        </button>
 
         <span title={new Date(tx.createdAt).toISOString()} className="text-xs">
           {new Date(tx.createdAt).toLocaleString()}

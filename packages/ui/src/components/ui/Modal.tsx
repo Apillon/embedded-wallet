@@ -49,12 +49,12 @@ export default ({
             <div className="flex items-center justify-center min-h-full">
               <DialogPanel
                 className={clsx(
-                  'relative min-w-[400px] w-full min-h-[380px] bg-dark border border-brightdark text-offwhite flex flex-col',
+                  'relative min-w-[400px] w-full min-h-[380px] bg-dark border border-lightdark text-offwhite flex flex-col',
                   isAuth ? 'max-w-[445px]' : 'max-w-[400px]'
                 )}
               >
                 <button
-                  className="flex absolute top-2 right-2 oaw-button-plain"
+                  className="flex absolute top-2 right-2 oaw-button-plain invisible"
                   onClick={() => setIsOpen(false)}
                 >
                   <svg

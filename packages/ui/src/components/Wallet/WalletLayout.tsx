@@ -7,6 +7,7 @@ import Error from '../ui/Error';
 import WalletNetworkSelect from './WalletNetworkSelect';
 import WalletTokens from './WalletTokens';
 import WalletIndex from './WalletIndex';
+import WalletTopbar from './WalletTopbar';
 
 /**
  * Base layout elements and screen display logic
@@ -52,20 +53,24 @@ export default () => {
   }
 
   return (
-    <div>
-      {!!isAccountWalletsStale && (
-        <div className="flex gap-2 justify-between items-start py-2 px-3 break-words text-sm text-white bg-blue/75 rounded-md overflow-auto text-left mb-8">
-          <span>Accounts are stale</span>
-          <a href="#" className="font-bold" onClick={() => loadAccountWallets()}>
-            {loadingWallets ? '...' : 'Reload'}
-          </a>
-        </div>
-      )}
+    <div className="min-h-[635px]">
+      <WalletTopbar />
 
-      {/* Error */}
-      <Error show className="mb-6" />
+      <div className="px-8 pb-4">
+        {!!isAccountWalletsStale && (
+          <div className="flex gap-2 justify-between items-start py-2 px-3 break-words text-sm text-white bg-blue/75 rounded-md overflow-auto text-left mb-8">
+            <span>Accounts are stale</span>
+            <a href="#" className="font-bold" onClick={() => loadAccountWallets()}>
+              {loadingWallets ? '...' : 'Reload'}
+            </a>
+          </div>
+        )}
 
-      {content()}
+        {/* Error */}
+        <Error show className="mb-6" />
+
+        {content()}
+      </div>
 
       {/* {state.walletScreen === 'exportPrivateKey' && <WalletPKExport />}
       {state.walletScreen === 'selectAccounts' && <WalletAccounts />}

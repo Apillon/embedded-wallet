@@ -18,8 +18,8 @@ type Props = {
   Partial<React.ComponentPropsWithoutRef<'a'>>;
 
 const DEFAULT_WIDTH = '160px';
-const DEFAULT_HEIGHT = '40px'; // + borders top/bottom 4px
-const DEFAULT_PADDING = 'px-5 py-2.5';
+const DEFAULT_HEIGHT = '48px'; // + borders top/bottom 4px
+const DEFAULT_PADDING = 'px-5 py-0.5';
 
 const Btn = forwardRef<HTMLAnchorElement, Props>(
   (

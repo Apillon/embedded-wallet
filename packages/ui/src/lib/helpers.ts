@@ -19,3 +19,7 @@ export function logToStorage(msg: string) {
     `${new Date().toISOString().slice(0, -5)} ~ ${msg}\n` + ls
   );
 }
+
+export function formatBalance(balance: string) {
+  return `${parseFloat(balance)} ETH`;
+}

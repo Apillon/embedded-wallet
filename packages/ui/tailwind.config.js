@@ -22,6 +22,7 @@ export default {
       lightdark: '#1E212B',
       primarylight: '#1E212B',
       primarydark: '#06080F',
+      deepdark: '#06080F',
       secondary: '#EEEEEE',
       secondarydark: '#9C9C95',
       lightgrey: '#9D9E91',
@@ -29,12 +30,14 @@ export default {
     },
     fontFamily: {
       sans: ['Inter', ...fontFamily.sans],
+      ibm: ['IBM Plex Sans', ...fontFamily.sans],
     },
     extend: {
       fontSize: {
-        xs: ['0.75rem', 1.66],
-        sm: ['0.875rem', 1.72],
+        xs: ['0.75rem', '1.25rem'],
+        sm: ['0.875rem', '1.5rem'],
         base: ['1rem', 1.625],
+        '3xl': ['1.75rem', '2.5rem'],
       },
     },
   },
