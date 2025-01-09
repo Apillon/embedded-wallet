@@ -7,7 +7,7 @@ import Error from '../ui/Error';
 import WalletNetworkSelect from './WalletNetworkSelect';
 import WalletTokens from './WalletTokens';
 import WalletIndex from './WalletIndex';
-import WalletTopbar from './WalletTopbar';
+import Topbar from '../Topbar/Topbar';
 
 /**
  * Base layout elements and screen display logic
@@ -54,7 +54,7 @@ export default () => {
 
   return (
     <div className="min-h-[635px]">
-      <WalletTopbar />
+      <Topbar />
 
       <div className="px-8 pb-4">
         {!!isAccountWalletsStale && (

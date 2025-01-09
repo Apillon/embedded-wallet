@@ -50,7 +50,7 @@
   }
 
   .oaw-button-plain {
-    @apply text-lightgrey cursor-pointer bg-transparent border-none hover:text-offwhite p-0 rounded-sm min-w-0 min-h-0 font-normal transform-none;
+    @apply text-lightgrey cursor-pointer bg-transparent border-none hover:text-offwhite p-0 rounded-sm min-w-0 min-h-0 font-normal transform-none transition-none select-none;
   }
 }
 

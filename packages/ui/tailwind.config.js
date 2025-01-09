@@ -27,6 +27,7 @@ export default {
       secondarydark: '#9C9C95',
       lightgrey: '#9D9E91',
       green: '#A9DC76',
+      darkgrey: '#6A6B63',
     },
     fontFamily: {
       sans: ['Inter', ...fontFamily.sans],

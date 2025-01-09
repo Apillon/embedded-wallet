@@ -20,7 +20,7 @@ export default () => {
   const network = !!networkId && !!networksById[networkId] ? networksById[networkId] : null;
 
   return (
-    <div className="bg-lightdark flex items-center justify-between gap-4 p-4">
+    <div className="flex items-center justify-between gap-4 p-4">
       <div className="w-[72px] shrink-0">
         <button
           className="oaw-button-plain !rounded-md !bg-deepdark flex items-center gap-2.5 !py-1 !px-2"
