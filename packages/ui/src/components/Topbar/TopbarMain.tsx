@@ -80,6 +80,7 @@ export default () => {
         <button
           className="oaw-button-plain !rounded-full !bg-transparent relative w-8 h-8 text-offwhite shrink-0"
           title="Settings"
+          onClick={() => setScreen('menuDot')}
         >
           <IconVdots className="mx-auto" />
         </button>

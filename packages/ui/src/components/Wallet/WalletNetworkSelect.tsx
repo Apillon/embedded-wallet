@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useWalletContext } from '../../contexts/wallet.context';
-import Btn from '../ui/Btn';
 import InputSearch from '../ui/InputSearch';
 import clsx from 'clsx';
 
@@ -24,26 +23,6 @@ export default function WalletNetworkSelect() {
 
   return (
     <div>
-      {/* <Btn
-        variant="primary"
-        className="w-full mb-6"
-        onClick={() => {
-          dispatch({ type: 'reset' });
-
-          wallet?.setAccount({
-            username: '',
-            walletIndex: 0,
-            contractAddress: '',
-            strategy: 'passkey',
-            wallets: [],
-          });
-
-          setScreen('main');
-        }}
-      >
-        Disconnect wallet
-      </Btn> */}
-
       <InputSearch value={search} onChange={ev => setSearch(ev)} className="my-6" />
 
       <div className="flex flex-col gap-3">
@@ -55,7 +34,7 @@ export default function WalletNetworkSelect() {
               disabled={network.id === state.networkId}
               className={clsx(
                 'oaw-button-plain !px-4 !py-[0.6875rem] !rounded-md !flex items-center gap-4 !bg-primarylight',
-                '!border !border-solid border-transparent',
+                '!border !border-solid border-transparent !transition-colors',
                 'hover:border-darkgrey',
                 {
                   '!border-yellow !cursor-not-allowed': network.id === state.networkId,

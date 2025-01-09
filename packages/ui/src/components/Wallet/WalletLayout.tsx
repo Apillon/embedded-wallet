@@ -8,6 +8,7 @@ import WalletNetworkSelect from './WalletNetworkSelect';
 import WalletTokens from './WalletTokens';
 import WalletIndex from './WalletIndex';
 import Topbar from '../Topbar/Topbar';
+import SettingsMenuDot from '../Settings/SettingsMenuDot';
 
 /**
  * Base layout elements and screen display logic
@@ -36,6 +37,8 @@ export default () => {
     switch (walletScreen) {
       case 'networks':
         return <WalletNetworkSelect />;
+      case 'menuDot':
+        return <SettingsMenuDot />;
       case 'sendToken':
       case 'selectToken':
       case 'receiveToken':
@@ -53,10 +56,10 @@ export default () => {
   }
 
   return (
-    <div className="min-h-[635px]">
+    <div className="h-[635px] flex flex-col">
       <Topbar />
 
-      <div className="px-8 pb-4">
+      <div className="px-8 pb-4 grow overflow-y-auto">
         {!!isAccountWalletsStale && (
           <div className="flex gap-2 justify-between items-start py-2 px-3 break-words text-sm text-white bg-blue/75 rounded-md overflow-auto text-left mb-8">
             <span>Accounts are stale</span>

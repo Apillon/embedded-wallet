@@ -34,7 +34,8 @@ export type WalletScreens =
   | 'addAccount'
   | 'importAccount'
   | 'reloadAccounts'
-  | 'renameAccount';
+  | 'renameAccount'
+  | 'menuDot';
 
 type AccountWalletEx = AccountWallet & { balance: string };
 
