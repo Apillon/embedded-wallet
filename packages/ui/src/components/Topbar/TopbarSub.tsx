@@ -1,4 +1,5 @@
 import { useWalletContext, WalletScreens } from '../../contexts/wallet.context';
+import SettingsUsername from '../Settings/SettingsUsername';
 import IconArrow from '../ui/IconArrow';
 import IconHome from '../ui/IconHome';
 
@@ -19,6 +20,14 @@ export default () => {
 
   const title = titles[walletScreen];
 
+  function centerContent() {
+    if (walletScreen === 'menuDot') {
+      return <SettingsUsername />;
+    }
+
+    return <span className="text-sm font-bold">{title}</span>;
+  }
+
   return (
     <div className="flex items-center justify-between gap-4 p-4">
       <div className="w-8 shrink-0">
@@ -37,9 +46,7 @@ export default () => {
         </button>
       </div>
 
-      <div className="flex-1 text-center min-w-0">
-        <span className="text-sm font-bold">{title}</span>
-      </div>
+      <div className="flex-1 text-center min-w-0">{centerContent()}</div>
 
       <div className="w-8 shrink-0">
         <button

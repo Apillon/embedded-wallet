@@ -4,6 +4,7 @@ import clsx from 'clsx';
 export default function Input({
   label,
   className,
+  disabled,
   ...inputProps
 }: { label?: string } & InputProps) {
   return (
@@ -12,11 +13,15 @@ export default function Input({
 
       <HeadlessInput
         {...inputProps}
+        disabled={disabled}
         className={clsx(
           'w-full px-5 py-3 text-sm',
-          'rounded-lg border border-brightdark focus:border-lightgrey',
-          'outline-none bg-lightdark text-offwhite',
+          'rounded-lg border border-brightdark',
+          '!outline-none bg-lightdark text-offwhite',
           'placeholder:text-lightgrey',
+          {
+            'hover:border-lightgrey focus:border-offwhite': !disabled,
+          },
           className
         )}
       />
