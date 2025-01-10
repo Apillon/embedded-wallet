@@ -39,7 +39,7 @@ export default () => {
 
       <p className="text-center text-xs text-lightgrey break-all mb-2">{activeWallet.address}</p>
 
-      <div className="flex justify-center gap-4 mb-6">
+      <div className="flex justify-center mb-6">
         <button
           className="oaw-button-plain !inline-flex items-center gap-2 !text-yellow"
           onClick={() => onCopy(activeWallet.address)}

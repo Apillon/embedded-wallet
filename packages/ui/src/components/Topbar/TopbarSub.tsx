@@ -18,8 +18,8 @@ const titles = {
 
 export default () => {
   const {
-    state: { walletScreen, walletScreenHistory },
-    setScreen,
+    state: { walletScreen },
+    goScreenBack,
     dispatch,
   } = useWalletContext();
 
@@ -39,13 +39,7 @@ export default () => {
         <button
           className="oaw-button-plain !rounded-full !bg-transparent w-8 h-8"
           title="Back"
-          onClick={() => {
-            if (walletScreenHistory.length > 1) {
-              setScreen(walletScreenHistory[walletScreenHistory.length - 2]);
-            } else {
-              setScreen('main');
-            }
-          }}
+          onClick={() => goScreenBack()}
         >
           <IconArrow className="inline-block" />
         </button>

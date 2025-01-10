@@ -1,9 +1,9 @@
 import { useApproveContext } from '../../contexts/approve.context';
 import { TokensProvider } from '../../contexts/tokens.context';
 import { useWalletContext } from '../../contexts/wallet.context';
+import MsgError from '../ui/MsgError';
 import Approve from '../Approve/Approve';
 import ApproveSuccess from '../Approve/ApproveSuccess';
-import Error from '../ui/Error';
 import WalletNetworkSelect from './WalletNetworkSelect';
 import WalletTokens from './WalletTokens';
 import WalletIndex from './WalletIndex';
@@ -85,7 +85,7 @@ export default () => {
         )}
 
         {/* Error */}
-        <Error show className="mb-6" />
+        <MsgError show className="mb-6" />
 
         {content()}
       </div>

@@ -2,20 +2,14 @@ import { useWalletContext } from '../../contexts/wallet.context';
 import IconChevron from '../ui/IconChevron';
 import apillonLogo from '../../assets/apillon.svg';
 import IconVdots from '../ui/IconVdots';
-import clsx from 'clsx';
-import IconCheckSmall from '../ui/IconCheckSmall';
-import IconCopy from '../ui/IconCopy';
-import useCopyToClipboard from '../../hooks/useCopyToClipboard';
+import AccountsCurrent from '../Accounts/AccountsCurrent';
 
 export default () => {
   const {
-    state: { username, networkId },
+    state: { networkId },
     networksById,
-    activeWallet,
     setScreen,
   } = useWalletContext();
-
-  const { text: copyText, onCopy } = useCopyToClipboard('', '+');
 
   const network = !!networkId && !!networksById[networkId] ? networksById[networkId] : null;
 
@@ -42,30 +36,7 @@ export default () => {
         </button>
       </div>
 
-      <div className="flex-1 text-center min-w-0">
-        <button
-          className="oaw-button-plain flex items-center gap-1 mb-1.5 min-w-0 !text-offwhite max-w-full mx-auto"
-          title={activeWallet?.title || username}
-        >
-          <span className="text-sm font-bold truncate">{activeWallet?.title || username}</span>
-
-          <IconChevron />
-        </button>
-
-        {!!activeWallet && (
-          <button
-            title={activeWallet.address}
-            className="oaw-button-plain !pl-2 !pr-0.5 flex items-center min-w-0 !text-lightgrey mx-auto"
-            onClick={() => onCopy(activeWallet.address)}
-          >
-            <span className="truncate text-lightgrey text-xs w-[70px]">{activeWallet.address}</span>
-
-            <span className={clsx(['shrink-0 pl-0.5', { 'text-green': copyText === '+' }])}>
-              {copyText === '+' ? <IconCheckSmall /> : <IconCopy className="text-lightgrey" />}
-            </span>
-          </button>
-        )}
-      </div>
+      <AccountsCurrent className="flex-1 min-w-0" />
 
       <div className="w-[80px] flex items-center justify-end gap-2 -mr-2 shrink-0">
         <button

@@ -1,6 +1,6 @@
 import AuthLoginForm from './AuthLoginForm';
 import Logo from '../ui/Logo';
-import WalletError from '../ui/Error';
+import MsgError from '../ui/MsgError';
 import { useAuthContext } from '../../contexts/auth.context';
 import AuthConfiguringPasskey from './AuthConfiguringPasskey';
 import AuthConfirmCode from './AuthConfirmCode';
@@ -34,7 +34,7 @@ export default ({ className }: { className?: string }) => {
 
       {currentScreen()}
 
-      <WalletError show className="mt-6" />
+      <MsgError show className="mt-6" />
     </div>
   );
 };

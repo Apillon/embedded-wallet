@@ -139,6 +139,7 @@ const WalletContext = createContext<
       ) => Promise<AccountWallet[] | undefined>;
       reloadAccountBalances: (addresses?: string[]) => Promise<boolean | undefined>;
       setScreen: (screen: WalletScreens) => void;
+      goScreenBack: () => void;
       handleError: (e?: any, src?: string) => string;
       setStateValue: <T extends keyof ReturnType<typeof initialState>>(
         key: T,
@@ -419,6 +420,16 @@ function WalletProvider({
         loadAccountWallets,
         reloadAccountBalances,
         setScreen: (s: WalletScreens) => setStateValue('walletScreen', s),
+        goScreenBack: () => {
+          if (state.walletScreenHistory.length > 1) {
+            setStateValue(
+              'walletScreen',
+              state.walletScreenHistory[state.walletScreenHistory.length - 2]
+            );
+          } else {
+            setStateValue('walletScreen', 'main');
+          }
+        },
         handleError,
         setStateValue,
       }}

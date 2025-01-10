@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import { useWalletContext } from '../../contexts/wallet.context';
 
-export default function Error({
+export default ({
   text,
   show,
   className,
@@ -9,7 +9,7 @@ export default function Error({
   text?: string;
   show?: boolean;
   className?: string;
-}) {
+}) => {
   const { state, handleError } = useWalletContext();
 
   if ((!state.displayedError && !text) || !show) {
@@ -24,7 +24,7 @@ export default function Error({
       )}
       style={{ maxHeight: '250px' }}
     >
-      {state.displayedError || text || ''}
+      {text || state.displayedError || ''}
 
       <button
         title="Dismiss"
@@ -49,4 +49,4 @@ export default function Error({
       </button>
     </div>
   );
-}
+};

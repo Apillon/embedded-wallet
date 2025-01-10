@@ -40,7 +40,7 @@ export default () => {
   ];
 
   return (
-    <div className="flex flex-col pt-10 gap-3 min-h-full">
+    <div className="flex flex-col pt-10 pb-2 gap-3 min-h-full">
       {items.map((item, index) => (
         <SettingsMenuItem key={index} {...item} />
       ))}
