@@ -42,6 +42,7 @@ export default () => {
         <button
           className="oaw-button-plain !rounded-full !bg-deepdark relative w-8 h-8 shrink-0"
           title="Account"
+          onClick={() => setScreen('accountDetails')}
         >
           <img src={apillonLogo} alt="Account" className="mx-auto" />
 

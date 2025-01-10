@@ -14,6 +14,8 @@ const titles = {
   settingsGeneral: 'General settings',
   exportPrivateKey: 'Export private key',
   importAccount: 'Import private key',
+  selectAccounts: 'Select account',
+  addAccount: 'Add new account',
 } as { [key in WalletScreens]: string };
 
 export default () => {

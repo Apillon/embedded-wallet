@@ -7,6 +7,7 @@ import useCopyToClipboard from '../../hooks/useCopyToClipboard';
 import IconCopy from '../ui/IconCopy';
 import IconCheckSmall from '../ui/IconCheckSmall';
 import dayjs from 'dayjs';
+import Pill from '../ui/Pill';
 
 export default function WalletTransactions({ className }: { className?: string }) {
   const { activeWallet } = useWalletContext();
@@ -46,19 +47,15 @@ function Transaction({ tx }: { tx: TransactionItem }) {
           </a>
         </span>
 
-        <span
-          className={clsx(
-            'font-ibm text-[10px] font-bold text-center uppercase text-deepdark',
-            'px-2.5 py-1 min-h-6 rounded-full',
-            {
-              'bg-[#F00]': tx.status === 'failed',
-              'bg-[#A9DC76]': tx.status === 'confirmed',
-              'bg-[#F7AF39]': tx.status === 'pending',
-            }
-          )}
-        >
-          {tx.status}
-        </span>
+        <Pill
+          text={tx.status}
+          bg={''}
+          className={clsx({
+            'bg-[#F00]': tx.status === 'failed',
+            'bg-[#A9DC76]': tx.status === 'confirmed',
+            'bg-[#F7AF39]': tx.status === 'pending',
+          })}
+        />
       </div>
 
       <div className="flex justify-between items-end">

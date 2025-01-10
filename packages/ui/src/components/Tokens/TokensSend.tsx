@@ -10,27 +10,11 @@ import TokensInput from '../Tokens/TokensInput';
 
 export default () => {
   const { state, activeWallet, goScreenBack, wallet, handleError } = useWalletContext();
-  const { state: tokens, nativeToken } = useTokensContext();
+  const { selectedToken } = useTokensContext();
 
   const [receiverAddress, setReceiverAddress] = useState('');
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
-
-  const selectedToken = useMemo<TokenInfo>(() => {
-    if (tokens.selectedToken) {
-      const userTokens = tokens.list?.[activeWallet?.address || '']?.[state.networkId];
-
-      if (userTokens) {
-        const found = userTokens.find(x => x.address === tokens.selectedToken);
-
-        if (found) {
-          return found;
-        }
-      }
-    }
-
-    return nativeToken;
-  }, [tokens.selectedToken, tokens.list]);
 
   async function onSubmit() {
     if (loading) {

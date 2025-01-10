@@ -16,6 +16,8 @@ import SettingsGeneral from '../Settings/SettingsGeneral';
 import TokensSend from '../Tokens/TokensSend';
 import TokensSelect from '../Tokens/TokensSelect';
 import TokensAdd from '../Tokens/TokensAdd';
+import AccountsList from '../Accounts/AccountsList';
+import AccountsAdd from '../Accounts/AccountsAdd';
 
 /**
  * Base layout elements and screen display logic
@@ -73,9 +75,14 @@ export default () => {
             })()}
           </TokensProvider>
         );
-      /**
-       * @TODO Other screens
-       */
+      case 'selectAccounts':
+        return (
+          <TokensProvider>
+            <AccountsList />
+          </TokensProvider>
+        );
+      case 'addAccount':
+        return <AccountsAdd />;
       default:
         return <WalletIndex />;
     }
@@ -90,13 +97,6 @@ export default () => {
       <div className="absolute -bottom-5 left-0 right-0 px-8">
         <MsgError show />
       </div>
-
-      {/* {state.walletScreen === 'exportPrivateKey' && <WalletPKExport />}
-      {state.walletScreen === 'selectAccounts' && <WalletAccounts />}
-      {state.walletScreen === 'addAccount' && <AccountsAdd />}
-      {state.walletScreen === 'reloadAccounts' && <AccountsReload />}
-      {state.walletScreen === 'importAccount' && <AccountsImport />}
-      {state.walletScreen === 'renameAccount' && <AccountsRename />} */}
     </div>
   );
 };

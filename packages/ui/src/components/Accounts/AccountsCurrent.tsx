@@ -9,6 +9,7 @@ export default ({ noChevron = false, className }: { noChevron?: boolean; classNa
   const {
     state: { username },
     activeWallet,
+    setScreen,
   } = useWalletContext();
   const { text: copyText, onCopy } = useCopyToClipboard('', '+');
 
@@ -17,6 +18,7 @@ export default ({ noChevron = false, className }: { noChevron?: boolean; classNa
       <button
         className="oaw-button-plain flex items-center gap-1 mb-1.5 min-w-0 !text-offwhite max-w-full mx-auto"
         title={activeWallet?.title || username}
+        onClick={() => setScreen('selectAccounts')}
       >
         <span className="text-sm font-bold truncate">{activeWallet?.title || username}</span>
 

@@ -82,6 +82,7 @@ const TokensContext = createContext<
       state: ContextState;
       dispatch: (action: ContextActions) => void;
       nativeToken: TokenInfo;
+      selectedToken: TokenInfo;
       getTokenDetails: (address: string) => Promise<TokenInfo | undefined>;
     }
   | undefined
@@ -102,6 +103,22 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
     }),
     [activeWallet?.balance, walletState.networkId]
   );
+
+  const selectedToken = useMemo<TokenInfo>(() => {
+    if (state.selectedToken) {
+      const userTokens = state.list?.[activeWallet?.address || '']?.[walletState.networkId];
+
+      if (userTokens) {
+        const found = userTokens.find(x => x.address === state.selectedToken);
+
+        if (found) {
+          return found;
+        }
+      }
+    }
+
+    return nativeToken;
+  }, [state.selectedToken, state.list]);
 
   useEffect(() => {
     if (initialized) {
@@ -202,6 +219,7 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
         state,
         dispatch,
         nativeToken,
+        selectedToken,
         getTokenDetails,
       }}
     >
