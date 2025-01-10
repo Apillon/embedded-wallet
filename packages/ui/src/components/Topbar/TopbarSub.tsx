@@ -8,7 +8,7 @@ const titles = {
   transactions: 'Transactions',
   sendToken: 'Send',
   selectToken: 'Select token',
-  receiveToken: 'Receive',
+  addToken: 'Add token',
   accountDetails: 'Account details',
   menuMore: 'Settings & security',
   settingsGeneral: 'General settings',

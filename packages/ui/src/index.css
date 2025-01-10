@@ -52,6 +52,16 @@
   .oaw-button-plain {
     @apply text-lightgrey cursor-pointer bg-transparent border-none hover:text-offwhite p-0 rounded-sm min-w-0 min-h-0 font-normal transform-none transition-none select-none;
   }
+
+  /* Hide number input spinbox */
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type='number'] {
+    -moz-appearance: textfield;
+  }
 }
 
 #oaw-wallet-widget {

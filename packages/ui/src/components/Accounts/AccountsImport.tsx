@@ -48,7 +48,7 @@ export default function AccountsImport() {
         options={[
           { label: 'Select type', value: '' },
           { label: 'Private Key', value: 'pk' },
-          { label: 'JSON File', value: 'json' },
+          // { label: 'JSON File', value: 'json' },
         ]}
         className="w-full mb-6"
         onChange={ev => setType(ev.target.value)}

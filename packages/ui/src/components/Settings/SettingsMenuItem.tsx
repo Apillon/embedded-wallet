@@ -8,14 +8,18 @@ export default ({
   icon,
   link,
   screen,
+  disabled = false,
   className,
+  onClick,
 }: {
   title: string;
   description?: string;
   icon?: React.ReactNode;
   link?: string;
   screen?: WalletScreens;
+  disabled?: boolean;
   className?: string;
+  onClick?: () => void;
 }) => {
   const { setScreen } = useWalletContext();
 
@@ -36,12 +40,21 @@ export default ({
     'oaw-button-plain !px-4 !py-[0.6875rem] !rounded-md !flex items-center gap-4 !bg-primarylight !text-left',
     '!border !border-solid border-transparent !transition-colors',
     'hover:border-darkgrey',
+    {
+      'opacity-60 grayscale pointer-events-none': disabled,
+    },
     className
   );
 
   if (link) {
     return (
-      <a href={link} target="_blank" rel="noopener noreferrer" className={classes}>
+      <a
+        href={link}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-disabled={disabled}
+        className={classes}
+      >
         {content}
       </a>
     );
@@ -49,7 +62,15 @@ export default ({
 
   if (screen) {
     return (
-      <button className={classes} onClick={() => setScreen(screen)}>
+      <button className={classes} disabled={disabled} onClick={() => setScreen(screen)}>
+        {content}
+      </button>
+    );
+  }
+
+  if (onClick) {
+    return (
+      <button className={classes} disabled={disabled} onClick={onClick}>
         {content}
       </button>
     );

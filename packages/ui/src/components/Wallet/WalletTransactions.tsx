@@ -77,7 +77,7 @@ function Transaction({ tx }: { tx: TransactionItem }) {
 
         <span title={new Date(tx.createdAt).toISOString()} className="text-xs text-lightgrey">
           {dayjs(tx.createdAt).format(
-            tx.createdAt > Date.now() - 86400 * 1e3 ? 'HH:mm' : 'MMM D, YYYY'
+            tx.createdAt > dayjs().startOf('day').valueOf() ? 'HH:mm' : 'MMM D, YYYY'
           )}
         </span>
       </div>

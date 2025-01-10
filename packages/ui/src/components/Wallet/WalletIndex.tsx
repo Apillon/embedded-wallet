@@ -6,7 +6,12 @@ import WalletTransactions from './WalletTransactions';
 import { Tab, TabGroup, TabList, TabPanel, TabPanels } from '@headlessui/react';
 
 export default () => {
-  const { activeWallet, setScreen } = useWalletContext();
+  const {
+    state: { isAccountWalletsStale, loadingWallets },
+    activeWallet,
+    setScreen,
+    loadAccountWallets,
+  } = useWalletContext();
 
   const tabs = [
     {
@@ -25,6 +30,16 @@ export default () => {
 
   return (
     <div>
+      {!!isAccountWalletsStale && (
+        <div className="flex gap-2 justify-between items-start py-2 px-3 break-words text-sm text-deepdark bg-blue rounded-md overflow-auto text-left">
+          <span>Accounts are stale</span>
+
+          <a href="#" className="font-bold text-deepdark" onClick={() => loadAccountWallets()}>
+            {loadingWallets ? '...' : 'Reload'}
+          </a>
+        </div>
+      )}
+
       <div className="py-12">
         {/* Account info: username, address, balance */}
         <div className="text-center mb-4">
@@ -37,7 +52,7 @@ export default () => {
             Send
           </Btn>
 
-          <Btn minWidth="0" minHeight="40px" onClick={() => setScreen('receiveToken')}>
+          <Btn minWidth="0" minHeight="40px" onClick={() => setScreen('accountDetails')}>
             Receive
           </Btn>
 

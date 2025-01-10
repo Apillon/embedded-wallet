@@ -28,7 +28,7 @@ export type WalletScreens =
   | 'transactions'
   | 'sendToken'
   | 'selectToken'
-  | 'receiveToken'
+  | 'addToken'
   | 'exportPrivateKey'
   | 'selectAccounts'
   | 'addAccount'
@@ -79,9 +79,11 @@ type ContextActions =
 function reducer(state: ContextState, action: ContextActions) {
   switch (action.type) {
     case 'setValue': {
-      const walletScreenHistory = [...state.walletScreenHistory];
-
+      // Keep history of wallet screens routing
+      // and reset displayed error
       if (action.payload.key === 'walletScreen') {
+        const walletScreenHistory = [...state.walletScreenHistory];
+
         if (
           walletScreenHistory.length > 1 &&
           walletScreenHistory[walletScreenHistory.length - 2] === action.payload.value
@@ -90,11 +92,17 @@ function reducer(state: ContextState, action: ContextActions) {
         } else {
           walletScreenHistory.push(action.payload.value);
         }
+
+        return {
+          ...state,
+          walletScreenHistory,
+          displayedError: '',
+          [action.payload.key]: action.payload.value,
+        };
       }
 
       return {
         ...state,
-        walletScreenHistory,
         [action.payload.key]: action.payload.value,
       };
     }

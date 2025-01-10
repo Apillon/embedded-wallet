@@ -5,7 +5,6 @@ import MsgError from '../ui/MsgError';
 import Approve from '../Approve/Approve';
 import ApproveSuccess from '../Approve/ApproveSuccess';
 import WalletNetworkSelect from './WalletNetworkSelect';
-import WalletTokens from './WalletTokens';
 import WalletIndex from './WalletIndex';
 import Topbar from '../Topbar/Topbar';
 import SettingsMenuDot from '../Settings/SettingsMenuDot';
@@ -14,14 +13,16 @@ import SettingsMenuMore from '../Settings/SettingsMenuMore';
 import AccountsExport from '../Accounts/AccountsExport';
 import AccountsImport from '../Accounts/AccountsImport';
 import SettingsGeneral from '../Settings/SettingsGeneral';
+import TokensSend from '../Tokens/TokensSend';
+import TokensSelect from '../Tokens/TokensSelect';
+import TokensAdd from '../Tokens/TokensAdd';
 
 /**
  * Base layout elements and screen display logic
  */
 export default () => {
   const {
-    state: { walletScreen, isAccountWalletsStale, loadingWallets },
-    loadAccountWallets,
+    state: { walletScreen },
   } = useWalletContext();
   const { state: approveState } = useApproveContext();
 
@@ -54,12 +55,22 @@ export default () => {
         return <AccountsExport />;
       case 'importAccount':
         return <AccountsImport />;
-      case 'sendToken':
       case 'selectToken':
-      case 'receiveToken':
+      case 'sendToken':
+      case 'addToken':
         return (
           <TokensProvider>
-            <WalletTokens />
+            {(() => {
+              switch (walletScreen) {
+                case 'sendToken':
+                  return <TokensSend />;
+                case 'addToken':
+                  return <TokensAdd />;
+                case 'selectToken':
+                default:
+                  return <TokensSelect />;
+              }
+            })()}
           </TokensProvider>
         );
       /**
@@ -71,23 +82,13 @@ export default () => {
   }
 
   return (
-    <div className="h-[635px] flex flex-col">
+    <div className="h-[635px] flex flex-col relative">
       <Topbar />
 
-      <div className="px-8 pb-4 grow overflow-y-auto">
-        {!!isAccountWalletsStale && (
-          <div className="flex gap-2 justify-between items-start py-2 px-3 break-words text-sm text-white bg-blue/75 rounded-md overflow-auto text-left mb-8">
-            <span>Accounts are stale</span>
-            <a href="#" className="font-bold" onClick={() => loadAccountWallets()}>
-              {loadingWallets ? '...' : 'Reload'}
-            </a>
-          </div>
-        )}
+      <div className="px-8 pb-4 grow overflow-y-auto">{content()}</div>
 
-        {/* Error */}
-        <MsgError show className="mb-6" />
-
-        {content()}
+      <div className="absolute -bottom-5 left-0 right-0 px-8">
+        <MsgError show />
       </div>
 
       {/* {state.walletScreen === 'exportPrivateKey' && <WalletPKExport />}

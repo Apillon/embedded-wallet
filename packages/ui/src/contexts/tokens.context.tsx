@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useReducer, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useReducer, useState } from 'react';
 import { ERC20Abi } from '@apillon/wallet-sdk';
 import { useWalletContext } from './wallet.context';
 import { ethers } from 'ethers';
@@ -81,6 +81,7 @@ const TokensContext = createContext<
   | {
       state: ContextState;
       dispatch: (action: ContextActions) => void;
+      nativeToken: TokenInfo;
       getTokenDetails: (address: string) => Promise<TokenInfo | undefined>;
     }
   | undefined
@@ -89,7 +90,18 @@ const TokensContext = createContext<
 function TokensProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState());
   const [initialized, setInitialized] = useState(false);
-  const { state: walletState, wallet, activeWallet } = useWalletContext();
+  const { state: walletState, wallet, activeWallet, networksById } = useWalletContext();
+
+  const nativeToken = useMemo<TokenInfo>(
+    () => ({
+      address: '',
+      name: `${networksById?.[walletState.networkId]?.name} ETH`,
+      symbol: networksById?.[walletState.networkId]?.currencySymbol || 'ETH',
+      decimals: networksById?.[walletState.networkId]?.currencDecimals || 18,
+      balance: activeWallet?.balance || '',
+    }),
+    [activeWallet?.balance, walletState.networkId]
+  );
 
   useEffect(() => {
     if (initialized) {
@@ -189,6 +201,7 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
       value={{
         state,
         dispatch,
+        nativeToken,
         getTokenDetails,
       }}
     >
