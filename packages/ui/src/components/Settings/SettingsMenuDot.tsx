@@ -1,10 +1,9 @@
-import clsx from 'clsx';
 import IconLinkOut from '../ui/IconLinkOut';
 import IconLock from '../ui/IconLock';
 import IconProfile from '../ui/IconProfile';
-import IconChevron from '../ui/IconChevron';
-import { useWalletContext, WalletScreens } from '../../contexts/wallet.context';
+import { useWalletContext } from '../../contexts/wallet.context';
 import Btn from '../ui/Btn';
+import SettingsMenuItem from './SettingsMenuItem';
 
 export default () => {
   const {
@@ -21,12 +20,12 @@ export default () => {
     {
       title: 'Account details',
       icon: <IconProfile />,
-      screen: 'sendToken' as const,
+      screen: 'accountDetails' as const,
     },
     {
       title: 'Settings & security',
       icon: <IconLock />,
-      screen: 'networks' as const,
+      screen: 'menuMore' as const,
     },
     {
       title: 'View on Explorer',
@@ -69,60 +68,4 @@ export default () => {
       </Btn>
     </div>
   );
-};
-
-const SettingsMenuItem = ({
-  title,
-  description,
-  icon,
-  link,
-  screen,
-  className,
-}: {
-  title: string;
-  description?: string;
-  icon: React.ReactNode;
-  link?: string;
-  screen?: WalletScreens;
-  className?: string;
-}) => {
-  const { setScreen } = useWalletContext();
-
-  const content = (
-    <>
-      {icon}
-
-      <div className="grow">
-        <p className="text-sm font-normal text-offwhite">{title}</p>
-        {description && <p className="text-xs text-lightgrey">{description}</p>}
-      </div>
-
-      <IconChevron />
-    </>
-  );
-
-  const classes = clsx(
-    'oaw-button-plain !px-4 !py-[0.6875rem] !rounded-md !flex items-center gap-4 !bg-primarylight !text-left',
-    '!border !border-solid border-transparent !transition-colors',
-    'hover:border-darkgrey',
-    className
-  );
-
-  if (link) {
-    return (
-      <a href={link} target="_blank" rel="noopener noreferrer" className={classes}>
-        {content}
-      </a>
-    );
-  }
-
-  if (screen) {
-    return (
-      <button className={classes} onClick={() => setScreen(screen)}>
-        {content}
-      </button>
-    );
-  }
-
-  return <></>;
 };

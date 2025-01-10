@@ -71,7 +71,7 @@ function Transaction({ tx }: { tx: TransactionItem }) {
           </span>
 
           <span className={clsx(['shrink-0 pl-0.5', { 'text-green': copyText === '+' }])}>
-            {copyText === '+' ? <IconCheckSmall /> : <IconCopy />}
+            {copyText === '+' ? <IconCheckSmall /> : <IconCopy className="text-lightgrey" />}
           </span>
         </button>
 

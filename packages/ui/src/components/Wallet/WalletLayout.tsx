@@ -9,6 +9,11 @@ import WalletTokens from './WalletTokens';
 import WalletIndex from './WalletIndex';
 import Topbar from '../Topbar/Topbar';
 import SettingsMenuDot from '../Settings/SettingsMenuDot';
+import AccountsDetails from '../Accounts/AccountsDetails';
+import SettingsMenuMore from '../Settings/SettingsMenuMore';
+import AccountsExport from '../Accounts/AccountsExport';
+import AccountsImport from '../Accounts/AccountsImport';
+import SettingsGeneral from '../Settings/SettingsGeneral';
 
 /**
  * Base layout elements and screen display logic
@@ -39,6 +44,16 @@ export default () => {
         return <WalletNetworkSelect />;
       case 'menuDot':
         return <SettingsMenuDot />;
+      case 'menuMore':
+        return <SettingsMenuMore />;
+      case 'settingsGeneral':
+        return <SettingsGeneral />;
+      case 'accountDetails':
+        return <AccountsDetails />;
+      case 'exportPrivateKey':
+        return <AccountsExport />;
+      case 'importAccount':
+        return <AccountsImport />;
       case 'sendToken':
       case 'selectToken':
       case 'receiveToken':

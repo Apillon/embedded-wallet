@@ -7,8 +7,13 @@ const titles = {
   networks: 'Networks',
   transactions: 'Transactions',
   sendToken: 'Send',
-  selectToken: 'Select Token',
+  selectToken: 'Select token',
   receiveToken: 'Receive',
+  accountDetails: 'Account details',
+  menuMore: 'Settings & security',
+  settingsGeneral: 'General settings',
+  exportPrivateKey: 'Export private key',
+  importAccount: 'Import private key',
 } as { [key in WalletScreens]: string };
 
 export default () => {

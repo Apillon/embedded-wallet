@@ -58,6 +58,7 @@ export default ({ className }: { className?: string }) => {
         className={clsx('oaw-button-plain !inline-flex items-center gap-2', {
           invisible: isEditing,
         })}
+        title="Edit account name"
         onClick={() => setIsEditing(true)}
       >
         <span className="text-sm font-bold text-offwhite">{activeWallet.title}</span>
@@ -68,7 +69,7 @@ export default ({ className }: { className?: string }) => {
       {isEditing && (
         <form
           ref={formRef}
-          className="flex w-full items-center gap-2 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+          className="flex w-full items-center justify-center gap-2 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
           onSubmit={ev => {
             ev.preventDefault();
             updateWalletTitle();
