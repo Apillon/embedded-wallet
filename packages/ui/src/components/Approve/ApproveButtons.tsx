@@ -3,15 +3,18 @@ import Btn from '../ui/Btn';
 import { useApproveContext } from '../../contexts/approve.context';
 import { useWalletContext } from '../../contexts/wallet.context';
 import { UserRejectedRequestError } from '@apillon/wallet-sdk';
+import clsx from 'clsx';
 
 export default ({
   doneAfterApprove = false,
   doneAfterDecline = true,
+  className,
   onApprove,
   onDecline,
 }: {
   doneAfterApprove?: boolean;
   doneAfterDecline?: boolean;
+  className?: string;
   onApprove: () => Promise<void> | void;
   onDecline?: () => void;
 }) => {
@@ -47,10 +50,27 @@ export default ({
 
   return (
     <>
-      <div className="mt-6">
+      <div className={clsx('grid grid-cols-2 gap-2', className)}>
+        <Btn
+          variant="ghost"
+          disabled={loading}
+          minWidth="0"
+          onClick={() => {
+            if (onDecline) {
+              onDecline();
+            }
+
+            if (doneAfterDecline) {
+              done();
+            }
+          }}
+        >
+          Cancel
+        </Btn>
+
         <Btn
           loading={loading}
-          className="w-full mb-4"
+          minWidth="0"
           onClick={async () => {
             if (!!loading) {
               return;
@@ -79,49 +99,7 @@ export default ({
         >
           Approve
         </Btn>
-
-        <Btn
-          variant="ghost"
-          disabled={loading}
-          className="w-full"
-          onClick={() => {
-            if (onDecline) {
-              onDecline();
-            }
-
-            if (doneAfterDecline) {
-              done();
-            }
-          }}
-        >
-          Reject
-        </Btn>
       </div>
-
-      {/* <div className="mt-4 text-center text-xs">
-        <button
-          onClick={() => {
-            wallet?.setAccount({
-              username: '',
-              walletIndex: 0,
-              contractAddress: '',
-              strategy: 'passkey',
-            });
-
-            dispatch({
-              type: 'setState',
-              payload: {
-                username: '',
-                walletIndex: 0,
-                contractAddress: '',
-                authStrategy: 'passkey',
-              },
-            });
-          }}
-        >
-          Use another account
-        </button>
-      </div> */}
     </>
   );
 };

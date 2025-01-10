@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { ethers } from 'ethers';
 import { ERC20Abi } from '@apillon/wallet-sdk';
-import { TokenInfo, useTokensContext } from '../../contexts/tokens.context';
+import { useTokensContext } from '../../contexts/tokens.context';
 import { useWalletContext } from '../../contexts/wallet.context';
 import Btn from '../ui/Btn';
 import Input from '../ui/Input';
@@ -9,7 +9,7 @@ import SettingsMenuItem from '../Settings/SettingsMenuItem';
 import TokensInput from '../Tokens/TokensInput';
 
 export default () => {
-  const { state, activeWallet, goScreenBack, wallet, handleError } = useWalletContext();
+  const { state, goScreenBack, wallet, handleError } = useWalletContext();
   const { selectedToken } = useTokensContext();
 
   const [receiverAddress, setReceiverAddress] = useState('');

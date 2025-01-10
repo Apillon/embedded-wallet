@@ -39,6 +39,7 @@ export default {
         xs: ['0.75rem', '1.25rem'],
         sm: ['0.875rem', '1.5rem'],
         base: ['1rem', 1.625],
+        xl: ['1.25rem', '2rem'],
         '3xl': ['1.75rem', '2.5rem'],
       },
     },

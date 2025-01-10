@@ -37,8 +37,7 @@
   }
 
   h3 {
-    @apply font-bold text-xl leading-tight text-offwhite text-center mt-0;
-    font-family: 'New Spirit', serif;
+    @apply font-bold text-xl leading-tight text-offwhite text-center mt-0 font-sans;
   }
 
   h4 {

@@ -1,9 +1,9 @@
 import { useApproveContext } from '../../contexts/approve.context';
 import { useWalletContext } from '../../contexts/wallet.context';
 import ApproveButtons from './ApproveButtons';
+import ApproveDataRow from './ApproveDataRow';
 
 const ExcludedTxKeys = ['data', 'gasLimit', 'nonce', 'maxFeePerGas', 'gasPrice'];
-const preClass = 'bg-offwhite/25 p-3 whitespace-pre-wrap break-all rounded-sm mt-2';
 
 export default () => {
   const {
@@ -20,10 +20,10 @@ export default () => {
   }
 
   return (
-    <>
-      <div>
-        <h3 className="mb-6">Approve Transaction</h3>
+    <div className="flex flex-col min-h-full pb-2">
+      <h3 className="my-6">Approve Transaction</h3>
 
+      <div className="flex flex-col gap-4 mb-6">
         {Object.entries(txToConfirm)
           .filter(([k, v]) => {
             if (k === 'data' && v !== '0x') {
@@ -33,30 +33,26 @@ export default () => {
             return !ExcludedTxKeys.includes(k);
           })
           .map(([k, v]) => (
-            <div key={k} className="mb-2 break-all">
-              <p className="font-bold text-xs">{k}</p>
-
-              <div
-                style={{ maxHeight: '220px' }}
-                className="overflow-auto pr-8 -mr-8 sm:pr-12 sm:-mr-12 text-sm"
-              >
-                {typeof v === 'bigint' ? (
-                  v.toString()
-                ) : typeof v === 'object' ? (
-                  <pre className={preClass}>
-                    {JSON.stringify(
-                      txToConfirm,
-                      (_, value) => (typeof value === 'bigint' ? value.toString() : value),
-                      2
-                    )}
-                  </pre>
-                ) : (
-                  v
-                )}
-              </div>
-            </div>
+            <ApproveDataRow
+              key={k}
+              label={k}
+              data={
+                typeof v === 'bigint'
+                  ? v.toString()
+                  : typeof v === 'object'
+                    ? JSON.stringify(
+                        v,
+                        (_, value) => (typeof value === 'bigint' ? value.toString() : value),
+                        2
+                      )
+                    : v
+              }
+              collapsable={typeof v === 'object'}
+            />
           ))}
       </div>
+
+      <div className="grow"></div>
 
       <ApproveButtons
         onApprove={async () => {
@@ -81,6 +77,6 @@ export default () => {
           }
         }}
       />
-    </>
+    </div>
   );
 };
