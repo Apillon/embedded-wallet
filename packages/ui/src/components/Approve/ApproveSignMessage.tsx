@@ -1,6 +1,7 @@
 import { useApproveContext } from '../../contexts/approve.context';
 import { useWalletContext } from '../../contexts/wallet.context';
 import ApproveButtons from './ApproveButtons';
+import ApproveDataRow from './ApproveDataRow';
 
 export default () => {
   const {
@@ -13,13 +14,12 @@ export default () => {
   } = useApproveContext();
 
   return (
-    <>
-      <div>
-        <h3 className="mb-6">Sign Message</h3>
+    <div className="flex flex-col min-h-full pb-2">
+      <h3 className="my-6">Sign Message</h3>
 
-        <p className="text-xs font-bold mb-1">You are signing:</p>
-        <p className="break-all">{messageToSign}</p>
-      </div>
+      <ApproveDataRow label="Signing" data={messageToSign} className="mb-6" />
+
+      <div className="grow"></div>
 
       <ApproveButtons
         onApprove={async () => {
@@ -35,6 +35,6 @@ export default () => {
           }
         }}
       />
-    </>
+    </div>
   );
 };

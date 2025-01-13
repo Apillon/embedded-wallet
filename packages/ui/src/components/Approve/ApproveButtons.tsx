@@ -2,7 +2,6 @@ import { useState } from 'react';
 import Btn from '../ui/Btn';
 import { useApproveContext } from '../../contexts/approve.context';
 import { useWalletContext } from '../../contexts/wallet.context';
-import { UserRejectedRequestError } from '@apillon/wallet-sdk';
 import clsx from 'clsx';
 
 export default ({
@@ -18,35 +17,10 @@ export default ({
   onApprove: () => Promise<void> | void;
   onDecline?: () => void;
 }) => {
-  const {
-    state: { walletScreenHistory },
-    setStateValue: setForWallet,
-    handleError,
-  } = useWalletContext();
-  const { state: approveState, dispatch: dispatchApprove } = useApproveContext();
+  const { handleError } = useWalletContext();
+  const { onApproveDone } = useApproveContext();
 
   const [loading, setLoading] = useState(false);
-
-  // Close wallet modal if wallet was not opened before approve action.
-  function done(success = false) {
-    if (walletScreenHistory.length) {
-      if (!success) {
-        if (!approveState.successInfo?.title) {
-          if (approveState.approveParams?.contractWrite?.reject) {
-            approveState.approveParams.contractWrite.reject(new UserRejectedRequestError());
-          } else if (approveState.approveParams?.plain?.reject) {
-            approveState.approveParams.plain.reject(new UserRejectedRequestError());
-          } else if (approveState.approveParams?.signature?.reject) {
-            approveState.approveParams.signature.reject(new UserRejectedRequestError());
-          }
-        }
-      }
-
-      dispatchApprove({ type: 'reset' });
-    } else {
-      setForWallet('isOpen', false);
-    }
-  }
 
   return (
     <>
@@ -61,7 +35,7 @@ export default ({
             }
 
             if (doneAfterDecline) {
-              done();
+              onApproveDone();
             }
           }}
         >
@@ -83,14 +57,14 @@ export default ({
               await onApprove();
 
               if (doneAfterApprove) {
-                done(true);
+                onApproveDone(true);
               }
             } catch (e) {
               const errMsg = handleError(e);
 
               // Transaction was already broadcast
               if (errMsg === 'already known') {
-                done();
+                onApproveDone();
               }
             }
 

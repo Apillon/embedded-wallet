@@ -1,8 +1,7 @@
 import { useApproveContext } from '../../contexts/approve.context';
 import { useWalletContext } from '../../contexts/wallet.context';
 import ApproveButtons from './ApproveButtons';
-
-const preClass = 'bg-offwhite/25 p-3 whitespace-pre-wrap break-all rounded-sm mt-2';
+import ApproveDataRow from './ApproveDataRow';
 
 export default () => {
   const {
@@ -20,44 +19,47 @@ export default () => {
   }
 
   return (
-    <>
-      <div>
-        <h3 className="mb-6">Approve Contract Transaction</h3>
+    <div className="flex flex-col min-h-full pb-2">
+      <h3 className="my-6">Contract Transaction</h3>
 
-        {!!contractFunctionData.chainId && !!networksById[contractFunctionData.chainId] && (
-          <div className="mb-3">
-            <p className="font-bold text-xs mb-1">Chain</p>
-            {networksById[contractFunctionData.chainId].name}
-          </div>
+      {!!contractFunctionData.chainId && !!networksById[contractFunctionData.chainId] && (
+        <ApproveDataRow
+          label="Chain"
+          data={networksById[contractFunctionData.chainId].name}
+          className="mb-4"
+        />
+      )}
+
+      <ApproveDataRow
+        label="Contract address"
+        data={contractFunctionData.contractAddress}
+        className="mb-4"
+      />
+
+      <ApproveDataRow
+        label="Contract function"
+        data={contractFunctionData.contractFunctionName}
+        className="mb-4"
+      />
+
+      {!!contractFunctionData.contractFunctionValues &&
+        !!contractFunctionData.contractFunctionValues.length && (
+          <ApproveDataRow
+            label="Contract function values"
+            data={JSON.stringify(
+              contractFunctionData.contractFunctionValues,
+              (_, value) => (typeof value === 'bigint' ? value.toString() : value),
+              2
+            )}
+            className="mb-4"
+            collapsable
+          />
         )}
 
-        <div className="mb-3 break-all">
-          <p className="font-bold text-xs mb-1">Contract address</p>
-          {contractFunctionData.contractAddress}
-        </div>
-
-        <div className="mb-3 break-all">
-          <p className="font-bold text-xs mb-1">Contract function</p>
-          {contractFunctionData.contractFunctionName}
-        </div>
-
-        {!!contractFunctionData.contractFunctionValues &&
-          !!contractFunctionData.contractFunctionValues.length && (
-            <div className="break-all">
-              <p className="font-bold text-xs mb-1">Contract function values</p>
-
-              <pre className={preClass}>
-                {JSON.stringify(
-                  contractFunctionData.contractFunctionValues,
-                  (_, value) => (typeof value === 'bigint' ? value.toString() : value),
-                  2
-                )}
-              </pre>
-            </div>
-          )}
-      </div>
+      <div className="grow"></div>
 
       <ApproveButtons
+        className="mt-6"
         onApprove={async () => {
           if (approveParams?.contractWrite) {
             const res = await wallet?.signContractWrite({
@@ -80,6 +82,6 @@ export default () => {
           }
         }}
       />
-    </>
+    </div>
   );
 };

@@ -21,6 +21,13 @@ export default ({
     '!bg-primarylight !text-offwhite'
   );
 
+  // Split label into words and capitalize it
+  label = label
+    .split(/(?=[A-Z])/)
+    .join(' ')
+    .toLowerCase()
+    .replace(/^\w/, c => c.toUpperCase());
+
   if (collapsable) {
     return (
       <div className={className}>

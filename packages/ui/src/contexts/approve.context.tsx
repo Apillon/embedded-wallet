@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { ContractReadParams, Events } from '@apillon/wallet-sdk';
+import { ContractReadParams, Events, UserRejectedRequestError } from '@apillon/wallet-sdk';
 import { createContext, useContext, useEffect, useReducer } from 'react';
 import { useTransactionsContext } from './transactions.context';
 import { useWalletContext } from './wallet.context';
@@ -13,7 +13,11 @@ export type DisplayedContractParams = Pick<
 function ApproveProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState());
 
-  const { wallet, setStateValue: setForWallet } = useWalletContext();
+  const {
+    state: { walletScreenHistory },
+    wallet,
+    setStateValue: setForWallet,
+  } = useWalletContext();
   const { dispatch: dispatchTx } = useTransactionsContext();
 
   /**
@@ -92,12 +96,34 @@ function ApproveProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'setValue', payload: { key, value } });
   }
 
+  // Close wallet modal if wallet was not opened before approve action.
+  function onApproveDone(success = false) {
+    if (walletScreenHistory.length > 1) {
+      if (!success) {
+        if (!state.successInfo?.title) {
+          if (state.approveParams?.contractWrite?.reject) {
+            state.approveParams.contractWrite.reject(new UserRejectedRequestError());
+          } else if (state.approveParams?.plain?.reject) {
+            state.approveParams.plain.reject(new UserRejectedRequestError());
+          } else if (state.approveParams?.signature?.reject) {
+            state.approveParams.signature.reject(new UserRejectedRequestError());
+          }
+        }
+      }
+
+      dispatch({ type: 'reset' });
+    } else {
+      setForWallet('isOpen', false);
+    }
+  }
+
   return (
     <ApproveContext.Provider
       value={{
         state,
         dispatch,
         setStateValue,
+        onApproveDone,
       }}
     >
       {children}
@@ -113,6 +139,7 @@ const ApproveContext = createContext<
         key: T,
         value: ReturnType<typeof initialState>[T]
       ) => void;
+      onApproveDone: (success?: boolean) => void;
     }
   | undefined
 >(undefined);

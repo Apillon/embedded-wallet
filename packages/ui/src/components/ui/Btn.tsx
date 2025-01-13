@@ -83,7 +83,7 @@ const Btn = forwardRef<HTMLAnchorElement, Props>(
           target={blank ? '_blank' : '_self'}
           rel="noreferrer"
           title={props.title}
-          className={btnClass}
+          className={clsx(btnClass, 'inline-flex items-center justify-center')}
           style={btnStyle}
           onClick={props.onClick}
         >

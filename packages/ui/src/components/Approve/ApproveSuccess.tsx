@@ -1,12 +1,12 @@
 import { useApproveContext } from '../../contexts/approve.context';
-import { useWalletContext } from '../../contexts/wallet.context';
+import AuthTitle from '../Auth/AuthTitle';
 import Btn from '../ui/Btn';
 import IconCheckCircle from '../ui/IconCheckCircle';
 
 export default () => {
-  const { setStateValue: setForWallet } = useWalletContext();
   const {
     state: { successInfo },
+    onApproveDone,
   } = useApproveContext();
 
   if (!successInfo) {
@@ -14,34 +14,34 @@ export default () => {
   }
 
   return (
-    <div>
-      <h3 className="mb-4 flex gap-4">
-        <IconCheckCircle />
-        {successInfo.title}
-      </h3>
+    <div className="pt-12 pb-2">
+      <AuthTitle
+        title={successInfo.title}
+        header={<IconCheckCircle />}
+        titleClass="text-xl"
+        headerClass="!mb-4"
+        className="!mb-4"
+      />
 
       {!!successInfo.txHash && (
-        <p className="break-words text-sm text-lightgrey mb-4">
-          Transaction has been completed with the following hash:{' '}
+        <p className="break-words text-sm text-center">
+          <span className="text-lightgrey">
+            Transaction has been completed with the following hash:
+          </span>{' '}
+          <br />
           <span className="text-offwhite">{successInfo.txHash}</span>
         </p>
       )}
 
-      {!!successInfo.explorerUrl && (
-        <p className="text-sm mb-4">
-          <a
-            href={successInfo.explorerUrl}
-            target="_blank"
-            className="text-yellow hover:text-offwhite"
-          >
-            View on blockchain explorer
-          </a>
-        </p>
-      )}
+      <div className="mt-12">
+        <Btn variant="ghost" href={successInfo.explorerUrl} blank className="w-full mb-3">
+          View on blockchain explorer
+        </Btn>
 
-      <Btn variant="ghost" className="w-full mt-12" onClick={() => setForWallet('isOpen', false)}>
-        Close
-      </Btn>
+        <Btn variant="primary" className="w-full" onClick={() => onApproveDone(true)}>
+          Close
+        </Btn>
+      </div>
     </div>
   );
 };
