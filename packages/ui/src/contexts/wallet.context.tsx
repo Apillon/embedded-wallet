@@ -209,8 +209,16 @@ function WalletProvider({
        * Exclude some state variables from being saved
        */
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { walletScreen, displayedError, loadingWallets, privateKeys, appProps, ...save } =
-        state;
+      const {
+        walletScreen,
+        displayedError,
+        loadingWallets,
+        privateKeys,
+        appProps,
+        walletScreenHistory,
+        isOpen,
+        ...save
+      } = state;
 
       localStorage.setItem(WebStorageKeys.WALLET_CONTEXT, JSON.stringify(save));
     }
@@ -327,6 +335,8 @@ function WalletProvider({
   }
 
   async function reloadAccountBalances(addresses?: string[]) {
+    await new Promise(resolve => setTimeout(resolve, 50));
+
     if (!addresses) {
       if (!activeWallet?.address) {
         return;
@@ -397,7 +407,8 @@ function WalletProvider({
         msg &&
         msg !== 'already known' &&
         msg !== 'Request rejected by user' &&
-        e?.code !== 4001
+        e?.code !== 4001 &&
+        e?.name !== 'NotAllowedError' // user cancelled passkey prompt
       ) {
         setStateValue('displayedError', msg);
       }

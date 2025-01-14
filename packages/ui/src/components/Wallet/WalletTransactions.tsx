@@ -14,12 +14,13 @@ export default function WalletTransactions({ className }: { className?: string }
   const { state } = useTransactionsContext();
 
   if (!activeWallet?.address || !state.txs[activeWallet.address]) {
-    return <></>;
+    return <p className="text-sm text-lightgrey text-center">No transactions</p>;
   }
 
   return (
     <div className={className}>
-      <div className="flex flex-col gap-2 max-h-[278px] overflow-auto pr-2">
+      {/* max-h-[278px] overflow-auto */}
+      <div className="flex flex-col gap-2 pr-2">
         {Object.values(state.txs[activeWallet.address])
           .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
           .map(tx => (

@@ -12,7 +12,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     handleError,
     state: { appProps, username: loggedInUsername },
     dispatch: dispatchWallet,
-    defaultNetworkId,
     loadAccountWallets,
   } = useWalletContext();
 
@@ -94,7 +93,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         walletIndex: 0,
         username,
         authStrategy,
-        networkId: defaultNetworkId || undefined,
+        // networkId: defaultNetworkId || undefined,
       },
     });
 
@@ -175,7 +174,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   function redirectToGateway(username?: string) {
     const gatewayUrl = import.meta.env.VITE_XDOMAIN_PASSKEY_SRC ?? 'https://passkey.apillon.io';
 
-    if (!!loggedInUsername && gatewayUrl) {
+    if (!loggedInUsername && gatewayUrl) {
       window.location.href = `${gatewayUrl}?${[
         `ref=${encodeURIComponent(window.location.origin + window.location.pathname)}`,
         `clientId=${appProps.clientId || wallet?.apillonClientId || ''}`,

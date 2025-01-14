@@ -98,7 +98,7 @@ function Main({ disableDefaultActivatorStyle = false }: AppProps) {
         wallet.events.off('dataUpdated', onDataUpdated);
       }
     };
-  }, [wallet]);
+  }, [wallet, reloadAccountBalances]);
 
   /**
    * On modal close:
