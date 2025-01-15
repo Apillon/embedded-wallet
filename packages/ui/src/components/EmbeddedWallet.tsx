@@ -192,7 +192,7 @@ function Main({ disableDefaultActivatorStyle = false }: AppProps) {
   );
 }
 
-export default function WalletWidget(props: AppProps) {
+export default function EmbeddedWallet(props: AppProps) {
   let props2 = { ...props } as AppProps;
 
   if (!props2) {

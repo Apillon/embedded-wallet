@@ -1,4 +1,4 @@
-import WalletWidget from '../components/WalletWidget';
+import EmbeddedWallet from '../components/EmbeddedWallet';
 import TestEIP1193 from './TestEIP1193';
 import TestSign from './TestSign';
 import TestTx from './TestTx';
@@ -8,7 +8,7 @@ export default function TestApp() {
     <div>
       <h2>Wallet Widget</h2>
 
-      <WalletWidget
+      <EmbeddedWallet
         clientId={import.meta.env.VITE_CLIENT_ID ?? 'YOUR INTEGRATION UUID HERE'}
         broadcastAfterSign
         passkeyAuthMode="tab_process"

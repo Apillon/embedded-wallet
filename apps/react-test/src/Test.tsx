@@ -1,4 +1,4 @@
-import { useAccount, WalletWidget } from '@apillon/wallet-react';
+import { useAccount, EmbeddedWallet } from '@apillon/wallet-react';
 import TestSdk from './TestSdk';
 import TestViem from './TestViem';
 import TestEthers6 from './TestEthers6';
@@ -9,7 +9,7 @@ export default function Test() {
 
   return (
     <div>
-      <WalletWidget
+      <EmbeddedWallet
         clientId={import.meta.env.VITE_CLIENT_ID ?? 'YOUR INTEGRATION UUID HERE'}
         defaultNetworkId={1287}
         networks={[

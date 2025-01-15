@@ -2,14 +2,14 @@
 
 Collection of Vue composabes to help with embedded wallet implementation.
 
-## Component `<WalletWidget />`
+## Component `<EmbeddedWallet />`
 
 Initialize wallet SDK and UI.
 
 ```ts
-import { WalletWidget } from '@apillon/wallet-vue';
+import { EmbeddedWallet } from '@apillon/wallet-vue';
 
-<WalletWidget ...props />
+<EmbeddedWallet ...props />
 ```
 
 ## Hooks

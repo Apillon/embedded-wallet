@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { EmbeddedWalletUI, AppProps } from '@apillon/wallet-ui';
 
-export function WalletWidget({ className, ...params }: AppProps & { className?: string }) {
+export function EmbeddedWallet({ className, ...params }: AppProps & { className?: string }) {
   const initialized = useRef(false);
 
   useEffect(() => {
