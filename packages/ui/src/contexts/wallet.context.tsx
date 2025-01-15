@@ -145,7 +145,10 @@ const WalletContext = createContext<
         strategy?: AuthStrategyName,
         username?: string
       ) => Promise<AccountWallet[] | undefined>;
-      reloadAccountBalances: (addresses?: string[]) => Promise<boolean | undefined>;
+      reloadAccountBalances: (
+        addresses?: string[],
+        accountWallets?: AccountWalletEx[]
+      ) => Promise<boolean | undefined>;
       setScreen: (screen: WalletScreens) => void;
       goScreenBack: () => void;
       handleError: (e?: any, src?: string) => string;
@@ -310,10 +313,9 @@ function WalletProvider({
           reload: true,
         })) || [];
 
-      setStateValue(
-        'accountWallets',
-        (wallets || []).map(x => ({ ...x, balance: '0' }))
-      );
+      const newWallets = (wallets || []).map(x => ({ ...x, balance: '0' }));
+
+      setStateValue('accountWallets', newWallets);
 
       if (state.walletIndex < wallets.length) {
         wallet?.events.emit('accountsChanged', [wallets[state.walletIndex].address]);
@@ -323,7 +325,10 @@ function WalletProvider({
       setStateValue('isAccountWalletsStale', false);
       setStateValue('displayedError', '');
 
-      reloadAccountBalances(wallets.map(w => w.address));
+      reloadAccountBalances(
+        wallets.map(w => w.address),
+        newWallets
+      );
 
       return wallets;
     } catch (e) {
@@ -334,7 +339,10 @@ function WalletProvider({
     setStateValue('loadingWallets', false);
   }
 
-  async function reloadAccountBalances(addresses?: string[]) {
+  async function reloadAccountBalances(
+    addresses?: string[],
+    accountWallets: AccountWalletEx[] = state.accountWallets
+  ) {
     await new Promise(resolve => setTimeout(resolve, 50));
 
     if (!addresses) {
@@ -357,7 +365,7 @@ function WalletProvider({
         })
       );
 
-      const updatedWallets = [...state.accountWallets];
+      const updatedWallets = [...accountWallets];
 
       balances.forEach(b => {
         const found = updatedWallets.findIndex(x => x.address === b.address);

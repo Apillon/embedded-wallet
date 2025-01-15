@@ -38,7 +38,7 @@ if (!urlParams.has('popup')) {
     </StrictMode>
   );
 } else {
-  createRoot(document.getElementById('root')!).render(
+  createRoot(document.getElementById('loading')!).render(
     <StrictMode>
       <div className="flex flex-col min-h-[100svh] justify-center items-center p-8 text-center">
         <h1 className="hidden">Apillon</h1>
