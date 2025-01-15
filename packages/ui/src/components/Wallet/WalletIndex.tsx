@@ -7,7 +7,8 @@ import { Tab, TabGroup, TabList, TabPanel, TabPanels } from '@headlessui/react';
 
 export default () => {
   const {
-    state: { isAccountWalletsStale, loadingWallets },
+    state: { isAccountWalletsStale, loadingWallets, networkId },
+    networksById,
     activeWallet,
     setScreen,
     loadAccountWallets,
@@ -15,16 +16,18 @@ export default () => {
 
   const tabs = [
     {
-      title: 'Content',
-      content: <ContentPlaceholder />,
-    },
-    {
       title: 'Transactions',
       content: <WalletTransactions />,
     },
     {
-      title: 'Content2',
+      title: 'Tokens',
       content: <ContentPlaceholder />,
+      disabled: true,
+    },
+    {
+      title: 'NFTs',
+      content: <ContentPlaceholder />,
+      disabled: true,
     },
   ];
 
@@ -43,7 +46,12 @@ export default () => {
       <div className="py-12">
         {/* Account info: username, address, balance */}
         <div className="text-center mb-4">
-          <p className="font-bold text-3xl">{formatBalance(activeWallet?.balance || '0')}</p>
+          <p className="font-bold text-3xl">
+            {formatBalance(
+              activeWallet?.balance || '0',
+              networksById?.[networkId]?.currencySymbol || 'ETH'
+            )}
+          </p>
         </div>
 
         {/* Actions: send/receive */}
@@ -68,11 +76,15 @@ export default () => {
             {tabs.map(t => (
               <Tab
                 key={t.title}
+                disabled={t.disabled}
                 className={clsx(
                   'oaw-button-plain z-10',
                   '!rounded-full !py-2 !px-6 text-sm font-normal text-lightgrey',
                   '!border !border-solid !border-brightdark',
-                  'data-[selected]:bg-deepdark data-[selected]:text-offwhite data-[selected]:z-20'
+                  'data-[selected]:bg-deepdark data-[selected]:text-offwhite data-[selected]:z-20',
+                  {
+                    'hover:!text-lightgrey !cursor-not-allowed': t.disabled,
+                  }
                 )}
               >
                 {t.title}

@@ -17,6 +17,7 @@ import {
   SapphireTestnet,
   AccountWallet,
 } from '@apillon/wallet-sdk';
+import { ethers } from 'ethers';
 import { AppProps } from '../main';
 import { WebStorageKeys } from '../lib/constants';
 import { logToStorage } from '../lib/helpers';
@@ -24,6 +25,7 @@ import oasisLogo from '../assets/oasis.svg';
 
 export type WalletScreens =
   | 'main'
+  | 'approve'
   | 'networks'
   | 'transactions'
   | 'sendToken'
@@ -89,6 +91,11 @@ function reducer(state: ContextState, action: ContextActions) {
           walletScreenHistory[walletScreenHistory.length - 2] === action.payload.value
         ) {
           walletScreenHistory.pop();
+        } else if (
+          walletScreenHistory.length > 0 &&
+          walletScreenHistory[walletScreenHistory.length - 1] === action.payload.value
+        ) {
+          // same screen, do nothing
         } else {
           walletScreenHistory.push(action.payload.value);
         }
@@ -149,6 +156,7 @@ const WalletContext = createContext<
         addresses?: string[],
         accountWallets?: AccountWalletEx[]
       ) => Promise<boolean | undefined>;
+      formatNativeBalance: (balance: string | bigint | number) => string;
       setScreen: (screen: WalletScreens) => void;
       goScreenBack: () => void;
       handleError: (e?: any, src?: string) => string;
@@ -177,6 +185,7 @@ function WalletProvider({
           rpcUrl: 'https://testnet.sapphire.oasis.io',
           explorerUrl: 'https://explorer.oasis.io/testnet/sapphire',
           imageUrl: oasisLogo,
+          currencySymbol: 'ROSE',
         }
       : {
           name: 'Oasis Sapphire',
@@ -184,6 +193,7 @@ function WalletProvider({
           rpcUrl: 'https://sapphire.oasis.io',
           explorerUrl: 'https://explorer.oasis.io/mainnet/sapphire',
           imageUrl: oasisLogo,
+          currencySymbol: 'ROSE',
         },
     ...networks,
   ];
@@ -194,6 +204,14 @@ function WalletProvider({
   );
   const [initialized, setInitialized] = useState(false);
   const [wallet, setWallet] = useState<EmbeddedWallet>();
+
+  const networksById = networks.reduce(
+    (acc, x) => {
+      acc[x.id] = x;
+      return acc;
+    },
+    {} as { [networkId: number]: Network }
+  );
 
   const activeWallet = useMemo(() => {
     if (state.walletIndex >= state.accountWallets.length) {
@@ -383,6 +401,13 @@ function WalletProvider({
     }
   }
 
+  function formatNativeBalance(balance: string | bigint | number) {
+    return (
+      ethers.formatUnits(balance, networksById?.[state.networkId]?.currencDecimals || 18) +
+      ` ${networksById?.[state.networkId]?.currencySymbol || 'ETH'}`
+    );
+  }
+
   function handleError(e?: any, src?: string) {
     let msg = '';
 
@@ -409,6 +434,10 @@ function WalletProvider({
         msg = e.message;
       }
 
+      if (msg.includes('message: ')) {
+        msg = msg.split('message: ')[1];
+      }
+
       logToStorage(msg);
 
       if (
@@ -433,19 +462,16 @@ function WalletProvider({
         state,
         dispatch,
         networks,
-        networksById: networks.reduce(
-          (acc, x) => {
-            acc[x.id] = x;
-            return acc;
-          },
-          {} as { [networkId: number]: Network }
-        ),
+        networksById,
         defaultNetworkId: defaultNetworkId || 0,
         activeWallet,
         wallet,
         setWallet,
         loadAccountWallets,
         reloadAccountBalances,
+        formatNativeBalance,
+        handleError,
+        setStateValue,
         setScreen: (s: WalletScreens) => setStateValue('walletScreen', s),
         goScreenBack: () => {
           if (state.walletScreenHistory.length > 1) {
@@ -457,8 +483,6 @@ function WalletProvider({
             setStateValue('walletScreen', 'main');
           }
         },
-        handleError,
-        setStateValue,
       }}
     >
       {children}

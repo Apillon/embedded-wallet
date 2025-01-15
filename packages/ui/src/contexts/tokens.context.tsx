@@ -14,7 +14,7 @@ export type TokenInfo = {
 
 const initialState = () => ({
   list: {} as {
-    [ownerAddress: string]: { [chainId: number]: TokenInfo[] };
+    [ownerContractAddress: string]: { [chainId: number]: TokenInfo[] };
   },
   selectedToken: '', // address
 });
@@ -106,7 +106,7 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
 
   const selectedToken = useMemo<TokenInfo>(() => {
     if (state.selectedToken) {
-      const userTokens = state.list?.[activeWallet?.address || '']?.[walletState.networkId];
+      const userTokens = state.list?.[walletState.contractAddress || '']?.[walletState.networkId];
 
       if (userTokens) {
         const found = userTokens.find(x => x.address === state.selectedToken);
@@ -118,7 +118,7 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
     }
 
     return nativeToken;
-  }, [state.selectedToken, state.list]);
+  }, [state.selectedToken, state.list, walletState.contractAddress, walletState.networkId]);
 
   useEffect(() => {
     if (initialized) {
@@ -136,9 +136,11 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
 
         if (
           !!activeWallet &&
-          Array.isArray(restored?.list?.[activeWallet?.address || '']?.[walletState.networkId])
+          Array.isArray(
+            restored?.list?.[walletState.contractAddress || '']?.[walletState.networkId]
+          )
         ) {
-          restored.list[activeWallet.address][walletState.networkId].forEach(
+          restored.list[walletState.contractAddress][walletState.networkId].forEach(
             async (t: TokenInfo) => {
               if (wallet) {
                 const res = await wallet.contractRead({
@@ -152,7 +154,7 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
                   dispatch({
                     type: 'updateToken',
                     payload: {
-                      owner: activeWallet.address,
+                      owner: walletState.contractAddress,
                       chainId: walletState.networkId,
                       token: {
                         ...t,

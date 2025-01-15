@@ -36,6 +36,13 @@ export default function TestApp() {
             explorerUrl: 'https://www.oklink.com/amoy',
             imageUrl: 'https://cryptologos.cc/logos/polygon-matic-logo.png?v=022',
           },
+          {
+            name: 'Ethereum Sepolia',
+            id: 11155111,
+            rpcUrl: 'https://ethereum-sepolia-rpc.publicnode.com',
+            explorerUrl: 'https://sepolia.etherscan.io',
+            imageUrl: 'https://cryptologos.cc/logos/ethereum-eth-logo.png?v=022',
+          },
         ]}
       />
 

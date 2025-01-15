@@ -6,8 +6,7 @@ import Btn from '../ui/Btn';
 
 export default () => {
   const {
-    state: { networkId },
-    activeWallet,
+    state: { networkId, contractAddress },
     handleError,
     goScreenBack,
   } = useWalletContext();
@@ -42,13 +41,13 @@ export default () => {
               throw new Error('Could not get token details');
             }
 
-            if (!activeWallet?.address) {
+            if (!contractAddress) {
               throw new Error('Could not get user wallet address');
             }
 
             dispatch({
               type: 'updateToken',
-              payload: { owner: activeWallet.address, chainId: networkId, token: res },
+              payload: { owner: contractAddress, chainId: networkId, token: res },
             });
 
             goScreenBack();

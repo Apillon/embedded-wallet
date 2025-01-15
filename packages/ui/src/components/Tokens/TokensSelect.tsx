@@ -5,14 +5,14 @@ import Btn from '../ui/Btn';
 import SettingsMenuItem from '../Settings/SettingsMenuItem';
 
 export default () => {
-  const { state, activeWallet, setScreen, goScreenBack } = useWalletContext();
+  const { state, setScreen, goScreenBack } = useWalletContext();
   const { state: tokens, dispatch, nativeToken } = useTokensContext();
 
   const tokenList = useMemo<TokenInfo[]>(() => {
-    return Array.isArray(tokens.list[activeWallet?.address || '']?.[state.networkId])
-      ? [nativeToken, ...tokens.list[activeWallet?.address || ''][state.networkId]]
+    return Array.isArray(tokens.list[state.contractAddress || '']?.[state.networkId])
+      ? [nativeToken, ...tokens.list[state.contractAddress || ''][state.networkId]]
       : [nativeToken];
-  }, [tokens.list]);
+  }, [tokens.list, state.networkId, state.contractAddress]);
 
   return (
     <div className="pt-10 pb-2 min-h-full flex flex-col">

@@ -43,6 +43,8 @@ export default () => {
     }
 
     switch (walletScreen) {
+      case 'approve':
+        return <></>;
       case 'networks':
         return <WalletNetworkSelect />;
       case 'menuDot':

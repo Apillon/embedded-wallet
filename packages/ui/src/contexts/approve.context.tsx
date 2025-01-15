@@ -17,6 +17,7 @@ function ApproveProvider({ children }: { children: React.ReactNode }) {
     state: { walletScreenHistory },
     wallet,
     setStateValue: setForWallet,
+    setScreen,
   } = useWalletContext();
   const { dispatch: dispatchTx } = useTransactionsContext();
 
@@ -89,6 +90,12 @@ function ApproveProvider({ children }: { children: React.ReactNode }) {
     };
   }, [wallet]);
 
+  useEffect(() => {
+    if (state.approveParams || state.targetChain) {
+      setScreen('approve');
+    }
+  }, [state.approveParams, state.targetChain]);
+
   function setStateValue<T extends keyof ReturnType<typeof initialState>>(
     key: T,
     value: ReturnType<typeof initialState>[T]
@@ -98,7 +105,11 @@ function ApproveProvider({ children }: { children: React.ReactNode }) {
 
   // Close wallet modal if wallet was not opened before approve action.
   function onApproveDone(success = false) {
-    if (walletScreenHistory.length > 1) {
+    const newHistory = walletScreenHistory.filter(s => s !== 'approve');
+
+    setForWallet('walletScreenHistory', newHistory);
+
+    if (newHistory.length > 1) {
       if (!success) {
         if (!state.successInfo?.title) {
           if (state.approveParams?.contractWrite?.reject) {
@@ -107,11 +118,14 @@ function ApproveProvider({ children }: { children: React.ReactNode }) {
             state.approveParams.plain.reject(new UserRejectedRequestError());
           } else if (state.approveParams?.signature?.reject) {
             state.approveParams.signature.reject(new UserRejectedRequestError());
+          } else if (state?.targetChain?.resolve) {
+            state.targetChain.resolve(false);
           }
         }
       }
 
       dispatch({ type: 'reset' });
+      setForWallet('walletScreen', newHistory[newHistory.length - 1]);
     } else {
       setForWallet('isOpen', false);
     }

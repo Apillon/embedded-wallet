@@ -7,7 +7,7 @@ import MsgSuccess from '../ui/MsgSuccess';
 
 export default function AccountsImport() {
   const { wallet, goScreenBack, handleError } = useWalletContext();
-  const [type, setType] = useState('');
+  const [type, setType] = useState('pk');
   const [title, setTitle] = useState('');
   const [privateKey, setPrivateKey] = useState('');
   const [loading, setLoading] = useState(false);

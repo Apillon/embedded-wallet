@@ -7,8 +7,8 @@ import AuthTitle from './AuthTitle';
 export default () => {
   const {
     state: { appProps },
-    setStateValue: setForWallet,
   } = useWalletContext();
+
   const {
     state: { username, loading },
     setStateValue: setForAuth,
@@ -35,7 +35,7 @@ export default () => {
           Continue
         </Btn>
 
-        <button
+        {/* <button
           type="button"
           className="oaw-button-plain mt-3 text-xs text-center w-full rounded-sm opacity-100 hover:opacity-80"
           onClick={() => {
@@ -51,7 +51,7 @@ export default () => {
           }}
         >
           I have a login code
-        </button>
+        </button> */}
       </form>
     </>
   );

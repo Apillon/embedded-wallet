@@ -9,6 +9,7 @@ export default () => {
   const {
     wallet,
     state: { username, appProps },
+    formatNativeBalance,
   } = useWalletContext();
 
   const {
@@ -37,15 +38,17 @@ export default () => {
               key={k}
               label={k}
               data={
-                typeof v === 'bigint'
-                  ? v.toString()
-                  : typeof v === 'object'
-                    ? JSON.stringify(
-                        v,
-                        (_, value) => (typeof value === 'bigint' ? value.toString() : value),
-                        2
-                      )
-                    : v
+                k === 'value'
+                  ? formatNativeBalance(v)
+                  : typeof v === 'bigint'
+                    ? v.toString()
+                    : typeof v === 'object'
+                      ? JSON.stringify(
+                          v,
+                          (_, value) => (typeof value === 'bigint' ? value.toString() : value),
+                          2
+                        )
+                      : v
               }
               collapsable={typeof v === 'object'}
             />

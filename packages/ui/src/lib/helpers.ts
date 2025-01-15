@@ -20,6 +20,6 @@ export function logToStorage(msg: string) {
   );
 }
 
-export function formatBalance(balance: string) {
-  return `${parseFloat(balance)} ETH`;
+export function formatBalance(balance: string, unit = 'ETH') {
+  return `${parseFloat(balance)} ${unit}`;
 }

@@ -8,7 +8,7 @@ export default () => {
     state: { walletScreen },
   } = useWalletContext();
 
-  const isMain = walletScreen === 'main';
+  const isMain = walletScreen === 'main' || walletScreen === 'approve';
 
   return (
     <div
