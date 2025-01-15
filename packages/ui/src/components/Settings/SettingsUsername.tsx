@@ -1,10 +1,10 @@
 import { useRef, useState } from 'react';
 import { useWalletContext } from '../../contexts/wallet.context';
-import IconPencil from '../ui/IconPencil';
+import IconPencil from '../ui/Icon/IconPencil';
 import Input from '../ui/Input';
 import clsx from 'clsx';
 import Loader from '../ui/Loader';
-import IconCheck from '../ui/IconCheck';
+import IconCheck from '../ui/Icon/IconCheck';
 import useClickOutside from '../../hooks/useClickOutside';
 
 export default ({ className }: { className?: string }) => {

@@ -1,6 +1,6 @@
-import IconLinkOut from '../ui/IconLinkOut';
-import IconLock from '../ui/IconLock';
-import IconProfile from '../ui/IconProfile';
+import IconLinkOut from '../ui/Icon/IconLinkOut';
+import IconLock from '../ui/Icon/IconLock';
+import IconProfile from '../ui/Icon/IconProfile';
 import { useWalletContext } from '../../contexts/wallet.context';
 import Btn from '../ui/Btn';
 import SettingsMenuItem from './SettingsMenuItem';

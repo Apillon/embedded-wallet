@@ -1,8 +1,8 @@
 import { InputProps, Input as HeadlessInput } from '@headlessui/react';
 import clsx from 'clsx';
-import IconMagnify from './IconMagnify';
+import IconMagnify from './Icon/IconMagnify';
 import { useRef, useState } from 'react';
-import IconCircleX from './IconCircleX';
+import IconCircleX from './Icon/IconCircleX';
 import useClickOutside from '../../hooks/useClickOutside';
 
 export default function InputSearch({

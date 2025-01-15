@@ -1,7 +1,7 @@
 import { useApproveContext } from '../../contexts/approve.context';
 import AuthTitle from '../Auth/AuthTitle';
 import Btn from '../ui/Btn';
-import IconCheckCircle from '../ui/IconCheckCircle';
+import IconCheckCircle from '../ui/Icon/IconCheckCircle';
 
 export default () => {
   const {

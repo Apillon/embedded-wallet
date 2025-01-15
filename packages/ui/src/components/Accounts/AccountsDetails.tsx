@@ -2,10 +2,10 @@ import { useWalletContext } from '../../contexts/wallet.context';
 import SettingsUsername from '../Settings/SettingsUsername';
 // @ts-ignore
 import { QRCode } from 'react-qr-code';
-import IconCopy from '../ui/IconCopy';
+import IconCopy from '../ui/Icon/IconCopy';
 import Btn from '../ui/Btn';
 import useCopyToClipboard from '../../hooks/useCopyToClipboard';
-import IconCheckSmall from '../ui/IconCheckSmall';
+import IconCheckSmall from '../ui/Icon/IconCheckSmall';
 
 export default () => {
   const { activeWallet, setScreen } = useWalletContext();

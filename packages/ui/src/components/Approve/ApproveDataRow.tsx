@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import IconChevron from '../ui/IconChevron';
+import IconChevron from '../ui/Icon/IconChevron';
 import { useState } from 'react';
 
 export default ({

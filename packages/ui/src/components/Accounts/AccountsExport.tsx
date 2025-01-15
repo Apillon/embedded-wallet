@@ -5,8 +5,8 @@ import useCopyToClipboard from '../../hooks/useCopyToClipboard';
 import AccountsCurrent from './AccountsCurrent';
 import WarningBox from '../ui/WarningBox';
 import clsx from 'clsx';
-import IconCheckSmall from '../ui/IconCheckSmall';
-import IconCopy from '../ui/IconCopy';
+import IconCheckSmall from '../ui/Icon/IconCheckSmall';
+import IconCopy from '../ui/Icon/IconCopy';
 import HoldToReveal from '../ui/HoldToReveal';
 
 export default () => {

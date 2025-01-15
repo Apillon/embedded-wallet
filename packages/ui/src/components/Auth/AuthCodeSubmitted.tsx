@@ -1,6 +1,6 @@
 import { useAuthContext } from '../../contexts/auth.context';
 import Btn from '../ui/Btn';
-import IconCheckmark from '../ui/IconCheckmark';
+import IconCheckmark from '../ui/Icon/IconCheckmark';
 import AuthTitle from './AuthTitle';
 
 export default () => {

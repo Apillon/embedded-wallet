@@ -1,7 +1,7 @@
 import { useWalletContext, WalletScreens } from '../../contexts/wallet.context';
 import SettingsUsername from '../Settings/SettingsUsername';
-import IconArrow from '../ui/IconArrow';
-import IconHome from '../ui/IconHome';
+import IconArrow from '../ui/Icon/IconArrow';
+import IconHome from '../ui/Icon/IconHome';
 
 const titles = {
   networks: 'Networks',

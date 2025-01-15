@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import IconInfo from './IconInfo';
+import IconInfo from './Icon/IconInfo';
 
 export default ({ text, className }: { text: string; className?: string }) => (
   <div

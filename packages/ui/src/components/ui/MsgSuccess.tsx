@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import IconCheck from './IconCheck';
+import IconCheck from './Icon/IconCheck';
 
 export default ({ text, className }: { text: string; className?: string }) => {
   return (

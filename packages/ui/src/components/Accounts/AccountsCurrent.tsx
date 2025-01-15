@@ -1,8 +1,8 @@
 import { useWalletContext } from '../../contexts/wallet.context';
 import useCopyToClipboard from '../../hooks/useCopyToClipboard';
-import IconChevron from '../ui/IconChevron';
-import IconCopy from '../ui/IconCopy';
-import IconCheckSmall from '../ui/IconCheckSmall';
+import IconChevron from '../ui/Icon/IconChevron';
+import IconCopy from '../ui/Icon/IconCopy';
+import IconCheckSmall from '../ui/Icon/IconCheckSmall';
 import clsx from 'clsx';
 
 export default ({ noChevron = false, className }: { noChevron?: boolean; className?: string }) => {

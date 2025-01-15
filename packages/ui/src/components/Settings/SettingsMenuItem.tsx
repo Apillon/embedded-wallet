@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { WalletScreens, useWalletContext } from '../../contexts/wallet.context';
-import IconChevron from '../ui/IconChevron';
+import IconChevron from '../ui/Icon/IconChevron';
 
 export default ({
   title,

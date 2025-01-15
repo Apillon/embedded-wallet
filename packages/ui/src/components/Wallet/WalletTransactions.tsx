@@ -4,8 +4,8 @@ import { useTransactionsContext } from '../../contexts/transactions.context';
 import { useWalletContext } from '../../contexts/wallet.context';
 import { shortHash } from '../../lib/helpers';
 import useCopyToClipboard from '../../hooks/useCopyToClipboard';
-import IconCopy from '../ui/IconCopy';
-import IconCheckSmall from '../ui/IconCheckSmall';
+import IconCopy from '../ui/Icon/IconCopy';
+import IconCheckSmall from '../ui/Icon/IconCheckSmall';
 import dayjs from 'dayjs';
 import Pill from '../ui/Pill';
 

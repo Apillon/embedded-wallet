@@ -1,7 +1,7 @@
 import { useWalletContext } from '../../contexts/wallet.context';
-import IconChevron from '../ui/IconChevron';
+import IconChevron from '../ui/Icon/IconChevron';
 import apillonLogo from '../../assets/apillon.svg';
-import IconVdots from '../ui/IconVdots';
+import IconVdots from '../ui/Icon/IconVdots';
 import AccountsCurrent from '../Accounts/AccountsCurrent';
 
 export default () => {

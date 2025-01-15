@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import IconBird from '../ui/IconBird';
+import IconBird from '../ui/Icon/IconBird';
 import Btn from '../ui/Btn';
 import AuthTitle from './AuthTitle';
 import { useAuthContext } from '../../contexts/auth.context';
