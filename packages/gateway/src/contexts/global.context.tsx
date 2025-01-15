@@ -5,7 +5,7 @@ import {
   ErrorMessages,
 } from '@apillon/wallet-sdk';
 import { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
-import { isValidUrl } from './helpers';
+import { isValidUrl } from '../helpers';
 
 const GlobalContext = createContext<
   | {

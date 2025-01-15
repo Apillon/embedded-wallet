@@ -1,7 +1,7 @@
 import clsx from 'clsx';
-import { useGlobalContext } from '../global.context';
+import { useGlobalContext } from '../../contexts/global.context';
 
-export default function WalletError({
+export default function MsgError({
   text,
   show,
   className,
@@ -19,16 +19,22 @@ export default function WalletError({
   return (
     <div
       className={clsx(
-        'flex gap-2 justify-between items-start py-2 pl-3 pr-2 break-words text-sm text-white bg-red/75 rounded-md overflow-auto text-left',
+        'flex gap-2 justify-between items-start py-2 pl-3 pr-2 text-sm text-white bg-truered rounded-md text-left',
         className
       )}
-      style={{ maxHeight: '250px' }}
     >
-      {error || text || ''}
+      <div
+        className="min-w-0 overflow-auto -ml-3 pl-3"
+        style={{ maxHeight: '250px', direction: 'rtl' }}
+      >
+        <div className="break-words" style={{ direction: 'ltr' }}>
+          {text || error || ''}
+        </div>
+      </div>
 
       <button
         title="Dismiss"
-        className="!text-white/50 hover:!text-white -mt-0.5 shrink-0"
+        className="oaw-button-plain !text-white/50 hover:!text-white -mt-0.5 shrink-0"
         onClick={() => handleError()}
       >
         <svg

@@ -1,10 +1,13 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
-import { GlobalProvider } from './global.context.tsx';
-import WalletAuth from './components/WalletAuth.tsx';
-import Logo from './components/Logo.tsx';
+import { GlobalProvider } from './contexts/global.context.tsx';
+import { AuthProvider } from './contexts/auth.context.tsx';
 import { credentialGet, credentialCreate } from '@apillon/wallet-sdk';
+import clsx from 'clsx';
+import Auth from './components/Auth/Auth.tsx';
+import Loader from './components/ui/Loader.tsx';
+import Logo from './components/ui/Logo.tsx';
 
 const urlParams = new URLSearchParams(window.location.search);
 
@@ -12,28 +15,42 @@ if (!urlParams.has('popup')) {
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <GlobalProvider>
-        <div className="flex flex-col min-h-[100svh] justify-center items-center">
-          <div className="relative max-w-[440px] w-full min-h-[476px] bg-dark p-8 sm:p-12 border border-brightdark text-offwhite flex flex-col">
-            <div className="sm:mb-8 mb-12 text-center">
-              <Logo className="inline-block" />
+        <AuthProvider>
+          <div className="flex flex-col min-h-[100svh] justify-center items-center">
+            <div className="relative max-w-[445px] w-full min-h-[380px] bg-dark border border-lightdark text-offwhite flex flex-col">
+              <Auth />
+
+              <div className="flex-grow"></div>
+
+              <p className={clsx('text-xs px-8 text-center', 'pb-8 sm:pb-12')}>
+                <a
+                  href="https://apillon.io/"
+                  target="_blank"
+                  className="rounded-sm opacity-100 hover:opacity-80"
+                >
+                  Powered by ©Apillon
+                </a>
+              </p>
             </div>
-
-            <WalletAuth />
-
-            <div className="flex-grow"></div>
-
-            <p className="text-xs mt-6 text-center">
-              <a
-                href="https://apillon.io/"
-                target="_blank"
-                className="rounded-sm opacity-100 hover:opacity-80"
-              >
-                Powered by ©Apillon
-              </a>
-            </p>
           </div>
-        </div>
+        </AuthProvider>
       </GlobalProvider>
+    </StrictMode>
+  );
+} else {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <div className="flex flex-col min-h-[100svh] justify-center items-center p-8 text-center">
+        <h1 className="hidden">Apillon</h1>
+
+        <Logo className="mb-8" />
+
+        <Loader />
+
+        <p id="statustext" className="text-lightgrey text-base mt-8">
+          Configuring passkey
+        </p>
+      </div>
     </StrictMode>
   );
 }
