@@ -8,6 +8,7 @@ import {
   ContractReadParams,
   ContractWriteParams,
   Events,
+  GaslessTxType,
   PlainTransactionParams,
   RegisterData,
   SignMessageParams,
@@ -141,11 +142,11 @@ class EmbeddedWallet {
     skipAccountWallets = false
   ) {
     if (!this.sapphireProvider) {
-      abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
+      return abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
     }
 
     if (!this.accountManagerContract) {
-      abort('ACCOUNT_MANAGER_CONTRACT_NOT_INITIALIZED');
+      return abort('ACCOUNT_MANAGER_CONTRACT_NOT_INITIALIZED');
     }
 
     let registerData = undefined as RegisterData | undefined;
@@ -186,7 +187,7 @@ class EmbeddedWallet {
     const gaslessParams = await this.getApillonSignature(gaslessData);
 
     if (!gaslessParams.signature) {
-      abort('CANT_GET_SIGNATURE');
+      return abort('CANT_GET_SIGNATURE');
     }
 
     const signedTx = await this.accountManagerContract.generateGaslessTx(
@@ -474,13 +475,50 @@ class EmbeddedWallet {
       ]
     );
 
-    const res = await this.proxyWriteForStrategy(
-      params.strategy,
-      'addWallet',
+    // const res = await this.proxyWriteForStrategy(
+    //   params.strategy,
+    //   'addWallet',
+    //   data,
+    //   params.authData,
+    //   'Add new account'
+    // );
+
+    let txType = GaslessTxType.AddWallet;
+    let funcDataTypes = '';
+
+    if (params.strategy === 'passkey') {
+      txType = GaslessTxType.AddWallet;
+      funcDataTypes =
+        'tuple(bytes32 credentialIdHashed, (bytes authenticatorData, (uint8 t, string k, string v)[] clientDataTokens, uint256 sigR, uint256 sigS) resp, bytes data)';
+    } else if (params.strategy === 'password') {
+      txType = GaslessTxType.AddWalletPassword;
+      funcDataTypes = 'tuple(bytes32 hashedUsername, bytes32 digest, bytes data)';
+    }
+
+    const res = await this.gaslessTx({
+      label: 'Add new account',
+      strategy: params.strategy,
+      authData: params.authData,
       data,
-      params.authData,
-      'Add new account'
-    );
+      txType,
+      funcDataTypes,
+      funcDataValuesFormatter(p) {
+        if (p.credentials.passkey) {
+          return {
+            ...p.credentials.passkey,
+            data,
+          };
+        } else if (p.credentials.password) {
+          return {
+            hashedUsername: p.hashedUsername,
+            digest: p.credentials.password,
+            data,
+          };
+        }
+
+        return {};
+      },
+    });
 
     if (res) {
       return res as string;
@@ -1125,6 +1163,99 @@ class EmbeddedWallet {
       return await contract[params.contractFunctionName]();
     }
   }
+
+  async gaslessTx(params: {
+    strategy: AuthStrategyName;
+    authData: AuthData;
+    data: any;
+    txType: GaslessTxType;
+    funcDataTypes: string;
+    funcDataValuesFormatter(p: {
+      credentials: {
+        passkey: Awaited<ReturnType<InstanceType<typeof PasskeyStrategy>['getPasskeyForMode']>>;
+        password: Awaited<ReturnType<InstanceType<typeof PasswordStrategy>['getCredentials']>>;
+      };
+      hashedUsername: Buffer;
+    }): any;
+    label?: string;
+    internalLabel?: string;
+  }) {
+    if (!this.sapphireProvider) {
+      return abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
+    }
+
+    if (!this.accountManagerContract) {
+      return abort('ACCOUNT_MANAGER_CONTRACT_NOT_INITIALIZED');
+    }
+
+    if (!params.authData.hashedUsername) {
+      params.authData.hashedUsername = await getHashedUsername(params.authData.username);
+    }
+
+    if (!params.authData.hashedUsername) {
+      abort('CANT_HASH_USERNAME');
+      return;
+    }
+
+    // Get credentials
+    const credentials = {
+      [params.strategy]: await this.getCredentialsForStrategy(
+        params.strategy,
+        params.data,
+        params.authData
+      ),
+    } as any;
+
+    // Format gaslessData
+    const funcDataValues = params.funcDataValuesFormatter({
+      credentials,
+      hashedUsername: params.authData.hashedUsername,
+    });
+
+    const gaslessData = this.abiCoder.encode(
+      ['tuple(bytes funcData, uint8 txType)'],
+      [
+        {
+          funcData: this.abiCoder.encode([params.funcDataTypes], [funcDataValues]),
+          txType: params.txType,
+        },
+      ]
+    );
+
+    // Calculate tx params
+    const gasPrice = (await this.sapphireProvider.getFeeData()).gasPrice;
+    const nonce = await this.sapphireProvider.getTransactionCount(
+      await this.accountManagerContract.gaspayingAddress()
+    );
+
+    // Get signature from API (handle gas payments e.g.)
+    const gaslessParams = await this.getApillonSignature(gaslessData);
+
+    if (!gaslessParams.signature) {
+      return abort('CANT_GET_SIGNATURE');
+    }
+
+    // Invoke contract method to get plain tx data
+    const signedTx = await this.accountManagerContract.generateGaslessTx(
+      gaslessData,
+      nonce as any,
+      gaslessParams.gasPrice ? BigInt(gaslessParams.gasPrice) : (gasPrice as any),
+      gaslessParams.gasLimit ? BigInt(gaslessParams.gasLimit) : 1_000_000n,
+      BigInt(gaslessParams.timestamp),
+      gaslessParams.signature
+    );
+
+    const res = await this.broadcastTransaction(
+      signedTx,
+      undefined,
+      params.label || 'Gasless Transaction',
+      params.internalLabel || `gasless_${params.txType}`
+    );
+
+    if (res.txHash) {
+      return res.txHash;
+    }
+  }
   // #endregion
 
   // #region Helpers
@@ -1147,6 +1278,10 @@ class EmbeddedWallet {
     }
   }
 
+  /**
+   * Use signContractWrite to invoke an account manager method and broadcast the tx
+   * @returns txHash | undefined
+   */
   async proxyWriteForStrategy(
     strategy: AuthStrategyName,
     functionName: keyof typeof ProxyWriteFunctionsByStrategy,
@@ -1176,6 +1311,20 @@ class EmbeddedWallet {
         authData,
         txLabel,
         dontWait
+      );
+    }
+  }
+
+  async getCredentialsForStrategy(strategy: AuthStrategyName, data: any, authData: AuthData) {
+    const hashedUsername = authData.hashedUsername || (await getHashedUsername(authData.username));
+
+    if (strategy === 'password') {
+      return await new PasswordStrategy(this).getCredentials(data, { ...authData, hashedUsername });
+    } else if (strategy === 'passkey') {
+      return await new PasskeyStrategy(this).getPasskeyForMode(
+        this?.xdomain?.mode || 'standalone',
+        hashedUsername!,
+        data
       );
     }
   }

@@ -167,6 +167,14 @@ export type ContractWriteParams = {
   reject?: (reason?: any) => void;
 } & ContractReadParams;
 
+export enum GaslessTxType {
+  CreateAccount,
+  ManageCredential,
+  ManageCredentialPassword,
+  AddWallet,
+  AddWalletPassword,
+}
+
 export type TransactionItem = {
   hash: string;
   label: string;

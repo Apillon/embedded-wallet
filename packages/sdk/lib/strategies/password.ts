@@ -145,6 +145,22 @@ class PasswordStrategy implements AuthStrategy {
     }
   }
 
+  async getCredentials(data: any, authData: AuthData) {
+    const hashedUsername = authData.hashedUsername || (await getHashedUsername(authData.username));
+
+    if (!hashedUsername) {
+      abort('CANT_HASH_USERNAME');
+      return;
+    }
+
+    const digest = ethers.solidityPackedKeccak256(
+      ['bytes32', 'bytes'],
+      [ethers.encodeBytes32String(authData.password!), data]
+    );
+
+    return digest;
+  }
+
   generateNewKeypair() {
     const privateKey = secp256r1.utils.randomPrivateKey();
     const pubKey = secp256r1.getPublicKey(privateKey, false);

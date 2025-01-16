@@ -277,6 +277,8 @@ function isAccountWalletsTx(tx?: TransactionItem) {
       'proxyWrite_addWalletPassword',
       'proxyWrite_manageCredential',
       'proxyWrite_manageCredentialPassword',
+      'gasless_3', // AddWallet
+      'gasless_4', // AddWalletPassword
       'updateAccountWalletTitle',
     ].includes(tx.internalLabel)
   );
