@@ -1,5 +1,11 @@
 import { ethers } from 'ethers';
-import { AuthData, AuthPasskeyMode, AuthProxyWriteFns, AuthStrategy } from '../types';
+import {
+  AuthData,
+  AuthPasskeyMode,
+  AuthPasskeyModeInternal,
+  AuthProxyWriteFns,
+  AuthStrategy,
+} from '../types';
 import { abort, getHashedUsername, getPasskeyOrigin } from '../utils';
 import { credentialCreate, credentialGet } from '../browser-webauthn';
 import { SapphireMainnet, SapphireTestnet, WalletType } from '../constants';
@@ -168,7 +174,11 @@ class PasskeyStrategy implements AuthStrategy {
     }
   }
 
-  async getPasskeyForMode(mode: AuthPasskeyMode, hashedUsername: Buffer, data: any) {
+  async getPasskeyForMode(
+    mode: AuthPasskeyMode | AuthPasskeyModeInternal,
+    hashedUsername: Buffer,
+    data: any
+  ) {
     const personalization = await this.wallet.accountManagerContract.personalization();
     const credentialIds = await this.wallet.accountManagerContract.credentialIdsByUsername(
       hashedUsername as any

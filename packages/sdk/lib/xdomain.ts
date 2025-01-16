@@ -1,5 +1,5 @@
 import { ErrorMessages, Errors } from './constants';
-import { AuthPasskeyMode, AuthStrategyName } from './types';
+import { AuthPasskeyMode, AuthPasskeyModeInternal, AuthStrategyName } from './types';
 import { abort, isSafari } from './utils';
 
 /**
@@ -20,7 +20,7 @@ export class XdomainPasskey {
 
   constructor(
     public clientId: string,
-    public mode: AuthPasskeyMode = 'redirect'
+    public mode: AuthPasskeyMode | AuthPasskeyModeInternal = 'redirect'
   ) {
     if (mode !== 'standalone') {
       window.addEventListener('message', this.onResponse.bind(this));
