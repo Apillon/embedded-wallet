@@ -91,10 +91,10 @@ function ApproveProvider({ children }: { children: React.ReactNode }) {
   }, [wallet]);
 
   useEffect(() => {
-    if (state.approveParams || state.targetChain) {
+    if (state.approveParams || state.targetChain || state.successInfo) {
       setScreen('approve');
     }
-  }, [state.approveParams, state.targetChain]);
+  }, [state.approveParams, state.targetChain, state.successInfo]);
 
   function setStateValue<T extends keyof ReturnType<typeof initialState>>(
     key: T,

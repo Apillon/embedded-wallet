@@ -19,6 +19,7 @@ export default function AccountsImport() {
     }
 
     setLoading(true);
+    handleError();
 
     try {
       await wallet?.addAccountWallet({

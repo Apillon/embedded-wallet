@@ -1,13 +1,30 @@
+import { useEffect, useRef } from 'react';
 import { useApproveContext } from '../../contexts/approve.context';
 import AuthTitle from '../Auth/AuthTitle';
 import Btn from '../ui/Btn';
 import IconCheckCircle from '../ui/Icon/IconCheckCircle';
+import { useWalletContext } from '../../contexts/wallet.context';
 
 export default () => {
+  const {
+    state: { walletScreen },
+  } = useWalletContext();
   const {
     state: { successInfo },
     onApproveDone,
   } = useApproveContext();
+  const isApproveScreen = useRef(false);
+
+  /**
+   * Reject request if user navigates away from approve screen.
+   */
+  useEffect(() => {
+    if (isApproveScreen.current && walletScreen !== 'approve') {
+      onApproveDone();
+    } else if (walletScreen === 'approve') {
+      isApproveScreen.current = true;
+    }
+  }, [walletScreen]);
 
   if (!successInfo) {
     return <></>;
