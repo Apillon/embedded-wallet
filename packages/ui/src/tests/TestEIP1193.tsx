@@ -22,10 +22,13 @@ export default function TestEIP1193() {
             const p = getProvider();
             const w = getEmbeddedWallet();
 
-            if (w?.lastAccount.address) {
+            if (w?.lastAccount.wallets?.[w?.lastAccount.walletIndex]) {
               const res = await p.request({
                 method: 'eth_sign',
-                params: [w?.lastAccount.address, `0xTest message`],
+                params: [
+                  w?.lastAccount.wallets[w?.lastAccount.walletIndex].address,
+                  `Test message` as `0x${string}`,
+                ],
               });
               console.log(res);
             }
@@ -41,7 +44,7 @@ export default function TestEIP1193() {
             const p = getProvider();
             const w = getEmbeddedWallet();
 
-            if (w?.lastAccount.address) {
+            if (w?.lastAccount.wallets[w?.lastAccount.walletIndex]) {
               const res = await p.request({
                 method: 'eth_signTransaction',
                 params: [

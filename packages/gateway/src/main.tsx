@@ -1,43 +1,72 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
-import { GlobalProvider } from './global.context.tsx';
-import WalletAuth from './components/WalletAuth.tsx';
-import Logo from './components/Logo.tsx';
-import { credentialGet } from '@apillon/wallet-sdk';
+import { GlobalProvider } from './contexts/global.context.tsx';
+import { AuthProvider } from './contexts/auth.context.tsx';
+import { credentialGet, credentialCreate } from '@apillon/wallet-sdk';
+import clsx from 'clsx';
+import Auth from './components/Auth/Auth.tsx';
+import Loader from './components/ui/Loader.tsx';
+import Logo from './components/ui/Logo.tsx';
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <GlobalProvider>
-      <div className="flex flex-col min-h-[100svh] justify-center items-center">
-        <div className="relative max-w-[440px] w-full min-h-[476px] bg-dark p-8 sm:p-12 border border-brightdark text-offwhite flex flex-col">
-          <div className="sm:mb-8 mb-12 text-center">
-            <Logo className="inline-block" />
+const urlParams = new URLSearchParams(window.location.search);
+
+if (!urlParams.has('popup')) {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <GlobalProvider>
+        <AuthProvider>
+          <div className="flex flex-col min-h-[100svh] justify-center items-center">
+            <div className="relative max-w-[445px] w-full min-h-[380px] bg-dark border border-lightdark text-offwhite flex flex-col">
+              <Auth />
+
+              <div className="flex-grow"></div>
+
+              <p className={clsx('text-xs px-8 text-center', 'pb-8 sm:pb-12')}>
+                <a
+                  href="https://apillon.io/"
+                  target="_blank"
+                  className="rounded-sm opacity-100 hover:opacity-80"
+                >
+                  Powered by ©Apillon
+                </a>
+              </p>
+            </div>
           </div>
+        </AuthProvider>
+      </GlobalProvider>
+    </StrictMode>
+  );
+} else {
+  createRoot(document.getElementById('loading')!).render(
+    <StrictMode>
+      <div className="flex flex-col min-h-[100svh] justify-center items-center p-8 text-center">
+        <h1 className="hidden">Apillon</h1>
 
-          <WalletAuth />
+        <Logo className="mb-8" />
 
-          <div className="flex-grow"></div>
+        <Loader />
 
-          <p className="text-xs mt-6 text-center">
-            <a
-              href="https://apillon.io/"
-              target="_blank"
-              className="rounded-sm opacity-100 hover:opacity-80"
-            >
-              Powered by ©Apillon
-            </a>
-          </p>
-        </div>
+        <p id="statustext" className="text-lightgrey text-base mt-8">
+          Configuring passkey
+        </p>
       </div>
-    </GlobalProvider>
-  </StrictMode>
-);
+    </StrictMode>
+  );
+}
 
-// #region iframe auth
+// #region iframe/popup
+window.addEventListener('load', () => {
+  window.opener?.postMessage({ type: 'apillon_pk_load' }, '*');
+});
+
 window.addEventListener('message', ev => {
   if (ev.data.type === 'get_pk_credentials') {
     getPasskey(ev.data.id, ev.data.content);
+  } else if (ev.data.type === 'create_pk_credentials') {
+    createPasskey(ev.data.id, ev.data.content);
+  } else if (ev.data.type === 'save_pk_event_id') {
+    sessionStorage.setItem('event_id', ev.data.id);
   }
 });
 
@@ -65,6 +94,46 @@ async function getPasskey(
     );
   } catch (e) {
     window.top?.postMessage(
+      {
+        type: 'apillon_pk_error',
+        id: eventId,
+        content: e,
+      },
+      '*'
+    );
+  }
+}
+
+async function createPasskey(
+  eventId: number,
+  content: { hashedUsername: Buffer; username: string }
+) {
+  try {
+    const cred = await credentialCreate(
+      {
+        name: 'Embedded Wallet Account',
+        id: window.location.hostname,
+      },
+      {
+        id: content.hashedUsername,
+        name: content.username,
+        displayName: content.username,
+      },
+      crypto.getRandomValues(new Uint8Array(32))
+    );
+    window.opener?.postMessage(
+      {
+        type: 'apillon_pk_response',
+        id: eventId,
+        content: {
+          credentialId: cred.id,
+          pubkey: cred.ad.attestedCredentialData!.credentialPublicKey!,
+        },
+      },
+      '*'
+    );
+  } catch (e) {
+    window.opener?.postMessage(
       {
         type: 'apillon_pk_error',
         id: eventId,

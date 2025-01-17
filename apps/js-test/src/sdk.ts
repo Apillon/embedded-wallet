@@ -20,7 +20,7 @@ document.getElementById('sdk-native-balance')?.addEventListener('click', async (
     const address = await w.getAccountAddress();
 
     if (address) {
-      const result = await w.getAccountBalance(address.publicAddress);
+      const result = await w.getAccountBalance(address);
       console.log(result);
     }
   }
@@ -61,7 +61,7 @@ document.getElementById('sdk-contract-read')?.addEventListener('click', async ()
         ],
         contractAddress: '0x67b9DA16d0Adf2dF05F0564c081379479d0448f8',
         contractFunctionName: 'balanceOf',
-        contractFunctionValues: [address.publicAddress],
+        contractFunctionValues: [address],
         chainId: 1287,
       });
 

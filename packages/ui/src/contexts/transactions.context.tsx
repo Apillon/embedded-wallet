@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useReducer, useState } from 'react';
-import { getEmbeddedWallet, WebStorageKeys, TransactionItem } from '@apillon/wallet-sdk';
+import { getEmbeddedWallet, TransactionItem } from '@apillon/wallet-sdk';
 import { useWalletContext } from './wallet.context';
+import { WebStorageKeys } from '../lib/constants';
 
 const initialState = () => ({
   txs: {} as { [ownerAddress: string]: { [txHash: string]: TransactionItem } },
@@ -86,7 +87,7 @@ const TransactionsContext = createContext<
   | {
       state: ContextState;
       dispatch: (action: ContextActions) => void;
-      checkTransaction: (txHash: string) => void;
+      checkTransaction: (txHash: string, txData?: TransactionItem) => void;
     }
   | undefined
 >(undefined);
@@ -95,10 +96,7 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState());
   const [initialized, setInitialized] = useState(false);
 
-  const {
-    state: { address: accountAddress },
-    reloadUserBalance,
-  } = useWalletContext();
+  const { activeWallet, reloadAccountBalances, dispatch: dispatchWallet } = useWalletContext();
 
   useEffect(() => {
     if (initialized) {
@@ -127,15 +125,15 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (
-      accountAddress &&
-      state.txs[accountAddress] &&
-      Object.keys(state.txs[accountAddress]).length
+      activeWallet &&
+      state.txs[activeWallet.address] &&
+      Object.keys(state.txs[activeWallet.address]).length
     ) {
-      for (const h of Object.keys(state.txs[accountAddress])) {
-        checkTransaction(h);
+      for (const tx of Object.values(state.txs[activeWallet.address])) {
+        checkTransaction(tx.hash, tx);
       }
     }
-  }, [accountAddress, state.txs]);
+  }, [activeWallet, state.txs]);
 
   /**
    * Check if transaction is already finalized in store.
@@ -143,8 +141,8 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
    * otherwise attach a listener to provider that updates when
    * the transaction is mined.
    */
-  async function checkTransaction(txHash: string) {
-    if (!accountAddress) {
+  async function checkTransaction(txHash: string, txData?: TransactionItem) {
+    if (!activeWallet) {
       return;
     }
 
@@ -160,7 +158,7 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
       throw new Error('Provider not initialized. ' + txHash);
     }
 
-    const tx = state.txs[accountAddress]?.[txHash];
+    const tx = state.txs[activeWallet.address]?.[txHash];
 
     // Tx doesnt exist, is done, or is already pending
     if (
@@ -203,7 +201,7 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
         const failed = ev && !isNaN(ev.status) && ev.status === 0;
 
         // Reload balance on every tx
-        reloadUserBalance();
+        reloadAccountBalances();
 
         // Finalize tx, also remove persist if tx failed
         dispatch({
@@ -213,6 +211,14 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
             status: failed ? 'failed' : 'confirmed',
           },
         });
+
+        // set wallets data to stale if needed
+        if (!failed && isAccountWalletsTx(txData)) {
+          dispatchWallet({
+            type: 'setValue',
+            payload: { key: 'isAccountWalletsStale', value: true },
+          });
+        }
 
         wallet.events.emit('txDone', tx);
       });
@@ -228,6 +234,13 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
             status: 'confirmed',
           },
         });
+
+        if (isAccountWalletsTx(txData)) {
+          dispatchWallet({
+            type: 'setValue',
+            payload: { key: 'isAccountWalletsStale', value: true },
+          });
+        }
       } else {
         // Tx failed
         dispatch({
@@ -240,7 +253,7 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Reload balance on every tx
-      reloadUserBalance();
+      reloadAccountBalances();
 
       wallet.events.emit('txDone', tx);
     }
@@ -250,6 +263,24 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
     <TransactionsContext.Provider value={{ state, dispatch, checkTransaction }}>
       {children}
     </TransactionsContext.Provider>
+  );
+}
+
+/**
+ * Check if transaction is for a contract call that changes user's wallets
+ */
+function isAccountWalletsTx(tx?: TransactionItem) {
+  return (
+    tx?.internalLabel &&
+    [
+      'proxyWrite_addWallet',
+      'proxyWrite_addWalletPassword',
+      'proxyWrite_manageCredential',
+      'proxyWrite_manageCredentialPassword',
+      'gasless_3', // AddWallet
+      'gasless_4', // AddWalletPassword
+      'updateAccountWalletTitle',
+    ].includes(tx.internalLabel)
   );
 }
 

@@ -1,11 +1,16 @@
-import { AuthData, AuthStrategy, WebauthnContract } from '../types';
+import { AuthData, AuthProxyWriteFns, AuthStrategy } from '../types';
 import { secp256r1 } from '@noble/curves/p256';
 import { bytesToHex } from '@noble/curves/abstract/utils';
 import { ethers } from 'ethers';
 import { abort, getHashedUsername } from '../utils';
+import { SapphireMainnet, SapphireTestnet, WalletType } from '../constants';
+import EmbeddedWallet from '..';
+import { AccountManagerAbi } from '../abi';
 
 class PasswordStrategy implements AuthStrategy {
   abiCoder = ethers.AbiCoder.defaultAbiCoder();
+
+  constructor(public wallet: EmbeddedWallet) {}
 
   async getRegisterData(authData: AuthData) {
     if (!authData.username) {
@@ -36,22 +41,30 @@ class PasswordStrategy implements AuthStrategy {
         y: keyPair.decoded_y,
       },
       optionalPassword: ethers.encodeBytes32String(authData.password!),
+      wallet: {
+        walletType: WalletType.EVM,
+        keypairSecret: ethers.ZeroHash,
+        title: authData.username,
+      },
     };
   }
 
-  async getProxyResponse(WAC: WebauthnContract, data: string, authData: AuthData) {
+  async getProxyResponse(data: string, authData: AuthData) {
     if (!authData.username) {
       abort('NO_USERNAME');
+      return;
     }
 
     if (!authData.password) {
       abort('NO_PASSWORD');
+      return;
     }
 
     const hashedUsername = await getHashedUsername(authData.username);
 
     if (!hashedUsername) {
       abort('CANT_HASH_USERNAME');
+      return;
     }
 
     const digest = ethers.solidityPackedKeccak256(
@@ -59,7 +72,93 @@ class PasswordStrategy implements AuthStrategy {
       [ethers.encodeBytes32String(authData.password!), data]
     );
 
-    return await WAC.proxyViewPassword(hashedUsername as any, digest, data);
+    return await this.wallet.accountManagerContract.proxyViewPassword(
+      hashedUsername as any,
+      digest,
+      data
+    );
+  }
+
+  async proxyWrite(
+    functionName: AuthProxyWriteFns,
+    data: string,
+    authData: AuthData,
+    txLabel?: string,
+    dontWait = false
+  ) {
+    if (!authData.username) {
+      abort('NO_USERNAME');
+      return;
+    }
+
+    if (!authData.password) {
+      abort('NO_PASSWORD');
+      return;
+    }
+
+    const hashedUsername = await getHashedUsername(authData.username);
+
+    if (!hashedUsername) {
+      abort('CANT_HASH_USERNAME');
+      return;
+    }
+
+    const digest = ethers.solidityPackedKeccak256(
+      ['bytes32', 'bytes'],
+      [ethers.encodeBytes32String(authData.password!), data]
+    );
+
+    const res = await this.wallet.signContractWrite({
+      authData,
+      strategy: 'password',
+      label: txLabel,
+      contractAddress: this.wallet.accountManagerAddress,
+      contractAbi: AccountManagerAbi,
+      contractFunctionName: functionName,
+      contractFunctionValues: [
+        {
+          hashedUsername,
+          digest,
+          data,
+        },
+      ],
+      chainId: (import.meta.env.VITE_SAPPHIRE_URL ?? '').includes('testnet')
+        ? SapphireTestnet
+        : SapphireMainnet,
+    });
+
+    if (res) {
+      const { txHash } = await this.wallet.broadcastTransaction(
+        res?.signedTxData,
+        res?.chainId,
+        txLabel,
+        `proxyWrite_${functionName}`
+      );
+
+      if (dontWait) {
+        return txHash;
+      }
+
+      if (await this.wallet.waitForTxReceipt(txHash)) {
+        return txHash;
+      }
+    }
+  }
+
+  async getCredentials(data: any, authData: AuthData) {
+    const hashedUsername = authData.hashedUsername || (await getHashedUsername(authData.username));
+
+    if (!hashedUsername) {
+      abort('CANT_HASH_USERNAME');
+      return;
+    }
+
+    const digest = ethers.solidityPackedKeccak256(
+      ['bytes32', 'bytes'],
+      [ethers.encodeBytes32String(authData.password!), data]
+    );
+
+    return digest;
   }
 
   generateNewKeypair() {

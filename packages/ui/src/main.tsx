@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import WalletWidget, { AppProps } from './components/WalletWidget';
+import EmbeddedWallet, { AppProps } from './components/EmbeddedWallet';
 import './index.css';
 
 export function EmbeddedWalletUI(activatorSelector?: string, options?: AppProps) {
@@ -28,7 +28,7 @@ export function EmbeddedWalletUI(activatorSelector?: string, options?: AppProps)
 
   ReactDOM.createRoot(selectedEl).render(
     <React.StrictMode>
-      <WalletWidget {...options} />
+      <EmbeddedWallet {...options} />
     </React.StrictMode>
   );
 }

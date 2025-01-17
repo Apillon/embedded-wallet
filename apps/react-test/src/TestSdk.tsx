@@ -53,7 +53,7 @@ export default function TestSdk() {
 
       <button
         onClick={async () => {
-          console.log(await read('balanceOf', [info.address]));
+          console.log(await read('balanceOf', [info?.activeWallet?.address]));
         }}
       >
         (SDK) Contract read (balanceOf)

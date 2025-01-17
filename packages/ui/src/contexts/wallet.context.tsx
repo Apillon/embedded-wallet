@@ -1,36 +1,64 @@
-import { ReactNode, createContext, useContext, useEffect, useReducer, useState } from 'react';
+import {
+  ReactNode,
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useReducer,
+  useState,
+} from 'react';
 import {
   AuthStrategyName,
   ErrorMessages,
-  WebStorageKeys,
   EmbeddedWallet,
   EmbeddedWalletSDK,
   SapphireMainnet,
   Network,
   SapphireTestnet,
+  AccountWallet,
 } from '@apillon/wallet-sdk';
+import { ethers } from 'ethers';
 import { AppProps } from '../main';
+import { WebStorageKeys } from '../lib/constants';
+import { logToStorage } from '../lib/helpers';
+import oasisLogo from '../assets/oasis.svg';
 
 export type WalletScreens =
   | 'main'
+  | 'approve'
   | 'networks'
   | 'transactions'
   | 'sendToken'
   | 'selectToken'
-  | 'receiveToken'
-  | 'exportPrivateKey';
+  | 'addToken'
+  | 'exportPrivateKey'
+  | 'selectAccounts'
+  | 'addAccount'
+  | 'importAccount'
+  | 'reloadAccounts'
+  | 'renameAccount'
+  | 'menuDot'
+  | 'menuMore'
+  | 'accountDetails'
+  | 'settingsGeneral';
+
+type AccountWalletEx = AccountWallet & { balance: string };
 
 const initialState = (defaultNetworkId = 0, appProps: AppProps) => ({
   username: '',
-  address: '',
+  walletIndex: 0,
+  accountWallets: [] as AccountWalletEx[],
+  isAccountWalletsStale: false,
   contractAddress: '',
-  privateKey: '',
-  balance: '',
+  privateKeys: {} as { [walletAddress: string]: string },
   authStrategy: 'passkey' as AuthStrategyName,
   networkId: defaultNetworkId,
   walletScreen: 'main' as WalletScreens,
+  walletScreenHistory: [] as WalletScreens[],
+  isOpen: false, // is wallet modal displayed
   displayedError: '',
   appProps,
+  loadingWallets: false,
 });
 
 type ContextState = ReturnType<typeof initialState>;
@@ -47,20 +75,62 @@ type ContextActions =
       type: 'setState';
       payload: Partial<ReturnType<typeof initialState>>;
     }
+  | { type: 'setBalance'; payload: { address: string; balance?: string } }
   | { type: 'reset' };
 
 function reducer(state: ContextState, action: ContextActions) {
   switch (action.type) {
-    case 'setValue':
+    case 'setValue': {
+      // Keep history of wallet screens routing
+      // and reset displayed error
+      if (action.payload.key === 'walletScreen') {
+        const walletScreenHistory = [...state.walletScreenHistory];
+
+        if (
+          walletScreenHistory.length > 1 &&
+          walletScreenHistory[walletScreenHistory.length - 2] === action.payload.value
+        ) {
+          walletScreenHistory.pop();
+        } else if (
+          walletScreenHistory.length > 0 &&
+          walletScreenHistory[walletScreenHistory.length - 1] === action.payload.value
+        ) {
+          // same screen, do nothing
+        } else {
+          walletScreenHistory.push(action.payload.value);
+        }
+
+        return {
+          ...state,
+          walletScreenHistory,
+          displayedError: '',
+          [action.payload.key]: action.payload.value,
+        };
+      }
+
       return {
         ...state,
         [action.payload.key]: action.payload.value,
       };
+    }
     case 'setState':
       return {
         ...state,
         ...action.payload,
       };
+    case 'setBalance': {
+      const updated = [...state.accountWallets];
+      const found = updated.findIndex(x => x.address === action.payload.address);
+
+      if (found > -1) {
+        updated[found].balance = action.payload.balance || '';
+      }
+
+      return {
+        ...state,
+        accountWallets: updated,
+      };
+    }
     case 'reset':
       return initialState(state.networkId, state.appProps);
     default:
@@ -75,11 +145,25 @@ const WalletContext = createContext<
       networks: Network[];
       networksById: { [networkId: number]: Network };
       defaultNetworkId: number;
+      activeWallet?: AccountWalletEx;
       wallet?: EmbeddedWallet;
       setWallet: (wallet: EmbeddedWallet) => void;
-      reloadUserBalance: (walletRef?: EmbeddedWallet) => void;
+      loadAccountWallets: (
+        strategy?: AuthStrategyName,
+        username?: string
+      ) => Promise<AccountWallet[] | undefined>;
+      reloadAccountBalances: (
+        addresses?: string[],
+        accountWallets?: AccountWalletEx[]
+      ) => Promise<boolean | undefined>;
+      formatNativeBalance: (balance: string | bigint | number) => string;
       setScreen: (screen: WalletScreens) => void;
+      goScreenBack: () => void;
       handleError: (e?: any, src?: string) => string;
+      setStateValue: <T extends keyof ReturnType<typeof initialState>>(
+        key: T,
+        value: ReturnType<typeof initialState>[T]
+      ) => void;
     }
   | undefined
 >(undefined);
@@ -100,12 +184,16 @@ function WalletProvider({
           id: SapphireTestnet,
           rpcUrl: 'https://testnet.sapphire.oasis.io',
           explorerUrl: 'https://explorer.oasis.io/testnet/sapphire',
+          imageUrl: oasisLogo,
+          currencySymbol: 'ROSE',
         }
       : {
           name: 'Oasis Sapphire',
           id: SapphireMainnet,
           rpcUrl: 'https://sapphire.oasis.io',
           explorerUrl: 'https://explorer.oasis.io/mainnet/sapphire',
+          imageUrl: oasisLogo,
+          currencySymbol: 'ROSE',
         },
     ...networks,
   ];
@@ -117,6 +205,22 @@ function WalletProvider({
   const [initialized, setInitialized] = useState(false);
   const [wallet, setWallet] = useState<EmbeddedWallet>();
 
+  const networksById = networks.reduce(
+    (acc, x) => {
+      acc[x.id] = x;
+      return acc;
+    },
+    {} as { [networkId: number]: Network }
+  );
+
+  const activeWallet = useMemo(() => {
+    if (state.walletIndex >= state.accountWallets.length) {
+      return undefined;
+    }
+
+    return state.accountWallets[state.walletIndex];
+  }, [state.walletIndex, state.accountWallets]);
+
   /**
    * Store changed state to localStorage
    */
@@ -126,7 +230,16 @@ function WalletProvider({
        * Exclude some state variables from being saved
        */
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { walletScreen, displayedError, ...save } = state;
+      const {
+        walletScreen,
+        displayedError,
+        loadingWallets,
+        privateKeys,
+        appProps,
+        walletScreenHistory,
+        isOpen,
+        ...save
+      } = state;
 
       localStorage.setItem(WebStorageKeys.WALLET_CONTEXT, JSON.stringify(save));
     }
@@ -169,35 +282,178 @@ function WalletProvider({
 
       if (w) {
         setWallet(w);
-        reloadUserBalance(w);
 
         w.setAccount({
           username: state.username,
           strategy: state.authStrategy,
-          address: state.address,
+          walletIndex: state.walletIndex,
           contractAddress: state.contractAddress,
         });
+
+        w.setWallets(state.accountWallets);
       }
     }
   }, [networks, defaultNetworkId, initialized]);
 
   /**
-   * Reload balance if user "logged in"
+   * Reload balance on:
+   * - login
+   * - account change
    */
-  async function reloadUserBalance(walletRef?: EmbeddedWallet) {
-    const w = walletRef || wallet;
-
-    if (w && state.address) {
-      // wait a bit for w.defaultNetworkId to finalize
-      await new Promise(resolve => setTimeout(resolve, 10));
-
-      try {
-        const balance = await w?.getAccountBalance(state.address);
-        dispatch({ type: 'setValue', payload: { key: 'balance', value: balance } });
-      } catch (e) {
-        console.error('Reloading balance', e);
-      }
+  useEffect(() => {
+    if (state.walletIndex < state.accountWallets.length) {
+      reloadAccountBalances([state.accountWallets[state.walletIndex].address]);
     }
+  }, [state.username, state.walletIndex, state.accountWallets.length]);
+
+  function setStateValue<T extends keyof ReturnType<typeof initialState>>(
+    key: T,
+    value: ReturnType<typeof initialState>[T]
+  ) {
+    dispatch({ type: 'setValue', payload: { key, value } });
+  }
+
+  /**
+   * Load all wallet accounts for user. Requires auth
+   */
+  async function loadAccountWallets(strategy?: AuthStrategyName, username?: string) {
+    if (state.loadingWallets) {
+      return;
+    }
+
+    setStateValue('loadingWallets', true);
+
+    try {
+      const wallets =
+        (await wallet?.getAccountWallets({
+          strategy: strategy || state.authStrategy,
+          authData: { username: username || state.username },
+          reload: true,
+        })) || [];
+
+      const newWallets = (wallets || []).map(x => ({ ...x, balance: '0' }));
+
+      setStateValue('accountWallets', newWallets);
+
+      if (state.walletIndex < wallets.length) {
+        wallet?.events.emit('accountsChanged', [wallets[state.walletIndex].address]);
+      }
+
+      setStateValue('loadingWallets', false);
+      setStateValue('isAccountWalletsStale', false);
+      setStateValue('displayedError', '');
+
+      reloadAccountBalances(
+        wallets.map(w => w.address),
+        newWallets
+      );
+
+      return wallets;
+    } catch (e) {
+      console.error('loadAccountWallets', e);
+      handleError(e);
+    }
+
+    setStateValue('loadingWallets', false);
+  }
+
+  async function reloadAccountBalances(
+    addresses?: string[],
+    accountWallets: AccountWalletEx[] = state.accountWallets
+  ) {
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    if (!addresses) {
+      if (!activeWallet?.address) {
+        return;
+      }
+
+      addresses = [activeWallet.address];
+    }
+
+    try {
+      const balances = await Promise.all(
+        addresses.map(async address => {
+          const balance = await wallet?.getAccountBalance(address);
+
+          return {
+            address,
+            balance,
+          };
+        })
+      );
+
+      const updatedWallets = [...accountWallets];
+
+      balances.forEach(b => {
+        const found = updatedWallets.findIndex(x => x.address === b.address);
+
+        if (found > -1) {
+          updatedWallets[found].balance = b.balance || '0';
+        }
+      });
+
+      setStateValue('accountWallets', updatedWallets);
+
+      return true;
+    } catch (e) {
+      console.error('Reloading balance', e);
+    }
+  }
+
+  function formatNativeBalance(balance: string | bigint | number) {
+    return (
+      ethers.formatUnits(balance, networksById?.[state.networkId]?.currencDecimals || 18) +
+      ` ${networksById?.[state.networkId]?.currencySymbol || 'ETH'}`
+    );
+  }
+
+  function handleError(e?: any, src?: string) {
+    let msg = '';
+
+    if (e) {
+      console.error(src ?? '', e);
+
+      if (e?.name) {
+        msg = ErrorMessages[e.name];
+      }
+
+      if (!msg && e?.error) {
+        if (e?.error?.message) {
+          msg = e.error.message;
+        } else if (typeof e.error === 'string') {
+          msg = e.error;
+        }
+      }
+
+      if (!msg && e?.details) {
+        msg = e.details;
+      }
+
+      if (!msg && e?.message) {
+        msg = e.message;
+      }
+
+      if (msg.includes('message: ')) {
+        msg = msg.split('message: ')[1];
+      }
+
+      logToStorage(msg);
+
+      if (
+        msg &&
+        msg !== 'already known' &&
+        msg !== 'Request rejected by user' &&
+        e?.code !== 4001 &&
+        e?.name !== 'NotAllowedError' // user cancelled passkey prompt
+      ) {
+        setStateValue('displayedError', msg);
+      }
+    } else {
+      setStateValue('displayedError', '');
+    }
+
+    return msg;
   }
 
   return (
@@ -206,61 +462,26 @@ function WalletProvider({
         state,
         dispatch,
         networks,
-        networksById: networks.reduce(
-          (acc, x) => {
-            acc[x.id] = x;
-            return acc;
-          },
-          {} as { [networkId: number]: Network }
-        ),
+        networksById,
         defaultNetworkId: defaultNetworkId || 0,
+        activeWallet,
         wallet,
         setWallet,
-        reloadUserBalance,
-        setScreen: (s: WalletScreens) =>
-          dispatch({ type: 'setValue', payload: { key: 'walletScreen', value: s } }),
-        handleError: (e?: any, src?: string) => {
-          let msg = '';
-
-          if (e) {
-            console.error(src ?? '', e);
-
-            if (e?.name) {
-              msg = ErrorMessages[e.name];
-            }
-
-            if (!msg && e?.error) {
-              if (e?.error?.message) {
-                msg = e.error.message;
-              } else if (typeof e.error === 'string') {
-                msg = e.error;
-              }
-            }
-
-            if (!msg && e?.details) {
-              msg = e.details;
-            }
-
-            if (!msg && e?.message) {
-              msg = e.message;
-            }
-
-            if (
-              msg &&
-              msg !== 'already known' &&
-              msg !== 'Request rejected by user' &&
-              e?.code !== 4001
-            ) {
-              dispatch({
-                type: 'setValue',
-                payload: { key: 'displayedError', value: msg },
-              });
-            }
+        loadAccountWallets,
+        reloadAccountBalances,
+        formatNativeBalance,
+        handleError,
+        setStateValue,
+        setScreen: (s: WalletScreens) => setStateValue('walletScreen', s),
+        goScreenBack: () => {
+          if (state.walletScreenHistory.length > 1) {
+            setStateValue(
+              'walletScreen',
+              state.walletScreenHistory[state.walletScreenHistory.length - 2]
+            );
           } else {
-            dispatch({ type: 'setValue', payload: { key: 'displayedError', value: '' } });
+            setStateValue('walletScreen', 'main');
           }
-
-          return msg;
         },
       }}
     >

@@ -34,7 +34,7 @@ async function transferNativeBalance() {
 }
 
 async function contractBalance() {
-  console.log(await read('balanceOf', [info.address]));
+  console.log(await read('balanceOf', [info?.activeWallet?.address]));
 }
 
 async function contractClaim() {

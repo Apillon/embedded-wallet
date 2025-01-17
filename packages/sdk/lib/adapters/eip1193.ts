@@ -58,8 +58,8 @@ function getProvider(): EIP1193Provider & {
        * If not logged in, trigger login SDK event (open modal, wait for auth...)
        */
       case 'eth_requestAccounts': {
-        if (w.lastAccount.address) {
-          finalRes = [w.lastAccount.address];
+        if (w.lastAccount.wallets[w.lastAccount.walletIndex].address) {
+          finalRes = [w.lastAccount.wallets[w.lastAccount.walletIndex].address];
           break;
         }
 
@@ -74,8 +74,8 @@ function getProvider(): EIP1193Provider & {
       }
 
       case 'eth_accounts': {
-        if (w.lastAccount.address) {
-          finalRes = [w.lastAccount.address];
+        if (w.lastAccount.wallets[w.lastAccount.walletIndex].address) {
+          finalRes = [w.lastAccount.wallets[w.lastAccount.walletIndex].address];
           break;
         }
 
@@ -119,7 +119,7 @@ function getProvider(): EIP1193Provider & {
           mustConfirm: true,
           strategy: w.lastAccount.authStrategy,
           authData: {
-            username: w.lastAccount.username,
+            username: w.lastAccount.wallets[w.lastAccount.walletIndex].title,
           },
           tx: params[0],
         });
@@ -143,7 +143,7 @@ function getProvider(): EIP1193Provider & {
           mustConfirm: true,
           strategy: w.lastAccount.authStrategy,
           authData: {
-            username: w.lastAccount.username,
+            username: w.lastAccount.wallets[w.lastAccount.walletIndex].title,
           },
           tx: params[0],
         });

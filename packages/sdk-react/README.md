@@ -2,14 +2,14 @@
 
 Collection of React hooks to help with embedded wallet implementation.
 
-## Component `<WalletWidget />`
+## Component `<EmbeddedWallet />`
 
 Initialize wallet SDK and UI.
 
 ```tsx
-import { WalletWidget } from '@apillon/wallet-react';
+import { EmbeddedWallet } from '@apillon/wallet-react';
 
-return <WalletWidget ...props />;
+return <EmbeddedWallet ...props />;
 ```
 
 ## Hooks

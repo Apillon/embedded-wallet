@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import WalletWidget from '../lib/WalletWidget.vue';
+import EmbeddedWallet from '../lib/EmbeddedWallet.vue';
 import { useAccount } from '../lib/main';
 
 const { info } = useAccount();
@@ -7,7 +7,7 @@ const { info } = useAccount();
 
 <template>
   <div>
-    <WalletWidget
+    <EmbeddedWallet
       clientId="YOUR INTEGRATION UUID HERE"
       :defaultNetworkId="1287"
       :networks="[
@@ -34,6 +34,6 @@ const { info } = useAccount();
 
     <p>username: {{ info.username }}</p>
 
-    <p>address: {{ info.address }}</p>
+    <p>address: {{ info.activeWallet }}</p>
   </div>
 </template>

@@ -4,12 +4,15 @@ import TestEthers from './TestEthers';
 import TestViem from './TestViem';
 import TestAccount from './TestAccount';
 import { getEmbeddedWallet } from '../../lib/utils';
+import TestWallet from './TestWallet';
+import TestExport from './TestExport';
 
 export default function TestApp() {
   return (
     <div>
       <h2>Setup account</h2>
       <TestAccount />
+      <TestAccount pw />
 
       <h2>Sign message</h2>
       <TestSign />
@@ -20,13 +23,19 @@ export default function TestApp() {
           onClick={async () => {
             const wallet = getEmbeddedWallet();
             console.log(
-              await wallet?.getAccountBalance(wallet.lastAccount.address, wallet.defaultNetworkId)
+              await wallet?.getAccountBalance(
+                wallet.lastAccount.wallets[wallet.lastAccount.walletIndex].address,
+                wallet.defaultNetworkId
+              )
             );
           }}
         >
           Get balance
         </button>
       </div>
+
+      <h2>Create/import wallet</h2>
+      <TestWallet />
 
       {/* <h2>Passkey iframe</h2>
       <div className="row">
@@ -43,20 +52,7 @@ export default function TestApp() {
       </div> */}
 
       <h2>PK export</h2>
-      <div className="row">
-        <button
-          onClick={async () => {
-            const wallet = getEmbeddedWallet();
-
-            const res = await wallet?.getAccountPrivateKey({
-              strategy: 'passkey',
-            });
-            console.log(res);
-          }}
-        >
-          TEST
-        </button>
-      </div>
+      <TestExport />
 
       <h2>Trigger ethers test</h2>
       <div className="row">

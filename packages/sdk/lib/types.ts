@@ -3,12 +3,21 @@ import { AccountManagerAbi } from './abi';
 import { TypedContract } from 'ethers-abitype';
 import { ethers } from 'ethers';
 import { ProviderRpcError } from 'viem';
+import { ProxyWriteFunctionsByStrategy, WalletType } from './constants';
 
 const wacAbi = parseAbi(AccountManagerAbi);
 
 export type WebauthnContract = TypedContract<typeof wacAbi>;
 
-export type Network = { name: string; id: number; rpcUrl: string; explorerUrl: string };
+export type Network = {
+  name: string;
+  id: number;
+  rpcUrl: string;
+  explorerUrl: string;
+  imageUrl?: string;
+  currencySymbol?: string;
+  currencDecimals?: number;
+};
 
 export type SignatureCallback = (
   gaslessData: string
@@ -45,7 +54,7 @@ export type AppParams = {
   /**
    * Use a new window for creating and authenticating with a passkey
    */
-  isPasskeyPopup?: boolean;
+  passkeyAuthMode?: AuthPasskeyMode;
 
   /**
    * Iframe uses same wallet code. Set this to prevent implosion.
@@ -72,15 +81,29 @@ export type RegisterData = {
   optionalPassword: string;
 };
 
+type AllValuesOf<T> = T extends any ? T[keyof T] : never;
+
+export type AuthProxyWriteFns = AllValuesOf<
+  (typeof ProxyWriteFunctionsByStrategy)[keyof typeof ProxyWriteFunctionsByStrategy]
+>;
+
 export interface AuthStrategy {
   getRegisterData(authData: AuthData): Promise<RegisterData | undefined>;
 
-  getProxyResponse(
-    WAC: WebauthnContract,
+  getProxyResponse(data: string, authData: AuthData): Promise<any>;
+
+  proxyWrite(
+    functionName: AuthProxyWriteFns,
     data: string,
-    authData: AuthData
-  ): Promise<ethers.BytesLike | undefined>;
+    authData: AuthData,
+    txLabel?: string,
+    dontWait?: boolean
+  ): Promise<any>;
 }
+
+export type AuthPasskeyMode = 'redirect' | 'popup' | 'tab_process' | 'tab_form';
+
+export type AuthPasskeyModeInternal = 'iframe' | 'standalone';
 
 export type AuthStrategyName = 'password' | 'passkey';
 
@@ -91,9 +114,19 @@ export type UserInfo = {
   accountContractAddress: string | ethers.Addressable;
 };
 
+export type AccountWalletTypes = (typeof WalletType)[keyof typeof WalletType];
+
+export type AccountWallet = {
+  walletType: AccountWalletTypes;
+  address: string;
+  title: string;
+  index: number;
+};
+
 export type PlainTransactionParams = {
   strategy?: AuthStrategyName;
   authData?: AuthData;
+  walletIndex?: number;
   tx: ethers.TransactionLike<ethers.AddressLike>;
   label?: string;
   mustConfirm?: boolean;
@@ -104,6 +137,7 @@ export type PlainTransactionParams = {
 export type SignMessageParams = {
   strategy?: AuthStrategyName;
   authData?: AuthData;
+  walletIndex?: number;
   message: ethers.BytesLike | string;
   data?: string;
   mustConfirm?: boolean;
@@ -122,11 +156,20 @@ export type ContractReadParams = {
 export type ContractWriteParams = {
   strategy?: AuthStrategyName;
   authData?: AuthData;
+  walletIndex?: number;
   label?: string;
   mustConfirm?: boolean;
   resolve?: (result: { signedTxData: any; chainId?: number }) => void;
   reject?: (reason?: any) => void;
 } & ContractReadParams;
+
+export enum GaslessTxType {
+  CreateAccount,
+  ManageCredential,
+  ManageCredentialPassword,
+  AddWallet,
+  AddWalletPassword,
+}
 
 export type TransactionItem = {
   hash: string;
@@ -137,6 +180,7 @@ export type TransactionItem = {
   chainId: number;
   explorerUrl: string;
   createdAt: number; // timestamp
+  internalLabel?: string;
 };
 
 export type Events = {
@@ -145,7 +189,15 @@ export type Events = {
   txSubmitted: TransactionItem;
   txDone: TransactionItem; // emitted by UI
   dataUpdated: {
-    name: 'username' | 'address' | 'authStrategy' | 'defaultNetworkId' | 'sessionToken';
+    name:
+      | 'username'
+      | 'authStrategy'
+      | 'defaultNetworkId'
+      | 'sessionToken'
+      | 'wallets'
+      | 'walletIndex'
+      | 'address'
+      | 'contractAddress';
     newValue: any;
     oldValue: any;
   };

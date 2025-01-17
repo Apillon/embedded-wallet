@@ -5,7 +5,7 @@ import { EmbeddedWalletSDK } from '../../lib/utils.ts';
 
 EmbeddedWalletSDK({
   clientId: import.meta.env.VITE_CLIENT_ID ?? 'YOUR INTEGRATION UUID HERE',
-  defaultNetworkId: 23294,
+  defaultNetworkId: 23295,
   networks: [
     {
       id: 1287,

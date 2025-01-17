@@ -1,16 +1,21 @@
 import { ethers } from 'ethers';
-import { AuthData, AuthStrategy, WebauthnContract } from '../types';
 import {
-  abort,
-  getHashedUsername,
-  getPasskeyOrigin,
-  getPasskeyXd,
-  getPasskeyXdIframe,
-} from '../utils';
+  AuthData,
+  AuthPasskeyMode,
+  AuthPasskeyModeInternal,
+  AuthProxyWriteFns,
+  AuthStrategy,
+} from '../types';
+import { abort, getHashedUsername, getPasskeyOrigin } from '../utils';
 import { credentialCreate, credentialGet } from '../browser-webauthn';
+import { SapphireMainnet, SapphireTestnet, WalletType } from '../constants';
+import EmbeddedWallet from '..';
+import { AccountManagerAbi } from '../abi';
 
 class PasskeyStrategy implements AuthStrategy {
-  async getRegisterData(authData: AuthData, isPopup = false) {
+  constructor(public wallet: EmbeddedWallet) {}
+
+  async getRegisterData(authData: AuthData) {
     if (!authData.username) {
       abort('NO_USERNAME');
       return;
@@ -25,8 +30,14 @@ class PasskeyStrategy implements AuthStrategy {
       return;
     }
 
-    if (isPopup) {
-      const cred = await getPasskeyXd()?.create(authData.hashedUsername, authData.username);
+    const newWallet = {
+      walletType: WalletType.EVM,
+      keypairSecret: ethers.ZeroHash,
+      title: authData.username,
+    };
+
+    if (this.wallet.xdomain?.mode === 'popup' || this.wallet.xdomain?.mode === 'tab_process') {
+      const cred = await this.wallet.xdomain?.create(authData.hashedUsername, authData.username);
 
       if (!cred) {
         abort('XDOMAIN_NOT_INIT');
@@ -38,6 +49,7 @@ class PasskeyStrategy implements AuthStrategy {
         credentialId: cred.credentialId,
         pubkey: cred.pubkey,
         optionalPassword: ethers.ZeroHash,
+        wallet: newWallet,
       };
     } else {
       const cred = await credentialCreate(
@@ -58,15 +70,49 @@ class PasskeyStrategy implements AuthStrategy {
         credentialId: cred.id,
         pubkey: cred.ad.attestedCredentialData!.credentialPublicKey!,
         optionalPassword: ethers.ZeroHash,
+        wallet: newWallet,
       };
     }
   }
 
-  async getProxyResponse(
-    WAC: WebauthnContract,
+  async getProxyResponse(data: string, authData: AuthData) {
+    if (!authData.username) {
+      abort('NO_USERNAME');
+      return;
+    }
+
+    const hashedUsername = authData.hashedUsername || (await getHashedUsername(authData.username));
+
+    if (!hashedUsername) {
+      abort('CANT_HASH_USERNAME');
+      return;
+    }
+
+    const cred = await this.getPasskeyForMode(
+      this.wallet?.xdomain?.mode || 'standalone',
+      hashedUsername,
+      data
+    );
+
+    if (!cred) {
+      abort('XDOMAIN_NOT_INIT');
+      return;
+    }
+
+    return await this.wallet.accountManagerContract.proxyView(
+      cred.credentialIdHashed,
+      // @ts-expect-error AbiTypes
+      cred.resp,
+      data
+    );
+  }
+
+  async proxyWrite(
+    functionName: AuthProxyWriteFns,
     data: string,
     authData: AuthData,
-    mode: 'default' | 'iframe' | 'popup' = 'default'
+    txLabel?: string,
+    dontWait = false
   ) {
     if (!authData.username) {
       abort('NO_USERNAME');
@@ -80,58 +126,87 @@ class PasskeyStrategy implements AuthStrategy {
       return;
     }
 
-    const personalization = await WAC.personalization();
-    const credentialIds = await WAC.credentialIdsByUsername(hashedUsername as any);
+    const cred = await this.getPasskeyForMode(
+      this.wallet?.xdomain?.mode || 'standalone',
+      hashedUsername,
+      data
+    );
 
-    /**
-     * Request passkey from user
-     */
-    if (mode === 'popup') {
-      /**
-       * Popup
-       */
-      const res = await getPasskeyXd()?.get(
-        credentialIds.map((c: any) => ethers.toBeArray(c)),
-        ethers.toBeArray(ethers.sha256(personalization + ethers.sha256(data).slice(2)))
+    if (!cred) {
+      abort('XDOMAIN_NOT_INIT');
+      return;
+    }
+
+    const res = await this.wallet.signContractWrite({
+      authData,
+      strategy: 'passkey',
+      label: txLabel,
+      contractAddress: this.wallet.accountManagerAddress,
+      contractAbi: AccountManagerAbi,
+      contractFunctionName: functionName,
+      contractFunctionValues: [
+        {
+          credentialIdHashed: cred.credentialIdHashed,
+          resp: cred.resp,
+          data,
+        },
+      ],
+      chainId: (import.meta.env.VITE_SAPPHIRE_URL ?? '').includes('testnet')
+        ? SapphireTestnet
+        : SapphireMainnet,
+    });
+
+    if (res) {
+      const { txHash } = await this.wallet.broadcastTransaction(
+        res?.signedTxData,
+        res?.chainId,
+        txLabel,
+        `proxyWrite_${functionName}`
       );
 
+      if (dontWait) {
+        return txHash;
+      }
+
+      if (await this.wallet.waitForTxReceipt(txHash)) {
+        return txHash;
+      }
+    }
+  }
+
+  async getPasskeyForMode(
+    mode: AuthPasskeyMode | AuthPasskeyModeInternal,
+    hashedUsername: Buffer,
+    data: any
+  ) {
+    const personalization = await this.wallet.accountManagerContract.personalization();
+    const credentialIds = await this.wallet.accountManagerContract.credentialIdsByUsername(
+      hashedUsername as any
+    );
+
+    const credentials = credentialIds.map((c: any) => ethers.toBeArray(c));
+    const challenge = ethers.toBeArray(
+      ethers.sha256(personalization + ethers.sha256(data).slice(2))
+    );
+
+    if (['popup', 'redirect', 'iframe', 'tab_process', 'tab_form'].includes(mode)) {
+      const res = await this.wallet.xdomain?.get(credentials, challenge);
+
       if (!res) {
-        abort('XDOMAIN_NOT_INIT');
         return;
       }
 
-      // @ts-expect-error Types from abi are not correct
-      return await WAC.proxyView(res.credentials.credentialIdHashed, res.credentials.resp, data);
-    } else if (mode === 'iframe') {
-      /**
-       * Iframe
-       */
-      const res = await getPasskeyXdIframe()?.get(
-        credentialIds.map((c: any) => ethers.toBeArray(c)),
-        ethers.toBeArray(ethers.sha256(personalization + ethers.sha256(data).slice(2)))
-      );
-
-      if (!res) {
-        abort('XDOMAIN_NOT_INIT');
-        return;
-      }
-
-      // @ts-expect-error Types from abi are not correct
-      return await WAC.proxyView(res.credentials.credentialIdHashed, res.credentials.resp, data);
+      return {
+        credentialIdHashed: res.credentials.credentialIdHashed,
+        resp: res.credentials.resp,
+      };
     } else {
-      /**
-       * Direct SDK (login on gateway)
-       */
-      const credentials = await credentialGet(
-        // binary credential ids
-        credentialIds.map((c: any) => ethers.toBeArray(c)),
-        // challenge
-        ethers.toBeArray(ethers.sha256(personalization + ethers.sha256(data).slice(2))),
-        getPasskeyOrigin()
-      );
+      const res = await credentialGet(credentials, challenge, getPasskeyOrigin());
 
-      // @ts-expect-error Types from abi are not correct
-      return await WAC.proxyView(credentials.credentialIdHashed, credentials.resp, data);
+      return {
+        credentialIdHashed: res.credentialIdHashed,
+        resp: res.resp,
+      };
     }
   }
 }

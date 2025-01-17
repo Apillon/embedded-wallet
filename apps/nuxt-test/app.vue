@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { useAccount, WalletWidget } from '@apillon/wallet-vue';
+import { useAccount, EmbeddedWallet } from '@apillon/wallet-vue';
 import './public/style.css';
 
 const { info } = useAccount();
@@ -7,7 +7,7 @@ const { info } = useAccount();
 
 <template>
   <div>
-    <WalletWidget
+    <EmbeddedWallet
       :clientId="$config.public.CLIENT_ID"
       :defaultNetworkId="1287"
       :networks="[
@@ -41,13 +41,13 @@ const { info } = useAccount();
 
     <p>username: {{ info.username }}</p>
 
-    <p>address: {{ info.address }}</p>
+    <p>address: {{ info?.activeWallet?.address }}</p>
 
     <br />
 
     <TestSdk />
 
-    <template v-if="info.address">
+    <template v-if="info?.activeWallet?.address">
       <br />
 
       <TestViem />

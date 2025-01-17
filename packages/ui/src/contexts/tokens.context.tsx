@@ -1,7 +1,8 @@
-import { createContext, useContext, useEffect, useReducer, useState } from 'react';
-import { WebStorageKeys, ERC20Abi } from '@apillon/wallet-sdk';
+import { createContext, useContext, useEffect, useMemo, useReducer, useState } from 'react';
+import { ERC20Abi } from '@apillon/wallet-sdk';
 import { useWalletContext } from './wallet.context';
 import { ethers } from 'ethers';
+import { WebStorageKeys } from '../lib/constants';
 
 export type TokenInfo = {
   address: string;
@@ -13,7 +14,7 @@ export type TokenInfo = {
 
 const initialState = () => ({
   list: {} as {
-    [ownerAddress: string]: { [chainId: number]: TokenInfo[] };
+    [ownerContractAddress: string]: { [chainId: number]: TokenInfo[] };
   },
   selectedToken: '', // address
 });
@@ -80,6 +81,8 @@ const TokensContext = createContext<
   | {
       state: ContextState;
       dispatch: (action: ContextActions) => void;
+      nativeToken: TokenInfo;
+      selectedToken: TokenInfo;
       getTokenDetails: (address: string) => Promise<TokenInfo | undefined>;
     }
   | undefined
@@ -88,7 +91,34 @@ const TokensContext = createContext<
 function TokensProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState());
   const [initialized, setInitialized] = useState(false);
-  const { state: walletState, wallet } = useWalletContext();
+  const { state: walletState, wallet, activeWallet, networksById } = useWalletContext();
+
+  const nativeToken = useMemo<TokenInfo>(
+    () => ({
+      address: '',
+      name: `${networksById?.[walletState.networkId]?.name} ETH`,
+      symbol: networksById?.[walletState.networkId]?.currencySymbol || 'ETH',
+      decimals: networksById?.[walletState.networkId]?.currencDecimals || 18,
+      balance: activeWallet?.balance || '',
+    }),
+    [activeWallet?.balance, walletState.networkId]
+  );
+
+  const selectedToken = useMemo<TokenInfo>(() => {
+    if (state.selectedToken) {
+      const userTokens = state.list?.[walletState.contractAddress || '']?.[walletState.networkId];
+
+      if (userTokens) {
+        const found = userTokens.find(x => x.address === state.selectedToken);
+
+        if (found) {
+          return found;
+        }
+      }
+    }
+
+    return nativeToken;
+  }, [state.selectedToken, state.list, walletState.contractAddress, walletState.networkId]);
 
   useEffect(() => {
     if (initialized) {
@@ -104,22 +134,27 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
         const restored = JSON.parse(stored);
         dispatch({ type: 'setState', payload: restored });
 
-        if (Array.isArray(restored?.list?.[walletState.address]?.[walletState.networkId])) {
-          restored.list[walletState.address][walletState.networkId].forEach(
+        if (
+          !!activeWallet &&
+          Array.isArray(
+            restored?.list?.[walletState.contractAddress || '']?.[walletState.networkId]
+          )
+        ) {
+          restored.list[walletState.contractAddress][walletState.networkId].forEach(
             async (t: TokenInfo) => {
               if (wallet) {
                 const res = await wallet.contractRead({
                   contractAddress: t.address,
                   contractAbi: ERC20Abi,
                   contractFunctionName: 'balanceOf',
-                  contractFunctionValues: [walletState.address],
+                  contractFunctionValues: [activeWallet.address],
                 });
 
                 if (res) {
                   dispatch({
                     type: 'updateToken',
                     payload: {
-                      owner: walletState.address,
+                      owner: walletState.contractAddress,
                       chainId: walletState.networkId,
                       token: {
                         ...t,
@@ -143,7 +178,7 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   async function getTokenDetails(address: string) {
-    if (wallet) {
+    if (wallet && activeWallet) {
       const [name, symbol, decimals, balance] = await Promise.all([
         wallet.contractRead({
           contractAddress: address,
@@ -164,7 +199,7 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
           contractAddress: address,
           contractAbi: ERC20Abi,
           contractFunctionName: 'balanceOf',
-          contractFunctionValues: [walletState.address],
+          contractFunctionValues: [activeWallet.address],
         }),
       ]);
 
@@ -185,6 +220,8 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
       value={{
         state,
         dispatch,
+        nativeToken,
+        selectedToken,
         getTokenDetails,
       }}
     >

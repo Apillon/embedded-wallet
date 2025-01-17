@@ -2,11 +2,11 @@ export const WindowId = 'embeddedWallet'; // update "interface Window" manually 
 export const SapphireMainnet = 23294;
 export const SapphireTestnet = 23295;
 
-export const WebStorageKeys = {
-  WALLET_CONTEXT: 'oaw_context',
-  TRANSACTIONS_CONTEXT: 'oaw_transactions',
-  TOKENS_CONTEXT: 'oaw_tokens',
-};
+export const WalletType = {
+  EVM: 0,
+  SUBSTRATE: 1,
+  BITCOIN: 2,
+} as const;
 
 export const Errors = {
   SAPPHIRE_PROVIDER_NOT_INITIALIZED: 'OAW_SAPPHIRE_PROVIDER_NOT_INITIALIZED',
@@ -16,6 +16,7 @@ export const Errors = {
   NO_LOGIN_PROXY_DATA: 'OAW_NO_LOGIN_PROXY_DATA',
   AUTHENTICATION_DATA_NOT_PROVIDED: 'OAW_AUTHENTICATION_DATA_NOT_PROVIDED',
   CANT_GET_ACCOUNT_ADDRESS: 'OAW_CANT_GET_ACCOUNT_ADDRESS',
+  CANT_GET_ACCOUNT_WALLETS: 'OAW_CANT_GET_ACCOUNT_WALLETS',
   NO_RPC_URL_CONFIGURED_FOR_SELECTED_CHAINID: 'OAW_NO_RPC_URL_CONFIGURED_FOR_SELECTED_CHAINID',
   CROSS_CHAIN_PROVIDER_NOT_INITIALIZED: 'OAW_CROSS_CHAIN_PROVIDER_NOT_INITIALIZED',
   OASIS_WALLET_NOT_INITIALIZED: 'OAW_OASIS_WALLET_NOT_INITIALIZED',
@@ -29,6 +30,8 @@ export const Errors = {
   XDOMAIN_NOT_INIT: 'XDOMAIN_NOT_INIT',
   XDOMAIN_STOPPED: 'XDOMAIN_STOPPED',
   XDOMAIN_BLOCKED: 'XDOMAIN_BLOCKED',
+  CANT_GET_WALLET_ADDRESS: 'CANT_GET_WALLET_ADDRESS',
+  WALLET_TITLE_UPDATE_FAILED: 'WALLET_TITLE_UPDATE_FAILED',
 };
 
 export const ErrorMessages = {
@@ -53,3 +56,14 @@ export const ErrorMessages = {
   [Errors.XDOMAIN_BLOCKED]:
     'Passkey configuration popup blocked, please allow browser popups to continue',
 };
+
+export const ProxyWriteFunctionsByStrategy = {
+  addWallet: {
+    passkey: 'addWallet',
+    password: 'addWalletPassword',
+  },
+  manageCredential: {
+    passkey: 'manageCredential',
+    password: 'manageCredentialPassword',
+  },
+} as const;

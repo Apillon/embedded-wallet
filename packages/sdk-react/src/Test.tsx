@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { WalletWidget } from '../lib/WalletWidget';
+import { EmbeddedWallet } from '../lib/EmbeddedWallet';
 import { useAccount } from '../lib/main';
 
 export function Test() {
@@ -9,7 +9,7 @@ export function Test() {
   return (
     <>
       <div>
-        <WalletWidget
+        <EmbeddedWallet
           clientId="YOUR INTEGRATION UUID HERE"
           defaultNetworkId={1287}
           networks={[
@@ -36,7 +36,7 @@ export function Test() {
 
         <p>username: {info.username}</p>
 
-        <p>address: {info.address}</p>
+        <p>address: {JSON.stringify(info.activeWallet)}</p>
       </div>
     </>
   );
