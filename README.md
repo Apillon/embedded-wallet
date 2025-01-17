@@ -8,7 +8,10 @@
 
 An embedded wallet is an in-app wallet that provides a streamlined experience for generating and signing transactions with your private key, without requiring separate downloads or installations. By integrating directly into applications via an SDK, embedded wallets simplify onboarding, allowing users to log in with just their email and a verification code. This setup eliminates mnemonic phrases, making the experience accessible and secure.
 
+## Detailed documentation
 To learn more about Apillon's embedded wallet service, read our [full wiki page](https://wiki.apillon.io/web3-services/9-embedded-wallets.html)
+
+For a technical guide to integrate Apillon's embedded wallet service into your application, read our [integration guide](https://wiki.apillon.io/build/12-embedded-wallets-integration.html)
 
 ## SDK
 
