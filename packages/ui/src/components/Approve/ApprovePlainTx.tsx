@@ -1,15 +1,31 @@
 import { useApproveContext } from '../../contexts/approve.context';
 import { useWalletContext } from '../../contexts/wallet.context';
+import { formatTxObjectData } from '../../lib/helpers';
 import ApproveButtons from './ApproveButtons';
 import ApproveDataRow from './ApproveDataRow';
 
-const ExcludedTxKeys = ['data', 'gasLimit', 'nonce', 'maxFeePerGas', 'gasPrice'];
+const ExcludedTxKeys = [
+  'data',
+  'gasLimit',
+  'nonce',
+  'maxFeePerGas',
+  'gasPrice',
+  'maxFeePerBlobGas',
+  'maxPriorityFeePerGas',
+  'chain', // viem
+  'blobs', // viem
+  'accessList', // viem
+  'authorizationList', // viem
+  'nonceManager', // viem
+  'type', // viem
+];
 
 export default () => {
   const {
     wallet,
     state: { username, appProps },
     formatNativeBalance,
+    networksById,
   } = useWalletContext();
 
   const {
@@ -31,6 +47,10 @@ export default () => {
               return true;
             }
 
+            if (k === 'value' && !v) {
+              return false;
+            }
+
             return !ExcludedTxKeys.includes(k);
           })
           .map(([k, v]) => (
@@ -38,19 +58,17 @@ export default () => {
               key={k}
               label={k}
               data={
-                k === 'value'
+                k === 'value' || k === 'gas'
                   ? formatNativeBalance(v)
-                  : typeof v === 'bigint'
-                    ? v.toString()
-                    : typeof v === 'object'
-                      ? JSON.stringify(
-                          v,
-                          (_, value) => (typeof value === 'bigint' ? value.toString() : value),
-                          2
-                        )
-                      : v
+                  : k === 'chainId'
+                    ? `${v}${networksById[v] ? ` (${networksById[v].name})` : ''}`
+                    : typeof v === 'bigint'
+                      ? v.toString()
+                      : typeof v === 'object'
+                        ? formatTxObjectData(v)
+                        : v
               }
-              collapsable={typeof v === 'object'}
+              collapsable={typeof v === 'object' || k === 'data'}
             />
           ))}
       </div>

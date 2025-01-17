@@ -23,3 +23,16 @@ export function logToStorage(msg: string) {
 export function formatBalance(balance: string, unit = 'ETH') {
   return `${parseFloat(balance)} ${unit}`;
 }
+
+/**
+ * Format object/array data for display on approve screens
+ */
+export function formatTxObjectData(data: Object) {
+  if (Array.isArray(data)) {
+    return data.join(`\n`);
+  }
+
+  return Object.values(data).reduce((acc, [key, value]) => {
+    acc += `${key}: ${value}`;
+  }, '');
+}
