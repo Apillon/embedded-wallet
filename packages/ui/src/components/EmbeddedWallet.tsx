@@ -65,31 +65,34 @@ function Main({ disableDefaultActivatorStyle = false }: AppProps) {
       wallet.events.on('dataUpdated', onDataUpdated);
 
       // Login if account params are in the URL (redirected back from auth gateway)
-      if (window.location.search) {
-        const urlParams = new URLSearchParams(window.location.search);
+      // Delay a bit to prevent freeze
+      setTimeout(() => {
+        if (window.location.search) {
+          const urlParams = new URLSearchParams(window.location.search);
 
-        if (urlParams.has('username')) {
-          const loginData = {
-            username: urlParams.get('username') || '',
-            authStrategy: (urlParams.get('authStrategy') || 'passkey') as any,
-            networkId: defaultNetworkId || undefined,
-          };
+          if (urlParams.has('username')) {
+            const loginData = {
+              username: urlParams.get('username') || '',
+              authStrategy: (urlParams.get('authStrategy') || 'passkey') as any,
+              networkId: defaultNetworkId || undefined,
+            };
 
-          dispatch({
-            type: 'setState',
-            payload: loginData,
-          });
+            dispatch({
+              type: 'setState',
+              payload: loginData,
+            });
 
-          setTimeout(() => {
-            loadAccountWallets(loginData.authStrategy, loginData.username);
+            setTimeout(() => {
+              loadAccountWallets(loginData.authStrategy, loginData.username);
 
-            const url = new URL(window.location.href);
-            url.searchParams.delete('username');
-            url.searchParams.delete('authStrategy');
-            window.history.replaceState(null, '', url.toString());
-          }, 50);
+              const url = new URL(window.location.href);
+              url.searchParams.delete('username');
+              url.searchParams.delete('authStrategy');
+              window.history.replaceState(null, '', url.toString());
+            }, 50);
+          }
         }
-      }
+      }, 200);
     }
 
     return () => {
