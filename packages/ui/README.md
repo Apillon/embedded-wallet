@@ -4,12 +4,9 @@ This package provides default UI for showing the state of connected account and 
 
 Use `EmbeddedWalletUI()` to initialize SDK and the UI. The UI is done with React and HeadlessUI (tailwind).
 
-There are some UI specific options in addition to all SDK options.
+There are some UI specific options in addition to all the SDK options.
 
 ```ts
-// Supported networks info, for showing names and links to explorer.
-networks?: { name: string; id: number; rpcUrl: string; explorerUrl: string }[];
-
 /**
  * Automatically broadcast with SDK after confirming a transaction.
  *

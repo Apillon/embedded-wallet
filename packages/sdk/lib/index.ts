@@ -495,7 +495,7 @@ class EmbeddedWallet {
       funcDataTypes = 'tuple(bytes32 hashedUsername, bytes32 digest, bytes data)';
     }
 
-    const res = await this.gaslessTx({
+    const res = await this.processGaslessMethod({
       label: 'Add new account',
       strategy: params.strategy,
       authData: params.authData,
@@ -1031,7 +1031,7 @@ class EmbeddedWallet {
   /**
    * Prepare tx and emit `txSubmitted` event (to show tx in tx history in UI e.g.)
    */
-  submitTx(
+  submitTransaction(
     txHash: string,
     signedTxData?: ethers.BytesLike,
     chainId?: number,
@@ -1193,7 +1193,17 @@ class EmbeddedWallet {
     }
   }
 
-  async gaslessTx(params: {
+  /**
+   * Call an `Account Manager` contract method with a gasless transaction.
+   * This means that app owner (clientId) pays for the transaction fees instead of user.
+   * These methods must be supported by `generateGaslessTx` method on the contract.
+   * Supported methods are defined by `GaslessTxType`.
+   * About
+   * - get & confirm credentials
+   * - calculate and format tx data (according to `funcDataTypes` and `funcDataValuesFormatter` params)
+   * - broadcast the tx (marked with `label` from params)
+   */
+  async processGaslessMethod(params: {
     strategy: AuthStrategyName;
     authData: AuthData;
     data: any;

@@ -14,9 +14,9 @@ export type Network = {
   id: number;
   rpcUrl: string;
   explorerUrl: string;
-  imageUrl?: string;
-  currencySymbol?: string;
-  currencDecimals?: number;
+  imageUrl?: string; // Icon of the chain for display in UI
+  currencySymbol?: string; // Symbol of the native currency (default is 'ETH')
+  currencyDecimals?: number; // Number of decimals of the native currency (default is 18)
 };
 
 export type SignatureCallback = (
