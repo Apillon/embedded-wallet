@@ -3,9 +3,8 @@ import { abort, getEmbeddedWallet } from '../utils';
 import EmbeddedWallet from '..';
 
 class EmbeddedEthersSigner extends ethers.AbstractSigner<ethers.JsonRpcProvider> {
-  address = '';
   wallet: EmbeddedWallet;
-  // override provider: ethers.JsonRpcProvider;
+  internalSigner: InternalEmbeddedEthersSignerextends;
 
   constructor(provider?: ethers.JsonRpcProvider) {
     const w = getEmbeddedWallet();
@@ -16,8 +15,94 @@ class EmbeddedEthersSigner extends ethers.AbstractSigner<ethers.JsonRpcProvider>
 
     super(provider || w.getRpcProviderForChainId(w.defaultNetworkId));
 
+    this.internalSigner = new InternalEmbeddedEthersSignerextends(
+      provider || w.getRpcProviderForChainId(w.defaultNetworkId),
+      w
+    );
+
     this.wallet = w!;
-    // this.provider = provider;
+
+    /**
+     * Reinitialize signer with new provider when chain changes
+     */
+    w.events.on('dataUpdated', ({ name, newValue }) => {
+      if (name === 'defaultNetworkId') {
+        this.internalSigner = new InternalEmbeddedEthersSignerextends(
+          w.getRpcProviderForChainId(newValue),
+          this.wallet
+        );
+      }
+    });
+  }
+
+  override connect(): ethers.Signer {
+    return this.internalSigner;
+  }
+
+  override async getAddress(): Promise<string> {
+    const a = await this.wallet.getAccountAddress();
+    return a || '';
+  }
+
+  override async signTransaction(
+    tx: ethers.TransactionRequest,
+    mustConfirm = true
+  ): Promise<string> {
+    return this.internalSigner.signTransaction(tx, mustConfirm);
+  }
+
+  override async signMessage(message: string | Uint8Array, mustConfirm = true): Promise<string> {
+    return this.internalSigner.signMessage(message, mustConfirm);
+  }
+
+  override async sendTransaction(
+    tx: ethers.TransactionRequest
+  ): Promise<ethers.TransactionResponse> {
+    return this.internalSigner.sendTransaction(tx);
+  }
+
+  /**
+   * NOT implemented
+   */
+  override async signTypedData(
+    domain: ethers.TypedDataDomain,
+    types: Record<string, ethers.TypedDataField[]>,
+    value: Record<string, any>
+  ): Promise<string> {
+    console.error('EmbeddedEthersSigner#signTypedData Not implemented', { domain, types, value });
+    return '';
+  }
+
+  /**
+   * @deprecated v5 signer properties
+   */
+  _isSigner = true;
+  async getBalance(blockTag?: ethers.BlockTag) {
+    return this.internalSigner.getBalance(blockTag);
+  }
+  async getTransactionCount(blockTag?: ethers.BlockTag) {
+    return this.internalSigner.getTransactionCount(blockTag);
+  }
+  async getChainId() {
+    return this.internalSigner.getChainId();
+  }
+  async getGasPrice() {
+    return this.internalSigner.getGasPrice();
+  }
+  async getFeeData() {
+    return this.internalSigner.getFeeData();
+  }
+}
+
+class InternalEmbeddedEthersSignerextends extends ethers.AbstractSigner<ethers.JsonRpcProvider> {
+  // address = '';
+  // override provider: ethers.JsonRpcProvider;
+
+  constructor(
+    provider: ethers.JsonRpcProvider,
+    private wallet: EmbeddedWallet
+  ) {
+    super(provider);
   }
 
   override connect(): ethers.Signer {
