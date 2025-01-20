@@ -33,9 +33,7 @@ function GlobalProvider({ children }: { children: ReactNode }) {
       const urlParams = new URLSearchParams(window.location.search);
 
       if (!wallet) {
-        setWallet(
-          EmbeddedWalletSDK({ clientId: urlParams.get('clientId') || '', noPasskeyIframe: true })
-        );
+        setWallet(EmbeddedWalletSDK({ clientId: urlParams.get('clientId') || '' }));
       }
 
       const referrer = urlParams.get('ref');

@@ -5,7 +5,7 @@ import { useWalletContext } from '../../contexts/wallet.context';
 import clsx from 'clsx';
 
 export default ({
-  doneAfterApprove = false,
+  doneAfterApprove = true,
   doneAfterDecline = true,
   className,
   onApprove,

@@ -403,7 +403,7 @@ function WalletProvider({
 
   function formatNativeBalance(balance: string | bigint | number) {
     return (
-      ethers.formatUnits(balance, networksById?.[state.networkId]?.currencDecimals || 18) +
+      ethers.formatUnits(balance, networksById?.[state.networkId]?.currencyDecimals || 18) +
       ` ${networksById?.[state.networkId]?.currencySymbol || 'ETH'}`
     );
   }

@@ -28,7 +28,7 @@ async function transferNativeBalance() {
   const res = await sendTransaction({
     to: '0x700cebAA997ecAd7B0797f8f359C621604Cce6Bf',
     value: '10000000',
-    chainId: 1287,
+    // chainId: 1287,
   });
   console.log(res);
 }

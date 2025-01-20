@@ -1,6 +1,8 @@
 # Embedded App Wallet
 
-Apillon Embedded Wallet JS SDK
+Apillon Embedded Wallet JS SDK.
+
+More info can be found [in the Apillon wiki](https://wiki.apillon.io/build/12-embedded-wallets-integration.html).
 
 ## Stack
 
@@ -34,6 +36,11 @@ defaultNetworkId?: number;
  * Configuration of available networks. Oasis Sapphire is always included (ids 23294 and 23295)
 */
 networks?: Network[];
+
+/**
+ * Method for authenticating with passkey to make it global.
+ */
+passkeyAuthMode: 'redirect' | 'popup' | 'tab_process' | 'tab_form' = 'redirect';
 ```
 
 The class instance is then available on window (`embeddedWallet`) and can be obtained with the `getEmbeddedWallet()` utility.
@@ -85,6 +92,18 @@ wallet.events.on('txSubmitted', tx => {
 
 - `getAccountBalance`
 
+- `getAccountPrivateKey`
+
+### Wallet accounts methods
+
+- `getAccountWallets`
+  Get all wallets added on user's account. Requires authentication.
+
+- `addAccountWallet`
+  Add new wallet or import from privateKey.
+
+- `updateAccountWalletTitle`
+
 ### Transaction methods
 
 - `signMessage`
@@ -96,12 +115,20 @@ wallet.events.on('txSubmitted', tx => {
   Send raw transaction data to network.
   If chainId is provided, the transaction is sent to that network (cross-chain).
 
+- `submitTransaction`
+  Prepare transaction and emit `txSubmitted` event (to show tx in tx history in UI e.g.).
+  To be used after sending transaction through anything else than `broadcastTransaction`.
+  Doesn't do anything by itself, just for logging/parsing transactions.
+
 - `signContractWrite`
   Get signed tx for making a contract write call.
 
 - `contractRead`
   Get result of contract read.
   Utility function, this has nothing to do with Oasis.
+
+- `processGaslessMethod`
+  Call a contract method with a gasless transaction (app owner pays for the transaction fees instead of user).
 
 ### mustConfirm
 

@@ -1,5 +1,6 @@
 import { useApproveContext } from '../../contexts/approve.context';
 import { useWalletContext } from '../../contexts/wallet.context';
+import { formatTxObjectData } from '../../lib/helpers';
 import ApproveButtons from './ApproveButtons';
 import ApproveDataRow from './ApproveDataRow';
 
@@ -25,7 +26,7 @@ export default () => {
       {!!contractFunctionData.chainId && !!networksById[contractFunctionData.chainId] && (
         <ApproveDataRow
           label="Chain"
-          data={networksById[contractFunctionData.chainId].name}
+          data={`${contractFunctionData.chainId} (${networksById[contractFunctionData.chainId].name})`}
           className="mb-4"
         />
       )}
@@ -46,11 +47,7 @@ export default () => {
         !!contractFunctionData.contractFunctionValues.length && (
           <ApproveDataRow
             label="Contract function values"
-            data={JSON.stringify(
-              contractFunctionData.contractFunctionValues,
-              (_, value) => (typeof value === 'bigint' ? value.toString() : value),
-              2
-            )}
+            data={formatTxObjectData(contractFunctionData.contractFunctionValues)}
             className="mb-4"
             collapsable
           />

@@ -495,7 +495,7 @@ class EmbeddedWallet {
       funcDataTypes = 'tuple(bytes32 hashedUsername, bytes32 digest, bytes data)';
     }
 
-    const res = await this.gaslessTx({
+    const res = await this.processGaslessMethod({
       label: 'Add new account',
       strategy: params.strategy,
       authData: params.authData,
@@ -1029,6 +1029,35 @@ class EmbeddedWallet {
   }
 
   /**
+   * Prepare tx and emit `txSubmitted` event (to show tx in tx history in UI e.g.)
+   */
+  submitTransaction(
+    txHash: string,
+    signedTxData?: ethers.BytesLike,
+    chainId?: number,
+    label = 'Transaction',
+    internalLabel?: string
+  ) {
+    const txItem = {
+      hash: txHash,
+      label,
+      rawData: signedTxData || '',
+      owner: this.lastAccount.wallets[this.lastAccount.walletIndex].address || 'none',
+      status: 'pending' as const,
+      chainId: chainId || this.defaultNetworkId,
+      explorerUrl: this.explorerUrls[chainId || this.defaultNetworkId]
+        ? `${this.explorerUrls[chainId || this.defaultNetworkId]}/tx/${txHash}`
+        : '',
+      createdAt: Date.now(),
+      internalLabel,
+    } as TransactionItem;
+
+    this.events.emit('txSubmitted', txItem);
+
+    return txItem;
+  }
+
+  /**
    * Get signed tx for making a contract write call.
    */
   async signContractWrite(params: ContractWriteParams) {
@@ -1164,7 +1193,17 @@ class EmbeddedWallet {
     }
   }
 
-  async gaslessTx(params: {
+  /**
+   * Call an `Account Manager` contract method with a gasless transaction.
+   * This means that app owner (clientId) pays for the transaction fees instead of user.
+   * These methods must be supported by `generateGaslessTx` method on the contract.
+   * Supported methods are defined by `GaslessTxType`.
+   * About
+   * - get & confirm credentials
+   * - calculate and format tx data (according to `funcDataTypes` and `funcDataValuesFormatter` params)
+   * - broadcast the tx (marked with `label` from params)
+   */
+  async processGaslessMethod(params: {
     strategy: AuthStrategyName;
     authData: AuthData;
     data: any;

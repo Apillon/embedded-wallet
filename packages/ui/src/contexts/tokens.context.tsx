@@ -98,7 +98,7 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
       address: '',
       name: `${networksById?.[walletState.networkId]?.name} ETH`,
       symbol: networksById?.[walletState.networkId]?.currencySymbol || 'ETH',
-      decimals: networksById?.[walletState.networkId]?.currencDecimals || 18,
+      decimals: networksById?.[walletState.networkId]?.currencyDecimals || 18,
       balance: activeWallet?.balance || '',
     }),
     [activeWallet?.balance, walletState.networkId]

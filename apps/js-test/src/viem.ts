@@ -15,7 +15,7 @@ async function start() {
   // Wait for wallet SDK and account to initialize
   await new Promise<void>(resolve => {
     const clear = setInterval(() => {
-      if (window.embeddedWallet && !!window.embeddedWallet.lastAccount.address) {
+      if (window.embeddedWallet && !!window.embeddedWallet.lastAccount.contractAddress) {
         clearInterval(clear);
         resolve();
       }

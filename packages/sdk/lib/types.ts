@@ -14,9 +14,9 @@ export type Network = {
   id: number;
   rpcUrl: string;
   explorerUrl: string;
-  imageUrl?: string;
-  currencySymbol?: string;
-  currencDecimals?: number;
+  imageUrl?: string; // Icon of the chain for display in UI
+  currencySymbol?: string; // Symbol of the native currency (default is 'ETH')
+  currencyDecimals?: number; // Number of decimals of the native currency (default is 18)
 };
 
 export type SignatureCallback = (
@@ -52,14 +52,9 @@ export type AppParams = {
   networks?: Network[];
 
   /**
-   * Use a new window for creating and authenticating with a passkey
+   * Method for authenticating with passkey to make it global.
    */
   passkeyAuthMode?: AuthPasskeyMode;
-
-  /**
-   * Iframe uses same wallet code. Set this to prevent implosion.
-   */
-  noPasskeyIframe?: boolean;
 };
 
 export type AuthData = {
