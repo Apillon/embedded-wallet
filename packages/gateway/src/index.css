@@ -34,13 +34,12 @@ body {
 }
 
 h2 {
-  @apply font-bold text-[1.75rem] text-offwhite text-center leading-tight;
+  @apply font-medium text-[1.75rem] text-offwhite text-center leading-tight;
   font-family: 'New Spirit', serif;
 }
 
 h3 {
-  @apply font-bold text-xl leading-tight text-offwhite text-center mt-0;
-  font-family: 'New Spirit', serif;
+  @apply font-bold text-xl leading-tight text-offwhite text-center mt-0 font-sans;
 }
 
 h4 {
@@ -49,6 +48,14 @@ h4 {
 
 a {
   @apply text-offwhite;
+}
+
+input {
+  @apply bg-lightdark;
+}
+
+input::placeholder {
+  @apply text-lightgrey;
 }
 
 #root {

@@ -61,6 +61,14 @@
   input[type='number'] {
     -moz-appearance: textfield;
   }
+
+  input {
+    @apply bg-lightdark;
+  }
+
+  input::placeholder {
+    @apply text-lightgrey;
+  }
 }
 
 #oaw-wallet-widget {
