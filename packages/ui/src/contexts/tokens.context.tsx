@@ -121,13 +121,19 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
   }, [state.selectedToken, state.list, walletState.contractAddress, walletState.networkId]);
 
   useEffect(() => {
-    if (initialized) {
-      localStorage.setItem(WebStorageKeys.TOKENS_CONTEXT, JSON.stringify(state));
+    if (initialized && wallet) {
+      wallet.xdomain?.storageSet(WebStorageKeys.TOKENS_CONTEXT, JSON.stringify(state));
     }
   }, [state]);
 
   useEffect(() => {
-    const stored = localStorage.getItem(WebStorageKeys.TOKENS_CONTEXT);
+    if (!!wallet) {
+      init();
+    }
+  }, [wallet]);
+
+  async function init() {
+    const stored = await wallet?.xdomain?.storageGet(WebStorageKeys.TOKENS_CONTEXT);
 
     if (stored) {
       try {
@@ -175,7 +181,7 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
     setTimeout(() => {
       setInitialized(true);
     }, 100);
-  }, []);
+  }
 
   async function getTokenDetails(address: string) {
     if (wallet && activeWallet) {

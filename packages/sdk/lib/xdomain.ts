@@ -13,6 +13,8 @@ export class XdomainPasskey {
   lastEventId = 0; // use this to match iframe response with promise resolvers
 
   iframe: HTMLIFrameElement | undefined;
+  iframeLoadPromise: Promise<void> | undefined;
+  isIframeLoaded = false;
   popup: Window | null = null;
   popupLoadPromise: { resolve: () => void; reject: (e: any) => void } | undefined;
   isPopupLoaded = false;
@@ -22,7 +24,7 @@ export class XdomainPasskey {
     public clientId: string,
     public mode: AuthPasskeyMode | AuthPasskeyModeInternal = 'redirect'
   ) {
-    if (mode !== 'standalone') {
+    if (mode !== 'standalone' && mode !== 'iframe') {
       window.addEventListener('message', this.onResponse.bind(this));
       this.initIframe();
     }
@@ -70,10 +72,26 @@ export class XdomainPasskey {
       return;
     }
 
+    if (this.iframeLoadPromise) {
+      await this.iframeLoadPromise;
+      await new Promise(resolve => setTimeout(resolve, 150));
+
+      if (!!this.iframe) {
+        return;
+      }
+    }
+
     const i = document.createElement('iframe');
 
-    const iframeLoading = new Promise<void>(resolve => {
-      i.addEventListener('load', () => resolve(), { once: true });
+    this.iframeLoadPromise = new Promise<void>(resolve => {
+      i.addEventListener(
+        'load',
+        () => {
+          this.isIframeLoaded = true;
+          resolve();
+        },
+        { once: true }
+      );
     });
 
     i.setAttribute('src', `${this.src}?clientId=${this.clientId}`);
@@ -89,7 +107,8 @@ export class XdomainPasskey {
 
     document.body.appendChild(i);
 
-    await iframeLoading;
+    await this.iframeLoadPromise;
+    await new Promise(resolve => setTimeout(resolve, 150));
   }
 
   async openPopup(username: string) {
@@ -259,10 +278,8 @@ export class XdomainPasskey {
    * Get credentials -- always through iframe.
    */
   async get(credentials: Uint8Array[], challenge: Uint8Array) {
-    if (!this.iframe) {
+    if (!this.iframe || !this.isIframeLoaded) {
       await this.initIframe();
-
-      await new Promise(resolve => setTimeout(resolve, 150));
 
       if (!this.iframe) {
         return abort('XDOMAIN_NOT_INIT');
@@ -315,6 +332,60 @@ export class XdomainPasskey {
         reject,
       });
     });
+  }
+
+  /**
+   * Gateway localStorage get
+   */
+  async storageGet(key: string) {
+    if (!this.iframe || !this.isIframeLoaded) {
+      await this.initIframe();
+
+      if (!this.iframe) {
+        return abort('XDOMAIN_NOT_INIT');
+      }
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    const id = this.getEventId();
+
+    this.iframe.contentWindow?.postMessage(
+      {
+        type: 'storage_get',
+        id,
+        content: key,
+      },
+      this.src
+    );
+
+    return new Promise<string | null>((resolve, reject) => {
+      this.promises.push({
+        id,
+        resolve,
+        reject,
+      });
+    });
+  }
+
+  /**
+   * Gateway localStorage set
+   */
+  storageSet(key: string, value: string) {
+    if (!this.iframe) {
+      return abort('XDOMAIN_NOT_INIT');
+    }
+
+    const id = this.getEventId();
+
+    this.iframe.contentWindow?.postMessage(
+      {
+        type: 'storage_set',
+        id,
+        content: { key, value },
+      },
+      this.src
+    );
   }
 
   getEventId() {

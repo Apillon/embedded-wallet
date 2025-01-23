@@ -5,6 +5,7 @@ import {
   useEffect,
   useMemo,
   useReducer,
+  useRef,
   useState,
 } from 'react';
 import {
@@ -202,7 +203,8 @@ function WalletProvider({
     reducer,
     initialState(defaultNetworkId || networks[0].id, { ...restOfParams, defaultNetworkId })
   );
-  const [initialized, setInitialized] = useState(false);
+  const initializingWallet = useRef(false);
+  const initialized = useRef(false);
   const [wallet, setWallet] = useState<EmbeddedWallet>();
 
   const networksById = networks.reduce(
@@ -222,10 +224,21 @@ function WalletProvider({
   }, [state.walletIndex, state.accountWallets]);
 
   /**
-   * Store changed state to localStorage
+   * Initialize Oasis Wallet App SDK
+   * + initialize last global state
    */
   useEffect(() => {
-    if (initialized) {
+    if (!wallet && !initializingWallet.current) {
+      initializingWallet.current = true;
+      initWallet();
+    }
+  }, []);
+
+  /**
+   * Store changed state to gateway localStorage
+   */
+  useEffect(() => {
+    if (initialized.current && wallet) {
       /**
        * Exclude some state variables from being saved
        */
@@ -241,59 +254,9 @@ function WalletProvider({
         ...save
       } = state;
 
-      localStorage.setItem(WebStorageKeys.WALLET_CONTEXT, JSON.stringify(save));
+      wallet.xdomain?.storageSet(WebStorageKeys.WALLET_CONTEXT, JSON.stringify(save));
     }
   }, [state]);
-
-  /**
-   * Initialize state from localStorage
-   */
-  useEffect(() => {
-    const stored = localStorage.getItem(WebStorageKeys.WALLET_CONTEXT);
-
-    if (stored) {
-      try {
-        const restored = JSON.parse(stored) as ContextState;
-        dispatch({ type: 'setState', payload: restored });
-      } catch (e) {
-        console.error('Cant parse global state localStorage', e);
-      }
-    }
-
-    setTimeout(() => setInitialized(true), 10);
-  }, []);
-
-  /**
-   * Initialize Oasis Wallet App SDK
-   */
-  useEffect(() => {
-    if (initialized && !wallet) {
-      let w = undefined as EmbeddedWallet | undefined;
-
-      if (networks && networks.length) {
-        w = EmbeddedWalletSDK({
-          ...restOfParams,
-          networks,
-          defaultNetworkId: state.networkId || defaultNetworkId,
-        });
-      } else {
-        w = EmbeddedWalletSDK();
-      }
-
-      if (w) {
-        setWallet(w);
-
-        w.setAccount({
-          username: state.username,
-          strategy: state.authStrategy,
-          walletIndex: state.walletIndex,
-          contractAddress: state.contractAddress,
-        });
-
-        w.setWallets(state.accountWallets);
-      }
-    }
-  }, [networks, defaultNetworkId, initialized]);
 
   /**
    * Reload balance on:
@@ -305,6 +268,53 @@ function WalletProvider({
       reloadAccountBalances([state.accountWallets[state.walletIndex].address]);
     }
   }, [state.username, state.walletIndex, state.accountWallets.length]);
+
+  async function initWallet() {
+    let w = undefined as EmbeddedWallet | undefined;
+
+    if (networks && networks.length) {
+      w = EmbeddedWalletSDK({
+        ...restOfParams,
+        networks,
+        defaultNetworkId,
+      });
+    } else {
+      w = EmbeddedWalletSDK();
+    }
+
+    if (w) {
+      setWallet(w);
+
+      // Get stored state
+      const stored = await w.xdomain?.storageGet(WebStorageKeys.WALLET_CONTEXT);
+
+      let mergedState = { ...state };
+
+      if (stored) {
+        try {
+          const restored = JSON.parse(stored) as ContextState;
+          mergedState = { ...mergedState, ...restored };
+          dispatch({ type: 'setState', payload: restored });
+        } catch (e) {
+          console.error('Cant parse global state localStorage', e);
+        }
+      }
+
+      w.setAccount({
+        username: mergedState.username,
+        strategy: mergedState.authStrategy,
+        walletIndex: mergedState.walletIndex,
+        contractAddress: mergedState.contractAddress,
+      });
+
+      w.setWallets(mergedState.accountWallets);
+
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      initializingWallet.current = false;
+      initialized.current = true;
+    }
+  }
 
   function setStateValue<T extends keyof ReturnType<typeof initialState>>(
     key: T,
