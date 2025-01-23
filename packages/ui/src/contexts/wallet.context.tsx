@@ -300,6 +300,10 @@ function WalletProvider({
         }
       }
 
+      if (mergedState.networkId !== defaultNetworkId) {
+        w.setDefaultNetworkId(mergedState.networkId);
+      }
+
       w.setAccount({
         username: mergedState.username,
         strategy: mergedState.authStrategy,

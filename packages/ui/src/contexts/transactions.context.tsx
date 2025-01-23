@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useReducer, useState } from 'react';
+import { createContext, useContext, useEffect, useReducer, useRef } from 'react';
 import { getEmbeddedWallet, TransactionItem } from '@apillon/wallet-sdk';
 import { useWalletContext } from './wallet.context';
 import { WebStorageKeys } from '../lib/constants';
@@ -94,7 +94,8 @@ const TransactionsContext = createContext<
 
 function TransactionsProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState());
-  const [initialized, setInitialized] = useState(false);
+  const initializing = useRef(false);
+  const initialized = useRef(false);
 
   const {
     wallet,
@@ -104,7 +105,7 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
   } = useWalletContext();
 
   useEffect(() => {
-    if (initialized && wallet) {
+    if (initialized.current && wallet) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { pending, chainIdsForHash, ...save } = state;
       wallet.xdomain?.storageSet(WebStorageKeys.TRANSACTIONS_CONTEXT, JSON.stringify(save));
@@ -112,10 +113,11 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
   }, [state]);
 
   useEffect(() => {
-    if (wallet) {
+    if (wallet && !initializing.current) {
+      initializing.current = true;
       init();
     }
-  }, []);
+  }, [wallet]);
 
   useEffect(() => {
     if (
@@ -142,7 +144,7 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
     }
 
     setTimeout(() => {
-      setInitialized(true);
+      initialized.current = true;
     }, 100);
   }
 

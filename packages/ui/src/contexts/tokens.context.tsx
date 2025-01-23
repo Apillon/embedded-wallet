@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useReducer, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useReducer, useRef } from 'react';
 import { ERC20Abi } from '@apillon/wallet-sdk';
 import { useWalletContext } from './wallet.context';
 import { ethers } from 'ethers';
@@ -90,7 +90,8 @@ const TokensContext = createContext<
 
 function TokensProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState());
-  const [initialized, setInitialized] = useState(false);
+  const initializing = useRef(false);
+  const initialized = useRef(false);
   const { state: walletState, wallet, activeWallet, networksById } = useWalletContext();
 
   const nativeToken = useMemo<TokenInfo>(
@@ -121,13 +122,14 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
   }, [state.selectedToken, state.list, walletState.contractAddress, walletState.networkId]);
 
   useEffect(() => {
-    if (initialized && wallet) {
+    if (initializing.current && wallet) {
       wallet.xdomain?.storageSet(WebStorageKeys.TOKENS_CONTEXT, JSON.stringify(state));
     }
   }, [state]);
 
   useEffect(() => {
-    if (!!wallet) {
+    if (wallet && !initializing.current) {
+      initializing.current = true;
       init();
     }
   }, [wallet]);
@@ -179,7 +181,7 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
     }
 
     setTimeout(() => {
-      setInitialized(true);
+      initialized.current = true;
     }, 100);
   }
 
