@@ -61,6 +61,14 @@
   input[type='number'] {
     -moz-appearance: textfield;
   }
+
+  input {
+    @apply bg-lightdark;
+  }
+
+  input::placeholder {
+    @apply text-lightgrey;
+  }
 }
 
 #oaw-wallet-widget {
@@ -97,6 +105,13 @@
 
 .oaw-btn-default-style:hover {
   transform: translateY(-2px);
+}
+
+#oaw-wallet-widget-btn .loader {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
 }
 
 #oaw-wallet-widget *:focus,

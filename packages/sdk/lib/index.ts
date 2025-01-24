@@ -34,6 +34,7 @@ import { XdomainPasskey } from './xdomain';
 
 class EmbeddedWallet {
   sapphireProvider: ethers.JsonRpcProvider;
+  sapphireChainId = 0;
   accountManagerAddress: string;
   accountManagerContract: WebauthnContract;
   abiCoder = ethers.AbiCoder.defaultAbiCoder();
@@ -75,6 +76,7 @@ class EmbeddedWallet {
     ]);
 
     this.sapphireProvider = sapphire.wrap(ethSaphProvider);
+    this.loadSapphireChainId();
     this.accountManagerAddress =
       import.meta.env.VITE_ACCOUNT_MANAGER_ADDRESS ?? '0x50dE236a7ce372E7a09956087Fb4862CA1a887aA';
 
@@ -497,7 +499,7 @@ class EmbeddedWallet {
     }
 
     const res = await this.processGaslessMethod({
-      label: 'Add new account',
+      label: params.privateKey ? 'Import new account' : 'Add new account',
       strategy: params.strategy,
       authData: params.authData,
       data,
@@ -1288,7 +1290,7 @@ class EmbeddedWallet {
 
     const res = await this.broadcastTransaction(
       signedTx,
-      undefined,
+      this.sapphireChainId,
       params.label || 'Gasless Transaction',
       params.internalLabel || `gasless_${params.txType}`
     );
@@ -1433,6 +1435,15 @@ class EmbeddedWallet {
 
       this.setDefaultNetworkId(chainId);
     }
+  }
+
+  // Get sapphire chain id from connected provider
+  async loadSapphireChainId() {
+    if (!this.sapphireChainId && !!this.sapphireProvider) {
+      this.sapphireChainId = +(await this.sapphireProvider.getNetwork()).chainId.toString();
+    }
+
+    return this.sapphireChainId;
   }
 
   /**

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useReducer, useState } from 'react';
+import { createContext, useContext, useEffect, useReducer, useRef } from 'react';
 import { getEmbeddedWallet, TransactionItem } from '@apillon/wallet-sdk';
 import { useWalletContext } from './wallet.context';
 import { WebStorageKeys } from '../lib/constants';
@@ -94,34 +94,30 @@ const TransactionsContext = createContext<
 
 function TransactionsProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState());
-  const [initialized, setInitialized] = useState(false);
+  const initializing = useRef(false);
+  const initialized = useRef(false);
 
-  const { activeWallet, reloadAccountBalances, dispatch: dispatchWallet } = useWalletContext();
+  const {
+    wallet,
+    activeWallet,
+    reloadAccountBalances,
+    dispatch: dispatchWallet,
+  } = useWalletContext();
 
   useEffect(() => {
-    if (initialized) {
+    if (initialized.current && wallet) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { pending, chainIdsForHash, ...save } = state;
-      localStorage.setItem(WebStorageKeys.TRANSACTIONS_CONTEXT, JSON.stringify(save));
+      wallet.xdomain?.storageSet(WebStorageKeys.TRANSACTIONS_CONTEXT, JSON.stringify(save));
     }
   }, [state]);
 
   useEffect(() => {
-    const stored = localStorage.getItem(WebStorageKeys.TRANSACTIONS_CONTEXT);
-
-    if (stored) {
-      try {
-        const restored = JSON.parse(stored);
-        dispatch({ type: 'setState', payload: restored });
-      } catch (e) {
-        console.error('Cant parse context state localStorage', e);
-      }
+    if (wallet && !initializing.current) {
+      initializing.current = true;
+      init();
     }
-
-    setTimeout(() => {
-      setInitialized(true);
-    }, 100);
-  }, []);
+  }, [wallet]);
 
   useEffect(() => {
     if (
@@ -134,6 +130,23 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
       }
     }
   }, [activeWallet, state.txs]);
+
+  async function init() {
+    const stored = await wallet?.xdomain?.storageGet(WebStorageKeys.TRANSACTIONS_CONTEXT);
+
+    if (stored) {
+      try {
+        const restored = JSON.parse(stored);
+        dispatch({ type: 'setState', payload: restored });
+      } catch (e) {
+        console.error('Cant parse context state localStorage', e);
+      }
+    }
+
+    setTimeout(() => {
+      initialized.current = true;
+    }, 100);
+  }
 
   /**
    * Check if transaction is already finalized in store.

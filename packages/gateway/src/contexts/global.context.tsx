@@ -23,17 +23,25 @@ function GlobalProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState('');
   const referrerUrl = useRef('');
   const isTab = useRef(false); // is app running in tab/popup -> close self on end
+  const init = useRef(false);
 
   /**
    * Initialize Oasis Wallet App SDK
    * & set referrer url
    */
   useEffect(() => {
-    if (window.location.search) {
+    if (window.location.search && !init.current) {
+      init.current = true;
+
       const urlParams = new URLSearchParams(window.location.search);
 
       if (!wallet) {
-        setWallet(EmbeddedWalletSDK({ clientId: urlParams.get('clientId') || '' }));
+        setWallet(
+          EmbeddedWalletSDK({
+            clientId: urlParams.get('clientId') || '',
+            passkeyAuthMode: 'iframe' as any,
+          })
+        );
       }
 
       const referrer = urlParams.get('ref');
