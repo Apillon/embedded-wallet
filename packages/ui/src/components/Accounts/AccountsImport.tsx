@@ -3,10 +3,9 @@ import Select from '../ui/Select';
 import Input from '../ui/Input';
 import Btn from '../ui/Btn';
 import { useWalletContext } from '../../contexts/wallet.context';
-import MsgSuccess from '../ui/MsgSuccess';
 
 export default function AccountsImport() {
-  const { wallet, goScreenBack, handleError } = useWalletContext();
+  const { wallet, goScreenBack, handleError, setStateValue: setForWallet } = useWalletContext();
   const [type, setType] = useState('pk');
   const [title, setTitle] = useState('');
   const [privateKey, setPrivateKey] = useState('');
@@ -29,6 +28,7 @@ export default function AccountsImport() {
       });
 
       setSuccess(true);
+      setForWallet('displayedSuccess', 'Account imported. Wait for transaction to complete.');
       setTitle('');
       setPrivateKey('');
     } catch (e) {
@@ -78,8 +78,6 @@ export default function AccountsImport() {
           Import
         </Btn>
       </div>
-
-      {!!success && <MsgSuccess text="Account imported" className="my-6" />}
 
       <div className="grow"></div>
 

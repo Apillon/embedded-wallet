@@ -51,13 +51,18 @@ function ApproveProvider({ children }: { children: React.ReactNode }) {
     const onTxSubmittedEvent = async (params: Events['txSubmitted']) => {
       dispatchTx({ type: 'addTx', payload: params });
 
-      await new Promise(resolve => setTimeout(resolve, MODAL_TRANSITION_TIME * 2));
+      if (params.internalLabel && ['gasless_3', 'gasless_4'].includes(params.internalLabel)) {
+        // Dont show transaction submitted screen
+        return;
+      }
 
       setStateValue('successInfo', {
         title: 'Successfully sent',
         txHash: params.hash,
         explorerUrl: params.explorerUrl,
       });
+
+      await new Promise(resolve => setTimeout(resolve, MODAL_TRANSITION_TIME * 2));
 
       setForWallet('isOpen', true);
     };

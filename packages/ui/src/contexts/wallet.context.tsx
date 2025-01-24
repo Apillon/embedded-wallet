@@ -58,6 +58,7 @@ const initialState = (defaultNetworkId = 0, appProps: AppProps) => ({
   walletScreenHistory: [] as WalletScreens[],
   isOpen: false, // is wallet modal displayed
   displayedError: '',
+  displayedSuccess: '',
   appProps,
   loadingWallets: false,
 });

@@ -18,6 +18,7 @@ import TokensSelect from '../Tokens/TokensSelect';
 import TokensAdd from '../Tokens/TokensAdd';
 import AccountsList from '../Accounts/AccountsList';
 import AccountsAdd from '../Accounts/AccountsAdd';
+import MsgSuccess from '../ui/MsgSuccess';
 
 /**
  * Base layout elements and screen display logic
@@ -96,7 +97,8 @@ export default () => {
 
       <div className="px-8 pb-4 grow overflow-y-auto">{content()}</div>
 
-      <div className="absolute -bottom-5 left-0 right-0 px-8">
+      <div className="absolute -bottom-5 left-0 right-0 px-8 flex flex-col gap-2">
+        <MsgSuccess />
         <MsgError show />
       </div>
     </div>

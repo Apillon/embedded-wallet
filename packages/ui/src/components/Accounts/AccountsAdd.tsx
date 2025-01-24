@@ -25,7 +25,7 @@ const walletTypeOptions = [
 ];
 
 export default function AccountsAdd() {
-  const { wallet, handleError, goScreenBack } = useWalletContext();
+  const { wallet, handleError, goScreenBack, setStateValue: setForWallet } = useWalletContext();
   const [type, setType] = useState<AccountWalletTypes>(WalletType.EVM);
   const [title, setTitle] = useState('');
   const [loading, setLoading] = useState(false);
@@ -39,6 +39,7 @@ export default function AccountsAdd() {
 
     try {
       await wallet?.addAccountWallet({ title, walletType: type });
+      setForWallet('displayedSuccess', 'Account created. Wait for transaction to complete.');
       goScreenBack();
     } catch (e) {
       handleError(e);
