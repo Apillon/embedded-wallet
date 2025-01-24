@@ -67,6 +67,19 @@ window.addEventListener('message', ev => {
     createPasskey(ev.data.id, ev.data.content);
   } else if (ev.data.type === 'save_pk_event_id') {
     sessionStorage.setItem('event_id', ev.data.id);
+  } else if (ev.data.type === 'storage_get') {
+    window.top?.postMessage(
+      {
+        type: 'apillon_pk_response',
+        id: ev.data.id,
+        content: localStorage.getItem(ev.data.content),
+      },
+      '*'
+    );
+  } else if (ev.data.type === 'storage_set') {
+    if (ev.data.content && ev.data.content.key) {
+      localStorage.setItem(ev.data.content.key, ev.data.content.value);
+    }
   }
 });
 

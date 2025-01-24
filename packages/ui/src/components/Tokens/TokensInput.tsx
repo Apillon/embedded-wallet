@@ -45,6 +45,7 @@ export default ({
           step="0.01"
           {...inputProps}
           disabled={disabled}
+          autoComplete="off"
           className={clsx(
             'placeholder:text-lightgrey !outline-none text-offwhite text-right rounded-none'
           )}
