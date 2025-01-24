@@ -96,7 +96,7 @@ export interface AuthStrategy {
   ): Promise<any>;
 }
 
-export type AuthPasskeyMode = 'redirect' | 'popup' | 'tab_process' | 'tab_form';
+export type AuthPasskeyMode = 'redirect' | 'popup' | 'tab_form';
 
 export type AuthPasskeyModeInternal = 'iframe' | 'standalone';
 
