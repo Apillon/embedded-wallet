@@ -130,6 +130,12 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error('Could not send confirmation email');
       }
 
+      const { data } = await res.json();
+
+      if (data?.expireTime) {
+        setStateValue('lastCodeExpiretime', new Date(data.expireTime).getTime() || 0);
+      }
+
       return true;
     } catch (e) {
       handleError(e, 'sendConfirmationEmail');
@@ -231,6 +237,7 @@ const initialState = () => ({
   username: '',
   hashedUsername: undefined as Buffer | undefined,
   screen: 'loginForm' as AuthScreens,
+  lastCodeExpiretime: 0, // get from /otp/generate and check before /otp/validate
 });
 
 type ContextState = ReturnType<typeof initialState>;

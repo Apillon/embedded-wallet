@@ -8,7 +8,7 @@ import { useWalletContext } from '../../contexts/wallet.context';
 export default () => {
   const { handleError } = useWalletContext();
   const {
-    state: { loading, username },
+    state: { loading, username, lastCodeExpiretime },
     setStateValue: setForAuth,
     startRegister,
     sendConfirmationEmail,
@@ -115,13 +115,12 @@ export default () => {
         )
       ).json();
 
-      if (!data) {
+      if (!data && !!lastCodeExpiretime && Date.now() > lastCodeExpiretime) {
+        setIsExpired(true);
         throw new Error('Verification code is not valid.');
       }
 
-      // Not implemented, backend doesn't return specific error codes
-      if (data.error === 'EXPIRED') {
-        setIsExpired(true);
+      if (!data) {
         throw new Error('Verification code is not valid.');
       }
 
