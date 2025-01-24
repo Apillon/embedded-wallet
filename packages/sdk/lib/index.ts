@@ -23,6 +23,7 @@ import PasskeyStrategy from './strategies/passkey';
 import { networkIdIsSapphire, getHashedUsername, abort, JsonMultiRpcProvider } from './utils';
 import mitt, { Emitter } from 'mitt';
 import {
+  ApillonApiErrors,
   ProxyWriteFunctionsByStrategy,
   SapphireMainnet,
   SapphireTestnet,
@@ -621,29 +622,30 @@ class EmbeddedWallet {
       return { signature: '', gasLimit: 0, timestamp: 0 };
     }
 
-    try {
-      const { data } = await (
-        await fetch(
-          `${import.meta.env.VITE_APILLON_BASE_URL ?? 'https://api.apillon.io'}/embedded-wallet/signature`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              data: gaslessData,
-              integration_uuid: this.apillonClientId,
-            }),
-          }
-        )
-      ).json();
+    const res = await (
+      await fetch(
+        `${import.meta.env.VITE_APILLON_BASE_URL ?? 'https://api.apillon.io'}/embedded-wallet/signature`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            data: gaslessData,
+            integration_uuid: this.apillonClientId,
+          }),
+        }
+      )
+    ).json();
 
+    if (res.data) {
       return {
-        signature: data.signature,
-        gasLimit: data.gasLimit || 0,
-        gasPrice: data.gasPrice || 0,
-        timestamp: data.timestamp,
+        signature: res.data.signature,
+        gasLimit: res.data.gasLimit || 0,
+        gasPrice: res.data.gasPrice || 0,
+        timestamp: res.data.timestamp,
       };
-    } catch (e) {
-      console.error('Signature request error', e);
+    } else if (res.code && ApillonApiErrors[res.code]) {
+      throw new Error(ApillonApiErrors[res.code]);
+      // return { signature: '', gasLimit: 0, timestamp: 0, error: ApillonApiErrors[res.code] };
     }
 
     return { signature: '', gasLimit: 0, timestamp: 0 };

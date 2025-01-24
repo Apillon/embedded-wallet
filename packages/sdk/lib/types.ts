@@ -21,7 +21,13 @@ export type Network = {
 
 export type SignatureCallback = (
   gaslessData: string
-) => Promise<{ signature: string; gasLimit?: number; gasPrice?: number; timestamp: number }>;
+) => Promise<{
+  signature: string;
+  gasLimit?: number;
+  gasPrice?: number;
+  timestamp: number;
+  error?: string;
+}>;
 
 export type AppParams = {
   /**
