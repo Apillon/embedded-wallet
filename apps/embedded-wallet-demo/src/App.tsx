@@ -2,10 +2,11 @@ import { useState } from 'react';
 import imageWallet from './assets/image-wallet.png';
 import Modal from './components/Modal';
 import Demo from './components/Demo';
-import myImage from './assets/image.png'; // Adjust the path as needed
+import myImage from './assets/image.png';
 import { Toaster } from 'sonner';
+import { AuthPasskeyMode } from '@apillon/wallet-sdk';
 
-export default function App() {
+export default function App({ setPasskeyAuthMode }: { setPasskeyAuthMode: (mode: AuthPasskeyMode) => void }) {
   const btnClass =
     'relative rounded-lg text-sm font-bold  ' +
     'px-4 py-2.5 min-w-[160px] ' +
@@ -41,25 +42,21 @@ export default function App() {
             </button>
           </div>
 
-          <div className="w-full md:!w-1/3 md:!text-right text-center">
-            <div id="wallet"></div>
-
-            {/* <button
-              style={{ color: 'white', border: 'solid 1px white' }}
-              onClick={async () => {
-                const w = getEmbeddedWallet();
-                console.log(
-                  await w?.contractRead({
-                    contractAbi: AccountManagerAbi,
-                    contractAddress: '0xF35C3eB93c6D3764A7D5efC6e9DEB614779437b1',
-                    contractFunctionName: 'gaspayingAddress',
-                    chainId: 23295,
-                  })
-                );
-              }}
-            >
-              W READ
-            </button> */}
+          <div className="w-full md:!w-1/3 md:!text-left text-center" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <select style={{
+              padding: '8px',
+              borderRadius: '5px',
+              border: '1px solid #ccc',
+              backgroundColor: 'gray',
+              color: 'white',
+              cursor: 'pointer',
+            }} onChange={e => setPasskeyAuthMode(e.target.value as AuthPasskeyMode)}>
+              <option value="popup">Popup</option>
+              <option value="redirect">Redirect</option>
+              <option value="tab_process">Tab Process</option>
+              <option value="tab_form">Tab Form</option>
+            </select>
+            <div id="wallet" />
           </div>
         </nav>
 
