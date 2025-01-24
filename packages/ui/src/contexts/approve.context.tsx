@@ -125,7 +125,8 @@ function ApproveProvider({ children }: { children: React.ReactNode }) {
       }
 
       dispatch({ type: 'reset' });
-      setForWallet('walletScreen', newHistory[newHistory.length - 1]);
+      // setForWallet('walletScreen', newHistory[newHistory.length - 1]);
+      setForWallet('walletScreen', 'main');
     } else {
       setForWallet('isOpen', false);
     }

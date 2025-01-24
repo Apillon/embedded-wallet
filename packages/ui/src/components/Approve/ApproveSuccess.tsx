@@ -43,7 +43,7 @@ export default () => {
       {!!successInfo.txHash && (
         <p className="break-words text-sm text-center">
           <span className="text-lightgrey">
-            Transaction has been completed with the following hash:
+            Transaction has been submitted with the following hash:
           </span>{' '}
           <br />
           <span className="text-offwhite">{successInfo.txHash}</span>
