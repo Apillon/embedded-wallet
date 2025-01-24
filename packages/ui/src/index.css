@@ -107,6 +107,13 @@
   transform: translateY(-2px);
 }
 
+#oaw-wallet-widget-btn .loader {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
 #oaw-wallet-widget *:focus,
 #oaw-wallet-widget *:focus-visible,
 .oaw-btn-default-style:focus,

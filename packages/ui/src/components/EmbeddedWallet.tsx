@@ -8,6 +8,7 @@ import Modal, { MODAL_TRANSITION_TIME } from './ui/Modal';
 import { ApproveProvider, useApproveContext } from '../contexts/approve.context';
 import WalletLayout from './Wallet/WalletLayout';
 import WalletUnavailable from './Wallet/WalletUnavailable';
+import Loader from './ui/Loader';
 
 export type AppProps = {
   /**
@@ -32,6 +33,7 @@ function Main({ disableDefaultActivatorStyle = false }: AppProps) {
   const {
     state,
     wallet,
+    initialized: walletInitialized,
     loadAccountWallets,
     reloadAccountBalances,
     dispatch,
@@ -189,7 +191,13 @@ function Main({ disableDefaultActivatorStyle = false }: AppProps) {
         className={!disableDefaultActivatorStyle ? 'oaw-btn-default-style' : undefined}
         onClick={() => setForWallet('isOpen', true)}
       >
-        {state.loadingWallets ? <span>&hellip;</span> : loggedIn ? 'Open wallet' : 'Sign in'}
+        {state.loadingWallets || !walletInitialized ? (
+          <Loader fill="#06080F" className="loader" />
+        ) : loggedIn ? (
+          'Open wallet'
+        ) : (
+          'Sign in'
+        )}
       </button>
     </div>
   );

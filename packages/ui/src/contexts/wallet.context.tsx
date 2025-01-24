@@ -149,6 +149,7 @@ const WalletContext = createContext<
       activeWallet?: AccountWalletEx;
       wallet?: EmbeddedWallet;
       setWallet: (wallet: EmbeddedWallet) => void;
+      initialized: boolean;
       loadAccountWallets: (
         strategy?: AuthStrategyName,
         username?: string
@@ -204,7 +205,7 @@ function WalletProvider({
     initialState(defaultNetworkId || networks[0].id, { ...restOfParams, defaultNetworkId })
   );
   const initializingWallet = useRef(false);
-  const initialized = useRef(false);
+  const [initialized, setInitialized] = useState(false);
   const [wallet, setWallet] = useState<EmbeddedWallet>();
 
   const networksById = networks.reduce(
@@ -238,7 +239,7 @@ function WalletProvider({
    * Store changed state to gateway localStorage
    */
   useEffect(() => {
-    if (initialized.current && wallet) {
+    if (initialized && wallet) {
       /**
        * Exclude some state variables from being saved
        */
@@ -316,7 +317,7 @@ function WalletProvider({
       await new Promise(resolve => setTimeout(resolve, 10));
 
       initializingWallet.current = false;
-      initialized.current = true;
+      setInitialized(true);
     }
   }
 
@@ -481,6 +482,7 @@ function WalletProvider({
         activeWallet,
         wallet,
         setWallet,
+        initialized,
         loadAccountWallets,
         reloadAccountBalances,
         formatNativeBalance,
