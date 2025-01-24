@@ -1,6 +1,7 @@
 import { createContext, useContext, useReducer } from 'react';
 import { useWalletContext } from './wallet.context';
 import { abort, AuthStrategyName, getHashedUsername } from '@apillon/wallet-sdk';
+import { WebStorageKeys } from '../lib/constants';
 
 export type AuthScreens = 'loginForm' | 'confirmCode' | 'codeSubmitted' | 'configuringPasskey';
 
@@ -133,7 +134,9 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data } = await res.json();
 
       if (data?.expireTime) {
-        setStateValue('lastCodeExpiretime', new Date(data.expireTime).getTime() || 0);
+        const ts = new Date(data.expireTime).getTime() || 0;
+        setStateValue('lastCodeExpiretime', ts);
+        wallet?.xdomain?.storageSet(WebStorageKeys.OTP_EXPIRATION, `${ts}`, true);
       }
 
       return true;

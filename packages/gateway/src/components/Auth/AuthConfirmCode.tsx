@@ -5,11 +5,12 @@ import AuthTitle from './AuthTitle';
 import { useAuthContext } from '../../contexts/auth.context';
 import { useGlobalContext } from '../../contexts/global.context';
 import { getHashedUsername } from '@apillon/wallet-sdk';
+import { WebStorageKeys } from '../../helpers';
 
 export default () => {
   const { handleError } = useGlobalContext();
   const {
-    state: { loading, username },
+    state: { loading, username, lastCodeExpiretime },
     setStateValue: setForAuth,
     startRegister,
     sendConfirmationEmail,
@@ -116,13 +117,18 @@ export default () => {
         )
       ).json();
 
-      if (!data) {
+      let expireTs = lastCodeExpiretime;
+
+      if (!expireTs) {
+        expireTs = +(sessionStorage.getItem(WebStorageKeys.OTP_EXPIRATION) || 0);
+      }
+
+      if (!data && !!expireTs && Date.now() > expireTs) {
+        setIsExpired(true);
         throw new Error('Verification code is not valid.');
       }
 
-      // Not implemented, backend doesn't return specific error codes
-      if (data.error === 'EXPIRED') {
-        setIsExpired(true);
+      if (!data) {
         throw new Error('Verification code is not valid.');
       }
 

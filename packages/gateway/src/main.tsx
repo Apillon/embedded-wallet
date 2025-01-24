@@ -68,17 +68,25 @@ window.addEventListener('message', ev => {
   } else if (ev.data.type === 'save_pk_event_id') {
     sessionStorage.setItem('event_id', ev.data.id);
   } else if (ev.data.type === 'storage_get') {
-    window.top?.postMessage(
-      {
-        type: 'apillon_pk_response',
-        id: ev.data.id,
-        content: localStorage.getItem(ev.data.content),
-      },
-      '*'
-    );
+    if (ev.data.content?.key) {
+      window.top?.postMessage(
+        {
+          type: 'apillon_pk_response',
+          id: ev.data.id,
+          content: ev.data.content.isSession
+            ? sessionStorage.getItem(ev.data.content.key)
+            : localStorage.getItem(ev.data.content.key),
+        },
+        '*'
+      );
+    }
   } else if (ev.data.type === 'storage_set') {
-    if (ev.data.content && ev.data.content.key) {
-      localStorage.setItem(ev.data.content.key, ev.data.content.value);
+    if (ev.data.content?.key) {
+      if (ev.data.content.isSession) {
+        sessionStorage.setItem(ev.data.content.key, ev.data.content.value);
+      } else {
+        localStorage.setItem(ev.data.content.key, ev.data.content.value);
+      }
     }
   }
 });

@@ -336,8 +336,9 @@ export class XdomainPasskey {
 
   /**
    * Gateway localStorage get
+   * @param isSession Use sessionStorage instead of localStorage
    */
-  async storageGet(key: string) {
+  async storageGet(key: string, isSession = false) {
     if (!this.iframe || !this.isIframeLoaded) {
       await this.initIframe();
 
@@ -354,7 +355,10 @@ export class XdomainPasskey {
       {
         type: 'storage_get',
         id,
-        content: key,
+        content: {
+          key,
+          isSession,
+        },
       },
       this.src
     );
@@ -371,7 +375,7 @@ export class XdomainPasskey {
   /**
    * Gateway localStorage set
    */
-  storageSet(key: string, value: string) {
+  storageSet(key: string, value: string, isSession = false) {
     if (!this.iframe) {
       return abort('XDOMAIN_NOT_INIT');
     }
@@ -382,7 +386,7 @@ export class XdomainPasskey {
       {
         type: 'storage_set',
         id,
-        content: { key, value },
+        content: { key, value, isSession },
       },
       this.src
     );
