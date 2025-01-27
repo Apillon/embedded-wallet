@@ -3,7 +3,7 @@ import { useWalletContext } from '../../contexts/wallet.context';
 import IconCheck from './Icon/IconCheck';
 
 export default ({ text, className }: { text?: string; className?: string }) => {
-  const { state, setStateValue: setForWallet } = useWalletContext();
+  const { state, handleSuccess } = useWalletContext();
 
   if (!text && !state.displayedSuccess) {
     return <></>;
@@ -32,7 +32,7 @@ export default ({ text, className }: { text?: string; className?: string }) => {
       <button
         title="Dismiss"
         className="oaw-button-plain !text-white/50 hover:!text-white -mt-0.5 shrink-0"
-        onClick={() => setForWallet('displayedSuccess', '')}
+        onClick={() => handleSuccess('', 0)}
       >
         <svg
           width="24"

@@ -162,6 +162,7 @@ const WalletContext = createContext<
       formatNativeBalance: (balance: string | bigint | number) => string;
       setScreen: (screen: WalletScreens) => void;
       goScreenBack: () => void;
+      handleSuccess: (msg: string, timeout?: number) => void;
       handleError: (e?: any, src?: string) => string;
       setStateValue: <T extends keyof ReturnType<typeof initialState>>(
         key: T,
@@ -208,6 +209,7 @@ function WalletProvider({
   const initializingWallet = useRef(false);
   const [initialized, setInitialized] = useState(false);
   const [wallet, setWallet] = useState<EmbeddedWallet>();
+  const successTimeout = useRef<ReturnType<typeof setTimeout>>();
 
   const networksById = networks.reduce(
     (acc, x) => {
@@ -472,6 +474,22 @@ function WalletProvider({
     return msg;
   }
 
+  /**
+   * Show success toast and hide it after a timeout
+   */
+  function handleSuccess(msg: string, timeout = 10000) {
+    if (successTimeout.current) {
+      clearTimeout(successTimeout.current);
+    }
+
+    setStateValue('displayedSuccess', msg);
+
+    successTimeout.current = setTimeout(() => {
+      setStateValue('displayedSuccess', '');
+      successTimeout.current = undefined;
+    }, timeout);
+  }
+
   return (
     <WalletContext.Provider
       value={{
@@ -488,6 +506,7 @@ function WalletProvider({
         reloadAccountBalances,
         formatNativeBalance,
         handleError,
+        handleSuccess,
         setStateValue,
         setScreen: (s: WalletScreens) => setStateValue('walletScreen', s),
         goScreenBack: () => {

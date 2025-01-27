@@ -5,7 +5,7 @@ import Btn from '../ui/Btn';
 import { useWalletContext } from '../../contexts/wallet.context';
 
 export default function AccountsImport() {
-  const { wallet, goScreenBack, handleError, setStateValue: setForWallet } = useWalletContext();
+  const { wallet, goScreenBack, handleError, handleSuccess } = useWalletContext();
   const [type, setType] = useState('pk');
   const [title, setTitle] = useState('');
   const [privateKey, setPrivateKey] = useState('');
@@ -28,7 +28,7 @@ export default function AccountsImport() {
       });
 
       setSuccess(true);
-      setForWallet('displayedSuccess', 'Account imported. Wait for transaction to complete.');
+      handleSuccess('Account imported. Wait for transaction to complete.');
       setTitle('');
       setPrivateKey('');
     } catch (e) {
