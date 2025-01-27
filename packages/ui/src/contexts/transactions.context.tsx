@@ -6,7 +6,6 @@ import { WebStorageKeys } from '../lib/constants';
 const initialState = () => ({
   txs: {} as { [ownerAddress: string]: { [txHash: string]: TransactionItem } },
   pending: [] as string[],
-  chainIdsForHash: {} as { [txHash: string]: number }, // for pending hashes
 });
 
 type ContextState = ReturnType<typeof initialState>;
@@ -40,10 +39,6 @@ function reducer(state: ContextState, action: ContextActions) {
           },
         },
         // pending: [...new Set([...state.pending, action.payload.hash])],
-        chainIdsForHash: {
-          ...state.chainIdsForHash,
-          [action.payload.hash]: action.payload.chainId,
-        },
       };
     case 'setTxStatus':
       return {
@@ -62,21 +57,6 @@ function reducer(state: ContextState, action: ContextActions) {
           action.payload.status === 'pending'
             ? [...new Set([...state.pending, action.payload.tx.hash])]
             : state.pending.filter(x => x !== action.payload.tx.hash),
-        chainIdsForHash:
-          action.payload.status === 'pending'
-            ? {
-                ...state.chainIdsForHash,
-                [action.payload.tx.hash]: action.payload.tx.chainId,
-              }
-            : Object.keys(state.chainIdsForHash).reduce(
-                (acc, x) => {
-                  if (x !== action.payload.tx.hash) {
-                    acc[x] = action.payload.tx.chainId;
-                  }
-                  return acc;
-                },
-                {} as { [txHash: string]: number }
-              ),
       };
     default:
       throw new Error('Unhandled action type.' + JSON.stringify(action));
@@ -87,7 +67,7 @@ const TransactionsContext = createContext<
   | {
       state: ContextState;
       dispatch: (action: ContextActions) => void;
-      checkTransaction: (txHash: string, txData?: TransactionItem) => void;
+      checkTransaction: (txData: TransactionItem) => void;
     }
   | undefined
 >(undefined);
@@ -105,19 +85,19 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
   } = useWalletContext();
 
   useEffect(() => {
-    if (initialized.current && wallet) {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { pending, chainIdsForHash, ...save } = state;
-      wallet.xdomain?.storageSet(WebStorageKeys.TRANSACTIONS_CONTEXT, JSON.stringify(save));
-    }
-  }, [state]);
-
-  useEffect(() => {
     if (wallet && !initializing.current) {
       initializing.current = true;
       init();
     }
   }, [wallet]);
+
+  useEffect(() => {
+    if (initialized.current && wallet) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { pending, ...save } = state;
+      wallet.xdomain?.storageSet(WebStorageKeys.TRANSACTIONS_CONTEXT, JSON.stringify(save));
+    }
+  }, [state]);
 
   useEffect(() => {
     if (
@@ -126,7 +106,7 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
       Object.keys(state.txs[activeWallet.address]).length
     ) {
       for (const tx of Object.values(state.txs[activeWallet.address])) {
-        checkTransaction(tx.hash, tx);
+        checkTransaction(tx);
       }
     }
   }, [activeWallet, state.txs]);
@@ -153,19 +133,22 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
    * If transaction is not finalized, check if it has been mined,
    * otherwise attach a listener to provider that updates when
    * the transaction is mined.
+   *
+   * @param rechecking Set if second run, some time after first run to check if tx is actually listed.
    */
-  async function checkTransaction(txHash: string, txData?: TransactionItem) {
+  async function checkTransaction(txData: TransactionItem, rechecking = false) {
     if (!activeWallet) {
       return;
     }
 
+    const txHash = txData.hash;
     const wallet = getEmbeddedWallet();
 
     if (!wallet) {
       throw new Error('Wallet not initialized.' + txHash);
     }
 
-    const ethProvider = wallet.getRpcProviderForChainId(state.chainIdsForHash[txHash]);
+    const ethProvider = wallet.getRpcProviderForChainId(txData?.chainId);
 
     if (!ethProvider) {
       throw new Error('Provider not initialized. ' + txHash);
@@ -209,8 +192,15 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
         },
       });
 
+      // Check for tx again after some time, to ensure tx is listed
+      const recheckTimeout = !rechecking ? setTimeout(() => checkTransaction(txData), 16000) : null;
+
       // Attach listener
       ethProvider.once(txHash, ev => {
+        if (recheckTimeout) {
+          clearTimeout(recheckTimeout);
+        }
+
         const failed = ev && !isNaN(ev.status) && ev.status === 0;
 
         // Reload balance on every tx
