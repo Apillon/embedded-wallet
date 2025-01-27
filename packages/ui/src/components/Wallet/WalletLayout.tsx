@@ -1,5 +1,4 @@
 import { useApproveContext } from '../../contexts/approve.context';
-import { TokensProvider } from '../../contexts/tokens.context';
 import { useWalletContext } from '../../contexts/wallet.context';
 import MsgError from '../ui/MsgError';
 import Approve from '../Approve/Approve';
@@ -64,7 +63,7 @@ export default () => {
       case 'sendToken':
       case 'addToken':
         return (
-          <TokensProvider>
+          <>
             {(() => {
               switch (walletScreen) {
                 case 'sendToken':
@@ -76,14 +75,10 @@ export default () => {
                   return <TokensSelect />;
               }
             })()}
-          </TokensProvider>
+          </>
         );
       case 'selectAccounts':
-        return (
-          <TokensProvider>
-            <AccountsList />
-          </TokensProvider>
-        );
+        return <AccountsList />;
       case 'addAccount':
         return <AccountsAdd />;
       default:

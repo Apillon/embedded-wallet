@@ -9,6 +9,7 @@ import { ApproveProvider, useApproveContext } from '../contexts/approve.context'
 import WalletLayout from './Wallet/WalletLayout';
 import WalletUnavailable from './Wallet/WalletUnavailable';
 import Loader from './ui/Loader';
+import { TokensProvider } from '../contexts/tokens.context';
 
 export type AppProps = {
   /**
@@ -222,7 +223,9 @@ export default function EmbeddedWallet(props: AppProps) {
     <WalletProvider {...props2}>
       <TransactionsProvider>
         <ApproveProvider>
-          <Main {...props2} />
+          <TokensProvider>
+            <Main {...props2} />
+          </TokensProvider>
         </ApproveProvider>
       </TransactionsProvider>
     </WalletProvider>

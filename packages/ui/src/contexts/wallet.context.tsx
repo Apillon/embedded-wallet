@@ -18,7 +18,6 @@ import {
   SapphireTestnet,
   AccountWallet,
 } from '@apillon/wallet-sdk';
-import { ethers } from 'ethers';
 import { AppProps } from '../main';
 import { WebStorageKeys } from '../lib/constants';
 import { logToStorage } from '../lib/helpers';
@@ -159,7 +158,6 @@ const WalletContext = createContext<
         addresses?: string[],
         accountWallets?: AccountWalletEx[]
       ) => Promise<boolean | undefined>;
-      formatNativeBalance: (balance: string | bigint | number) => string;
       setScreen: (screen: WalletScreens) => void;
       goScreenBack: () => void;
       handleSuccess: (msg: string, timeout?: number) => void;
@@ -419,13 +417,6 @@ function WalletProvider({
     }
   }
 
-  function formatNativeBalance(balance: string | bigint | number) {
-    return (
-      ethers.formatUnits(balance, networksById?.[state.networkId]?.currencyDecimals || 18) +
-      ` ${networksById?.[state.networkId]?.currencySymbol || 'ETH'}`
-    );
-  }
-
   function handleError(e?: any, src?: string) {
     let msg = '';
 
@@ -504,7 +495,6 @@ function WalletProvider({
         initialized,
         loadAccountWallets,
         reloadAccountBalances,
-        formatNativeBalance,
         handleError,
         handleSuccess,
         setStateValue,
