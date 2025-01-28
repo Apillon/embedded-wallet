@@ -11,7 +11,7 @@ import Pill from '../ui/Pill';
 const walletTypeOptions = [
   {
     type: WalletType.EVM,
-    title: 'Ethereum',
+    title: 'EVM',
     description: 'Ethereum, Arbitrum, Moonbeam etc',
     icon: ethIcon,
   },

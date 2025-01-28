@@ -4,11 +4,12 @@ import Btn from '../ui/Btn';
 import AuthTitle from './AuthTitle';
 import { useAuthContext } from '../../contexts/auth.context';
 import { useWalletContext } from '../../contexts/wallet.context';
+import { WebStorageKeys } from '../../lib/constants';
 
 export default () => {
-  const { handleError } = useWalletContext();
+  const { wallet, handleError } = useWalletContext();
   const {
-    state: { loading, username },
+    state: { loading, username, lastCodeExpiretime },
     setStateValue: setForAuth,
     startRegister,
     sendConfirmationEmail,
@@ -115,13 +116,18 @@ export default () => {
         )
       ).json();
 
-      if (!data) {
+      let expireTs = lastCodeExpiretime;
+
+      if (!expireTs) {
+        expireTs = +((await wallet?.xdomain?.storageGet(WebStorageKeys.OTP_EXPIRATION, true)) || 0);
+      }
+
+      if (!data && !!expireTs && Date.now() > expireTs) {
+        setIsExpired(true);
         throw new Error('Verification code is not valid.');
       }
 
-      // Not implemented, backend doesn't return specific error codes
-      if (data.error === 'EXPIRED') {
-        setIsExpired(true);
+      if (!data) {
         throw new Error('Verification code is not valid.');
       }
 

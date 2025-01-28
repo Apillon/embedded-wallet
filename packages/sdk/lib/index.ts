@@ -23,6 +23,7 @@ import PasskeyStrategy from './strategies/passkey';
 import { networkIdIsSapphire, getHashedUsername, abort, JsonMultiRpcProvider } from './utils';
 import mitt, { Emitter } from 'mitt';
 import {
+  ApillonApiErrors,
   ProxyWriteFunctionsByStrategy,
   SapphireMainnet,
   SapphireTestnet,
@@ -33,6 +34,7 @@ import { XdomainPasskey } from './xdomain';
 
 class EmbeddedWallet {
   sapphireProvider: ethers.JsonRpcProvider;
+  sapphireChainId = 0;
   accountManagerAddress: string;
   accountManagerContract: WebauthnContract;
   abiCoder = ethers.AbiCoder.defaultAbiCoder();
@@ -74,6 +76,7 @@ class EmbeddedWallet {
     ]);
 
     this.sapphireProvider = sapphire.wrap(ethSaphProvider);
+    this.loadSapphireChainId();
     this.accountManagerAddress =
       import.meta.env.VITE_ACCOUNT_MANAGER_ADDRESS ?? '0x50dE236a7ce372E7a09956087Fb4862CA1a887aA';
 
@@ -497,7 +500,7 @@ class EmbeddedWallet {
     }
 
     const res = await this.processGaslessMethod({
-      label: 'Add new account',
+      label: params.privateKey ? 'Import new account' : 'Add new account',
       strategy: params.strategy,
       authData: params.authData,
       data,
@@ -543,29 +546,30 @@ class EmbeddedWallet {
       return { signature: '', gasLimit: 0, timestamp: 0 };
     }
 
-    try {
-      const { data } = await (
-        await fetch(
-          `${import.meta.env.VITE_APILLON_BASE_URL ?? 'https://api.apillon.io'}/embedded-wallet/signature`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              data: gaslessData,
-              integration_uuid: this.apillonClientId,
-            }),
-          }
-        )
-      ).json();
+    const res = await (
+      await fetch(
+        `${import.meta.env.VITE_APILLON_BASE_URL ?? 'https://api.apillon.io'}/embedded-wallet/signature`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            data: gaslessData,
+            integration_uuid: this.apillonClientId,
+          }),
+        }
+      )
+    ).json();
 
+    if (res.data) {
       return {
-        signature: data.signature,
-        gasLimit: data.gasLimit || 0,
-        gasPrice: data.gasPrice || 0,
-        timestamp: data.timestamp,
+        signature: res.data.signature,
+        gasLimit: res.data.gasLimit || 0,
+        gasPrice: res.data.gasPrice || 0,
+        timestamp: res.data.timestamp,
       };
-    } catch (e) {
-      console.error('Signature request error', e);
+    } else if (res.code && ApillonApiErrors[res.code]) {
+      throw new Error(ApillonApiErrors[res.code]);
+      // return { signature: '', gasLimit: 0, timestamp: 0, error: ApillonApiErrors[res.code] };
     }
 
     return { signature: '', gasLimit: 0, timestamp: 0 };
@@ -1208,7 +1212,7 @@ class EmbeddedWallet {
 
     const res = await this.broadcastTransaction(
       signedTx,
-      undefined,
+      this.sapphireChainId,
       params.label || 'Gasless Transaction',
       params.internalLabel || `gasless_${params.txType}`
     );
@@ -1353,6 +1357,15 @@ class EmbeddedWallet {
 
       this.setDefaultNetworkId(chainId);
     }
+  }
+
+  // Get sapphire chain id from connected provider
+  async loadSapphireChainId() {
+    if (!this.sapphireChainId && !!this.sapphireProvider) {
+      this.sapphireChainId = +(await this.sapphireProvider.getNetwork()).chainId.toString();
+    }
+
+    return this.sapphireChainId;
   }
 
   /**

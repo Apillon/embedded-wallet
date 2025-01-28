@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useReducer } from 'react';
 import { AuthStrategyName } from '@apillon/wallet-sdk';
 import { useGlobalContext } from './global.context';
+import { WebStorageKeys } from '../helpers';
 
 export type AuthScreens = 'loginForm' | 'confirmCode' | 'codeSubmitted' | 'configuringPasskey';
 
@@ -104,6 +105,14 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error('Could not send confirmation email');
       }
 
+      const { data } = await res.json();
+
+      if (data?.expireTime) {
+        const ts = new Date(data.expireTime).getTime() || 0;
+        setStateValue('lastCodeExpiretime', ts);
+        sessionStorage.setItem(WebStorageKeys.OTP_EXPIRATION, `${ts}`);
+      }
+
       return true;
     } catch (e) {
       handleError(e, 'sendConfirmationEmail');
@@ -176,6 +185,7 @@ const initialState = () => ({
   username: '',
   hashedUsername: undefined as Buffer | undefined,
   screen: 'loginForm' as AuthScreens,
+  lastCodeExpiretime: 0, // get from /otp/generate and check before /otp/validate
 });
 
 type ContextState = ReturnType<typeof initialState>;

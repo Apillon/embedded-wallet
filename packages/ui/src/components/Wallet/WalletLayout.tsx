@@ -1,5 +1,4 @@
 import { useApproveContext } from '../../contexts/approve.context';
-import { TokensProvider } from '../../contexts/tokens.context';
 import { useWalletContext } from '../../contexts/wallet.context';
 import MsgError from '../ui/MsgError';
 import Approve from '../Approve/Approve';
@@ -18,6 +17,7 @@ import TokensSelect from '../Tokens/TokensSelect';
 import TokensAdd from '../Tokens/TokensAdd';
 import AccountsList from '../Accounts/AccountsList';
 import AccountsAdd from '../Accounts/AccountsAdd';
+import MsgSuccess from '../ui/MsgSuccess';
 
 /**
  * Base layout elements and screen display logic
@@ -63,7 +63,7 @@ export default () => {
       case 'sendToken':
       case 'addToken':
         return (
-          <TokensProvider>
+          <>
             {(() => {
               switch (walletScreen) {
                 case 'sendToken':
@@ -75,14 +75,10 @@ export default () => {
                   return <TokensSelect />;
               }
             })()}
-          </TokensProvider>
+          </>
         );
       case 'selectAccounts':
-        return (
-          <TokensProvider>
-            <AccountsList />
-          </TokensProvider>
-        );
+        return <AccountsList />;
       case 'addAccount':
         return <AccountsAdd />;
       default:
@@ -96,7 +92,8 @@ export default () => {
 
       <div className="px-8 pb-4 grow overflow-y-auto">{content()}</div>
 
-      <div className="absolute -bottom-5 left-0 right-0 px-8">
+      <div className="absolute -bottom-5 left-0 right-0 px-8 flex flex-col gap-2">
+        <MsgSuccess />
         <MsgError show />
       </div>
     </div>

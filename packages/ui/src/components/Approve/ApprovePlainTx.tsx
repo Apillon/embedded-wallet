@@ -1,6 +1,7 @@
 import { useApproveContext } from '../../contexts/approve.context';
+import { useTokensContext } from '../../contexts/tokens.context';
 import { useWalletContext } from '../../contexts/wallet.context';
-import { formatTxObjectData } from '../../lib/helpers';
+import { formatBalance, formatTxObjectData } from '../../lib/helpers';
 import ApproveButtons from './ApproveButtons';
 import ApproveDataRow from './ApproveDataRow';
 
@@ -24,7 +25,6 @@ export default () => {
   const {
     wallet,
     state: { username, appProps },
-    formatNativeBalance,
     networksById,
   } = useWalletContext();
 
@@ -58,15 +58,17 @@ export default () => {
               key={k}
               label={k}
               data={
-                k === 'value' || k === 'gas'
-                  ? formatNativeBalance(v)
-                  : k === 'chainId'
-                    ? `${v}${networksById[v] ? ` (${networksById[v].name})` : ''}`
-                    : typeof v === 'bigint'
-                      ? v.toString()
-                      : typeof v === 'object'
-                        ? formatTxObjectData(v)
-                        : v
+                k === 'value' || k === 'gas' ? (
+                  <ValueWithUSD value={v} />
+                ) : k === 'chainId' ? (
+                  `${v}${networksById[v] ? ` (${networksById[v].name})` : ''}`
+                ) : typeof v === 'bigint' ? (
+                  v.toString()
+                ) : typeof v === 'object' ? (
+                  formatTxObjectData(v)
+                ) : (
+                  v
+                )
               }
               collapsable={typeof v === 'object' || k === 'data'}
             />
@@ -99,5 +101,27 @@ export default () => {
         }}
       />
     </div>
+  );
+};
+
+const ValueWithUSD = ({ value }: { value: any }) => {
+  const { formatNativeBalance, currentExchangeRate } = useTokensContext();
+
+  const b = formatNativeBalance(value);
+
+  return (
+    <p className="text-right">
+      <span>
+        {b.amount} {b.symbol}
+      </span>
+
+      <br />
+
+      {!!currentExchangeRate && (
+        <span className="text-lightgrey">
+          ${formatBalance(+b.amount * currentExchangeRate, '', 2)}
+        </span>
+      )}
+    </p>
   );
 };

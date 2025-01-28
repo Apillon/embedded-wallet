@@ -3,7 +3,6 @@ import Select from '../ui/Select';
 import Input from '../ui/Input';
 import Btn from '../ui/Btn';
 import { useWalletContext } from '../../contexts/wallet.context';
-import MsgSuccess from '../ui/MsgSuccess';
 
 export default function AccountsImport() {
   const {
@@ -38,6 +37,7 @@ export default function AccountsImport() {
       saveAccountTitle(title, accountWallets[accountWallets.length - 1].index + 1, true);
 
       setSuccess(true);
+      handleSuccess('Account imported. Wait for transaction to complete.');
       setTitle('');
       setPrivateKey('');
     } catch (e) {
@@ -87,8 +87,6 @@ export default function AccountsImport() {
           Import
         </Btn>
       </div>
-
-      {!!success && <MsgSuccess text="Account imported" className="my-6" />}
 
       <div className="grow"></div>
 

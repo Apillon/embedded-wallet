@@ -5,6 +5,7 @@ import {
   useEffect,
   useMemo,
   useReducer,
+  useRef,
   useState,
 } from 'react';
 import {
@@ -56,6 +57,7 @@ const initialState = (defaultNetworkId = 0, appProps: AppProps) => ({
   walletScreenHistory: [] as WalletScreens[],
   isOpen: false, // is wallet modal displayed
   displayedError: '',
+  displayedSuccess: '',
   appProps,
   loadingWallets: false,
 });
@@ -147,6 +149,7 @@ const WalletContext = createContext<
       activeWallet?: AccountWalletEx;
       wallet?: EmbeddedWallet;
       setWallet: (wallet: EmbeddedWallet) => void;
+      initialized: boolean;
       loadAccountWallets: (
         strategy?: AuthStrategyName,
         username?: string
@@ -159,6 +162,7 @@ const WalletContext = createContext<
       saveAccountTitle: (title: string, index?: number, useIndex?: boolean) => Promise<void>;
       setScreen: (screen: WalletScreens) => void;
       goScreenBack: () => void;
+      handleSuccess: (msg: string, timeout?: number) => void;
       handleError: (e?: any, src?: string) => string;
       setStateValue: <T extends keyof ReturnType<typeof initialState>>(
         key: T,
@@ -202,8 +206,10 @@ function WalletProvider({
     reducer,
     initialState(defaultNetworkId || networks[0].id, { ...restOfParams, defaultNetworkId })
   );
+  const initializingWallet = useRef(false);
   const [initialized, setInitialized] = useState(false);
   const [wallet, setWallet] = useState<EmbeddedWallet>();
+  const successTimeout = useRef<ReturnType<typeof setTimeout>>();
 
   const networksById = networks.reduce(
     (acc, x) => {
@@ -222,10 +228,21 @@ function WalletProvider({
   }, [state.walletIndex, state.accountWallets]);
 
   /**
-   * Store changed state to localStorage
+   * Initialize Oasis Wallet App SDK
+   * + initialize last global state
    */
   useEffect(() => {
-    if (initialized) {
+    if (!wallet && !initializingWallet.current) {
+      initializingWallet.current = true;
+      initWallet();
+    }
+  }, []);
+
+  /**
+   * Store changed state to gateway localStorage
+   */
+  useEffect(() => {
+    if (initialized && wallet) {
       /**
        * Exclude some state variables from being saved
        */
@@ -241,59 +258,9 @@ function WalletProvider({
         ...save
       } = state;
 
-      localStorage.setItem(WebStorageKeys.WALLET_CONTEXT, JSON.stringify(save));
+      wallet.xdomain?.storageSet(WebStorageKeys.WALLET_CONTEXT, JSON.stringify(save));
     }
   }, [state]);
-
-  /**
-   * Initialize state from localStorage
-   */
-  useEffect(() => {
-    const stored = localStorage.getItem(WebStorageKeys.WALLET_CONTEXT);
-
-    if (stored) {
-      try {
-        const restored = JSON.parse(stored) as ContextState;
-        dispatch({ type: 'setState', payload: restored });
-      } catch (e) {
-        console.error('Cant parse global state localStorage', e);
-      }
-    }
-
-    setTimeout(() => setInitialized(true), 10);
-  }, []);
-
-  /**
-   * Initialize Oasis Wallet App SDK
-   */
-  useEffect(() => {
-    if (initialized && !wallet) {
-      let w = undefined as EmbeddedWallet | undefined;
-
-      if (networks && networks.length) {
-        w = EmbeddedWalletSDK({
-          ...restOfParams,
-          networks,
-          defaultNetworkId: state.networkId || defaultNetworkId,
-        });
-      } else {
-        w = EmbeddedWalletSDK();
-      }
-
-      if (w) {
-        setWallet(w);
-
-        w.setAccount({
-          username: state.username,
-          strategy: state.authStrategy,
-          walletIndex: state.walletIndex,
-          contractAddress: state.contractAddress,
-        });
-
-        w.setWallets(state.accountWallets);
-      }
-    }
-  }, [networks, defaultNetworkId, initialized]);
 
   /**
    * Reload balance on:
@@ -305,6 +272,57 @@ function WalletProvider({
       reloadAccountBalances([state.accountWallets[state.walletIndex].address]);
     }
   }, [state.username, state.walletIndex, state.accountWallets.length]);
+
+  async function initWallet() {
+    let w = undefined as EmbeddedWallet | undefined;
+
+    if (networks && networks.length) {
+      w = EmbeddedWalletSDK({
+        ...restOfParams,
+        networks,
+        defaultNetworkId,
+      });
+    } else {
+      w = EmbeddedWalletSDK();
+    }
+
+    if (w) {
+      setWallet(w);
+
+      // Get stored state
+      const stored = await w.xdomain?.storageGet(WebStorageKeys.WALLET_CONTEXT);
+
+      let mergedState = { ...state };
+
+      if (stored) {
+        try {
+          const restored = JSON.parse(stored) as ContextState;
+          mergedState = { ...mergedState, ...restored };
+          dispatch({ type: 'setState', payload: restored });
+        } catch (e) {
+          console.error('Cant parse global state localStorage', e);
+        }
+      }
+
+      if (mergedState.networkId !== defaultNetworkId) {
+        w.setDefaultNetworkId(mergedState.networkId);
+      }
+
+      w.setAccount({
+        username: mergedState.username,
+        strategy: mergedState.authStrategy,
+        walletIndex: mergedState.walletIndex,
+        contractAddress: mergedState.contractAddress,
+      });
+
+      w.setWallets(mergedState.accountWallets);
+
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      initializingWallet.current = false;
+      setInitialized(true);
+    }
+  }
 
   function setStateValue<T extends keyof ReturnType<typeof initialState>>(
     key: T,
@@ -562,6 +580,22 @@ function WalletProvider({
     return msg;
   }
 
+  /**
+   * Show success toast and hide it after a timeout
+   */
+  function handleSuccess(msg: string, timeout = 10000) {
+    if (successTimeout.current) {
+      clearTimeout(successTimeout.current);
+    }
+
+    setStateValue('displayedSuccess', msg);
+
+    successTimeout.current = setTimeout(() => {
+      setStateValue('displayedSuccess', '');
+      successTimeout.current = undefined;
+    }, timeout);
+  }
+
   return (
     <WalletContext.Provider
       value={{
@@ -573,11 +607,13 @@ function WalletProvider({
         activeWallet,
         wallet,
         setWallet,
+        initialized,
         loadAccountWallets,
         parseAccountWallets,
         reloadAccountBalances,
         saveAccountTitle,
         handleError,
+        handleSuccess,
         setStateValue,
         setScreen: (s: WalletScreens) => setStateValue('walletScreen', s),
         goScreenBack: () => {

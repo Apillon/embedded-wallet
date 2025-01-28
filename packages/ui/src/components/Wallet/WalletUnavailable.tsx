@@ -18,7 +18,25 @@ export default () => {
         variant="primary"
         disabled={state.loadingWallets}
         className="w-full mb-3"
-        onClick={() => loadAccountWallets()}
+        onClick={async () => {
+          const wallets = await loadAccountWallets();
+
+          // Account has no wallets -> created before multi account support
+          if (!wallets || !wallets.length) {
+            // Log out
+            dispatch({ type: 'reset' });
+
+            wallet?.setAccount({
+              username: '',
+              walletIndex: 0,
+              contractAddress: '',
+              strategy: 'passkey',
+              wallets: [],
+            });
+
+            setScreen('main');
+          }
+        }}
       >
         Authenticate
       </Btn>

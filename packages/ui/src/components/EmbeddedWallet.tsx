@@ -8,6 +8,8 @@ import Modal, { MODAL_TRANSITION_TIME } from './ui/Modal';
 import { ApproveProvider, useApproveContext } from '../contexts/approve.context';
 import WalletLayout from './Wallet/WalletLayout';
 import WalletUnavailable from './Wallet/WalletUnavailable';
+import Loader from './ui/Loader';
+import { TokensProvider } from '../contexts/tokens.context';
 
 export type AppProps = {
   /**
@@ -32,6 +34,7 @@ function Main({ disableDefaultActivatorStyle = false }: AppProps) {
   const {
     state,
     wallet,
+    initialized: walletInitialized,
     loadAccountWallets,
     reloadAccountBalances,
     dispatch,
@@ -65,31 +68,34 @@ function Main({ disableDefaultActivatorStyle = false }: AppProps) {
       wallet.events.on('dataUpdated', onDataUpdated);
 
       // Login if account params are in the URL (redirected back from auth gateway)
-      if (window.location.search) {
-        const urlParams = new URLSearchParams(window.location.search);
+      // Delay a bit to prevent freeze
+      setTimeout(() => {
+        if (window.location.search) {
+          const urlParams = new URLSearchParams(window.location.search);
 
-        if (urlParams.has('username')) {
-          const loginData = {
-            username: urlParams.get('username') || '',
-            authStrategy: (urlParams.get('authStrategy') || 'passkey') as any,
-            networkId: defaultNetworkId || undefined,
-          };
+          if (urlParams.has('username')) {
+            const loginData = {
+              username: urlParams.get('username') || '',
+              authStrategy: (urlParams.get('authStrategy') || 'passkey') as any,
+              networkId: defaultNetworkId || undefined,
+            };
 
-          dispatch({
-            type: 'setState',
-            payload: loginData,
-          });
+            dispatch({
+              type: 'setState',
+              payload: loginData,
+            });
 
-          setTimeout(() => {
-            loadAccountWallets(loginData.authStrategy, loginData.username);
+            setTimeout(() => {
+              loadAccountWallets(loginData.authStrategy, loginData.username);
 
-            const url = new URL(window.location.href);
-            url.searchParams.delete('username');
-            url.searchParams.delete('authStrategy');
-            window.history.replaceState(null, '', url.toString());
-          }, 50);
+              const url = new URL(window.location.href);
+              url.searchParams.delete('username');
+              url.searchParams.delete('authStrategy');
+              window.history.replaceState(null, '', url.toString());
+            }, 50);
+          }
         }
-      }
+      }, 200);
     }
 
     return () => {
@@ -186,7 +192,13 @@ function Main({ disableDefaultActivatorStyle = false }: AppProps) {
         className={!disableDefaultActivatorStyle ? 'oaw-btn-default-style' : undefined}
         onClick={() => setForWallet('isOpen', true)}
       >
-        {state.loadingWallets ? <span>&hellip;</span> : loggedIn ? 'Open wallet' : 'Sign in'}
+        {state.loadingWallets || !walletInitialized ? (
+          <Loader fill="#06080F" className="loader" />
+        ) : loggedIn ? (
+          'Open wallet'
+        ) : (
+          'Sign in'
+        )}
       </button>
     </div>
   );
@@ -211,7 +223,9 @@ export default function EmbeddedWallet(props: AppProps) {
     <WalletProvider {...props2}>
       <TransactionsProvider>
         <ApproveProvider>
-          <Main {...props2} />
+          <TokensProvider>
+            <Main {...props2} />
+          </TokensProvider>
         </ApproveProvider>
       </TransactionsProvider>
     </WalletProvider>
