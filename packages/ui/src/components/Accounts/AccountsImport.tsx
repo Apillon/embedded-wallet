@@ -34,7 +34,7 @@ export default function AccountsImport() {
       });
 
       // Save wallet name to GS, using (probably) next index, because address is not available yet
-      saveAccountTitle(title, accountWallets[accountWallets.length - 1].index + 1, true);
+      saveAccountTitle(title, accountWallets[accountWallets.length - 1].index + 1);
 
       setSuccess(true);
       handleSuccess('Account imported. Wait for transaction to complete.');

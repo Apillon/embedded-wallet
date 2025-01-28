@@ -159,7 +159,7 @@ const WalletContext = createContext<
         addresses?: string[],
         accountWallets?: AccountWalletEx[]
       ) => Promise<boolean | undefined>;
-      saveAccountTitle: (title: string, index?: number, useIndex?: boolean) => Promise<void>;
+      saveAccountTitle: (title: string, index?: number) => Promise<void>;
       setScreen: (screen: WalletScreens) => void;
       goScreenBack: () => void;
       handleSuccess: (msg: string, timeout?: number) => void;
@@ -464,28 +464,24 @@ function WalletProvider({
 
   /**
    * Save new custom account name, or update existing one.
-   *
-   * @param useIndex Use index instead of address to save the username (use e.g. when address is not available yet after creating account)
    */
-  async function saveAccountTitle(title: string, index?: number, useIndex = false) {
+  async function saveAccountTitle(title: string, index?: number) {
     if (!index && index !== 0) {
       index = state.walletIndex;
     }
 
-    if (index > state.accountWallets.length - 1) {
-      console.error('saveAccountTitle: wallet index not in range');
-      return;
-    }
-
     const { all, current } = await getAccountTitles();
 
+    // When address not available, use index instead to save the username (use e.g. when address is not available yet after creating account)
     wallet?.xdomain?.storageSet(
       WebStorageKeys.WALLET_NAMES,
       JSON.stringify({
         ...all,
         [state.contractAddress]: {
           ...current,
-          [useIndex ? `${index}` : state.accountWallets[index].address]: title,
+          [index > state.accountWallets.length - 1
+            ? `${index}`
+            : state.accountWallets[index].address]: title,
         },
       })
     );
