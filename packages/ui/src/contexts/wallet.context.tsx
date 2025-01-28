@@ -381,17 +381,16 @@ function WalletProvider({
     const { all: accountNamesStorage, current: accountNames } = await getAccountTitles();
     const accountNamesUpdates = {} as { [accountAddress: string]: string };
 
+    const username = state.username || wallet?.lastAccount.username || '-';
+    const contractAddress = state.contractAddress || wallet?.lastAccount?.contractAddress || '-';
+
     const newWallets = [] as AccountWalletEx[];
 
-    console.log(accountNames);
-
     for (const w of wallets) {
-      console.log(w.address, w.index, state.username);
-
       newWallets.push({
         ...w,
         balance: '0',
-        title: accountNames[w.address] || accountNames[`${w.index}`] || state.username,
+        title: accountNames[w.address] || accountNames[`${w.index}`] || username,
       });
 
       // Store (update global storage) names with wallet address if any are only stored with index
@@ -406,7 +405,7 @@ function WalletProvider({
         WebStorageKeys.WALLET_NAMES,
         JSON.stringify({
           ...accountNamesStorage,
-          [state.contractAddress]: {
+          [contractAddress]: {
             ...accountNames,
             ...accountNamesUpdates,
           },
@@ -516,6 +515,7 @@ function WalletProvider({
    */
   async function getAccountTitles() {
     const stored = await wallet?.xdomain?.storageGet(WebStorageKeys.WALLET_NAMES);
+    const contractAddress = state.contractAddress || wallet?.lastAccount?.contractAddress || '-';
 
     let all = {} as { [contractAddress: string]: { [accountAddress: string]: string } };
     let current = {} as { [accountAddress: string]: string };
@@ -523,8 +523,8 @@ function WalletProvider({
     if (stored) {
       try {
         all = JSON.parse(stored);
-        if (all[state.contractAddress]) {
-          current = all[state.contractAddress];
+        if (all[contractAddress]) {
+          current = all[contractAddress];
         }
       } catch (_e) {}
     }
