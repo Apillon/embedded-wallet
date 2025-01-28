@@ -25,7 +25,7 @@ class EmbeddedViemAdapter {
           message: message as any,
           strategy: this.wallet.lastAccount.authStrategy,
           authData: {
-            username: this.wallet.lastAccount.wallets[this.wallet.lastAccount.walletIndex].title,
+            username: this.wallet.lastAccount.username,
           },
           mustConfirm,
         });
@@ -41,7 +41,7 @@ class EmbeddedViemAdapter {
         const res = await this.wallet.signPlainTransaction({
           strategy: this.wallet.lastAccount.authStrategy,
           authData: {
-            username: this.wallet.lastAccount.wallets[this.wallet.lastAccount.walletIndex].title,
+            username: this.wallet.lastAccount.username,
           },
           mustConfirm,
           tx: transaction as any,

@@ -13,6 +13,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     state: { appProps, username: loggedInUsername },
     dispatch: dispatchWallet,
     loadAccountWallets,
+    parseAccountWallets,
   } = useWalletContext();
 
   function setStateValue<T extends keyof ReturnType<typeof initialState>>(
@@ -100,13 +101,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     await new Promise(resolve => setTimeout(resolve, 50));
 
     if (wallet?.lastAccount.wallets) {
-      dispatchWallet({
-        type: 'setValue',
-        payload: {
-          key: 'accountWallets',
-          value: wallet?.lastAccount.wallets,
-        },
-      });
+      parseAccountWallets(wallet?.lastAccount.wallets || []);
     }
   }
 

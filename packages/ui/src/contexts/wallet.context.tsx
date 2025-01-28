@@ -17,7 +17,6 @@ import {
   SapphireTestnet,
   AccountWallet,
 } from '@apillon/wallet-sdk';
-import { ethers } from 'ethers';
 import { AppProps } from '../main';
 import { WebStorageKeys } from '../lib/constants';
 import { logToStorage } from '../lib/helpers';
@@ -42,7 +41,7 @@ export type WalletScreens =
   | 'accountDetails'
   | 'settingsGeneral';
 
-type AccountWalletEx = AccountWallet & { balance: string };
+type AccountWalletEx = AccountWallet & { balance: string; title: string };
 
 const initialState = (defaultNetworkId = 0, appProps: AppProps) => ({
   username: '',
@@ -152,11 +151,12 @@ const WalletContext = createContext<
         strategy?: AuthStrategyName,
         username?: string
       ) => Promise<AccountWallet[] | undefined>;
+      parseAccountWallets: (wallets: AccountWallet[]) => Promise<AccountWalletEx[]>;
       reloadAccountBalances: (
         addresses?: string[],
         accountWallets?: AccountWalletEx[]
       ) => Promise<boolean | undefined>;
-      formatNativeBalance: (balance: string | bigint | number) => string;
+      saveAccountTitle: (title: string, index?: number, useIndex?: boolean) => Promise<void>;
       setScreen: (screen: WalletScreens) => void;
       goScreenBack: () => void;
       handleError: (e?: any, src?: string) => string;
@@ -331,9 +331,7 @@ function WalletProvider({
           reload: true,
         })) || [];
 
-      const newWallets = (wallets || []).map(x => ({ ...x, balance: '0' }));
-
-      setStateValue('accountWallets', newWallets);
+      const newWallets = await parseAccountWallets(wallets);
 
       if (state.walletIndex < wallets.length) {
         wallet?.events.emit('accountsChanged', [wallets[state.walletIndex].address]);
@@ -355,6 +353,52 @@ function WalletProvider({
     }
 
     setStateValue('loadingWallets', false);
+  }
+
+  /**
+   * Add info from global storage, initialize some info, set state.
+   */
+  async function parseAccountWallets(wallets: AccountWallet[]) {
+    // Get account names from global storage
+    const { all: accountNamesStorage, current: accountNames } = await getAccountTitles();
+    const accountNamesUpdates = {} as { [accountAddress: string]: string };
+
+    const newWallets = [] as AccountWalletEx[];
+
+    console.log(accountNames);
+
+    for (const w of wallets) {
+      console.log(w.address, w.index, state.username);
+
+      newWallets.push({
+        ...w,
+        balance: '0',
+        title: accountNames[w.address] || accountNames[`${w.index}`] || state.username,
+      });
+
+      // Store (update global storage) names with wallet address if any are only stored with index
+      if (!accountNames[w.address] && !!accountNames[`${w.index}`]) {
+        accountNamesUpdates[w.address] = accountNames[`${w.index}`];
+      }
+    }
+
+    // Update global storage if needed
+    if (Object.keys(accountNamesUpdates).length) {
+      wallet?.xdomain?.storageSet(
+        WebStorageKeys.WALLET_NAMES,
+        JSON.stringify({
+          ...accountNamesStorage,
+          [state.contractAddress]: {
+            ...accountNames,
+            ...accountNamesUpdates,
+          },
+        })
+      );
+    }
+
+    setStateValue('accountWallets', newWallets);
+
+    return newWallets;
   }
 
   async function reloadAccountBalances(
@@ -401,11 +445,73 @@ function WalletProvider({
     }
   }
 
-  function formatNativeBalance(balance: string | bigint | number) {
-    return (
-      ethers.formatUnits(balance, networksById?.[state.networkId]?.currencyDecimals || 18) +
-      ` ${networksById?.[state.networkId]?.currencySymbol || 'ETH'}`
+  /**
+   * Save new custom account name, or update existing one.
+   *
+   * @param useIndex Use index instead of address to save the username (use e.g. when address is not available yet after creating account)
+   */
+  async function saveAccountTitle(title: string, index?: number, useIndex = false) {
+    if (!index && index !== 0) {
+      index = state.walletIndex;
+    }
+
+    if (index > state.accountWallets.length - 1) {
+      console.error('saveAccountTitle: wallet index not in range');
+      return;
+    }
+
+    const { all, current } = await getAccountTitles();
+
+    wallet?.xdomain?.storageSet(
+      WebStorageKeys.WALLET_NAMES,
+      JSON.stringify({
+        ...all,
+        [state.contractAddress]: {
+          ...current,
+          [useIndex ? `${index}` : state.accountWallets[index].address]: title,
+        },
+      })
     );
+
+    const found = state.accountWallets.findIndex(x => x.index === index);
+
+    // Update wallet title in state
+    if (found) {
+      const n = [...state.accountWallets];
+      n[found] = { ...n[found], title };
+      setStateValue('accountWallets', n);
+    }
+  }
+
+  /**
+   * Get wallet names from global storage. Names are stored like
+   * ```
+   * {
+   *   // user wallet contract address
+   *   '0x5A891D65DFeE86b0eCceCFdfC788CFf5e41a073f': {
+   *     // each account wallet address
+   *     '0x2F76b9370743f9F38F261AA7Eb0e6879F7df76a4': 'Wallet name 1',
+   *     '0x9d39f807B7146a46e19456431aae8B9Ab22DC24b': 'Wallet name 2',
+   *   },
+   * },
+   * ```
+   */
+  async function getAccountTitles() {
+    const stored = await wallet?.xdomain?.storageGet(WebStorageKeys.WALLET_NAMES);
+
+    let all = {} as { [contractAddress: string]: { [accountAddress: string]: string } };
+    let current = {} as { [accountAddress: string]: string };
+
+    if (stored) {
+      try {
+        all = JSON.parse(stored);
+        if (all[state.contractAddress]) {
+          current = all[state.contractAddress];
+        }
+      } catch (_e) {}
+    }
+
+    return { all, current };
   }
 
   function handleError(e?: any, src?: string) {
@@ -468,8 +574,9 @@ function WalletProvider({
         wallet,
         setWallet,
         loadAccountWallets,
+        parseAccountWallets,
         reloadAccountBalances,
-        formatNativeBalance,
+        saveAccountTitle,
         handleError,
         setStateValue,
         setScreen: (s: WalletScreens) => setStateValue('walletScreen', s),

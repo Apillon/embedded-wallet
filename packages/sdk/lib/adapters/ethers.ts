@@ -121,7 +121,7 @@ class InternalEmbeddedEthersSignerextends extends ethers.AbstractSigner<ethers.J
     const res = await this.wallet.signPlainTransaction({
       strategy: this.wallet.lastAccount.authStrategy,
       authData: {
-        username: this.wallet.lastAccount.wallets[this.wallet.lastAccount.walletIndex].title,
+        username: this.wallet.lastAccount.username,
       },
       mustConfirm,
       tx: await this.populateTransaction(tx),
@@ -135,7 +135,7 @@ class InternalEmbeddedEthersSignerextends extends ethers.AbstractSigner<ethers.J
       message,
       strategy: this.wallet.lastAccount.authStrategy,
       authData: {
-        username: this.wallet.lastAccount.wallets[this.wallet.lastAccount.walletIndex].title,
+        username: this.wallet.lastAccount.username,
       },
       mustConfirm,
     });

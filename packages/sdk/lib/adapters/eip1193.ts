@@ -119,7 +119,7 @@ function getProvider(): EIP1193Provider & {
           mustConfirm: true,
           strategy: w.lastAccount.authStrategy,
           authData: {
-            username: w.lastAccount.wallets[w.lastAccount.walletIndex].title,
+            username: w.lastAccount.username,
           },
           tx: params[0],
         });
@@ -143,7 +143,7 @@ function getProvider(): EIP1193Provider & {
           mustConfirm: true,
           strategy: w.lastAccount.authStrategy,
           authData: {
-            username: w.lastAccount.wallets[w.lastAccount.walletIndex].title,
+            username: w.lastAccount.username,
           },
           tx: params[0],
         });

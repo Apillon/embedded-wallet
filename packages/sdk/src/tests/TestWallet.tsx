@@ -25,7 +25,6 @@ export default function TestWallet() {
             const w = getEmbeddedWallet();
 
             w?.addAccountWallet({
-              title,
               privateKey: !!pk ? pk : undefined,
               // strategy: 'password',
               // authData: {
@@ -46,23 +45,6 @@ export default function TestWallet() {
           value={updatedIndex}
           onChange={ev => setUpdatedIndex(+ev.target.value)}
         />
-
-        <button
-          onClick={() => {
-            const w = getEmbeddedWallet();
-            w?.updateAccountWalletTitle({
-              walletIndex: updatedIndex,
-              title: updatedTitle,
-              // strategy: 'password',
-              // authData: {
-              //   username: 'test8',
-              //   password: '1234',
-              // },
-            });
-          }}
-        >
-          Update title
-        </button>
       </div>
     </>
   );

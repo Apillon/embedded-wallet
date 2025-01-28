@@ -6,8 +6,15 @@ import { useWalletContext } from '../../contexts/wallet.context';
 import MsgSuccess from '../ui/MsgSuccess';
 
 export default function AccountsImport() {
-  const { wallet, goScreenBack, handleError } = useWalletContext();
-  const [type, setType] = useState('pk');
+  const {
+    state: { accountWallets },
+    wallet,
+    goScreenBack,
+    handleError,
+    handleSuccess,
+    saveAccountTitle,
+  } = useWalletContext();
+  const [type, setType] = useState('pk'); // used in <Select />
   const [title, setTitle] = useState('');
   const [privateKey, setPrivateKey] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,10 +30,12 @@ export default function AccountsImport() {
 
     try {
       await wallet?.addAccountWallet({
-        title,
         privateKey: !privateKey.startsWith('0x') ? `0x${privateKey}` : privateKey,
         // walletType??
       });
+
+      // Save wallet name to GS, using (probably) next index, because address is not available yet
+      saveAccountTitle(title, accountWallets[accountWallets.length - 1].index + 1, true);
 
       setSuccess(true);
       setTitle('');

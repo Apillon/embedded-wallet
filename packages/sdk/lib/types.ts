@@ -19,9 +19,13 @@ export type Network = {
   currencyDecimals?: number; // Number of decimals of the native currency (default is 18)
 };
 
-export type SignatureCallback = (
-  gaslessData: string
-) => Promise<{ signature: string; gasLimit?: number; gasPrice?: number; timestamp: number }>;
+export type SignatureCallback = (gaslessData: string) => Promise<{
+  signature: string;
+  gasLimit?: number;
+  gasPrice?: number;
+  timestamp: number;
+  error?: string;
+}>;
 
 export type AppParams = {
   /**
@@ -114,7 +118,6 @@ export type AccountWalletTypes = (typeof WalletType)[keyof typeof WalletType];
 export type AccountWallet = {
   walletType: AccountWalletTypes;
   address: string;
-  title: string;
   index: number;
 };
 

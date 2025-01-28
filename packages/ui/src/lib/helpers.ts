@@ -1,5 +1,9 @@
 import { WebStorageKeys } from './constants';
 
+export function sleep(ms = 1000) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export function shortHash(val: string) {
   if (!val || val.length <= 10) {
     return val;

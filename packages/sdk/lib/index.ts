@@ -402,7 +402,6 @@ class EmbeddedWallet {
               ? ({
                   walletType: +(x[0] as bigint).toString(),
                   address: x[1],
-                  title: x[2],
                   index,
                 } as AccountWallet)
               : undefined
@@ -429,7 +428,6 @@ class EmbeddedWallet {
    * Returns tx hash on success.
    */
   async addAccountWallet(params: {
-    title: string;
     walletType?: AccountWalletTypes;
     privateKey?: string;
     authData?: AuthData;
@@ -464,13 +462,16 @@ class EmbeddedWallet {
       }
     }
 
+    /**
+     * @TODO Remove title (when contract updates)
+     */
     const data = this.abiCoder.encode(
       ['tuple(uint256 walletType, bytes32 keypairSecret, string title)'],
       [
         {
           walletType: params.walletType,
           keypairSecret: params.privateKey || ethers.ZeroHash,
-          title: params.title,
+          title: '',
         },
       ]
     );
@@ -525,85 +526,6 @@ class EmbeddedWallet {
     }
 
     abort('CANT_GET_WALLET_ADDRESS');
-  }
-
-  async updateAccountWalletTitle(params: {
-    walletIndex?: number;
-    title: string;
-    authData?: AuthData;
-    strategy?: AuthStrategyName;
-  }) {
-    if (!this.sapphireProvider) {
-      abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
-      return;
-    }
-
-    if (!this.accountManagerContract) {
-      abort('ACCOUNT_MANAGER_CONTRACT_NOT_INITIALIZED');
-      return;
-    }
-
-    if (!params.strategy) {
-      params.strategy = this.lastAccount.authStrategy;
-    }
-
-    if (!params.walletIndex) {
-      params.walletIndex = this.lastAccount.walletIndex;
-    }
-
-    if (!params.authData) {
-      if (params.strategy === 'passkey' && this.lastAccount.username) {
-        params.authData = {
-          username: this.lastAccount.username,
-        };
-      } else {
-        abort('AUTHENTICATION_DATA_NOT_PROVIDED');
-        return;
-      }
-    }
-
-    const label = 'Wallet name change';
-
-    const res = await this.signContractWrite({
-      authData: params.authData,
-      strategy: params.strategy,
-      walletIndex: this.lastAccount.walletIndex,
-      label,
-      contractAddress: this.lastAccount.contractAddress,
-      contractAbi: AccountAbi,
-      contractFunctionName: 'updateTitle',
-      contractFunctionValues: [params.walletIndex, params.title],
-      chainId: (import.meta.env.VITE_SAPPHIRE_URL ?? '').includes('testnet')
-        ? SapphireTestnet
-        : SapphireMainnet,
-    });
-
-    if (res) {
-      await this.broadcastTransaction(
-        res?.signedTxData,
-        res?.chainId,
-        label,
-        `updateAccountWalletTitle`
-      );
-
-      // if (await this.waitForTxReceipt(txHash)) {
-      //   //
-      // }
-
-      const snap = { ...this.lastAccount.wallets };
-
-      this.lastAccount.wallets[params.walletIndex].title = params.title;
-
-      this.events.emit('dataUpdated', {
-        name: 'wallets',
-        oldValue: snap,
-        newValue: this.lastAccount.wallets,
-      });
-
-      return params.title;
-    }
-
-    abort('WALLET_TITLE_UPDATE_FAILED');
   }
   // #endregion
 

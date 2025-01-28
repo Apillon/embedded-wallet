@@ -102,8 +102,6 @@ wallet.events.on('txSubmitted', tx => {
 - `addAccountWallet`
   Add new wallet or import from privateKey.
 
-- `updateAccountWalletTitle`
-
 ### Transaction methods
 
 - `signMessage`
