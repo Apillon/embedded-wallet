@@ -5,6 +5,7 @@ import {
   useEffect,
   useMemo,
   useReducer,
+  useRef,
   useState,
 } from 'react';
 import {
@@ -17,7 +18,6 @@ import {
   SapphireTestnet,
   AccountWallet,
 } from '@apillon/wallet-sdk';
-import { ethers } from 'ethers';
 import { AppProps } from '../main';
 import { WebStorageKeys } from '../lib/constants';
 import { logToStorage } from '../lib/helpers';
@@ -42,7 +42,7 @@ export type WalletScreens =
   | 'accountDetails'
   | 'settingsGeneral';
 
-type AccountWalletEx = AccountWallet & { balance: string };
+type AccountWalletEx = AccountWallet & { balance: string; title: string };
 
 const initialState = (defaultNetworkId = 0, appProps: AppProps) => ({
   username: '',
@@ -57,6 +57,7 @@ const initialState = (defaultNetworkId = 0, appProps: AppProps) => ({
   walletScreenHistory: [] as WalletScreens[],
   isOpen: false, // is wallet modal displayed
   displayedError: '',
+  displayedSuccess: '',
   appProps,
   loadingWallets: false,
 });
@@ -148,17 +149,20 @@ const WalletContext = createContext<
       activeWallet?: AccountWalletEx;
       wallet?: EmbeddedWallet;
       setWallet: (wallet: EmbeddedWallet) => void;
+      initialized: boolean;
       loadAccountWallets: (
         strategy?: AuthStrategyName,
         username?: string
       ) => Promise<AccountWallet[] | undefined>;
+      parseAccountWallets: (wallets: AccountWallet[]) => Promise<AccountWalletEx[]>;
       reloadAccountBalances: (
         addresses?: string[],
         accountWallets?: AccountWalletEx[]
       ) => Promise<boolean | undefined>;
-      formatNativeBalance: (balance: string | bigint | number) => string;
+      saveAccountTitle: (title: string, index?: number) => Promise<void>;
       setScreen: (screen: WalletScreens) => void;
       goScreenBack: () => void;
+      handleSuccess: (msg: string, timeout?: number) => void;
       handleError: (e?: any, src?: string) => string;
       setStateValue: <T extends keyof ReturnType<typeof initialState>>(
         key: T,
@@ -202,8 +206,10 @@ function WalletProvider({
     reducer,
     initialState(defaultNetworkId || networks[0].id, { ...restOfParams, defaultNetworkId })
   );
+  const initializingWallet = useRef(false);
   const [initialized, setInitialized] = useState(false);
   const [wallet, setWallet] = useState<EmbeddedWallet>();
+  const successTimeout = useRef<ReturnType<typeof setTimeout>>();
 
   const networksById = networks.reduce(
     (acc, x) => {
@@ -222,10 +228,21 @@ function WalletProvider({
   }, [state.walletIndex, state.accountWallets]);
 
   /**
-   * Store changed state to localStorage
+   * Initialize Oasis Wallet App SDK
+   * + initialize last global state
    */
   useEffect(() => {
-    if (initialized) {
+    if (!wallet && !initializingWallet.current) {
+      initializingWallet.current = true;
+      initWallet();
+    }
+  }, []);
+
+  /**
+   * Store changed state to gateway localStorage
+   */
+  useEffect(() => {
+    if (initialized && wallet) {
       /**
        * Exclude some state variables from being saved
        */
@@ -241,59 +258,9 @@ function WalletProvider({
         ...save
       } = state;
 
-      localStorage.setItem(WebStorageKeys.WALLET_CONTEXT, JSON.stringify(save));
+      wallet.xdomain?.storageSet(WebStorageKeys.WALLET_CONTEXT, JSON.stringify(save));
     }
   }, [state]);
-
-  /**
-   * Initialize state from localStorage
-   */
-  useEffect(() => {
-    const stored = localStorage.getItem(WebStorageKeys.WALLET_CONTEXT);
-
-    if (stored) {
-      try {
-        const restored = JSON.parse(stored) as ContextState;
-        dispatch({ type: 'setState', payload: restored });
-      } catch (e) {
-        console.error('Cant parse global state localStorage', e);
-      }
-    }
-
-    setTimeout(() => setInitialized(true), 10);
-  }, []);
-
-  /**
-   * Initialize Oasis Wallet App SDK
-   */
-  useEffect(() => {
-    if (initialized && !wallet) {
-      let w = undefined as EmbeddedWallet | undefined;
-
-      if (networks && networks.length) {
-        w = EmbeddedWalletSDK({
-          ...restOfParams,
-          networks,
-          defaultNetworkId: state.networkId || defaultNetworkId,
-        });
-      } else {
-        w = EmbeddedWalletSDK();
-      }
-
-      if (w) {
-        setWallet(w);
-
-        w.setAccount({
-          username: state.username,
-          strategy: state.authStrategy,
-          walletIndex: state.walletIndex,
-          contractAddress: state.contractAddress,
-        });
-
-        w.setWallets(state.accountWallets);
-      }
-    }
-  }, [networks, defaultNetworkId, initialized]);
 
   /**
    * Reload balance on:
@@ -305,6 +272,57 @@ function WalletProvider({
       reloadAccountBalances([state.accountWallets[state.walletIndex].address]);
     }
   }, [state.username, state.walletIndex, state.accountWallets.length]);
+
+  async function initWallet() {
+    let w = undefined as EmbeddedWallet | undefined;
+
+    if (networks && networks.length) {
+      w = EmbeddedWalletSDK({
+        ...restOfParams,
+        networks,
+        defaultNetworkId,
+      });
+    } else {
+      w = EmbeddedWalletSDK();
+    }
+
+    if (w) {
+      setWallet(w);
+
+      // Get stored state
+      const stored = await w.xdomain?.storageGet(WebStorageKeys.WALLET_CONTEXT);
+
+      let mergedState = { ...state };
+
+      if (stored) {
+        try {
+          const restored = JSON.parse(stored) as ContextState;
+          mergedState = { ...mergedState, ...restored };
+          dispatch({ type: 'setState', payload: restored });
+        } catch (e) {
+          console.error('Cant parse global state localStorage', e);
+        }
+      }
+
+      if (mergedState.networkId !== defaultNetworkId) {
+        w.setDefaultNetworkId(mergedState.networkId);
+      }
+
+      w.setAccount({
+        username: mergedState.username,
+        strategy: mergedState.authStrategy,
+        walletIndex: mergedState.walletIndex,
+        contractAddress: mergedState.contractAddress,
+      });
+
+      w.setWallets(mergedState.accountWallets);
+
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      initializingWallet.current = false;
+      setInitialized(true);
+    }
+  }
 
   function setStateValue<T extends keyof ReturnType<typeof initialState>>(
     key: T,
@@ -331,9 +349,7 @@ function WalletProvider({
           reload: true,
         })) || [];
 
-      const newWallets = (wallets || []).map(x => ({ ...x, balance: '0' }));
-
-      setStateValue('accountWallets', newWallets);
+      const newWallets = await parseAccountWallets(wallets);
 
       if (state.walletIndex < wallets.length) {
         wallet?.events.emit('accountsChanged', [wallets[state.walletIndex].address]);
@@ -355,6 +371,51 @@ function WalletProvider({
     }
 
     setStateValue('loadingWallets', false);
+  }
+
+  /**
+   * Add info from global storage, initialize some info, set state.
+   */
+  async function parseAccountWallets(wallets: AccountWallet[]) {
+    // Get account names from global storage
+    const { all: accountNamesStorage, current: accountNames } = await getAccountTitles();
+    const accountNamesUpdates = {} as { [accountAddress: string]: string };
+
+    const username = state.username || wallet?.lastAccount.username || '-';
+    const contractAddress = state.contractAddress || wallet?.lastAccount?.contractAddress || '-';
+
+    const newWallets = [] as AccountWalletEx[];
+
+    for (const w of wallets) {
+      newWallets.push({
+        ...w,
+        balance: '0',
+        title: accountNames[w.address] || accountNames[`${w.index}`] || username,
+      });
+
+      // Store (update global storage) names with wallet address if any are only stored with index
+      if (!accountNames[w.address] && !!accountNames[`${w.index}`]) {
+        accountNamesUpdates[w.address] = accountNames[`${w.index}`];
+      }
+    }
+
+    // Update global storage if needed
+    if (Object.keys(accountNamesUpdates).length) {
+      wallet?.xdomain?.storageSet(
+        WebStorageKeys.WALLET_NAMES,
+        JSON.stringify({
+          ...accountNamesStorage,
+          [contractAddress]: {
+            ...accountNames,
+            ...accountNamesUpdates,
+          },
+        })
+      );
+    }
+
+    setStateValue('accountWallets', newWallets);
+
+    return newWallets;
   }
 
   async function reloadAccountBalances(
@@ -401,11 +462,70 @@ function WalletProvider({
     }
   }
 
-  function formatNativeBalance(balance: string | bigint | number) {
-    return (
-      ethers.formatUnits(balance, networksById?.[state.networkId]?.currencyDecimals || 18) +
-      ` ${networksById?.[state.networkId]?.currencySymbol || 'ETH'}`
+  /**
+   * Save new custom account name, or update existing one.
+   */
+  async function saveAccountTitle(title: string, index?: number) {
+    if (!index && index !== 0) {
+      index = state.walletIndex;
+    }
+
+    const { all, current } = await getAccountTitles();
+
+    // When address not available, use index instead to save the username (use e.g. when address is not available yet after creating account)
+    wallet?.xdomain?.storageSet(
+      WebStorageKeys.WALLET_NAMES,
+      JSON.stringify({
+        ...all,
+        [state.contractAddress]: {
+          ...current,
+          [index > state.accountWallets.length - 1
+            ? `${index}`
+            : state.accountWallets[index].address]: title,
+        },
+      })
     );
+
+    const found = state.accountWallets.findIndex(x => x.index === index);
+
+    // Update wallet title in state
+    if (found) {
+      const n = [...state.accountWallets];
+      n[found] = { ...n[found], title };
+      setStateValue('accountWallets', n);
+    }
+  }
+
+  /**
+   * Get wallet names from global storage. Names are stored like
+   * ```
+   * {
+   *   // user wallet contract address
+   *   '0x5A891D65DFeE86b0eCceCFdfC788CFf5e41a073f': {
+   *     // each account wallet address
+   *     '0x2F76b9370743f9F38F261AA7Eb0e6879F7df76a4': 'Wallet name 1',
+   *     '0x9d39f807B7146a46e19456431aae8B9Ab22DC24b': 'Wallet name 2',
+   *   },
+   * },
+   * ```
+   */
+  async function getAccountTitles() {
+    const stored = await wallet?.xdomain?.storageGet(WebStorageKeys.WALLET_NAMES);
+    const contractAddress = state.contractAddress || wallet?.lastAccount?.contractAddress || '-';
+
+    let all = {} as { [contractAddress: string]: { [accountAddress: string]: string } };
+    let current = {} as { [accountAddress: string]: string };
+
+    if (stored) {
+      try {
+        all = JSON.parse(stored);
+        if (all[contractAddress]) {
+          current = all[contractAddress];
+        }
+      } catch (_e) {}
+    }
+
+    return { all, current };
   }
 
   function handleError(e?: any, src?: string) {
@@ -456,6 +576,22 @@ function WalletProvider({
     return msg;
   }
 
+  /**
+   * Show success toast and hide it after a timeout
+   */
+  function handleSuccess(msg: string, timeout = 10000) {
+    if (successTimeout.current) {
+      clearTimeout(successTimeout.current);
+    }
+
+    setStateValue('displayedSuccess', msg);
+
+    successTimeout.current = setTimeout(() => {
+      setStateValue('displayedSuccess', '');
+      successTimeout.current = undefined;
+    }, timeout);
+  }
+
   return (
     <WalletContext.Provider
       value={{
@@ -467,10 +603,13 @@ function WalletProvider({
         activeWallet,
         wallet,
         setWallet,
+        initialized,
         loadAccountWallets,
+        parseAccountWallets,
         reloadAccountBalances,
-        formatNativeBalance,
+        saveAccountTitle,
         handleError,
+        handleSuccess,
         setStateValue,
         setScreen: (s: WalletScreens) => setStateValue('walletScreen', s),
         goScreenBack: () => {

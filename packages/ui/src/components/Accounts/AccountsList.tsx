@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { useWalletContext } from '../../contexts/wallet.context';
-import { shortHash } from '../../lib/helpers';
+import { formatBalance, shortHash } from '../../lib/helpers';
 import Btn from '../ui/Btn';
 import { useEffect, useState } from 'react';
 import InputSearch from '../ui/InputSearch';
@@ -16,7 +16,7 @@ export default () => {
     goScreenBack,
   } = useWalletContext();
 
-  const { selectedToken } = useTokensContext();
+  const { selectedToken, currentExchangeRate } = useTokensContext();
 
   const [search, setSearch] = useState('');
 
@@ -61,11 +61,15 @@ export default () => {
               </div>
 
               <div className="text-xs text-offwhite text-right">
-                <p>?? USD</p>
-
                 <p>
-                  {aw.balance} {selectedToken.symbol}
+                  {!!currentExchangeRate ? (
+                    `$${formatBalance(+aw.balance * currentExchangeRate, '', 2)}`
+                  ) : (
+                    <>&nbsp;</>
+                  )}
                 </p>
+
+                <p>{formatBalance(aw.balance, selectedToken.symbol)}</p>
               </div>
             </button>
           ))}

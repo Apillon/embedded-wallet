@@ -1,5 +1,9 @@
 import { WebStorageKeys } from './constants';
 
+export function sleep(ms = 1000) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export function shortHash(val: string) {
   if (!val || val.length <= 10) {
     return val;
@@ -20,8 +24,23 @@ export function logToStorage(msg: string) {
   );
 }
 
-export function formatBalance(balance: string, unit = 'ETH') {
-  return `${parseFloat(balance)} ${unit}`;
+// @TODO Maybe use bignumber from ethers?
+export function formatBalance(balance: string | number, unit = 'ETH', maxDecimals = 4) {
+  if (maxDecimals < 0 || maxDecimals > 18) {
+    maxDecimals = 5;
+  }
+
+  let parsed = typeof balance === 'string' ? parseFloat(balance) : balance;
+
+  const v = (typeof balance !== 'string' ? balance.toString() : balance).match(
+    new RegExp('(\\d+\\.\\d{' + maxDecimals + '})(\\d)')
+  );
+
+  if (v) {
+    parsed = parseFloat(v[1]);
+  }
+
+  return `${parsed}${!!unit ? ` ${unit}` : ''}`;
 }
 
 /**

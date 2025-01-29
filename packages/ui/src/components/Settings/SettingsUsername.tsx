@@ -6,13 +6,14 @@ import clsx from 'clsx';
 import Loader from '../ui/Loader';
 import IconCheck from '../ui/Icon/IconCheck';
 import useClickOutside from '../../hooks/useClickOutside';
+import { sleep } from '../../lib/helpers';
 
 export default ({ className }: { className?: string }) => {
   const {
     state: { walletIndex },
     activeWallet,
-    wallet,
     handleError,
+    saveAccountTitle,
   } = useWalletContext();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -35,10 +36,8 @@ export default ({ className }: { className?: string }) => {
     setLoading(true);
 
     try {
-      await wallet?.updateAccountWalletTitle({
-        walletIndex,
-        title,
-      });
+      await saveAccountTitle(title, walletIndex);
+      await sleep(200);
 
       setIsEditing(false);
     } catch (e) {

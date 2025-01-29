@@ -49,7 +49,10 @@ export default () => {
 
                 setLoading(true);
 
-                const pk = await wallet?.getAccountPrivateKey({ strategy: 'passkey' });
+                const pk = await wallet?.getAccountPrivateKey({
+                  strategy: 'passkey',
+                  walletIndex: activeWallet.index,
+                });
                 dispatch({
                   type: 'setValue',
                   payload: {

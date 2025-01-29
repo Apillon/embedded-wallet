@@ -11,7 +11,7 @@ import Pill from '../ui/Pill';
 const walletTypeOptions = [
   {
     type: WalletType.EVM,
-    title: 'Ethereum',
+    title: 'EVM',
     description: 'Ethereum, Arbitrum, Moonbeam etc',
     icon: ethIcon,
   },
@@ -25,7 +25,14 @@ const walletTypeOptions = [
 ];
 
 export default function AccountsAdd() {
-  const { wallet, handleError, goScreenBack } = useWalletContext();
+  const {
+    state: { accountWallets },
+    wallet,
+    handleError,
+    goScreenBack,
+    handleSuccess,
+    saveAccountTitle,
+  } = useWalletContext();
   const [type, setType] = useState<AccountWalletTypes>(WalletType.EVM);
   const [title, setTitle] = useState('');
   const [loading, setLoading] = useState(false);
@@ -38,7 +45,12 @@ export default function AccountsAdd() {
     setLoading(true);
 
     try {
-      await wallet?.addAccountWallet({ title, walletType: type });
+      await wallet?.addAccountWallet({ walletType: type });
+
+      // Save wallet name to GS, using (probably) next index, because address is not available yet
+      saveAccountTitle(title, accountWallets[accountWallets.length - 1].index + 1);
+
+      handleSuccess('Account created. Wait for transaction to complete.');
       goScreenBack();
     } catch (e) {
       handleError(e);

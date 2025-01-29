@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useReducer, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useReducer, useRef } from 'react';
 import { ERC20Abi } from '@apillon/wallet-sdk';
 import { useWalletContext } from './wallet.context';
 import { ethers } from 'ethers';
@@ -17,6 +17,7 @@ const initialState = () => ({
     [ownerContractAddress: string]: { [chainId: number]: TokenInfo[] };
   },
   selectedToken: '', // address
+  exchangeRates: {} as { [token: string]: number }, // token exchange rates (from some price api, eg. coingecko)
 });
 
 type ContextState = ReturnType<typeof initialState>;
@@ -83,15 +84,29 @@ const TokensContext = createContext<
       dispatch: (action: ContextActions) => void;
       nativeToken: TokenInfo;
       selectedToken: TokenInfo;
+      currentExchangeRate: number;
       getTokenDetails: (address: string) => Promise<TokenInfo | undefined>;
+      formatNativeBalance: (balance: string | bigint | number) => {
+        amount: string;
+        symbol: string;
+      };
     }
   | undefined
 >(undefined);
 
 function TokensProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState());
-  const [initialized, setInitialized] = useState(false);
+
   const { state: walletState, wallet, activeWallet, networksById } = useWalletContext();
+
+  const initializing = useRef(false);
+  const initialized = useRef(false);
+
+  // Exchange rates
+  const ER = useRef({
+    loading: false,
+    timeout: null as null | ReturnType<typeof setTimeout>,
+  });
 
   const nativeToken = useMemo<TokenInfo>(
     () => ({
@@ -120,14 +135,26 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
     return nativeToken;
   }, [state.selectedToken, state.list, walletState.contractAddress, walletState.networkId]);
 
+  const currentExchangeRate = useMemo(() => {
+    return state.exchangeRates[selectedToken.symbol] || 0;
+  }, [selectedToken, state.exchangeRates]);
+
   useEffect(() => {
-    if (initialized) {
-      localStorage.setItem(WebStorageKeys.TOKENS_CONTEXT, JSON.stringify(state));
+    if (initializing.current && wallet) {
+      wallet.xdomain?.storageSet(WebStorageKeys.TOKENS_CONTEXT, JSON.stringify(state));
     }
   }, [state]);
 
   useEffect(() => {
-    const stored = localStorage.getItem(WebStorageKeys.TOKENS_CONTEXT);
+    if (wallet && !initializing.current) {
+      initializing.current = true;
+      init();
+      loadExchangeRates();
+    }
+  }, [wallet]);
+
+  async function init() {
+    const stored = await wallet?.xdomain?.storageGet(WebStorageKeys.TOKENS_CONTEXT);
 
     if (stored) {
       try {
@@ -173,9 +200,9 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
     }
 
     setTimeout(() => {
-      setInitialized(true);
+      initialized.current = true;
     }, 100);
-  }, []);
+  }
 
   async function getTokenDetails(address: string) {
     if (wallet && activeWallet) {
@@ -215,6 +242,52 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  async function loadExchangeRates() {
+    if (ER.current.loading) {
+      return;
+    }
+
+    if (ER.current.timeout) {
+      clearTimeout(ER.current.timeout);
+    }
+
+    ER.current.loading = true;
+
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_APILLON_BASE_URL ?? 'https://api.apillon.io'}/embedded-wallet/evm-token-prices`,
+        { method: 'GET' }
+      );
+
+      if (!res.ok || res.status >= 400) {
+        throw new Error('Could not load token exchange rates');
+      }
+
+      const { data } = await res.json();
+
+      if (!!data) {
+        dispatch({ type: 'setValue', payload: { key: 'exchangeRates', value: data } });
+      }
+    } catch (e) {
+      console.error('loadExchangeRates', e);
+    }
+
+    ER.current.loading = false;
+
+    // Keep refreshing every 5mins
+    ER.current.timeout = setTimeout(() => loadExchangeRates(), 5 * 6e4);
+  }
+
+  function formatNativeBalance(balance: string | bigint | number) {
+    return {
+      amount: ethers.formatUnits(
+        balance,
+        networksById?.[walletState.networkId]?.currencyDecimals || 18
+      ),
+      symbol: networksById?.[walletState.networkId]?.currencySymbol || 'ETH',
+    };
+  }
+
   return (
     <TokensContext.Provider
       value={{
@@ -222,7 +295,9 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
         dispatch,
         nativeToken,
         selectedToken,
+        currentExchangeRate,
         getTokenDetails,
+        formatNativeBalance,
       }}
     >
       {children}

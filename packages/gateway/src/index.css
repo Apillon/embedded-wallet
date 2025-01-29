@@ -34,13 +34,12 @@ body {
 }
 
 h2 {
-  @apply font-bold text-[1.75rem] text-offwhite text-center leading-tight;
+  @apply font-medium text-[1.75rem] text-offwhite text-center leading-tight;
   font-family: 'New Spirit', serif;
 }
 
 h3 {
-  @apply font-bold text-xl leading-tight text-offwhite text-center mt-0;
-  font-family: 'New Spirit', serif;
+  @apply font-bold text-xl leading-tight text-offwhite text-center mt-0 font-sans;
 }
 
 h4 {
@@ -49,6 +48,14 @@ h4 {
 
 a {
   @apply text-offwhite;
+}
+
+input {
+  @apply bg-lightdark;
+}
+
+input::placeholder {
+  @apply text-lightgrey;
 }
 
 #root {
@@ -79,3 +86,148 @@ a {
     stroke-dashoffset: -124;
   }
 }
+
+/* #region loader */
+.animation-loader > svg {
+  width: 100%;
+}
+
+.animation-loader > svg path {
+  transition: all 0.3s;
+}
+
+.animation-loader > svg path.dot-left {
+  transform: translate(60px);
+  animation: dotLeft 4s ease-in-out infinite;
+}
+
+.animation-loader > svg path.dot-center {
+  animation: dotCenter 4s ease-in-out infinite;
+}
+
+.animation-loader > svg path.dot-right {
+  transform: translate(-60px);
+  animation: dotRight 4s ease-in-out infinite;
+}
+
+.animation-loader > svg path.triangle-left {
+  animation: triangleLeft 4s ease-in-out infinite;
+}
+
+.animation-loader > svg path.triangle-right {
+  animation: triangleRight 4s ease-in-out infinite;
+}
+
+@keyframes dotLeft {
+  0% {
+    transform: translate(60px);
+    opacity: 1;
+  }
+  20% {
+    transform: translate(0px);
+    opacity: 1;
+  }
+  25% {
+    opacity: 0;
+  }
+  100% {
+    transform: translate(0px);
+    opacity: 0;
+  }
+}
+@keyframes dotCenter {
+  0% {
+    opacity: 1;
+  }
+  20% {
+    opacity: 1;
+  }
+  25% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes dotRight {
+  0% {
+    transform: translate(-60px);
+    opacity: 1;
+  }
+  20% {
+    transform: translate(0px);
+    opacity: 1;
+  }
+  25% {
+    opacity: 0;
+  }
+  100% {
+    transform: translate(0px);
+    opacity: 0;
+  }
+}
+@keyframes triangleLeft {
+  0% {
+    transform: scale(1) translate(0, 0);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  29% {
+    transform: scale(1) translate(0, 0);
+  }
+  30% {
+    transform: scale(3.3333) translate(-35%, -35%);
+  }
+  35% {
+    transform: scale(2.6666) translate(-31%, -31%);
+  }
+  50% {
+    transform: scale(4.3333, 2.6666) translate(-30%, -31%);
+  }
+  80% {
+    transform: scale(4.3333, 2.6666) translate(-30%, -31%);
+  }
+  99% {
+    transform: scale(4.3333, 2.6666) translate(-30%, -31%);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) translate(0, 0);
+    opacity: 0;
+  }
+}
+@keyframes triangleRight {
+  0% {
+    transform: scale(1) translate(0, 0);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  29% {
+    transform: scale(1) translate(0, 0);
+  }
+  30% {
+    transform: scale(3.3333) translate(-35%, -35%);
+  }
+  35% {
+    transform: scale(2.6666) translate(-31%, -31%);
+  }
+  50% {
+    transform: scale(4.3333, 2.6666) translate(-46%, -31%);
+  }
+  80% {
+    transform: scale(4.3333, 2.6666) translate(-46%, -31%);
+  }
+  99% {
+    transform: scale(4.3333, 2.6666) translate(-46%, -31%);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) translate(0, 0);
+    opacity: 0;
+  }
+}
+/* #endregion loader */

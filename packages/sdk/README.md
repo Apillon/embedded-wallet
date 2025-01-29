@@ -40,7 +40,7 @@ networks?: Network[];
 /**
  * Method for authenticating with passkey to make it global.
  */
-passkeyAuthMode: 'redirect' | 'popup' | 'tab_process' | 'tab_form' = 'redirect';
+passkeyAuthMode: 'redirect' | 'popup' | 'tab_form' = 'redirect';
 ```
 
 The class instance is then available on window (`embeddedWallet`) and can be obtained with the `getEmbeddedWallet()` utility.
@@ -101,8 +101,6 @@ wallet.events.on('txSubmitted', tx => {
 
 - `addAccountWallet`
   Add new wallet or import from privateKey.
-
-- `updateAccountWalletTitle`
 
 ### Transaction methods
 

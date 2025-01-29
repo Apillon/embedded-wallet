@@ -4,15 +4,17 @@ import { formatBalance } from '../../lib/helpers';
 import Btn from '../ui/Btn';
 import WalletTransactions from './WalletTransactions';
 import { Tab, TabGroup, TabList, TabPanel, TabPanels } from '@headlessui/react';
+import { useTokensContext } from '../../contexts/tokens.context';
 
 export default () => {
   const {
-    state: { isAccountWalletsStale, loadingWallets, networkId },
-    networksById,
+    state: { isAccountWalletsStale, loadingWallets },
     activeWallet,
     setScreen,
     loadAccountWallets,
   } = useWalletContext();
+
+  const { selectedToken, currentExchangeRate } = useTokensContext();
 
   const tabs = [
     {
@@ -46,10 +48,16 @@ export default () => {
       <div className="py-12">
         {/* Account info: username, address, balance */}
         <div className="text-center mb-4">
-          <p className="font-bold text-3xl">
-            {formatBalance(
-              activeWallet?.balance || '0',
-              networksById?.[networkId]?.currencySymbol || 'ETH'
+          <p className="flex items-center justify-center gap-2">
+            <span className="font-bold text-3xl" title={activeWallet?.balance || '0'}>
+              {formatBalance(activeWallet?.balance || '0', selectedToken.symbol)}
+            </span>
+
+            {!!currentExchangeRate && (
+              <span className="text-lightgrey text-xl font-light">
+                ($
+                {formatBalance(+(activeWallet?.balance || 0) * currentExchangeRate, '', 2)})
+              </span>
             )}
           </p>
         </div>
