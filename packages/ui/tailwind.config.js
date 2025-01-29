@@ -13,6 +13,7 @@ export default {
       yellow: '#F9FF73',
       blue: '#78DCE8',
       red: '#FF6188',
+      pink: '#FF6188',
       truered: '#ff0000',
       bright: '#F0F2DA',
       offwhite: '#F0F2DA',
@@ -29,10 +30,10 @@ export default {
       lightgrey: '#9D9E91',
       green: '#A9DC76',
       darkgrey: '#6A6B63',
+      orange: '#F7AF39',
     },
     fontFamily: {
       sans: ['Inter', ...fontFamily.sans],
-      ibm: ['IBM Plex Sans', ...fontFamily.sans],
     },
     extend: {
       fontSize: {
