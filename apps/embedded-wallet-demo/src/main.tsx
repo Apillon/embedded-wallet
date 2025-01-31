@@ -26,6 +26,7 @@ const AppWrapper = () => {
           id: 1287,
           rpcUrl: 'https://rpc.testnet.moonbeam.network',
           explorerUrl: 'https://moonbase.moonscan.io',
+          currencySymbol: 'DEV',
         },
         {
           name: 'Celo Alfajores Testnet',

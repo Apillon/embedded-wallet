@@ -1,0 +1,14 @@
+{
+  "version": "1.0.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Build packages",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "build:packages"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    }
+  ]
+}
