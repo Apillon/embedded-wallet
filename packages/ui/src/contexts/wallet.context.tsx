@@ -349,7 +349,7 @@ function WalletProvider({
           reload: true,
         })) || [];
 
-      const newWallets = await parseAccountWallets(wallets);
+      const newWallets = await parseAccountWallets(wallets, username);
 
       if (state.walletIndex < wallets.length) {
         wallet?.events.emit('accountsChanged', [wallets[state.walletIndex].address]);
@@ -376,12 +376,12 @@ function WalletProvider({
   /**
    * Add info from global storage, initialize some info, set state.
    */
-  async function parseAccountWallets(wallets: AccountWallet[]) {
+  async function parseAccountWallets(wallets: AccountWallet[], username?: string) {
     // Get account names from global storage
     const { all: accountNamesStorage, current: accountNames } = await getAccountTitles();
     const accountNamesUpdates = {} as { [accountAddress: string]: string };
 
-    const username = state.username || wallet?.lastAccount.username || '-';
+    username = username || state.username || wallet?.lastAccount.username || '-';
     const contractAddress = state.contractAddress || wallet?.lastAccount?.contractAddress || '-';
 
     const newWallets = [] as AccountWalletEx[];
@@ -489,7 +489,7 @@ function WalletProvider({
     const found = state.accountWallets.findIndex(x => x.index === index);
 
     // Update wallet title in state
-    if (found) {
+    if (found > -1) {
       const n = [...state.accountWallets];
       n[found] = { ...n[found], title };
       setStateValue('accountWallets', n);

@@ -133,7 +133,13 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
     }
 
     return nativeToken;
-  }, [state.selectedToken, state.list, walletState.contractAddress, walletState.networkId]);
+  }, [
+    nativeToken,
+    state.selectedToken,
+    state.list,
+    walletState.contractAddress,
+    walletState.networkId,
+  ]);
 
   const currentExchangeRate = useMemo(() => {
     return state.exchangeRates[selectedToken.symbol] || 0;

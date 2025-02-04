@@ -63,7 +63,7 @@ function Main({ disableDefaultActivatorStyle = false }: AppProps) {
       }
     };
 
-    if (wallet) {
+    if (wallet && walletInitialized) {
       wallet.events.on('open', onOpen);
       wallet.events.on('dataUpdated', onDataUpdated);
 
@@ -104,7 +104,7 @@ function Main({ disableDefaultActivatorStyle = false }: AppProps) {
         wallet.events.off('dataUpdated', onDataUpdated);
       }
     };
-  }, [wallet, reloadAccountBalances]);
+  }, [wallet, reloadAccountBalances, walletInitialized]);
 
   /**
    * On modal close:
