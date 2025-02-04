@@ -81,7 +81,8 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
     wallet,
     activeWallet,
     reloadAccountBalances,
-    dispatch: dispatchWallet,
+    setStateValue: setForWallet,
+    handleInfo,
   } = useWalletContext();
 
   useEffect(() => {
@@ -217,10 +218,8 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
 
         // set wallets data to stale if needed
         if (!failed && isAccountWalletsTx(txData)) {
-          dispatchWallet({
-            type: 'setValue',
-            payload: { key: 'isAccountWalletsStale', value: true },
-          });
+          setForWallet('isAccountWalletsStale', true);
+          handleInfo('stale');
         }
 
         wallet.events.emit('txDone', tx);
@@ -239,10 +238,8 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
         });
 
         if (isAccountWalletsTx(txData)) {
-          dispatchWallet({
-            type: 'setValue',
-            payload: { key: 'isAccountWalletsStale', value: true },
-          });
+          setForWallet('isAccountWalletsStale', true);
+          handleInfo('stale');
         }
       } else {
         // Tx failed

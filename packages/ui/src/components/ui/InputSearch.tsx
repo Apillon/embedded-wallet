@@ -73,7 +73,7 @@ export default function InputSearch({
             }
           }}
         >
-          <IconCircleX className="inline-block" />
+          <IconCircleX className="inline-block text-darkgrey" />
         </button>
       </div>
     </div>

@@ -58,6 +58,7 @@ const initialState = (defaultNetworkId = 0, appProps: AppProps) => ({
   isOpen: false, // is wallet modal displayed
   displayedError: '',
   displayedSuccess: '',
+  displayedInfo: '',
   appProps,
   loadingWallets: false,
 });
@@ -163,6 +164,7 @@ const WalletContext = createContext<
       setScreen: (screen: WalletScreens) => void;
       goScreenBack: () => void;
       handleSuccess: (msg: string, timeout?: number) => void;
+      handleInfo: (msg: string, timeout?: number) => void;
       handleError: (e?: any, src?: string) => string;
       setStateValue: <T extends keyof ReturnType<typeof initialState>>(
         key: T,
@@ -210,6 +212,7 @@ function WalletProvider({
   const [initialized, setInitialized] = useState(false);
   const [wallet, setWallet] = useState<EmbeddedWallet>();
   const successTimeout = useRef<ReturnType<typeof setTimeout>>();
+  const infoTimeout = useRef<ReturnType<typeof setTimeout>>();
 
   const networksById = networks.reduce(
     (acc, x) => {
@@ -592,6 +595,22 @@ function WalletProvider({
     }, timeout);
   }
 
+  /**
+   * Show info toast and hide it after a timeout
+   */
+  function handleInfo(msg: string, timeout = 10000) {
+    if (infoTimeout.current) {
+      clearTimeout(infoTimeout.current);
+    }
+
+    setStateValue('displayedInfo', msg);
+
+    infoTimeout.current = setTimeout(() => {
+      setStateValue('displayedInfo', '');
+      infoTimeout.current = undefined;
+    }, timeout);
+  }
+
   return (
     <WalletContext.Provider
       value={{
@@ -610,6 +629,7 @@ function WalletProvider({
         saveAccountTitle,
         handleError,
         handleSuccess,
+        handleInfo,
         setStateValue,
         setScreen: (s: WalletScreens) => setStateValue('walletScreen', s),
         goScreenBack: () => {
