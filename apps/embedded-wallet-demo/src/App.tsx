@@ -53,7 +53,6 @@ export default function App({ setPasskeyAuthMode }: { setPasskeyAuthMode: (mode:
             }} onChange={e => setPasskeyAuthMode(e.target.value as AuthPasskeyMode)}>
               <option value="popup">Popup</option>
               <option value="redirect">Redirect</option>
-              <option value="tab_process">Tab Process</option>
               <option value="tab_form">Tab Form</option>
             </select>
             <div id="wallet" />
