@@ -48,6 +48,7 @@ const initialState = (defaultNetworkId = 0, appProps: AppProps) => ({
   username: '',
   walletIndex: 0,
   accountWallets: [] as AccountWalletEx[],
+  stagedWalletsCount: 0, // how many new wallets have been addedd, but are not in `accountWallets` yet
   isAccountWalletsStale: false,
   contractAddress: '',
   privateKeys: {} as { [walletAddress: string]: string },

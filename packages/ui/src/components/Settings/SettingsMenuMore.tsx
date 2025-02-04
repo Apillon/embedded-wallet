@@ -2,10 +2,10 @@ import SettingsMenuItem from './SettingsMenuItem';
 
 export default () => {
   const items = [
-    {
-      title: 'General',
-      screen: 'settingsGeneral' as const,
-    },
+    // {
+    //   title: 'General',
+    //   screen: 'settingsGeneral' as const,
+    // },
     {
       title: 'Export private key',
       screen: 'exportPrivateKey' as const,

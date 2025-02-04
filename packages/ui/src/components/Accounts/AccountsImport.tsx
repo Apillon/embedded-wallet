@@ -67,6 +67,7 @@ export default function AccountsImport() {
       <Input
         value={privateKey}
         placeholder="Enter your private key string here"
+        type="password"
         className="mb-6"
         onChange={ev => setPrivateKey(ev.target.value)}
       />
