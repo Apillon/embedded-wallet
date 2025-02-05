@@ -128,7 +128,8 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         'passkey',
         { username: state.username },
         state.hashedUsername,
-        true
+        true,
+        getReferrerHeaders()['X-Origin']
       );
 
       if (typeof res !== 'undefined') {

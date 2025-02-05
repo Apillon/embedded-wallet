@@ -55,16 +55,17 @@ function GlobalProvider({ children }: { children: ReactNode }) {
   }, []);
 
   function getReferrerHeaders() {
-    try {
-      const u = new URL(referrerUrl.current);
+    /**
+     * @TODO Uncomment if header checking is implemented on apillon backend
+     * Otherwise this throws CORS error
+     */
+    // try {
+    //   const u = new URL(referrerUrl.current);
 
-      return {
-        'X-Origin': u.origin,
-        'X-Referer': u.href,
-      };
-    } catch (e) {
-      console.error(e);
-    }
+    //   return { 'X-Origin': u.origin };
+    // } catch (e) {
+    //   console.error(e);
+    // }
 
     return {};
   }
