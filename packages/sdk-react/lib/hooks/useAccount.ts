@@ -21,6 +21,8 @@ export function useAccount() {
         setInfo(i => ({ ...i, username: newValue }));
       } else if (name === 'walletIndex') {
         setInfo(i => ({ ...i, activeWallet: wallet.lastAccount.wallets[newValue] }));
+      } else if (name === 'wallets' && newValue.length) {
+        setInfo(i => ({ ...i, activeWallet: newValue[wallet.lastAccount.walletIndex] }));
       } else if (name === 'authStrategy') {
         setInfo(i => ({ ...i, authStrategy: newValue }));
       }
