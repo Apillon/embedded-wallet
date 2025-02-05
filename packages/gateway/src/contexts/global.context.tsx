@@ -14,6 +14,7 @@ const GlobalContext = createContext<
       error: string;
       handleError: (e?: any, src?: string) => string;
       redirectBack: (data: { username: string; authStrategy: AuthStrategyName }) => void;
+      getReferrerHeaders: () => { 'X-Origin'?: string; 'X-Referer'?: string };
     }
   | undefined
 >(undefined);
@@ -53,12 +54,28 @@ function GlobalProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  function getReferrerHeaders() {
+    try {
+      const u = new URL(referrerUrl.current);
+
+      return {
+        'X-Origin': u.origin,
+        'X-Referer': u.href,
+      };
+    } catch (e) {
+      console.error(e);
+    }
+
+    return {};
+  }
+
   return (
     <GlobalContext.Provider
       value={{
         wallet,
         setWallet,
         error,
+        getReferrerHeaders,
         redirectBack: data => {
           if (isTab.current) {
             window.opener?.postMessage(

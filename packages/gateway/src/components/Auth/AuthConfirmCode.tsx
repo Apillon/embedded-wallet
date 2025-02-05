@@ -8,7 +8,7 @@ import { getHashedUsername } from '@apillon/wallet-sdk';
 import { WebStorageKeys } from '../../helpers';
 
 export default () => {
-  const { handleError } = useGlobalContext();
+  const { handleError, getReferrerHeaders } = useGlobalContext();
   const {
     state: { loading, username, lastCodeExpiretime },
     setStateValue: setForAuth,
@@ -108,7 +108,7 @@ export default () => {
           `${import.meta.env.VITE_APILLON_BASE_URL ?? 'https://api.apillon.io'}/embedded-wallet/otp/validate`,
           {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', ...getReferrerHeaders() },
             body: JSON.stringify({
               email: username,
               code,

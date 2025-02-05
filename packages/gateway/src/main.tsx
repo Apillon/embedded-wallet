@@ -8,6 +8,7 @@ import clsx from 'clsx';
 import Auth from './components/Auth/Auth.tsx';
 import Loader from './components/ui/Loader.tsx';
 import Logo from './components/ui/Logo.tsx';
+import pj from '../package.json';
 
 const urlParams = new URLSearchParams(window.location.search);
 
@@ -16,7 +17,7 @@ if (!urlParams.has('popup')) {
     <StrictMode>
       <GlobalProvider>
         <AuthProvider>
-          <div className="flex flex-col min-h-[100svh] justify-center items-center">
+          <div className="relative flex flex-col min-h-[100svh] justify-center items-center">
             <div className="relative max-w-[445px] w-full min-h-[380px] bg-dark border border-lightdark text-offwhite flex flex-col">
               <Auth />
 
@@ -32,6 +33,8 @@ if (!urlParams.has('popup')) {
                 </a>
               </p>
             </div>
+
+            <p className="text-darkgrey text-[10px] absolute bottom-4">{pj.version || ''}</p>
           </div>
         </AuthProvider>
       </GlobalProvider>
@@ -40,7 +43,7 @@ if (!urlParams.has('popup')) {
 } else {
   createRoot(document.getElementById('loading')!).render(
     <StrictMode>
-      <div className="flex flex-col min-h-[100svh] justify-center items-center p-8 text-center">
+      <div className="relative flex flex-col min-h-[100svh] justify-center items-center p-8 text-center">
         <h1 className="hidden">Apillon</h1>
 
         <Logo className="mb-8" />
@@ -50,6 +53,8 @@ if (!urlParams.has('popup')) {
         <p id="statustext" className="text-lightgrey text-base mt-8">
           Configuring passkey
         </p>
+
+        <p className="text-darkgrey text-[10px] absolute bottom-4">{pj.version || ''}</p>
       </div>
     </StrictMode>
   );

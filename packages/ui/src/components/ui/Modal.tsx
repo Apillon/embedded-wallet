@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react';
 import clsx from 'clsx';
+import pj from '../../../package.json';
 
 export const MODAL_TRANSITION_TIME = 200;
 
@@ -85,6 +86,10 @@ export default ({
                   >
                     Powered by ©Apillon
                   </a>
+                </p>
+
+                <p className="text-darkgrey text-[10px] absolute bottom-1 right-1">
+                  {pj.version || ''}
                 </p>
               </DialogPanel>
             </div>
