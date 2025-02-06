@@ -8,7 +8,7 @@ export type AuthScreens = 'loginForm' | 'confirmCode' | 'codeSubmitted' | 'confi
 function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState());
 
-  const { wallet, handleError, redirectBack, getReferrerHeaders } = useGlobalContext();
+  const { wallet, handleError, redirectBack, referrer } = useGlobalContext();
 
   useEffect(() => {
     /**
@@ -94,7 +94,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         `${import.meta.env.VITE_APILLON_BASE_URL ?? 'https://api.apillon.io'}/embedded-wallet/otp/generate`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...getReferrerHeaders() },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             email: state.username,
           }),
@@ -129,7 +129,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         { username: state.username },
         state.hashedUsername,
         true,
-        getReferrerHeaders()['X-Origin']
+        referrer
       );
 
       if (typeof res !== 'undefined') {

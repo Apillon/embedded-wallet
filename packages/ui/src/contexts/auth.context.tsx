@@ -64,7 +64,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
 
             const res = await wallet.xdomain.createViaTab(state.username);
 
-            if (res) {
+            if (res && res.username) {
               await loadAccountWallets(res.authStrategy, res.username);
               setupUserInfo({ username: state.username, authStrategy: 'passkey' });
             }
@@ -153,6 +153,11 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         res = await wallet.xdomain.createViaTab(state.username);
+
+        if (!res?.username) {
+          throw new Error(`Couldn't authenticate account. Please try again.`);
+        }
+
         await loadAccountWallets(res.authStrategy, res.username);
       } else {
         let hashed = state.hashedUsername;

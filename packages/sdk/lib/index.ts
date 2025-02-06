@@ -556,11 +556,11 @@ class EmbeddedWallet {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            ...(origin ? { 'X-Origin': origin } : {}),
           },
           body: JSON.stringify({
             data: gaslessData,
             integration_uuid: this.apillonClientId,
+            ...(origin ? { referrerDomain: origin } : {}),
           }),
         }
       )

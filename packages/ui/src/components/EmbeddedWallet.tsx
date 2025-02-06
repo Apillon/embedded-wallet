@@ -73,7 +73,7 @@ function Main({ disableDefaultActivatorStyle = false }: AppProps) {
         if (window.location.search) {
           const urlParams = new URLSearchParams(window.location.search);
 
-          if (urlParams.has('username')) {
+          if (urlParams.has('username') && !!urlParams.get('username')) {
             const loginData = {
               username: urlParams.get('username') || '',
               authStrategy: (urlParams.get('authStrategy') || 'passkey') as any,
@@ -93,6 +93,11 @@ function Main({ disableDefaultActivatorStyle = false }: AppProps) {
               url.searchParams.delete('authStrategy');
               window.history.replaceState(null, '', url.toString());
             }, 50);
+          } else {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('username');
+            url.searchParams.delete('authStrategy');
+            window.history.replaceState(null, '', url.toString());
           }
         }
       }, 200);
