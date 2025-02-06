@@ -30,6 +30,8 @@ export function useAccount() {
       info.username = newValue;
     } else if (name === 'walletIndex') {
       info.activeWallet = wallet.value?.lastAccount.wallets[newValue];
+    } else if (name === 'wallets' && newValue.length) {
+      info.activeWallet = newValue[wallet.value?.lastAccount?.walletIndex || 0];
     } else if (name === 'authStrategy') {
       info.authStrategy = newValue;
     }

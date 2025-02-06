@@ -26,12 +26,13 @@ const walletTypeOptions = [
 
 export default function AccountsAdd() {
   const {
-    state: { accountWallets },
+    state: { accountWallets, stagedWalletsCount },
     wallet,
     handleError,
     goScreenBack,
     handleSuccess,
     saveAccountTitle,
+    setStateValue: setForWallet,
   } = useWalletContext();
   const [type, setType] = useState<AccountWalletTypes>(WalletType.EVM);
   const [title, setTitle] = useState('');
@@ -48,7 +49,12 @@ export default function AccountsAdd() {
       await wallet?.addAccountWallet({ walletType: type });
 
       // Save wallet name to GS, using (probably) next index, because address is not available yet
-      saveAccountTitle(title, accountWallets[accountWallets.length - 1].index + 1);
+      saveAccountTitle(
+        title,
+        accountWallets[accountWallets.length - 1].index + 1 + stagedWalletsCount
+      );
+
+      setForWallet('stagedWalletsCount', stagedWalletsCount + 1);
 
       handleSuccess('Account created. Wait for transaction to complete.');
       goScreenBack();

@@ -8,7 +8,7 @@ export type AuthScreens = 'loginForm' | 'confirmCode' | 'codeSubmitted' | 'confi
 function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState());
 
-  const { wallet, handleError, redirectBack } = useGlobalContext();
+  const { wallet, handleError, redirectBack, referrer } = useGlobalContext();
 
   useEffect(() => {
     /**
@@ -128,7 +128,8 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         'passkey',
         { username: state.username },
         state.hashedUsername,
-        true
+        true,
+        referrer
       );
 
       if (typeof res !== 'undefined') {

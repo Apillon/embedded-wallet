@@ -11,7 +11,7 @@ export default ({ text, className }: { text: string; className?: string }) => (
     }}
   >
     <div className="shrink-0">
-      <IconInfo />
+      <IconInfo className="text-offwhite" />
     </div>
 
     <div className="text-sm font-normal text-offwhite">{text}</div>

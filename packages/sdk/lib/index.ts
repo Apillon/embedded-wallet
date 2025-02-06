@@ -137,12 +137,14 @@ class EmbeddedWallet {
    * Creates a new contract for each account on sapphire network.
    *
    * @param skipAccountWallets  Dont make another request for listing the wallets on account
+   * @param origin  Add custom header for origin website
    */
   async register(
     strategy: AuthStrategyName,
     authData: AuthData,
     hashedUsername?: Buffer,
-    skipAccountWallets = false
+    skipAccountWallets = false,
+    origin?: string
   ) {
     if (!this.sapphireProvider) {
       return abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
@@ -187,7 +189,7 @@ class EmbeddedWallet {
     );
 
     // Get signature from API (handle gas payments e.g.)
-    const gaslessParams = await this.getApillonSignature(gaslessData);
+    const gaslessParams = await this.getApillonSignature(gaslessData, origin);
 
     if (!gaslessParams.signature) {
       return abort('CANT_GET_SIGNATURE');
@@ -539,7 +541,8 @@ class EmbeddedWallet {
    * The request is limited to whitelisted domains determined by client integration ID.
    */
   async getApillonSignature(
-    gaslessData: Parameters<SignatureCallback>[0]
+    gaslessData: Parameters<SignatureCallback>[0],
+    origin?: string
   ): ReturnType<SignatureCallback> {
     if (!this.apillonClientId) {
       abort('NO_APILLON_CLIENT_ID');
@@ -551,10 +554,13 @@ class EmbeddedWallet {
         `${import.meta.env.VITE_APILLON_BASE_URL ?? 'https://api.apillon.io'}/embedded-wallet/signature`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+          },
           body: JSON.stringify({
             data: gaslessData,
             integration_uuid: this.apillonClientId,
+            ...(origin ? { referrerDomain: origin } : {}),
           }),
         }
       )

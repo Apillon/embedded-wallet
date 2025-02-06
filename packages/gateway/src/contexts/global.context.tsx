@@ -14,6 +14,7 @@ const GlobalContext = createContext<
       error: string;
       handleError: (e?: any, src?: string) => string;
       redirectBack: (data: { username: string; authStrategy: AuthStrategyName }) => void;
+      referrer: string;
     }
   | undefined
 >(undefined);
@@ -22,6 +23,7 @@ function GlobalProvider({ children }: { children: ReactNode }) {
   const [wallet, setWallet] = useState<EmbeddedWallet>();
   const [error, setError] = useState('');
   const referrerUrl = useRef('');
+  const [referrer, setReferrer] = useState(''); // `Referer`
   const isTab = useRef(false); // is app running in tab/popup -> close self on end
   const init = useRef(false);
 
@@ -49,6 +51,13 @@ function GlobalProvider({ children }: { children: ReactNode }) {
         referrerUrl.current = referrer!;
       }
 
+      if (!!isValidUrl(document.referrer)) {
+        const u = new URL(document.referrer);
+        if (window.location.origin !== u.origin) {
+          setReferrer(document.referrer);
+        }
+      }
+
       isTab.current = urlParams.has('tab');
     }
   }, []);
@@ -59,6 +68,7 @@ function GlobalProvider({ children }: { children: ReactNode }) {
         wallet,
         setWallet,
         error,
+        referrer,
         redirectBack: data => {
           if (isTab.current) {
             window.opener?.postMessage(

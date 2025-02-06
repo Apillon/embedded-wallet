@@ -36,7 +36,7 @@ function Transaction({ tx }: { tx: TransactionItem }) {
 
   return (
     <div className="rounded-lg bg-primarylight px-4 py-2">
-      <div className="flex justify-between items-center mb-1">
+      <div className="flex justify-between items-center mb-0.5">
         <span className="font-bold text-sm text-offwhite">
           <a
             href={tx.explorerUrl || '#'}
@@ -51,10 +51,11 @@ function Transaction({ tx }: { tx: TransactionItem }) {
         <Pill
           text={tx.status}
           bg={''}
+          color={''}
           className={clsx({
-            'bg-[#F00]': tx.status === 'failed',
-            'bg-[#A9DC76]': tx.status === 'confirmed',
-            'bg-[#F7AF39]': tx.status === 'pending',
+            'text-pink': tx.status === 'failed',
+            'text-green': tx.status === 'confirmed',
+            'text-orange': tx.status === 'pending',
           })}
         />
       </div>

@@ -48,6 +48,7 @@ const initialState = (defaultNetworkId = 0, appProps: AppProps) => ({
   username: '',
   walletIndex: 0,
   accountWallets: [] as AccountWalletEx[],
+  stagedWalletsCount: 0, // how many new wallets have been addedd, but are not in `accountWallets` yet
   isAccountWalletsStale: false,
   contractAddress: '',
   privateKeys: {} as { [walletAddress: string]: string },
@@ -58,6 +59,7 @@ const initialState = (defaultNetworkId = 0, appProps: AppProps) => ({
   isOpen: false, // is wallet modal displayed
   displayedError: '',
   displayedSuccess: '',
+  displayedInfo: '',
   appProps,
   loadingWallets: false,
 });
@@ -163,6 +165,7 @@ const WalletContext = createContext<
       setScreen: (screen: WalletScreens) => void;
       goScreenBack: () => void;
       handleSuccess: (msg: string, timeout?: number) => void;
+      handleInfo: (msg: string, timeout?: number) => void;
       handleError: (e?: any, src?: string) => string;
       setStateValue: <T extends keyof ReturnType<typeof initialState>>(
         key: T,
@@ -210,6 +213,7 @@ function WalletProvider({
   const [initialized, setInitialized] = useState(false);
   const [wallet, setWallet] = useState<EmbeddedWallet>();
   const successTimeout = useRef<ReturnType<typeof setTimeout>>();
+  const infoTimeout = useRef<ReturnType<typeof setTimeout>>();
 
   const networksById = networks.reduce(
     (acc, x) => {
@@ -349,7 +353,7 @@ function WalletProvider({
           reload: true,
         })) || [];
 
-      const newWallets = await parseAccountWallets(wallets);
+      const newWallets = await parseAccountWallets(wallets, username);
 
       if (state.walletIndex < wallets.length) {
         wallet?.events.emit('accountsChanged', [wallets[state.walletIndex].address]);
@@ -376,12 +380,12 @@ function WalletProvider({
   /**
    * Add info from global storage, initialize some info, set state.
    */
-  async function parseAccountWallets(wallets: AccountWallet[]) {
+  async function parseAccountWallets(wallets: AccountWallet[], username?: string) {
     // Get account names from global storage
     const { all: accountNamesStorage, current: accountNames } = await getAccountTitles();
     const accountNamesUpdates = {} as { [accountAddress: string]: string };
 
-    const username = state.username || wallet?.lastAccount.username || '-';
+    username = username || state.username || wallet?.lastAccount.username || '-';
     const contractAddress = state.contractAddress || wallet?.lastAccount?.contractAddress || '-';
 
     const newWallets = [] as AccountWalletEx[];
@@ -489,7 +493,7 @@ function WalletProvider({
     const found = state.accountWallets.findIndex(x => x.index === index);
 
     // Update wallet title in state
-    if (found) {
+    if (found > -1) {
       const n = [...state.accountWallets];
       n[found] = { ...n[found], title };
       setStateValue('accountWallets', n);
@@ -592,6 +596,22 @@ function WalletProvider({
     }, timeout);
   }
 
+  /**
+   * Show info toast and hide it after a timeout
+   */
+  function handleInfo(msg: string, timeout = 10000) {
+    if (infoTimeout.current) {
+      clearTimeout(infoTimeout.current);
+    }
+
+    setStateValue('displayedInfo', msg);
+
+    infoTimeout.current = setTimeout(() => {
+      setStateValue('displayedInfo', '');
+      infoTimeout.current = undefined;
+    }, timeout);
+  }
+
   return (
     <WalletContext.Provider
       value={{
@@ -610,6 +630,7 @@ function WalletProvider({
         saveAccountTitle,
         handleError,
         handleSuccess,
+        handleInfo,
         setStateValue,
         setScreen: (s: WalletScreens) => setStateValue('walletScreen', s),
         goScreenBack: () => {

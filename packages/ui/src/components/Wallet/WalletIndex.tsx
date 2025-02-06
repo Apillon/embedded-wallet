@@ -5,13 +5,13 @@ import Btn from '../ui/Btn';
 import WalletTransactions from './WalletTransactions';
 import { Tab, TabGroup, TabList, TabPanel, TabPanels } from '@headlessui/react';
 import { useTokensContext } from '../../contexts/tokens.context';
+import MsgInfo from '../ui/MsgInfo';
 
 export default () => {
   const {
-    state: { isAccountWalletsStale, loadingWallets },
+    state: { isAccountWalletsStale },
     activeWallet,
     setScreen,
-    loadAccountWallets,
   } = useWalletContext();
 
   const { selectedToken, currentExchangeRate } = useTokensContext();
@@ -35,15 +35,7 @@ export default () => {
 
   return (
     <div>
-      {!!isAccountWalletsStale && (
-        <div className="flex gap-2 justify-between items-start mt-6 -mb-6 py-2 px-3 break-words text-sm text-deepdark bg-blue rounded-md overflow-auto text-left">
-          <span>Accounts are stale</span>
-
-          <a href="#" className="font-bold text-deepdark" onClick={() => loadAccountWallets()}>
-            {loadingWallets ? '...' : 'Reload'}
-          </a>
-        </div>
-      )}
+      {!!isAccountWalletsStale && <MsgInfo text="stale" className="mt-6 -mb-6" />}
 
       <div className="py-12">
         {/* Account info: username, address, balance */}

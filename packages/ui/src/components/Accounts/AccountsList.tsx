@@ -5,15 +5,17 @@ import Btn from '../ui/Btn';
 import { useEffect, useState } from 'react';
 import InputSearch from '../ui/InputSearch';
 import { useTokensContext } from '../../contexts/tokens.context';
+import MsgInfo from '../ui/MsgInfo';
 
 export default () => {
   const {
     wallet,
-    state: { accountWallets, walletIndex },
+    state: { accountWallets, walletIndex, isAccountWalletsStale, loadingWallets },
     dispatch,
     setScreen,
     reloadAccountBalances,
     goScreenBack,
+    loadAccountWallets,
   } = useWalletContext();
 
   const { selectedToken, currentExchangeRate } = useTokensContext();
@@ -26,6 +28,8 @@ export default () => {
 
   return (
     <div className="pb-2 min-h-full flex flex-col">
+      {!!isAccountWalletsStale && <MsgInfo text="stale" className="mt-6" />}
+
       <InputSearch value={search} onChange={ev => setSearch(ev)} className="my-6" />
 
       <div className="flex flex-col gap-3 mb-6">
@@ -81,8 +85,17 @@ export default () => {
         Add new account
       </Btn>
 
-      <Btn variant="ghost" className="w-full" onClick={() => setScreen('importAccount')}>
+      <Btn variant="ghost" className="w-full mb-2" onClick={() => setScreen('importAccount')}>
         Import private key into new account
+      </Btn>
+
+      <Btn
+        variant="ghost"
+        loading={loadingWallets}
+        className="w-full"
+        onClick={() => loadAccountWallets()}
+      >
+        Reload accounts
       </Btn>
     </div>
   );
