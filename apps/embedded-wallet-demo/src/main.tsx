@@ -1,19 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import { EmbeddedWalletUI } from '@apillon/wallet-ui';
-import { AuthPasskeyMode } from '@apillon/wallet-sdk';
 import './index.css';
 
 const AppWrapper = () => {
-  const [passkeyAuthMode, setPasskeyAuthMode] = useState<AuthPasskeyMode>('popup');
+  const isInit = useRef(false);
 
   useEffect(() => {
+    if (!isInit.current) {
+      isInit.current = true;
+      initWallet(sessionStorage?.getItem('mode') || 'popup');
+    }
+  }, []);
+
+  function initWallet(mode = 'popup') {
+    console.log('initialize with mode', mode);
+
     EmbeddedWalletUI('#wallet', {
       clientId: import.meta.env.VITE_CLIENT_ID ?? 'YOUR INTEGRATION UUID HERE',
       defaultNetworkId: 1287,
       broadcastAfterSign: true,
-      passkeyAuthMode,
+      passkeyAuthMode: mode as any,
       networks: [
         {
           name: 'Sapphire Testnet',
@@ -42,11 +50,9 @@ const AppWrapper = () => {
         },
       ],
     });
-  }, [passkeyAuthMode]);
+  }
 
-  return (
-    <App setPasskeyAuthMode={setPasskeyAuthMode} />
-  );
+  return <App onModeChange={mode => initWallet(mode)} />;
 };
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

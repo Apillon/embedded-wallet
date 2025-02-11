@@ -6,13 +6,20 @@ import myImage from './assets/image.png';
 import { Toaster } from 'sonner';
 import { AuthPasskeyMode } from '@apillon/wallet-sdk';
 
-export default function App({ setPasskeyAuthMode }: { setPasskeyAuthMode: (mode: AuthPasskeyMode) => void }) {
+export default function App({
+  onModeChange,
+}: {
+  onModeChange: (mode: AuthPasskeyMode | string) => void;
+}) {
   const btnClass =
     'relative rounded-lg text-sm font-bold  ' +
     'px-4 py-2.5 min-w-[160px] ' +
     'text-yellow border-b-lightdark border-t-lightdark';
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [passkeyAuthMode, setPasskeyAuthMode] = useState<AuthPasskeyMode | string>(
+    sessionStorage?.getItem('mode') || 'popup'
+  );
 
   return (
     <>
@@ -42,19 +49,33 @@ export default function App({ setPasskeyAuthMode }: { setPasskeyAuthMode: (mode:
             </button>
           </div>
 
-          <div className="w-full md:!w-1/3 md:!text-left text-center" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <select style={{
-              padding: '8px',
-              borderRadius: '5px',
-              border: '1px solid #ccc',
-              backgroundColor: 'gray',
-              color: 'white',
-              cursor: 'pointer',
-            }} onChange={e => setPasskeyAuthMode(e.target.value as AuthPasskeyMode)}>
-              <option value="popup">Popup</option>
-              <option value="redirect">Redirect</option>
-              <option value="tab_form">Tab Form</option>
+          <div
+            className="w-full md:!w-1/3 md:!text-left text-center"
+            style={{ display: 'flex', alignItems: 'center', gap: '10px' }}
+          >
+            <select
+              value={passkeyAuthMode}
+              style={{
+                padding: '8px',
+                borderRadius: '5px',
+                border: '1px solid #ccc',
+                backgroundColor: 'gray',
+                color: 'white',
+                cursor: 'pointer',
+              }}
+              onChange={e => {
+                setPasskeyAuthMode(e.target.value);
+                sessionStorage.setItem('mode', e.target.value);
+                onModeChange(e.target.value);
+              }}
+            >
+              {['popup', 'redirect', 'tab_form'].map(x => (
+                <option key={x} value={x}>
+                  {x}
+                </option>
+              ))}
             </select>
+
             <div id="wallet" />
           </div>
         </nav>
