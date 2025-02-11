@@ -71,7 +71,7 @@ export default function App({
             >
               {['popup', 'redirect', 'tab_form'].map(x => (
                 <option key={x} value={x}>
-                  {x}
+                  {x.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase())}
                 </option>
               ))}
             </select>
