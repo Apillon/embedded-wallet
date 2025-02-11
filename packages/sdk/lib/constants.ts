@@ -72,4 +72,5 @@ export const ApillonApiErrors: { [code: number]: string } = {
   404130001: 'Invalid wallet integration UUID', // EMBEDDED_WALLET_INTEGRATION_NOT_FOUND
   403130000: 'Domain not whitelisted for wallet usage', // EMBEDDED_WALLET_INTEGRATION_DOMAIN_NOT_WHITELISTED
   40013002: 'Wallet usage limit reached', // MAX_NUMBER_OF_EMBEDDED_WALLET_SIGNATURES_REACHED
+  40300001: 'Invalid origin', // INVALID_ORIGIN
 };
