@@ -80,11 +80,6 @@ function Main({ disableDefaultActivatorStyle = false }: AppProps) {
               networkId: defaultNetworkId || undefined,
             };
 
-            wallet.setAccount({
-              username: loginData.username,
-              strategy: loginData.authStrategy,
-            });
-
             dispatch({
               type: 'setState',
               payload: loginData,
