@@ -93,7 +93,7 @@ export default () => {
 
       <div className="px-8 pb-4 grow overflow-y-auto">{content()}</div>
 
-      <div className="absolute -bottom-8 left-0 right-0 px-8 flex flex-col gap-2">
+      <div className="absolute z-10 -bottom-8 left-0 right-0 px-8 flex flex-col gap-2">
         <MsgSuccess />
         <MsgInfo />
         <MsgError show />

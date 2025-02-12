@@ -3,6 +3,7 @@ import { EmbeddedWallet } from '.';
 import { SapphireMainnet, SapphireTestnet, WindowId, Errors } from './constants';
 import { pbkdf2Sync } from 'pbkdf2';
 import { AppParams } from './types';
+import * as sapphire from '@oasisprotocol/sapphire-paratime';
 
 /**
  * Global wallet object.
@@ -110,7 +111,7 @@ export class JsonMultiRpcProvider extends ethers.JsonRpcProvider {
         // Initialize new Fetch request & provider
         const fetchRequest = new ethers.FetchRequest(this.rpcUrls[tryIndex]);
         fetchRequest.timeout = 15000;
-        this.providers.push(new ethers.JsonRpcProvider(fetchRequest));
+        this.providers.push(sapphire.wrap(new ethers.JsonRpcProvider(fetchRequest)));
         this.frs.push(fetchRequest);
       }
 
