@@ -221,7 +221,7 @@ export default function EmbeddedWallet(props: AppProps) {
   }
 
   if (!props2.authFormPlaceholder) {
-    props2.authFormPlaceholder = 'your e-mail';
+    props2.authFormPlaceholder = 'your email';
   }
 
   return (
