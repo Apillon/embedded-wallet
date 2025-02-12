@@ -353,6 +353,11 @@ function WalletProvider({
           reload: true,
         })) || [];
 
+      wallet?.setAccount({
+        strategy: strategy || state.authStrategy,
+        username: username || state.username,
+      });
+
       const newWallets = await parseAccountWallets(wallets, username);
 
       if (state.walletIndex < wallets.length) {
