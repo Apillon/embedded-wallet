@@ -18,14 +18,14 @@ export default () => {
   return (
     <>
       <AuthTitle
-        title="Sign in or Sign up"
-        description="Enter your e-mail to initialize a passkey through your email address."
+        title="Sign in or sign up"
+        description="Enter your email to set up your passkey"
       />
 
       <form onSubmit={ev => onAuth(false, ev)}>
         <Input
           type="email"
-          placeholder="your e-mail"
+          placeholder="your email"
           value={username}
           className="w-full mb-6"
           onChange={ev => setForAuth('username', ev.target.value)}

@@ -201,7 +201,7 @@ export default () => {
         ))}
       </div>
 
-      <p className="text-lightgrey text-xs mb-3 text-center">Didn't receive e-mail?</p>
+      <p className="text-lightgrey text-xs mb-3 text-center">Didn't receive an email?</p>
 
       {!isExpired && (
         <Btn
