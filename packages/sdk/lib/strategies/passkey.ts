@@ -103,6 +103,7 @@ class PasskeyStrategy implements AuthStrategy {
       cred.credentialIdHashed,
       // @ts-expect-error AbiTypes
       cred.resp,
+      WalletType.EVM,
       data
     );
   }
