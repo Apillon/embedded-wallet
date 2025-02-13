@@ -74,7 +74,7 @@ class PasswordStrategy implements AuthStrategy {
 
     return await this.wallet.accountManagerContract.proxyViewPassword(
       hashedUsername as any,
-      WalletType.EVM,
+      BigInt(WalletType.EVM),
       digest,
       data
     );

@@ -174,7 +174,8 @@ class EmbeddedWallet {
         {
           funcData: this.abiCoder.encode(
             [
-              'tuple(bytes32 hashedUsername, bytes credentialId, tuple(uint8 kty, int8 alg, uint8 crv, uint256 x, uint256 y) pubkey, bytes32 optionalPassword, tuple(uint8 walletType, bytes32 keypairSecret, string title) wallet)',
+              // AccountManagerAbi createAccount
+              'tuple(bytes32 hashedUsername, bytes credentialId, tuple(uint8 kty, int8 alg, uint8 crv, uint256 x, uint256 y) pubkey, bytes32 optionalPassword, tuple(uint8 walletType, bytes32 keypairSecret) wallet)',
             ],
             [registerData]
           ),
@@ -383,7 +384,7 @@ class EmbeddedWallet {
       const hashedUsername = await getHashedUsername(params.authData.username);
       this.lastAccount.contractAddress = (await this.accountManagerContract.getAccount(
         hashedUsername as any,
-        WalletType.EVM
+        BigInt(WalletType.EVM)
       )) as string;
 
       this.events.emit('dataUpdated', {
@@ -396,7 +397,11 @@ class EmbeddedWallet {
     const AC = new ethers.Interface(EVMAccountAbi);
     const data = AC.encodeFunctionData('getWalletList', []);
 
+    console.log('getWalletList');
+
     const res = await this.getProxyForStrategy(params.strategy, data, params.authData!);
+
+    console.log('res');
 
     if (res) {
       const [accountWallets] = AC.decodeFunctionResult('getWalletList', res).toArray();
@@ -467,11 +472,9 @@ class EmbeddedWallet {
       }
     }
 
-    /**
-     * @TODO Remove title (when contract updates)
-     */
     const data = this.abiCoder.encode(
-      ['tuple(uint256 walletType, bytes32 keypairSecret, string title)'],
+      // EVMAccountAbi createWallet
+      ['tuple(bytes32 keypairSecret)'],
       [
         {
           walletType: params.walletType,

@@ -3,9 +3,9 @@ export const SapphireMainnet = 23294;
 export const SapphireTestnet = 23295;
 
 export const WalletType = {
-  EVM: 0n,
-  SUBSTRATE: 1n,
-  BITCOIN: 2n,
+  EVM: 0,
+  SUBSTRATE: 1,
+  BITCOIN: 2,
 } as const;
 
 export const Errors = {
