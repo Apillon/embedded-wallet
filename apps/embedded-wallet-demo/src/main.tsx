@@ -15,8 +15,6 @@ const AppWrapper = () => {
   }, []);
 
   function initWallet(mode = 'popup') {
-    console.log('initialize with mode', mode);
-
     EmbeddedWalletUI('#wallet', {
       clientId: import.meta.env.VITE_CLIENT_ID ?? 'YOUR INTEGRATION UUID HERE',
       defaultNetworkId: 1287,

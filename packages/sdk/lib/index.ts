@@ -468,8 +468,6 @@ class EmbeddedWallet {
       }
     }
 
-    console.log(params);
-
     const data = this.abiCoder.encode(
       ['tuple(uint256 walletType, bytes32 keypairSecret)'],
       [
