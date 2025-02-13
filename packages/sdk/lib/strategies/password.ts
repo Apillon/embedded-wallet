@@ -44,7 +44,6 @@ class PasswordStrategy implements AuthStrategy {
       wallet: {
         walletType: WalletType.EVM,
         keypairSecret: ethers.ZeroHash,
-        title: authData.username,
       },
     };
   }

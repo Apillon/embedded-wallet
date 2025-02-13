@@ -397,11 +397,7 @@ class EmbeddedWallet {
     const AC = new ethers.Interface(EVMAccountAbi);
     const data = AC.encodeFunctionData('getWalletList', []);
 
-    console.log('getWalletList');
-
     const res = await this.getProxyForStrategy(params.strategy, data, params.authData!);
-
-    console.log('res');
 
     if (res) {
       const [accountWallets] = AC.decodeFunctionResult('getWalletList', res).toArray();
@@ -412,7 +408,7 @@ class EmbeddedWallet {
             (x, index) =>
               ({
                 walletType: WalletType.EVM,
-                address: x,
+                address: `0x${x.slice(-40)}`,
                 index,
               }) as AccountWallet
           )
@@ -472,14 +468,14 @@ class EmbeddedWallet {
       }
     }
 
+    console.log(params);
+
     const data = this.abiCoder.encode(
-      // EVMAccountAbi createWallet
-      ['tuple(bytes32 keypairSecret)'],
+      ['tuple(uint256 walletType, bytes32 keypairSecret)'],
       [
         {
-          walletType: params.walletType,
+          walletType: BigInt(params.walletType),
           keypairSecret: params.privateKey || ethers.ZeroHash,
-          title: '',
         },
       ]
     );
