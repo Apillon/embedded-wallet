@@ -33,7 +33,6 @@ class PasskeyStrategy implements AuthStrategy {
     const newWallet = {
       walletType: WalletType.EVM,
       keypairSecret: ethers.ZeroHash,
-      title: authData.username,
     };
 
     if (this.wallet.xdomain?.mode === 'popup') {
@@ -103,6 +102,7 @@ class PasskeyStrategy implements AuthStrategy {
       cred.credentialIdHashed,
       // @ts-expect-error AbiTypes
       cred.resp,
+      BigInt(WalletType.EVM),
       data
     );
   }

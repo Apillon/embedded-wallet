@@ -17,7 +17,7 @@ import {
   WebauthnContract,
 } from './types';
 import * as sapphire from '@oasisprotocol/sapphire-paratime';
-import { AccountAbi, AccountManagerAbi } from './abi';
+import { EVMAccountAbi, AccountManagerAbi } from './abi';
 import PasswordStrategy from './strategies/password';
 import PasskeyStrategy from './strategies/passkey';
 import { networkIdIsSapphire, getHashedUsername, abort, JsonMultiRpcProvider } from './utils';
@@ -174,7 +174,8 @@ class EmbeddedWallet {
         {
           funcData: this.abiCoder.encode(
             [
-              'tuple(bytes32 hashedUsername, bytes credentialId, tuple(uint8 kty, int8 alg, uint8 crv, uint256 x, uint256 y) pubkey, bytes32 optionalPassword, tuple(uint8 walletType, bytes32 keypairSecret, string title) wallet)',
+              // AccountManagerAbi createAccount
+              'tuple(bytes32 hashedUsername, bytes credentialId, tuple(uint8 kty, int8 alg, uint8 crv, uint256 x, uint256 y) pubkey, bytes32 optionalPassword, tuple(uint8 walletType, bytes32 keypairSecret) wallet)',
             ],
             [registerData]
           ),
@@ -321,7 +322,7 @@ class EmbeddedWallet {
       }
     }
 
-    const AC = new ethers.Interface(AccountAbi);
+    const AC = new ethers.Interface(EVMAccountAbi);
     const data = AC.encodeFunctionData('exportPrivateKey', [
       params.walletIndex || this.lastAccount.walletIndex,
     ]);
@@ -382,7 +383,8 @@ class EmbeddedWallet {
     if (!this.lastAccount.contractAddress) {
       const hashedUsername = await getHashedUsername(params.authData.username);
       this.lastAccount.contractAddress = (await this.accountManagerContract.getAccount(
-        hashedUsername as any
+        hashedUsername as any,
+        BigInt(WalletType.EVM)
       )) as string;
 
       this.events.emit('dataUpdated', {
@@ -392,7 +394,7 @@ class EmbeddedWallet {
       });
     }
 
-    const AC = new ethers.Interface(AccountAbi);
+    const AC = new ethers.Interface(EVMAccountAbi);
     const data = AC.encodeFunctionData('getWalletList', []);
 
     const res = await this.getProxyForStrategy(params.strategy, data, params.authData!);
@@ -402,14 +404,13 @@ class EmbeddedWallet {
 
       if (Array.isArray(accountWallets) && accountWallets.length) {
         const mapped = accountWallets
-          .map((x, index) =>
-            Array.isArray(x) && x.length >= 3
-              ? ({
-                  walletType: +(x[0] as bigint).toString(),
-                  address: x[1],
-                  index,
-                } as AccountWallet)
-              : undefined
+          .map(
+            (x, index) =>
+              ({
+                walletType: WalletType.EVM,
+                address: `0x${x.slice(-40)}`,
+                index,
+              }) as AccountWallet
           )
           .filter(x => !!x);
 
@@ -467,16 +468,12 @@ class EmbeddedWallet {
       }
     }
 
-    /**
-     * @TODO Remove title (when contract updates)
-     */
     const data = this.abiCoder.encode(
-      ['tuple(uint256 walletType, bytes32 keypairSecret, string title)'],
+      ['tuple(uint256 walletType, bytes32 keypairSecret)'],
       [
         {
-          walletType: params.walletType,
+          walletType: BigInt(params.walletType),
           keypairSecret: params.privateKey || ethers.ZeroHash,
-          title: '',
         },
       ]
     );
@@ -725,7 +722,7 @@ class EmbeddedWallet {
       }
     }
 
-    const AC = new ethers.Interface(AccountAbi);
+    const AC = new ethers.Interface(EVMAccountAbi);
 
     let data = params.data || '';
     const originalMessage = params.message;
@@ -889,7 +886,7 @@ class EmbeddedWallet {
       });
     }
 
-    const AC = new ethers.Interface(AccountAbi);
+    const AC = new ethers.Interface(EVMAccountAbi);
     const data = AC.encodeFunctionData('signEIP155', [
       params.walletIndex || this.lastAccount.walletIndex,
       params.tx,
@@ -1085,7 +1082,7 @@ class EmbeddedWallet {
     /**
      * Encode tx data and authenticate it with selected auth strategy through sapphire "Account Manager"
      */
-    const AC = new ethers.Interface(AccountAbi);
+    const AC = new ethers.Interface(EVMAccountAbi);
     const data = AC.encodeFunctionData('signEIP155', [params.walletIndex, tx]);
     const res = await this.getProxyForStrategy(params.strategy, data, params.authData!);
 

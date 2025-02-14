@@ -44,7 +44,6 @@ class PasswordStrategy implements AuthStrategy {
       wallet: {
         walletType: WalletType.EVM,
         keypairSecret: ethers.ZeroHash,
-        title: authData.username,
       },
     };
   }
@@ -74,6 +73,7 @@ class PasswordStrategy implements AuthStrategy {
 
     return await this.wallet.accountManagerContract.proxyViewPassword(
       hashedUsername as any,
+      BigInt(WalletType.EVM),
       digest,
       data
     );
