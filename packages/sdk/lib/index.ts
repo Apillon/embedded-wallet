@@ -16,7 +16,6 @@ import {
   TransactionItem,
   WebauthnContract,
 } from './types';
-import * as sapphire from '@oasisprotocol/sapphire-paratime';
 import { EVMAccountAbi, AccountManagerAbi } from './abi';
 import PasswordStrategy from './strategies/password';
 import PasskeyStrategy from './strategies/passkey';
@@ -68,14 +67,15 @@ class EmbeddedWallet {
    * Prepare data for available chains
    */
   constructor(params?: AppParams) {
-    const ethSaphProvider = new JsonMultiRpcProvider([
+    this.sapphireProvider = new JsonMultiRpcProvider([
       import.meta.env.VITE_SAPPHIRE_URL ?? 'https://sapphire.oasis.io',
       ...(import.meta.env.VITE_SAPPHIRE_BACKUP_URLS
         ? import.meta.env.VITE_SAPPHIRE_BACKUP_URLS.replace(/\s/g, '').split(',')
         : []),
     ]);
 
-    this.sapphireProvider = sapphire.wrap(ethSaphProvider);
+    // this.sapphireProvider = wrapEthereumProvider(ethSaphProvider);
+
     this.loadSapphireChainId();
     this.accountManagerAddress =
       import.meta.env.VITE_ACCOUNT_MANAGER_ADDRESS ?? '0x50dE236a7ce372E7a09956087Fb4862CA1a887aA';
@@ -98,7 +98,7 @@ class EmbeddedWallet {
     this.events = mitt<Events>();
     this.apillonClientId = params?.clientId || '';
 
-    this.xdomain = new XdomainPasskey(this.apillonClientId, params?.passkeyAuthMode);
+    this.xdomain = new XdomainPasskey(this.apillonClientId, params?.passkeyAuthMode || 'redirect');
 
     /**
      * Provider connection events
