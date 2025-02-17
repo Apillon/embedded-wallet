@@ -12,7 +12,7 @@ function addStyles() {
     writeBundle(options: any, bundle: { [fileName: string]: any }) {
       if (bundle?.['react.js']) {
         const data = fs.readFileSync('./dist/react.js', { encoding: 'utf8' });
-        fs.writeFileSync('./dist/react.js', `import './style.css';\n` + data);
+        fs.writeFileSync('./dist/react.js', `import './react.css';\n` + data);
       }
     },
   };

@@ -212,8 +212,8 @@ function WalletProvider({
   const initializingWallet = useRef(false);
   const [initialized, setInitialized] = useState(false);
   const [wallet, setWallet] = useState<EmbeddedWallet>();
-  const successTimeout = useRef<ReturnType<typeof setTimeout>>();
-  const infoTimeout = useRef<ReturnType<typeof setTimeout>>();
+  const successTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const infoTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const networksById = networks.reduce(
     (acc, x) => {
