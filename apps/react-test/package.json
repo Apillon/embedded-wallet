@@ -10,21 +10,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@apillon/wallet-react": "*",
-    "ethers": "^6.13.5",
-    "ethers5": "npm:ethers@^5.7.2",
-    "react": "19.0.0",
-    "react-dom": "19.0.0",
-    "viem": "^2.23.2"
+    "@apillon/wallet-react": "*"
   },
   "devDependencies": {
-    "@apillon/wallet-eslint-config": "*",
-    "@types/react": "19.0.10",
-    "@types/react-dom": "19.0.4",
-    "@vitejs/plugin-react-swc": "^3.8.0",
-    "typescript": "^5.7.3",
-    "vite": "^6.1.0",
-    "vite-plugin-mkcert": "^1.17.6",
-    "vite-plugin-node-polyfills": "^0.23.0"
+    "@apillon/wallet-eslint-config": "*"
+  },
+  "global": {
+    "dependencies": ["ethers", "ethers5", "react", "react-dom", "viem"]
   }
 }

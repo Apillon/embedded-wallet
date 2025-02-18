@@ -5,16 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "preview": "vite preview",
-    "@apillon/wallet-ui": "*",
-    "ethers": "^6.13.3",
-    "ethers5": "npm:ethers@^5.7.2",
-    "viem": "^2.21.19"
+    "preview": "vite preview"
   },
-  "devDependencies": {
-    "typescript": "^5.7.3",
-    "vite": "^6.1.0",
-    "vite-plugin-mkcert": "^1.17.6",
-    "vite-plugin-node-polyfills": "^0.23.0"
+  "dependencies": {
+    "@apillon/wallet-ui": "*"
+  },
+  "global": {
+    "dependencies": ["ethers", "ethers5", "viem"]
   }
 }

@@ -35,23 +35,17 @@
     "@oasisprotocol/sapphire-paratime": "^2.0.1",
     "asn1js": "^3.0.5",
     "cbor-redux": "^1.0.0",
-    "ethers": "^6.13.5",
     "mitt": "^3.0.1",
     "pbkdf2": "^3.1.2",
-    "secp256r1": "^0.0.3",
-    "viem": "^2.23.2"
+    "secp256r1": "^0.0.3"
   },
   "devDependencies": {
     "@apillon/wallet-eslint-config": "*",
     "@types/pbkdf2": "^3.1.2",
-    "@types/react": "^18.2.66",
-    "@types/react-dom": "^18.2.22",
     "abitype": "^1.0.8",
-    "ethers-abitype": "^1.0.3",
-    "typescript": "^5.7.3",
-    "vite": "^6.1.0",
-    "vite-plugin-dts": "^4.5.0",
-    "vite-plugin-mkcert": "^1.17.6",
-    "vite-plugin-node-polyfills": "^0.23.0"
+    "ethers-abitype": "^1.0.3"
+  },
+  "global": {
+    "dependencies": ["ethers", "viem"]
   }
 }
