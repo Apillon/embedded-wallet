@@ -1,6 +1,6 @@
 'use client';
 
-import { useAccount, EmbeddedWallet } from '../../lib/sdk-react/react';
+import { useAccount, EmbeddedWallet } from '@apillon/wallet-react';
 import TestSdk from './TestSdk';
 import TestViem from './TestViem';
 import TestEthers6 from './TestEthers6';
@@ -49,7 +49,7 @@ export default function Test() {
 
       <br />
 
-      {/* <TestSdk />
+      <TestSdk />
 
       <br />
 
@@ -61,7 +61,7 @@ export default function Test() {
 
       <br />
 
-      {!!info?.activeWallet?.address && <TestEthers5 />} */}
+      {!!info?.activeWallet?.address && <TestEthers5 />}
     </div>
   );
 }
