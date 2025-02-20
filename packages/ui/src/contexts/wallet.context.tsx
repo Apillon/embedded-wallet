@@ -184,26 +184,29 @@ function WalletProvider({
   children: ReactNode;
   networks?: Network[];
 } & AppProps) {
-  networks = [
-    import.meta.env.VITE_SAPPHIRE_TESTNET
-      ? {
-          name: 'Sapphire Testnet',
-          id: SapphireTestnet,
-          rpcUrl: 'https://testnet.sapphire.oasis.io',
-          explorerUrl: 'https://explorer.oasis.io/testnet/sapphire',
-          imageUrl: oasisLogo,
-          currencySymbol: 'ROSE',
-        }
-      : {
-          name: 'Oasis Sapphire',
-          id: SapphireMainnet,
-          rpcUrl: 'https://sapphire.oasis.io',
-          explorerUrl: 'https://explorer.oasis.io/mainnet/sapphire',
-          imageUrl: oasisLogo,
-          currencySymbol: 'ROSE',
-        },
-    ...networks,
-  ];
+  // If not already set, add sapphire network
+  if (!networks.some(n => n.id === SapphireTestnet || n.id === SapphireMainnet)) {
+    networks = [
+      import.meta.env.VITE_SAPPHIRE_TESTNET
+        ? {
+            name: 'Sapphire Testnet',
+            id: SapphireTestnet,
+            rpcUrl: 'https://testnet.sapphire.oasis.io',
+            explorerUrl: 'https://explorer.oasis.io/testnet/sapphire',
+            imageUrl: oasisLogo,
+            currencySymbol: 'ROSE',
+          }
+        : {
+            name: 'Oasis Sapphire',
+            id: SapphireMainnet,
+            rpcUrl: 'https://sapphire.oasis.io',
+            explorerUrl: 'https://explorer.oasis.io/mainnet/sapphire',
+            imageUrl: oasisLogo,
+            currencySymbol: 'ROSE',
+          },
+      ...networks,
+    ];
+  }
 
   const [state, dispatch] = useReducer(
     reducer,
