@@ -6,6 +6,7 @@ import { useAuthContext } from '../../contexts/auth.context';
 import { useGlobalContext } from '../../contexts/global.context';
 import { getHashedUsername } from '@apillon/wallet-sdk';
 import { WebStorageKeys } from '../../helpers';
+import Toast from '../ui/Toast';
 
 export default () => {
   const { handleError } = useGlobalContext();
@@ -214,7 +215,7 @@ export default () => {
         </Btn>
       )}
 
-      {!!resendCooldown && <p className="mt-2">Email sent!</p>}
+      {!!resendCooldown && <Toast text="Email sent!" className="mt-4" />}
     </>
   );
 };

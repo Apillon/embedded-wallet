@@ -24,6 +24,14 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         setStateValue('screen', 'confirmCode');
       }
     }
+
+    if (window) {
+      const procaptchaToken = sessionStorage.getItem(WebStorageKeys.PROCAPTCHA);
+
+      if (procaptchaToken) {
+        setStateValue('captcha', procaptchaToken);
+      }
+    }
   }, []);
 
   function setStateValue<T extends keyof ReturnType<typeof initialState>>(
@@ -87,6 +95,12 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function sendConfirmationEmail() {
     try {
+      if (!state.captcha) {
+        throw new Error(
+          'Captcha verification required. Please return to previous registration step.'
+        );
+      }
+
       /**
        * Apillon email confirmation
        */
@@ -97,6 +111,10 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             email: state.username,
+            captcha: {
+              token: state.captcha,
+              eKey: import.meta.env.VITE_PROCAPTCHA_KEY ?? 'N/A',
+            },
           }),
         }
       );
@@ -187,6 +205,7 @@ const initialState = () => ({
   hashedUsername: undefined as Buffer | undefined,
   screen: 'loginForm' as AuthScreens,
   lastCodeExpiretime: 0, // get from /otp/generate and check before /otp/validate
+  captcha: '',
 });
 
 type ContextState = ReturnType<typeof initialState>;

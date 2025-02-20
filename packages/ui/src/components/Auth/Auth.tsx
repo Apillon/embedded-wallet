@@ -1,6 +1,5 @@
 import AuthLoginForm from './AuthLoginForm';
 import Logo from '../ui/Logo';
-import MsgError from '../ui/MsgError';
 import { useAuthContext } from '../../contexts/auth.context';
 import AuthConfiguringPasskey from './AuthConfiguringPasskey';
 import AuthConfirmCode from './AuthConfirmCode';
@@ -36,8 +35,6 @@ export default ({ className }: { className?: string }) => {
       </div>
 
       {currentScreen()}
-
-      <MsgError show className="mt-6" />
     </div>
   );
 };

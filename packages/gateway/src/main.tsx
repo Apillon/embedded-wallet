@@ -9,6 +9,7 @@ import Auth from './components/Auth/Auth.tsx';
 import Loader from './components/ui/Loader.tsx';
 import Logo from './components/ui/Logo.tsx';
 import pj from '../package.json';
+import MsgError from './components/ui/MsgError.tsx';
 
 const urlParams = new URLSearchParams(window.location.search);
 
@@ -20,6 +21,8 @@ if (!urlParams.has('popup')) {
           <div className="relative flex flex-col min-h-[100svh] justify-center items-center">
             <div className="relative max-w-[445px] w-full min-h-[380px] bg-dark border border-lightdark text-offwhite flex flex-col">
               <Auth />
+
+              <MsgError show className="-mt-4 mb-6" />
 
               <div className="flex-grow"></div>
 
