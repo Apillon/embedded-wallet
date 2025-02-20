@@ -3,7 +3,12 @@ import { useWalletContext } from './wallet.context';
 import { abort, AuthStrategyName, getHashedUsername } from '@apillon/wallet-sdk';
 import { WebStorageKeys } from '../lib/constants';
 
-export type AuthScreens = 'loginForm' | 'confirmCode' | 'codeSubmitted' | 'configuringPasskey';
+export type AuthScreens =
+  | 'loginForm'
+  | 'captcha'
+  | 'confirmCode'
+  | 'codeSubmitted'
+  | 'configuringPasskey';
 
 function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState());
@@ -54,25 +59,12 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
           return true;
         }
       } else if (!onlyLogin) {
-        if (await sendConfirmationEmail()) {
-          if (appProps.passkeyAuthMode === 'tab_form') {
-            if (!wallet?.xdomain) {
-              throw abort('XDOMAIN_NOT_INIT');
-            }
-
-            setStateValue('screen', 'configuringPasskey');
-
-            const res = await wallet.xdomain.createViaTab(state.username);
-
-            if (res && res.username) {
-              await loadAccountWallets(res.authStrategy, res.username);
-              setupUserInfo({ username: state.username, authStrategy: 'passkey' });
-            }
-          } else if (['redirect', 'tab_form'].includes(appProps.passkeyAuthMode || '')) {
-            redirectToGateway(state.username);
-          } else {
-            setStateValue('screen', 'confirmCode');
+        if (state.captcha) {
+          if (await sendConfirmationEmail()) {
+            onRegister();
           }
+        } else {
+          setStateValue('screen', 'captcha');
         }
       }
     } catch (e) {
@@ -106,8 +98,12 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  async function sendConfirmationEmail() {
+  async function sendConfirmationEmail(captchaToken?: string) {
     try {
+      if (!captchaToken && !state.captcha) {
+        throw new Error('Captcha verification required');
+      }
+
       /**
        * Apillon email confirmation
        */
@@ -118,6 +114,10 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             email: state.username,
+            captcha: {
+              token: captchaToken || state.captcha,
+              eKey: import.meta.env.VITE_PROCAPTCHA_KEY ?? 'N/A',
+            },
           }),
         }
       );
@@ -140,6 +140,33 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  /**
+   * Handle redirects (after email confimration code sent)
+   */
+  async function onRegister() {
+    if (appProps.passkeyAuthMode === 'tab_form') {
+      if (!wallet?.xdomain) {
+        throw abort('XDOMAIN_NOT_INIT');
+      }
+
+      setStateValue('screen', 'configuringPasskey');
+
+      const res = await wallet.xdomain.createViaTab(state.username);
+
+      if (res && res.username) {
+        await loadAccountWallets(res.authStrategy, res.username);
+        setupUserInfo({ username: state.username, authStrategy: 'passkey' });
+      }
+    } else if (['redirect', 'tab_form'].includes(appProps.passkeyAuthMode || '')) {
+      redirectToGateway(state.username);
+    } else {
+      setStateValue('screen', 'confirmCode');
+    }
+  }
+
+  /**
+   * Actually trigger SDK#register (after email code confirmed)
+   */
   async function startRegister() {
     setStateValue('loading', true);
     handleError();
@@ -203,6 +230,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         dispatch,
         setStateValue,
         onAuth,
+        onRegister,
         setupUserInfo,
         sendConfirmationEmail,
         startRegister,
@@ -225,11 +253,12 @@ const AuthContext = createContext<
         onlyLogin?: boolean,
         ev?: React.FormEvent<HTMLFormElement>
       ) => Promise<true | undefined>;
+      onRegister: () => void;
       setupUserInfo: (params: {
         username: string;
         authStrategy: AuthStrategyName;
       }) => Promise<void>;
-      sendConfirmationEmail: () => Promise<true | undefined>;
+      sendConfirmationEmail: (captchaToken?: string) => Promise<true | undefined>;
       startRegister: () => void;
     }
   | undefined
@@ -241,6 +270,7 @@ const initialState = () => ({
   hashedUsername: undefined as Buffer | undefined,
   screen: 'loginForm' as AuthScreens,
   lastCodeExpiretime: 0, // get from /otp/generate and check before /otp/validate
+  captcha: '',
 });
 
 type ContextState = ReturnType<typeof initialState>;

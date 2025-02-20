@@ -1,91 +1,75 @@
-import { useEffect, useRef } from 'react';
-import { WebStorageKeys } from '../../lib/constants';
+import { useState } from 'react';
+import { useAuthContext } from '../../contexts/auth.context';
+import Btn from '../ui/Btn';
+import IconCheckmark from '../ui/Icon/IconCheckmark';
+import AuthCaptchaInput from './AuthCaptchaInput';
+import AuthTitle from './AuthTitle';
+import Loader from '../ui/Loader';
 
-const eventCaptchaVerified = new Event('EventCaptchaVerified');
-const eventCaptchaReload = new Event('EventCaptchaReload');
+export default function AuthCaptcha() {
+  const [isReady, setIsReady] = useState(false);
 
-export default function AuthCaptcha({ onVerified }: { onVerified: (token: string) => void }) {
-  const initialized = useRef(false);
+  const {
+    state: { loading, captcha },
+    setStateValue: setForAuth,
+    sendConfirmationEmail,
+    onRegister,
+  } = useAuthContext();
 
-  useEffect(() => {
-    if (!initialized.current) {
-      initialized.current = true;
+  return (
+    <>
+      {!!isReady && (
+        <AuthTitle
+          title="Verify you are human"
+          description="Please complete the captcha"
+          header={<IconCheckmark className="mx-auto" />}
+        />
+      )}
 
-      // Check if captcha token has already been set in current session
-      if (window) {
-        const procaptchaToken = sessionStorage.getItem(WebStorageKeys.PROCAPTCHA);
+      {!isReady && <AuthTitle title="" header={<Loader size={56} />} />}
 
-        if (procaptchaToken) {
-          onVerified(procaptchaToken);
-          return;
-        }
-      }
+      <form
+        className="text-center mb-6"
+        onSubmit={ev => {
+          ev.preventDefault();
+        }}
+      >
+        <AuthCaptchaInput
+          onInitialized={() => setIsReady(true)}
+          onVerified={async t => {
+            setForAuth('loading', true);
 
-      // Otherwise initialize new captcha form
-      initialize();
-    }
-  }, []);
+            if (await sendConfirmationEmail(t)) {
+              onRegister();
+            } else {
+              setForAuth('screen', 'loginForm');
+            }
 
-  /**
-   * Script initialization
-   */
-  function initialize() {
-    const script = document.createElement('script');
+            setForAuth('loading', false);
+          }}
+        />
+      </form>
 
-    script.src = 'https://js.prosopo.io/js/procaptcha.bundle.js';
-    script.type = 'module';
-    script.id = 'procaptcha-script';
-    script.async = true;
-    script.defer = true;
+      {!!isReady && (
+        <Btn
+          variant="ghost"
+          disabled={loading || !captcha}
+          className="w-full"
+          onClick={async () => {
+            setForAuth('loading', true);
 
-    script.onload = () => onCaptchaScriptLoaded();
+            if (await sendConfirmationEmail()) {
+              onRegister();
+            } else {
+              setForAuth('screen', 'loginForm');
+            }
 
-    document.head.appendChild(script);
-  }
-
-  /**
-   * Setup the captcha element
-   */
-  function onCaptchaScriptLoaded() {
-    const el = document.getElementById('procaptcha-container');
-
-    if (el && (window as any)?.procaptcha) {
-      (window as any)?.procaptcha.render(el, {
-        siteKey: import.meta.env.VITE_PROCAPTCHA_KEY ?? 'N/A',
-        theme: 'dark',
-        callback: onCaptchaVerified,
-        openCallback: onCaptchaOpen,
-        errorCallback: onCaptchaError,
-        expiredCallback: onCaptchaExpired,
-      });
-    } else {
-      // Retry
-      setTimeout(() => onCaptchaScriptLoaded(), 1000);
-    }
-  }
-
-  /**
-   * Captcha events
-   */
-  function onCaptchaVerified(captchaOutput: any) {
-    sessionStorage.setItem(WebStorageKeys.PROCAPTCHA, captchaOutput);
-    document.dispatchEvent(eventCaptchaVerified);
-    onVerified(captchaOutput);
-  }
-
-  function onCaptchaOpen() {
-    sessionStorage.removeItem(WebStorageKeys.PROCAPTCHA);
-  }
-
-  function onCaptchaError() {
-    sessionStorage.removeItem(WebStorageKeys.PROCAPTCHA);
-    document.dispatchEvent(eventCaptchaReload);
-  }
-
-  function onCaptchaExpired() {
-    sessionStorage.removeItem(WebStorageKeys.PROCAPTCHA);
-    document.dispatchEvent(eventCaptchaReload);
-  }
-
-  return <div id="procaptcha-container"></div>;
+            setForAuth('loading', false);
+          }}
+        >
+          Continue
+        </Btn>
+      )}
+    </>
+  );
 }

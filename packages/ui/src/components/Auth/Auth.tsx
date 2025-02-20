@@ -6,6 +6,7 @@ import AuthConfiguringPasskey from './AuthConfiguringPasskey';
 import AuthConfirmCode from './AuthConfirmCode';
 import AuthCodeSubmitted from './AuthCodeSubmitted';
 import clsx from 'clsx';
+import AuthCaptcha from './AuthCaptcha';
 
 export default ({ className }: { className?: string }) => {
   const {
@@ -20,6 +21,8 @@ export default ({ className }: { className?: string }) => {
         return <AuthCodeSubmitted />;
       case 'configuringPasskey':
         return <AuthConfiguringPasskey />;
+      case 'captcha':
+        return <AuthCaptcha />;
       case 'loginForm':
       default:
         return <AuthLoginForm />;
