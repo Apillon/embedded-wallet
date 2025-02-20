@@ -17,10 +17,7 @@ export default () => {
 
   return (
     <>
-      <AuthTitle
-        title="Sign in or sign up"
-        description="Enter your email to set up your passkey"
-      />
+      <AuthTitle title="Sign in or sign up" description="Enter your email to set up your passkey" />
 
       <form onSubmit={ev => onAuth(false, ev)}>
         <Input
