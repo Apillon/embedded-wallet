@@ -30,7 +30,7 @@ export type WalletScreens =
   | 'transactions'
   | 'sendToken'
   | 'selectToken'
-  | 'addToken'
+  | 'importToken'
   | 'exportPrivateKey'
   | 'selectAccounts'
   | 'addAccount'

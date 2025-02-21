@@ -13,12 +13,12 @@ import AccountsExport from '../Accounts/AccountsExport';
 import AccountsImport from '../Accounts/AccountsImport';
 import SettingsGeneral from '../Settings/SettingsGeneral';
 import TokensSend from '../Tokens/TokensSend';
-import TokensSelect from '../Tokens/TokensSelect';
-import TokensAdd from '../Tokens/TokensAdd';
 import AccountsList from '../Accounts/AccountsList';
 import AccountsAdd from '../Accounts/AccountsAdd';
 import MsgSuccess from '../ui/MsgSuccess';
 import MsgInfo from '../ui/MsgInfo';
+import TokensList from '../Tokens/TokensSelect';
+import TokensImport from '../Tokens/TokensImport';
 
 /**
  * Base layout elements and screen display logic
@@ -62,18 +62,18 @@ export default () => {
         return <AccountsImport />;
       case 'selectToken':
       case 'sendToken':
-      case 'addToken':
+      case 'importToken':
         return (
           <>
             {(() => {
               switch (walletScreen) {
                 case 'sendToken':
                   return <TokensSend />;
-                case 'addToken':
-                  return <TokensAdd />;
+                case 'importToken':
+                  return <TokensImport />;
                 case 'selectToken':
                 default:
-                  return <TokensSelect />;
+                  return <TokensList asButtons />;
               }
             })()}
           </>

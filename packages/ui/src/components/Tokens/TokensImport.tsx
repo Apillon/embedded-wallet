@@ -4,7 +4,7 @@ import { useTokensContext } from '../../contexts/tokens.context';
 import Input from '../ui/Input';
 import Btn from '../ui/Btn';
 
-export default () => {
+export default function TokensImport() {
   const {
     state: { networkId, contractAddress },
     handleError,
@@ -71,4 +71,4 @@ export default () => {
       </form>
     </div>
   );
-};
+}

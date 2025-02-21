@@ -10,6 +10,7 @@ export type TokenInfo = {
   symbol: string;
   decimals: number;
   balance: string;
+  imageUrl?: string;
 };
 
 const initialState = () => ({

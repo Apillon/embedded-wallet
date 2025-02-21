@@ -2,9 +2,9 @@ import { useMemo } from 'react';
 import { TokenInfo, useTokensContext } from '../../contexts/tokens.context';
 import { useWalletContext } from '../../contexts/wallet.context';
 import Btn from '../ui/Btn';
-import SettingsMenuItem from '../Settings/SettingsMenuItem';
+import TokensItem from './TokensItem';
 
-export default () => {
+export default function TokensList({ asButtons }: { asButtons?: boolean }) {
   const { state, setScreen, goScreenBack } = useWalletContext();
   const { state: tokens, dispatch, nativeToken } = useTokensContext();
 
@@ -18,28 +18,30 @@ export default () => {
     <div className="pt-10 pb-2 min-h-full flex flex-col">
       <div className="flex flex-col gap-3 mb-6">
         {tokenList.map(token => (
-          <SettingsMenuItem
+          <TokensItem
             key={token.address}
+            token={token}
+            asButton={asButtons}
             disabled={token.address === tokens.selectedToken}
-            title={`Token: ${token.name}`}
-            description={`Balance: ${token.balance} ${token.symbol}`}
             className="w-full text-left"
-            onClick={() => {
-              dispatch({
-                type: 'setValue',
-                payload: { key: 'selectedToken', value: token.address },
-              });
-              goScreenBack();
-            }}
+            onClick={
+              !asButtons
+                ? undefined
+                : () => {
+                    dispatch({
+                      type: 'setValue',
+                      payload: { key: 'selectedToken', value: token.address },
+                    });
+                    goScreenBack();
+                  }
+            }
           />
         ))}
       </div>
 
-      <div className="grow"></div>
-
-      <Btn variant="ghost" className="w-full" onClick={() => setScreen('addToken')}>
-        Add token
+      <Btn variant="ghost" className="w-full" onClick={() => setScreen('importToken')}>
+        Import tokens
       </Btn>
     </div>
   );
-};
+}
