@@ -6,6 +6,7 @@ import WalletTransactions from './WalletTransactions';
 import { Tab, TabGroup, TabList, TabPanel, TabPanels } from '@headlessui/react';
 import { useTokensContext } from '../../contexts/tokens.context';
 import MsgInfo from '../ui/MsgInfo';
+import TokensList from '../Tokens/TokensList';
 
 export default () => {
   const {
@@ -18,18 +19,17 @@ export default () => {
 
   const tabs = [
     {
-      title: 'Transactions',
-      content: <WalletTransactions />,
-    },
-    {
       title: 'Tokens',
-      content: <ContentPlaceholder />,
-      disabled: true,
+      content: <TokensList />,
     },
     {
       title: 'NFTs',
       content: <ContentPlaceholder />,
       disabled: true,
+    },
+    {
+      title: 'Transactions',
+      content: <WalletTransactions />,
     },
   ];
 

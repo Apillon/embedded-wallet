@@ -546,6 +546,10 @@ function WalletProvider({
     if (e) {
       console.error(src ?? '', e);
 
+      if (typeof e === 'string') {
+        msg = e;
+      }
+
       if (e?.name) {
         msg = ErrorMessages[e.name];
       }

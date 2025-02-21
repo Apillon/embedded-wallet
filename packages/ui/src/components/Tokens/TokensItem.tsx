@@ -1,6 +1,7 @@
 import clsx from 'clsx';
 import { TokenInfo } from '../../contexts/tokens.context';
 import IconChevron from '../ui/Icon/IconChevron';
+import { formatBalance } from '../../lib/helpers';
 
 export default function TokensItem({
   token,
@@ -28,7 +29,7 @@ export default function TokensItem({
         <p className="text-sm font-bold text-offwhite mb-0.5">{token.name}</p>
 
         <p className="text-xs text-lightgrey font-normal">
-          {token.balance} {token.symbol}
+          {formatBalance(token.balance, token.symbol)}
         </p>
       </div>
 

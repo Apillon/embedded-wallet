@@ -17,7 +17,7 @@ import AccountsList from '../Accounts/AccountsList';
 import AccountsAdd from '../Accounts/AccountsAdd';
 import MsgSuccess from '../ui/MsgSuccess';
 import MsgInfo from '../ui/MsgInfo';
-import TokensList from '../Tokens/TokensSelect';
+import TokensList from '../Tokens/TokensList';
 import TokensImport from '../Tokens/TokensImport';
 
 /**
@@ -73,7 +73,9 @@ export default () => {
                   return <TokensImport />;
                 case 'selectToken':
                 default:
-                  return <TokensList asButtons />;
+                  return (
+                    <TokensList asButtons highlightActiveToken className="pt-10 pb-2 min-h-full" />
+                  );
               }
             })()}
           </>
