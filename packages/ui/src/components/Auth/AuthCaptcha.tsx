@@ -53,7 +53,8 @@ export default function AuthCaptcha() {
       {!!isReady && (
         <Btn
           variant="ghost"
-          disabled={loading || !captcha}
+          disabled={!captcha}
+          loading={loading}
           className="w-full"
           onClick={async () => {
             setForAuth('loading', true);

@@ -9,7 +9,7 @@ export const AccountManagerAbi = [
   'error ECDSAInvalidSignatureS(bytes32 s)',
   'error ERC1967InvalidImplementation(address implementation)',
   'error ERC1967NonPayable()',
-  'error FailedInnerCall()',
+  'error FailedCall()',
   'error InvalidInitialization()',
   'error NotInitializing()',
   'error UUPSUnauthorizedCallContext()',
@@ -18,7 +18,7 @@ export const AccountManagerAbi = [
   'error k256Decompress_Invalid_Length_Error()',
   'error k256DeriveY_Invalid_Prefix_Error()',
   'error recoverV_Error()',
-  'event GaslessTransaction(bytes32 indexed dataHash, bytes32 indexed hashedUsername, address indexed publicAddress)',
+  'event GaslessTransaction(bytes32 indexed dataHash, address indexed publicAddress)',
   'event Initialized(uint64 version)',
   'event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole)',
   'event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender)',
@@ -64,10 +64,11 @@ export const EVMAccountAbi = [
   'error k256Decompress_Invalid_Length_Error()',
   'error k256DeriveY_Invalid_Prefix_Error()',
   'error recoverV_Error()',
+  'event WalletCreated(bytes32 indexed publicAddress)',
   'function addressToBytes32(address _addr) pure returns (bytes32)',
   'function bytes32ToAddress(bytes32 _b) pure returns (address)',
   'function call(address in_contract, bytes in_data) returns (bytes out_data)',
-  'function createWallet(bytes32 keypairSecret) returns (address)',
+  'function createWallet(bytes32 keypairSecret) returns (bytes32 publicAddress)',
   'function exportPrivateKey(uint256 walletId) view returns (bytes32)',
   'function getWalletList() view returns (bytes32[])',
   'function init(address initialController, bytes32 keypairSecret)',
@@ -80,6 +81,22 @@ export const EVMAccountAbi = [
   'function transfer(address in_target, uint256 amount)',
   'function walletAddress(uint256 walletId) view returns (bytes32)',
 ] as const;
+
+export const SubstrateAccountAbi = [
+  'event WalletCreated(bytes32 indexed publicAddress)',
+  'function call(address in_contract, bytes in_data) returns (bytes out_data)',
+  'function createWallet(bytes32 keypairSecret) returns (bytes32 publicAddress)',
+  'function exportPrivateKey(uint256 walletId) view returns (bytes32)',
+  'function getWalletList() view returns (bytes32[])',
+  'function init(address initialController, bytes32 keypairSecret)',
+  'function isController(address who) view returns (bool)',
+  'function modifyController(address who, bool status)',
+  'function removeWallet(uint256 walletId)',
+  'function sign(uint256 walletId, bytes data) view returns (bytes)',
+  'function staticcall(address in_contract, bytes in_data) view returns (bytes out_data)',
+  'function transfer(address in_target, uint256 amount)',
+  'function walletAddress(uint256 walletId) view returns (bytes32)',
+];
 
 export const ERC20Abi = [
   {

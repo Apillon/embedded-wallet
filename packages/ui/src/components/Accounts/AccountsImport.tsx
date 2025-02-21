@@ -6,12 +6,13 @@ import { useWalletContext } from '../../contexts/wallet.context';
 
 export default function AccountsImport() {
   const {
-    state: { accountWallets },
+    state: { accountWallets, stagedWalletsCount },
     wallet,
     goScreenBack,
     handleError,
     handleSuccess,
     saveAccountTitle,
+    setStateValue: setForWallet,
   } = useWalletContext();
   const [type, setType] = useState('pk'); // used in <Select />
   const [title, setTitle] = useState('');
@@ -34,7 +35,13 @@ export default function AccountsImport() {
       });
 
       // Save wallet name to GS, using (probably) next index, because address is not available yet
-      saveAccountTitle(title, accountWallets[accountWallets.length - 1].index + 1);
+      // When updating also check <AccountsAdd />
+      saveAccountTitle(
+        title,
+        accountWallets[accountWallets.length - 1].index + 1 + stagedWalletsCount
+      );
+
+      setForWallet('stagedWalletsCount', stagedWalletsCount + 1);
 
       setSuccess(true);
       handleSuccess('Account imported. Wait for transaction to complete.');

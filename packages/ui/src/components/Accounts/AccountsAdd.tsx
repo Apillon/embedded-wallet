@@ -49,6 +49,7 @@ export default function AccountsAdd() {
       await wallet?.addAccountWallet({ walletType: type });
 
       // Save wallet name to GS, using (probably) next index, because address is not available yet
+      // When updating also check <AccountsImport />
       saveAccountTitle(
         title,
         accountWallets[accountWallets.length - 1].index + 1 + stagedWalletsCount
