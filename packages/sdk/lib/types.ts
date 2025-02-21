@@ -206,6 +206,25 @@ export type Events = {
   open: boolean;
 
   /**
+   * Event for UI -- programmatically add a token
+   */
+  addToken: {
+    address: string;
+    name: string;
+    symbol: string;
+    decimals: number;
+    imageUrl?: string;
+  };
+
+  /**
+   * Feedback for `addToken` event
+   */
+  addTokenStatus: {
+    success: boolean;
+    info?: string;
+  };
+
+  /**
    * Triggered in 'eth_requestAccounts' provider request handler.
    * Receives resolver fn that should be invoked when user's account is available (after sign in / register)
    */

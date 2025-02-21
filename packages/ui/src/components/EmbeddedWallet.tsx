@@ -9,7 +9,7 @@ import { ApproveProvider, useApproveContext } from '../contexts/approve.context'
 import WalletLayout from './Wallet/WalletLayout';
 import WalletUnavailable from './Wallet/WalletUnavailable';
 import Loader from './ui/Loader';
-import { TokensProvider } from '../contexts/tokens.context';
+import { TokensProvider, useTokensContext } from '../contexts/tokens.context';
 
 export type AppProps = {
   /**
@@ -42,6 +42,7 @@ function Main({ disableDefaultActivatorStyle = false }: AppProps) {
     setStateValue: setForWallet,
   } = useWalletContext();
   const { state: approveState, dispatch: dispatchApprove } = useApproveContext();
+  const { dispatch: dispatchTokens, getTokenDetails } = useTokensContext();
 
   const loggedIn = !!state.username;
 
@@ -63,9 +64,50 @@ function Main({ disableDefaultActivatorStyle = false }: AppProps) {
       }
     };
 
+    const onAddToken = async (params: Events['addToken']) => {
+      let err = '';
+
+      if (!params.address) {
+        err = 'No address';
+      }
+
+      if (!params.symbol || params.symbol.length > 11) {
+        err = 'Invalid symbol (must be less than 11 characters)';
+      }
+
+      if (!params.decimals || isNaN(params.decimals)) {
+        err = 'Invalid decimals';
+      }
+
+      if (err) {
+        wallet?.events.emit('addTokenStatus', { success: false, info: err });
+        console.error('onAddToken:', err);
+        return;
+      }
+
+      const res = await getTokenDetails(params.address);
+
+      if (!res) {
+        err = `Token does not exist on chain (ID: ${state.networkId})`;
+        wallet?.events.emit('addTokenStatus', { success: false, info: err });
+        console.error('onAddToken:', err);
+        return;
+      }
+
+      dispatchTokens({
+        type: 'updateToken',
+        payload: {
+          owner: state.contractAddress,
+          chainId: state.networkId,
+          token: { ...params, balance: '0.0' },
+        },
+      });
+    };
+
     if (wallet && walletInitialized) {
       wallet.events.on('open', onOpen);
       wallet.events.on('dataUpdated', onDataUpdated);
+      wallet.events.on('addToken', onAddToken);
 
       // Login if account params are in the URL (redirected back from auth gateway)
       // Delay a bit to prevent freeze
@@ -107,6 +149,7 @@ function Main({ disableDefaultActivatorStyle = false }: AppProps) {
       if (wallet) {
         wallet.events.off('open', onOpen);
         wallet.events.off('dataUpdated', onDataUpdated);
+        wallet.events.off('addToken', onAddToken);
       }
     };
   }, [wallet, reloadAccountBalances, walletInitialized]);

@@ -1,3 +1,4 @@
+import { getEmbeddedWallet } from '@apillon/wallet-sdk';
 import EmbeddedWallet from '../components/EmbeddedWallet';
 import TestEIP1193 from './TestEIP1193';
 import TestSign from './TestSign';
@@ -66,6 +67,24 @@ export default function TestApp() {
       <h2>Transaction tests</h2>
 
       <TestTx />
+
+      <h2>Test addToken event</h2>
+
+      <div className="row">
+        <button
+          onClick={async () => {
+            const w = getEmbeddedWallet();
+            w?.events.emit('addToken', {
+              address: '0x3c8e129ca9e8439f7539fadd58e8c769ffdfc93e',
+              symbol: 'USDC',
+              decimals: 6,
+              name: 'USD Coin',
+            });
+          }}
+        >
+          Add some token
+        </button>
+      </div>
     </div>
   );
 }

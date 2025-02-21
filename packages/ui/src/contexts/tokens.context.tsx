@@ -213,38 +213,42 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
 
   async function getTokenDetails(address: string) {
     if (wallet && activeWallet) {
-      const [name, symbol, decimals, balance] = await Promise.all([
-        wallet.contractRead({
-          contractAddress: address,
-          contractAbi: ERC20Abi,
-          contractFunctionName: 'name',
-        }),
-        wallet.contractRead({
-          contractAddress: address,
-          contractAbi: ERC20Abi,
-          contractFunctionName: 'symbol',
-        }),
-        wallet.contractRead({
-          contractAddress: address,
-          contractAbi: ERC20Abi,
-          contractFunctionName: 'decimals',
-        }),
-        wallet.contractRead({
-          contractAddress: address,
-          contractAbi: ERC20Abi,
-          contractFunctionName: 'balanceOf',
-          contractFunctionValues: [activeWallet.address],
-        }),
-      ]);
+      try {
+        const [name, symbol, decimals, balance] = await Promise.all([
+          wallet.contractRead({
+            contractAddress: address,
+            contractAbi: ERC20Abi,
+            contractFunctionName: 'name',
+          }),
+          wallet.contractRead({
+            contractAddress: address,
+            contractAbi: ERC20Abi,
+            contractFunctionName: 'symbol',
+          }),
+          wallet.contractRead({
+            contractAddress: address,
+            contractAbi: ERC20Abi,
+            contractFunctionName: 'decimals',
+          }),
+          wallet.contractRead({
+            contractAddress: address,
+            contractAbi: ERC20Abi,
+            contractFunctionName: 'balanceOf',
+            contractFunctionValues: [activeWallet.address],
+          }),
+        ]);
 
-      if (symbol) {
-        return {
-          address,
-          name,
-          symbol,
-          decimals: Number(decimals),
-          balance: ethers.formatUnits(balance, decimals),
-        };
+        if (symbol) {
+          return {
+            address,
+            name,
+            symbol,
+            decimals: Number(decimals),
+            balance: ethers.formatUnits(balance, decimals),
+          };
+        }
+      } catch (e) {
+        console.error(e);
       }
     }
   }

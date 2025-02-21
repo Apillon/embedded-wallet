@@ -16,8 +16,6 @@ export default function TokensImport() {
 
   const [address, setAddress] = useState('');
   const [token, setToken] = useState<TokenInfo>();
-  // const [symbol, setSymbol] = useState('');
-  // const [decimals, setDecimals] = useState(18);
   const [loading, setLoading] = useState(false);
   const [isConfirmation, setIsConfirmation] = useState(false);
 
@@ -27,18 +25,18 @@ export default function TokensImport() {
     }
 
     if (!address) {
-      handleError('No address');
+      handleError('No address', 'TokensImport');
       return;
     }
 
     if (!!token) {
       if (!token.symbol || token.symbol.length > 11) {
-        handleError('Invalid symbol (must be less than 11 characters)');
+        handleError('Invalid symbol (must be less than 11 characters)', 'TokensImport');
         return;
       }
 
       if (!token.decimals || isNaN(token.decimals)) {
-        handleError('Invalid decimals');
+        handleError('Invalid decimals', 'TokensImport');
         return;
       }
 
@@ -54,8 +52,10 @@ export default function TokensImport() {
     try {
       const res = await getTokenDetails(address);
 
+      console.log(res);
+
       if (!res) {
-        throw new Error('Could not get token details');
+        throw new Error(`Token does not exist on chain (ID: ${networkId})`);
       }
 
       if (!contractAddress) {
@@ -63,19 +63,19 @@ export default function TokensImport() {
       }
 
       if (!token) {
+        // Step 1 -> show extra details for selected token address
         setToken(res);
-      }
-
-      if (isConfirmation) {
+      } else if (isConfirmation) {
+        // Step 2 -> Confirmation
         dispatch({
           type: 'updateToken',
-          payload: { owner: contractAddress, chainId: networkId, token: res },
+          payload: { owner: contractAddress, chainId: networkId, token },
         });
 
         goScreenBack();
       }
     } catch (e) {
-      handleError(e, 'onTokensAdd');
+      handleError(e, 'TokensImport');
     }
 
     setLoading(false);
