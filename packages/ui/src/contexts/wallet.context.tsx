@@ -58,6 +58,7 @@ const initialState = (defaultNetworkId = 0, appProps: AppProps) => ({
   networkId: defaultNetworkId,
   walletScreen: 'main' as WalletScreens,
   walletScreenHistory: [] as WalletScreens[],
+  lastIndexTabIndex: 0, // index of last tab opened on <WalletIndex />
   isOpen: false, // is wallet modal displayed
   displayedError: '',
   displayedSuccess: '',

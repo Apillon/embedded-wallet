@@ -11,9 +11,10 @@ import TokensNftList from '../Tokens/TokensNftList';
 
 export default () => {
   const {
-    state: { isAccountWalletsStale },
+    state: { isAccountWalletsStale, lastIndexTabIndex },
     activeWallet,
     setScreen,
+    setStateValue: setForWallet,
   } = useWalletContext();
 
   const { selectedToken, currentExchangeRate } = useTokensContext();
@@ -73,7 +74,10 @@ export default () => {
         </div>
       </div>
 
-      <TabGroup>
+      <TabGroup
+        selectedIndex={lastIndexTabIndex || 0}
+        onChange={index => setForWallet('lastIndexTabIndex', index)}
+      >
         <div className="-mx-8 flex justify-center">
           <TabList className="flex rounded-full bg-brightdark mb-6">
             {tabs.map(t => (
