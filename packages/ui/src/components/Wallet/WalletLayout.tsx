@@ -19,6 +19,7 @@ import MsgSuccess from '../ui/MsgSuccess';
 import MsgInfo from '../ui/MsgInfo';
 import TokensList from '../Tokens/TokensList';
 import TokensImport from '../Tokens/TokensImport';
+import TokensNftImport from '../Tokens/TokensNftImport';
 
 /**
  * Base layout elements and screen display logic
@@ -48,42 +49,43 @@ export default () => {
         return <></>;
       case 'networks':
         return <WalletNetworkSelect />;
+
+      /**
+       * Menus
+       */
       case 'menuDot':
         return <SettingsMenuDot />;
       case 'menuMore':
         return <SettingsMenuMore />;
       case 'settingsGeneral':
         return <SettingsGeneral />;
+
+      /**
+       * Account settings
+       */
       case 'accountDetails':
         return <AccountsDetails />;
       case 'exportPrivateKey':
         return <AccountsExport />;
       case 'importAccount':
         return <AccountsImport />;
-      case 'selectToken':
-      case 'sendToken':
-      case 'importToken':
-        return (
-          <>
-            {(() => {
-              switch (walletScreen) {
-                case 'sendToken':
-                  return <TokensSend />;
-                case 'importToken':
-                  return <TokensImport />;
-                case 'selectToken':
-                default:
-                  return (
-                    <TokensList asButtons highlightActiveToken className="pt-10 pb-2 min-h-full" />
-                  );
-              }
-            })()}
-          </>
-        );
       case 'selectAccounts':
         return <AccountsList />;
       case 'addAccount':
         return <AccountsAdd />;
+
+      /**
+       * Tokens
+       */
+      case 'sendToken':
+        return <TokensSend />;
+      case 'importToken':
+        return <TokensImport />;
+      case 'selectToken':
+        return <TokensList asButtons highlightActiveToken className="pt-10 pb-2 min-h-full" />;
+      case 'importNft':
+        return <TokensNftImport />;
+
       default:
         return <WalletIndex />;
     }

@@ -7,6 +7,7 @@ import { Tab, TabGroup, TabList, TabPanel, TabPanels } from '@headlessui/react';
 import { useTokensContext } from '../../contexts/tokens.context';
 import MsgInfo from '../ui/MsgInfo';
 import TokensList from '../Tokens/TokensList';
+import TokensNftList from '../Tokens/TokensNftList';
 
 export default () => {
   const {
@@ -21,15 +22,17 @@ export default () => {
     {
       title: 'Tokens',
       content: <TokensList />,
+      disabled: false,
     },
     {
       title: 'NFTs',
-      content: <ContentPlaceholder />,
-      disabled: true,
+      content: <TokensNftList />,
+      disabled: false,
     },
     {
       title: 'Transactions',
       content: <WalletTransactions />,
+      disabled: false,
     },
   ];
 
@@ -102,10 +105,3 @@ export default () => {
     </div>
   );
 };
-
-const ContentPlaceholder = () => (
-  <div className="flex gap-4 justify-center">
-    <div className="w-[125px] h-[144px] bg-primarybright rounded-lg"></div>
-    <div className="w-[125px] h-[144px] bg-primarybright rounded-lg"></div>
-  </div>
-);

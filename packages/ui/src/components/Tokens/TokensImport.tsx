@@ -10,6 +10,7 @@ export default function TokensImport() {
   const {
     state: { networkId, contractAddress },
     handleError,
+    handleSuccess,
     goScreenBack,
   } = useWalletContext();
   const { dispatch, getTokenDetails } = useTokensContext();
@@ -52,8 +53,6 @@ export default function TokensImport() {
     try {
       const res = await getTokenDetails(address);
 
-      console.log(res);
-
       if (!res) {
         throw new Error(`Token does not exist on chain (ID: ${networkId})`);
       }
@@ -71,6 +70,8 @@ export default function TokensImport() {
           type: 'updateToken',
           payload: { owner: contractAddress, chainId: networkId, token },
         });
+
+        handleSuccess(`Succesfully added ${token.symbol} token`);
 
         goScreenBack();
       }
@@ -104,7 +105,6 @@ export default function TokensImport() {
   return (
     <div className="pt-10">
       <form
-        className="mb-8"
         onSubmit={ev => {
           ev.preventDefault();
           onSubmit();
