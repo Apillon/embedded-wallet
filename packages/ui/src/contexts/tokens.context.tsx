@@ -136,14 +136,15 @@ const TokensContext = createContext<
       nativeToken: TokenInfo;
       selectedToken: TokenInfo;
       currentExchangeRate: number;
-      getTokenDetails: (address: string) => Promise<TokenInfo | undefined>;
+      getTokenDetails: (address: string, chainId?: number) => Promise<TokenInfo | undefined>;
       formatNativeBalance: (balance: string | bigint | number) => {
         amount: string;
         symbol: string;
       };
       getNftDetails: (
         address: string,
-        tokenId: number
+        tokenId: number,
+        chainId?: number
       ) => Promise<
         | {
             isOwner: boolean;
@@ -271,7 +272,7 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
     }, 100);
   }
 
-  async function getTokenDetails(address: string) {
+  async function getTokenDetails(address: string, chainId?: number) {
     if (wallet && activeWallet) {
       try {
         const [name, symbol, decimals, balance] = await Promise.all([
@@ -279,22 +280,26 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
             contractAddress: address,
             contractAbi: ERC20Abi,
             contractFunctionName: 'name',
+            chainId,
           }),
           wallet.contractRead({
             contractAddress: address,
             contractAbi: ERC20Abi,
             contractFunctionName: 'symbol',
+            chainId,
           }),
           wallet.contractRead({
             contractAddress: address,
             contractAbi: ERC20Abi,
             contractFunctionName: 'decimals',
+            chainId,
           }),
           wallet.contractRead({
             contractAddress: address,
             contractAbi: ERC20Abi,
             contractFunctionName: 'balanceOf',
             contractFunctionValues: [activeWallet.address],
+            chainId,
           }),
         ]);
 
@@ -361,7 +366,8 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
 
   async function getNftDetails(
     address: string,
-    tokenId: number
+    tokenId: number,
+    chainId?: number
   ): Promise<{ isOwner: boolean; data?: TokenNftInfo } | undefined> {
     if (wallet && activeWallet) {
       try {
@@ -371,12 +377,14 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
             contractAbi: ERC721Abi,
             contractFunctionName: 'ownerOf',
             contractFunctionValues: [tokenId],
+            chainId,
           }),
           wallet.contractRead({
             contractAddress: address,
             contractAbi: ERC721Abi,
             contractFunctionName: 'tokenURI',
             contractFunctionValues: [tokenId],
+            chainId,
           }),
         ]);
 

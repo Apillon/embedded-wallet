@@ -92,6 +92,18 @@ export default function TestApp() {
         >
           Add some token
         </button>
+
+        <button
+          onClick={async () => {
+            const w = getEmbeddedWallet();
+            w?.events.emit('addTokenNft', {
+              address: '0x14EeBa9Cf473c007997dB49a7600835e543BA3F5',
+              tokenId: 8,
+            });
+          }}
+        >
+          Add some NFT
+        </button>
       </div>
     </div>
   );

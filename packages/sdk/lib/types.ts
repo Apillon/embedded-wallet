@@ -214,10 +214,22 @@ export type Events = {
     symbol: string;
     decimals: number;
     imageUrl?: string;
+    chainId?: number;
   };
 
   /**
-   * Feedback for `addToken` event
+   * Event for UI -- programmatically add an NFT
+   */
+  addTokenNft: {
+    address: string;
+    tokenId: number;
+    name?: string;
+    imageUrl?: string;
+    chainId?: number;
+  };
+
+  /**
+   * Feedback for `addToken` and `addTokenNft` events
    */
   addTokenStatus: {
     success: boolean;

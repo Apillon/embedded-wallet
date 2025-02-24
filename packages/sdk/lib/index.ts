@@ -1377,8 +1377,10 @@ class EmbeddedWallet {
   validateChainId(chainId?: number) {
     if (chainId && !networkIdIsSapphire(chainId) && !this.rpcUrls[chainId]) {
       abort('NO_RPC_URL_CONFIGURED_FOR_SELECTED_CHAINID');
+      return;
     } else if (!chainId && !!this.defaultNetworkId && !this.rpcUrls[this.defaultNetworkId]) {
       abort('NO_RPC_URL_CONFIGURED_FOR_SELECTED_CHAINID');
+      return;
     }
 
     /**
