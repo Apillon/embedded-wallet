@@ -21,6 +21,10 @@ export type TokenNftInfo = {
   imageUrl?: string;
 };
 
+/**
+ * Tokens (ERC20) are shared between all accounts on user's wallet.
+ * NFT (ERC721) are scoped to each account, NOT for all accounts on the wallet.
+ */
 const initialState = () => ({
   list: {} as {
     [ownerContractAddress: string]: { [chainId: number]: TokenInfo[] };
@@ -30,6 +34,7 @@ const initialState = () => ({
   nfts: {} as {
     [ownerContractAddress: string]: { [chainId: number]: TokenNftInfo[] };
   },
+  selectedNft: undefined as TokenNftInfo | undefined, // NFT to be displayed on TokensNftDetail screen
 });
 
 type ContextState = ReturnType<typeof initialState>;
@@ -97,8 +102,10 @@ function reducer(state: ContextState, action: ContextActions) {
     }
     case 'addNft':
       const newTokens = [...(state.nfts[action.payload.owner]?.[action.payload.chainId] || [])];
-      const found = newTokens.findIndex(x =>
-        isLowerCaseEqual(x.address, action.payload.nft.address)
+      const found = newTokens.findIndex(
+        x =>
+          isLowerCaseEqual(x.address, action.payload.nft.address) &&
+          x.tokenId === action.payload.nft.tokenId
       );
 
       if (found < 0) {

@@ -6,7 +6,8 @@ import { useTokensContext } from '../../contexts/tokens.context';
 
 export default function TokensNftImport() {
   const {
-    state: { contractAddress, networkId },
+    state: { networkId },
+    activeWallet,
     handleError,
     handleSuccess,
     goScreenBack,
@@ -37,7 +38,7 @@ export default function TokensNftImport() {
         throw new Error('Could not get NFT details');
       }
 
-      if (!res.isOwner) {
+      if (!activeWallet || !res.isOwner) {
         throw new Error('Ownership details do not match');
       }
 
@@ -48,7 +49,7 @@ export default function TokensNftImport() {
       dispatch({
         type: 'addNft',
         payload: {
-          owner: contractAddress,
+          owner: activeWallet?.address,
           chainId: networkId,
           nft: res.data,
         },
@@ -56,6 +57,8 @@ export default function TokensNftImport() {
 
       handleSuccess(`NFT succesfully added`);
 
+      // setAddress('');
+      // setTokenId('');
       goScreenBack();
     } catch (e) {
       handleError(e, 'TokensNftImport');

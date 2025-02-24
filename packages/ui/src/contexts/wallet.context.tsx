@@ -41,7 +41,8 @@ export type WalletScreens =
   | 'menuMore'
   | 'accountDetails'
   | 'settingsGeneral'
-  | 'importNft';
+  | 'importNft'
+  | 'nftDetail';
 
 type AccountWalletEx = AccountWallet & { balance: string; title: string };
 

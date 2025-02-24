@@ -6,19 +6,21 @@ import Btn from '../ui/Btn';
 
 export default function TokensNftList({ className }: { className?: string }) {
   const {
-    state: { networkId, contractAddress },
+    state: { networkId },
+    activeWallet,
     setScreen,
   } = useWalletContext();
   const {
     state: { nfts },
+    dispatch,
   } = useTokensContext();
 
   const nftList = useMemo<TokenNftInfo[]>(
     () =>
-      Array.isArray(nfts[contractAddress || '']?.[networkId])
-        ? [...nfts[contractAddress || ''][networkId]]
+      !!activeWallet?.address && Array.isArray(nfts[activeWallet?.address || '']?.[networkId])
+        ? [...nfts[activeWallet?.address || ''][networkId]]
         : [],
-    [networkId, contractAddress]
+    [networkId, activeWallet]
   );
 
   return (
@@ -30,7 +32,23 @@ export default function TokensNftList({ className }: { className?: string }) {
       {!!nftList.length && (
         <div className="grid grid-cols-3 gap-3 mb-6">
           {nftList.map(nft => (
-            <div key={`${nft.address}-${nft.tokenId}`}>{nft.tokenId}</div>
+            <a
+              href="#"
+              key={`${nft.address}-${nft.tokenId}`}
+              className="relative w-full pb-[120%] bg-darkgrey rounded-md"
+              onClick={() => {
+                dispatch({ type: 'setValue', payload: { key: 'selectedNft', value: nft } });
+                setScreen('nftDetail');
+              }}
+            >
+              {!!nft.imageUrl && (
+                <img
+                  src={nft.imageUrl}
+                  alt={nft.name || ''}
+                  className="object-cover absolute inset-0 h-full w-full rounded-md"
+                />
+              )}
+            </a>
           ))}
         </div>
       )}

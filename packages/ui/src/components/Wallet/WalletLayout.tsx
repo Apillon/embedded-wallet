@@ -20,6 +20,7 @@ import MsgInfo from '../ui/MsgInfo';
 import TokensList from '../Tokens/TokensList';
 import TokensImport from '../Tokens/TokensImport';
 import TokensNftImport from '../Tokens/TokensNftImport';
+import TokensNftDetail from '../Tokens/TokensNftDetail';
 
 /**
  * Base layout elements and screen display logic
@@ -85,6 +86,8 @@ export default () => {
         return <TokensList asButtons highlightActiveToken className="pt-10 pb-2 min-h-full" />;
       case 'importNft':
         return <TokensNftImport />;
+      case 'nftDetail':
+        return <TokensNftDetail />;
 
       default:
         return <WalletIndex />;
