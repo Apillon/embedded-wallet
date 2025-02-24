@@ -23,7 +23,7 @@ export type TokenNftInfo = {
 
 /**
  * Tokens (ERC20) are shared between all accounts on user's wallet.
- * NFT (ERC721) are scoped to each account, NOT for all accounts on the wallet.
+ * NFTs (ERC721) are scoped to each account, NOT for all accounts on the wallet.
  */
 const initialState = () => ({
   list: {} as {
@@ -208,7 +208,7 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
   }, [selectedToken, state.exchangeRates]);
 
   useEffect(() => {
-    if (initializing.current && wallet) {
+    if (initialized.current && wallet) {
       wallet.xdomain?.storageSet(WebStorageKeys.TOKENS_CONTEXT, JSON.stringify(state));
     }
   }, [state]);
