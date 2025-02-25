@@ -8,7 +8,8 @@ export type AuthScreens =
   | 'captcha'
   | 'confirmCode'
   | 'codeSubmitted'
-  | 'configuringPasskey';
+  | 'configuringPasskey'
+  | 'importWallet';
 
 function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState());
@@ -142,8 +143,15 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
 
   /**
    * Handle redirects (after email confimration code sent)
+   *
+   * @param isPrivateKey Wallet is created from private key provided in sessionStorage.
    */
-  async function onRegister() {
+  async function onRegister(isPrivateKey = false) {
+    if (!isPrivateKey) {
+      wallet?.xdomain?.storageSet(WebStorageKeys.REGISTER_PK, '');
+      setStateValue('privateKey', '');
+    }
+
     if (appProps.passkeyAuthMode === 'tab_form') {
       if (!wallet?.xdomain) {
         throw abort('XDOMAIN_NOT_INIT');
@@ -194,7 +202,13 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
           setStateValue('hashedUsername', hashed);
         }
 
-        res = await wallet?.register('passkey', { username: state.username }, hashed);
+        let privateKey = state.privateKey || undefined;
+
+        if (privateKey && !privateKey.startsWith('0x')) {
+          privateKey = `0x${privateKey}`;
+        }
+
+        res = await wallet?.register('passkey', { username: state.username, privateKey }, hashed);
       }
 
       if (res) {
@@ -253,7 +267,7 @@ const AuthContext = createContext<
         onlyLogin?: boolean,
         ev?: React.FormEvent<HTMLFormElement>
       ) => Promise<true | undefined>;
-      onRegister: () => void;
+      onRegister: (isPrivateKey?: boolean) => Promise<void>;
       setupUserInfo: (params: {
         username: string;
         authStrategy: AuthStrategyName;
@@ -271,6 +285,7 @@ const initialState = () => ({
   screen: 'loginForm' as AuthScreens,
   lastCodeExpiretime: 0, // get from /otp/generate and check before /otp/validate
   captcha: '',
+  privateKey: '',
 });
 
 type ContextState = ReturnType<typeof initialState>;

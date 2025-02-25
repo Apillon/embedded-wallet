@@ -32,6 +32,20 @@ export default () => {
           Continue
         </Btn>
 
+        <div className="text-center my-2 text-sm text-darkgrey">
+          <span>OR</span>
+        </div>
+
+        <Btn
+          type="button"
+          variant="ghost"
+          disabled={loading}
+          className="w-full"
+          onClick={() => setForAuth('screen', 'importWallet')}
+        >
+          Import wallet
+        </Btn>
+
         {/* <button
           type="button"
           className="oaw-button-plain mt-3 text-xs text-center w-full rounded-sm opacity-100 hover:opacity-80"

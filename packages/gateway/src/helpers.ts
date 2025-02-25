@@ -18,4 +18,5 @@ export const WebStorageKeys = {
   ERROR_LOG: 'oaw_err',
   OTP_EXPIRATION: 'oaw_otp_expire_time',
   PROCAPTCHA: 'oaw_captcha',
+  REGISTER_PK: 'oaw_reg_pk',
 };

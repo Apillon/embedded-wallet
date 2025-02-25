@@ -40,7 +40,7 @@ export default function AuthCaptcha() {
             setForAuth('loading', true);
 
             if (await sendConfirmationEmail(t)) {
-              onRegister();
+              await onRegister();
             } else {
               setForAuth('screen', 'loginForm');
             }

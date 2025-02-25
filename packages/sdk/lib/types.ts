@@ -65,6 +65,7 @@ export type AuthData = {
   username: string;
   password?: string;
   hashedUsername?: Buffer | undefined;
+  privateKey?: string;
 };
 
 export type RegisterData = {

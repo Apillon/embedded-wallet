@@ -45,11 +45,20 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
    * @param onlyLogin Just check that user has logged in, don't try to register if login fails.
    * @returns `true` if login is successful
    */
-  async function onAuth(onlyLogin = false, ev?: React.FormEvent<HTMLFormElement>) {
+  async function onAuth(
+    onlyLogin = false,
+    ev?: React.FormEvent<HTMLFormElement>,
+    isPrivateKey = false
+  ) {
     ev?.preventDefault();
 
     if (!state.username) {
       return;
+    }
+
+    if (!isPrivateKey) {
+      sessionStorage.setItem(WebStorageKeys.REGISTER_PK, '');
+      setStateValue('privateKey', '');
     }
 
     setStateValue('loading', true);
@@ -141,10 +150,20 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     setStateValue('loading', true);
     handleError();
 
+    let privateKey =
+      sessionStorage.getItem(WebStorageKeys.REGISTER_PK) || state.privateKey || undefined;
+
+    if (privateKey && !privateKey.startsWith('0x')) {
+      privateKey = `0x${privateKey}`;
+    }
+
     try {
       const res = await wallet?.register(
         'passkey',
-        { username: state.username },
+        {
+          username: state.username,
+          privateKey,
+        },
         state.hashedUsername,
         true,
         referrer
@@ -187,7 +206,8 @@ const AuthContext = createContext<
       ) => void;
       onAuth: (
         onlyLogin?: boolean,
-        ev?: React.FormEvent<HTMLFormElement>
+        ev?: React.FormEvent<HTMLFormElement>,
+        privateKey?: boolean
       ) => Promise<true | undefined>;
       setupUserInfo: (params: {
         username: string;
@@ -206,6 +226,7 @@ const initialState = () => ({
   screen: 'loginForm' as AuthScreens,
   lastCodeExpiretime: 0, // get from /otp/generate and check before /otp/validate
   captcha: '',
+  privateKey: '',
 });
 
 type ContextState = ReturnType<typeof initialState>;
