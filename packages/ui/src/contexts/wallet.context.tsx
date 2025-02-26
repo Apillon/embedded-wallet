@@ -155,6 +155,11 @@ const WalletContext = createContext<
       wallet?: EmbeddedWallet;
       setWallet: (wallet: EmbeddedWallet) => void;
       initialized: boolean;
+      initUserData: (params: {
+        username: string;
+        authStrategy: AuthStrategyName;
+        address0: string;
+      }) => Promise<void>;
       loadAccountWallets: (
         strategy?: AuthStrategyName,
         username?: string
@@ -339,6 +344,55 @@ function WalletProvider({
     value: ReturnType<typeof initialState>[T]
   ) {
     dispatch({ type: 'setValue', payload: { key, value } });
+  }
+
+  async function initUserData({
+    username,
+    authStrategy,
+    address0,
+  }: {
+    username: string;
+    authStrategy: AuthStrategyName;
+    address0: string;
+  }) {
+    wallet?.setAccount({
+      username,
+      strategy: authStrategy,
+    });
+
+    dispatch({
+      type: 'setState',
+      payload: {
+        walletIndex: 0,
+        username,
+        authStrategy,
+        // networkId: defaultNetworkId || undefined,
+      },
+    });
+
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    /**
+     * First wallet has been retrieved from contract event, dont need to load wallets again
+     */
+    let accountWalletsRes = undefined as AccountWallet[] | undefined;
+    if (address0) {
+      accountWalletsRes = wallet?.initAccountWallets([address0]);
+
+      if (Array.isArray(accountWalletsRes) && accountWalletsRes.length) {
+        wallet?.events.emit('accountsChanged', [accountWalletsRes[0].address]);
+      }
+    }
+
+    if (!accountWalletsRes) {
+      await loadAccountWallets(authStrategy, username);
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    parseAccountWallets(accountWalletsRes || []);
+
+    await wallet?.initContractAddress({ username });
   }
 
   /**
@@ -639,6 +693,7 @@ function WalletProvider({
         wallet,
         setWallet,
         initialized,
+        initUserData,
         loadAccountWallets,
         parseAccountWallets,
         reloadAccountBalances,

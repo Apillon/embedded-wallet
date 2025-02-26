@@ -12,12 +12,10 @@ export default function useSdkEvents() {
     state,
     wallet,
     initialized: walletInitialized,
-    loadAccountWallets,
     reloadAccountBalances,
-    dispatch,
-    defaultNetworkId,
     setStateValue: setForWallet,
     activeWallet,
+    initUserData,
   } = useWalletContext();
 
   const { dispatch: dispatchTokens, getTokenDetails, getNftDetails } = useTokensContext();
@@ -148,23 +146,17 @@ export default function useSdkEvents() {
           const urlParams = new URLSearchParams(window.location.search);
 
           if (urlParams.has('username') && !!urlParams.get('username')) {
-            const loginData = {
+            initUserData({
               username: urlParams.get('username') || '',
               authStrategy: (urlParams.get('authStrategy') || 'passkey') as any,
-              networkId: defaultNetworkId || undefined,
-            };
-
-            dispatch({
-              type: 'setState',
-              payload: loginData,
+              address0: urlParams.get('address0') || '',
             });
 
             setTimeout(() => {
-              loadAccountWallets(loginData.authStrategy, loginData.username);
-
               const url = new URL(window.location.href);
               url.searchParams.delete('username');
               url.searchParams.delete('authStrategy');
+              urlParams.has('address0');
               window.history.replaceState(null, '', url.toString());
             }, 50);
           } else {

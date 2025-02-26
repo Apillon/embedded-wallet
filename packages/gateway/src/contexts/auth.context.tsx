@@ -75,6 +75,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
           setupUserInfo({
             username: state.username,
             authStrategy: 'passkey',
+            address0: address,
           });
 
           return true;
@@ -87,19 +88,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     setStateValue('loading', false);
-  }
-
-  async function setupUserInfo({
-    username,
-    authStrategy,
-  }: {
-    username: string;
-    authStrategy: AuthStrategyName;
-  }) {
-    redirectBack({
-      username,
-      authStrategy,
-    });
   }
 
   async function sendConfirmationEmail() {
@@ -165,18 +153,35 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
           privateKey,
         },
         state.hashedUsername,
-        true,
+        false,
         referrer
       );
 
       if (typeof res !== 'undefined') {
-        setupUserInfo({ username: state.username, authStrategy: 'passkey' });
+        // Redirects back to app
+        setupUserInfo({ username: state.username, authStrategy: 'passkey', address0: res });
       }
     } catch (e) {
       handleError(e, 'startRegister');
     }
 
     setStateValue('loading', false);
+  }
+
+  function setupUserInfo({
+    username,
+    authStrategy,
+    address0,
+  }: {
+    username: string;
+    authStrategy: AuthStrategyName;
+    address0: string;
+  }) {
+    redirectBack({
+      username,
+      authStrategy,
+      address0,
+    });
   }
 
   return (
@@ -212,7 +217,8 @@ const AuthContext = createContext<
       setupUserInfo: (params: {
         username: string;
         authStrategy: AuthStrategyName;
-      }) => Promise<void>;
+        address0: string;
+      }) => void;
       sendConfirmationEmail: () => Promise<true | undefined>;
       startRegister: () => void;
     }

@@ -136,7 +136,7 @@ class EmbeddedWallet {
    * Create new "wallet" for username.
    * Creates a new contract for each account on sapphire network.
    *
-   * @param skipAccountWallets  Dont make another request for listing the wallets on account
+   * @param skipAccountWallets  Dont make another request for listing the wallets on account (used to be used on gateway)
    * @param origin  Add custom header for origin website
    */
   async register(
@@ -206,10 +206,19 @@ class EmbeddedWallet {
     );
 
     const txHash = await this.sapphireProvider.send('eth_sendRawTransaction', [signedTx]);
+    const txReceipt = await this.waitForTxReceipt(txHash);
 
-    if (await this.waitForTxReceipt(txHash)) {
+    if (txReceipt) {
       if (skipAccountWallets) {
         return '';
+      }
+
+      if (txReceipt?.logs?.[0]) {
+        const parsed = new ethers.Interface(EVMAccountAbi).parseLog(txReceipt.logs[0]);
+
+        if (parsed?.args?.[0]) {
+          this.initAccountWallets([parsed.args[0]]);
+        }
       }
 
       return await this.finalizeAccountAuth(strategy, authData);
@@ -380,20 +389,6 @@ class EmbeddedWallet {
       }
     }
 
-    if (!this.lastAccount.contractAddress) {
-      const hashedUsername = await getHashedUsername(params.authData.username);
-      this.lastAccount.contractAddress = (await this.accountManagerContract.getAccount(
-        hashedUsername as any,
-        BigInt(WalletType.EVM)
-      )) as string;
-
-      this.events.emit('dataUpdated', {
-        name: 'contractAddress',
-        newValue: this.lastAccount.contractAddress,
-        oldValue: '',
-      });
-    }
-
     const AC = new ethers.Interface(EVMAccountAbi);
     const data = AC.encodeFunctionData('getWalletList', []);
 
@@ -402,30 +397,38 @@ class EmbeddedWallet {
     if (res) {
       const [accountWallets] = AC.decodeFunctionResult('getWalletList', res).toArray();
 
-      if (Array.isArray(accountWallets) && accountWallets.length) {
-        const mapped = accountWallets
-          .map(
-            (x, index) =>
-              ({
-                walletType: WalletType.EVM,
-                address: `0x${x.slice(-40)}`,
-                index,
-              }) as AccountWallet
-          )
-          .filter(x => !!x);
+      const wallets = this.initAccountWallets(accountWallets);
 
-        this.events.emit('dataUpdated', {
-          name: 'wallets',
-          newValue: mapped,
-          oldValue: this.lastAccount.wallets,
-        });
-
-        this.lastAccount.wallets = mapped;
-
-        return mapped as AccountWallet[];
+      if (wallets) {
+        return wallets;
       }
 
       abort('CANT_GET_ACCOUNT_WALLETS');
+    }
+  }
+
+  initAccountWallets(accountWallets: any) {
+    if (Array.isArray(accountWallets) && accountWallets.length) {
+      const mapped = accountWallets
+        .map(
+          (x, index) =>
+            ({
+              walletType: WalletType.EVM,
+              address: `0x${x.slice(-40)}`,
+              index,
+            }) as AccountWallet
+        )
+        .filter(x => !!x);
+
+      this.events.emit('dataUpdated', {
+        name: 'wallets',
+        newValue: mapped,
+        oldValue: this.lastAccount.wallets,
+      });
+
+      this.lastAccount.wallets = mapped;
+
+      return mapped as AccountWallet[];
     }
   }
 
@@ -656,12 +659,30 @@ class EmbeddedWallet {
     this.lastAccount.wallets = wallets;
   }
 
+  async initContractAddress(authData: AuthData) {
+    if (!this.lastAccount.contractAddress) {
+      const hashedUsername = await getHashedUsername(authData.username);
+      this.lastAccount.contractAddress = (await this.accountManagerContract.getAccount(
+        hashedUsername as any,
+        BigInt(WalletType.EVM)
+      )) as string;
+
+      this.events.emit('dataUpdated', {
+        name: 'contractAddress',
+        newValue: this.lastAccount.contractAddress,
+        oldValue: '',
+      });
+    }
+  }
+
   /**
    * Get a wallet address for account and pass it to listeners.
    * Update the stored lastAccount.
    * This process includes getting all wallets (getAccountWallets) which requires authentication (when no cache is available).
    */
   async finalizeAccountAuth(strategy: AuthStrategyName, authData: AuthData) {
+    await this.initContractAddress(authData);
+
     const addr = await this.getAccountAddress(strategy, authData);
 
     if (addr && this.waitForAccountResolver) {

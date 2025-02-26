@@ -55,6 +55,17 @@ export default function TestApp() {
         ]}
       />
 
+      <div className="row">
+        <button
+          onClick={async () => {
+            const w = getEmbeddedWallet();
+            console.log(await w?.getGaspayingAddress());
+          }}
+        >
+          Get gaspaying address
+        </button>
+      </div>
+
       <br />
       <br />
 
