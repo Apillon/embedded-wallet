@@ -1,3 +1,5 @@
+'use client';
+
 import { EmbeddedViemAdapter } from '@apillon/wallet-sdk';
 import {
   createPublicClient,

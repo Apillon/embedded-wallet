@@ -16,7 +16,6 @@ import {
   TransactionItem,
   WebauthnContract,
 } from './types';
-import * as sapphire from '@oasisprotocol/sapphire-paratime';
 import { EVMAccountAbi, AccountManagerAbi } from './abi';
 import PasswordStrategy from './strategies/password';
 import PasskeyStrategy from './strategies/passkey';
@@ -68,14 +67,15 @@ class EmbeddedWallet {
    * Prepare data for available chains
    */
   constructor(params?: AppParams) {
-    const ethSaphProvider = new JsonMultiRpcProvider([
+    this.sapphireProvider = new JsonMultiRpcProvider([
       import.meta.env.VITE_SAPPHIRE_URL ?? 'https://sapphire.oasis.io',
       ...(import.meta.env.VITE_SAPPHIRE_BACKUP_URLS
         ? import.meta.env.VITE_SAPPHIRE_BACKUP_URLS.replace(/\s/g, '').split(',')
         : []),
     ]);
 
-    this.sapphireProvider = sapphire.wrap(ethSaphProvider);
+    // this.sapphireProvider = wrapEthereumProvider(ethSaphProvider);
+
     this.loadSapphireChainId();
     this.accountManagerAddress =
       import.meta.env.VITE_ACCOUNT_MANAGER_ADDRESS ?? '0x50dE236a7ce372E7a09956087Fb4862CA1a887aA';
@@ -98,7 +98,7 @@ class EmbeddedWallet {
     this.events = mitt<Events>();
     this.apillonClientId = params?.clientId || '';
 
-    this.xdomain = new XdomainPasskey(this.apillonClientId, params?.passkeyAuthMode);
+    this.xdomain = new XdomainPasskey(this.apillonClientId, params?.passkeyAuthMode || 'redirect');
 
     /**
      * Provider connection events
@@ -136,7 +136,7 @@ class EmbeddedWallet {
    * Create new "wallet" for username.
    * Creates a new contract for each account on sapphire network.
    *
-   * @param skipAccountWallets  Dont make another request for listing the wallets on account
+   * @param skipAccountWallets  Dont make another request for listing the wallets on account (used to be used on gateway)
    * @param origin  Add custom header for origin website
    */
   async register(
@@ -206,10 +206,19 @@ class EmbeddedWallet {
     );
 
     const txHash = await this.sapphireProvider.send('eth_sendRawTransaction', [signedTx]);
+    const txReceipt = await this.waitForTxReceipt(txHash);
 
-    if (await this.waitForTxReceipt(txHash)) {
+    if (txReceipt) {
       if (skipAccountWallets) {
         return '';
+      }
+
+      if (txReceipt?.logs?.[0]) {
+        const parsed = new ethers.Interface(EVMAccountAbi).parseLog(txReceipt.logs[0]);
+
+        if (parsed?.args?.[0]) {
+          this.initAccountWallets([parsed.args[0]]);
+        }
       }
 
       return await this.finalizeAccountAuth(strategy, authData);
@@ -380,20 +389,6 @@ class EmbeddedWallet {
       }
     }
 
-    if (!this.lastAccount.contractAddress) {
-      const hashedUsername = await getHashedUsername(params.authData.username);
-      this.lastAccount.contractAddress = (await this.accountManagerContract.getAccount(
-        hashedUsername as any,
-        BigInt(WalletType.EVM)
-      )) as string;
-
-      this.events.emit('dataUpdated', {
-        name: 'contractAddress',
-        newValue: this.lastAccount.contractAddress,
-        oldValue: '',
-      });
-    }
-
     const AC = new ethers.Interface(EVMAccountAbi);
     const data = AC.encodeFunctionData('getWalletList', []);
 
@@ -402,30 +397,38 @@ class EmbeddedWallet {
     if (res) {
       const [accountWallets] = AC.decodeFunctionResult('getWalletList', res).toArray();
 
-      if (Array.isArray(accountWallets) && accountWallets.length) {
-        const mapped = accountWallets
-          .map(
-            (x, index) =>
-              ({
-                walletType: WalletType.EVM,
-                address: `0x${x.slice(-40)}`,
-                index,
-              }) as AccountWallet
-          )
-          .filter(x => !!x);
+      const wallets = this.initAccountWallets(accountWallets);
 
-        this.events.emit('dataUpdated', {
-          name: 'wallets',
-          newValue: mapped,
-          oldValue: this.lastAccount.wallets,
-        });
-
-        this.lastAccount.wallets = mapped;
-
-        return mapped as AccountWallet[];
+      if (wallets) {
+        return wallets;
       }
 
       abort('CANT_GET_ACCOUNT_WALLETS');
+    }
+  }
+
+  initAccountWallets(accountWallets: any) {
+    if (Array.isArray(accountWallets) && accountWallets.length) {
+      const mapped = accountWallets
+        .map(
+          (x, index) =>
+            ({
+              walletType: WalletType.EVM,
+              address: `0x${x.slice(-40)}`,
+              index,
+            }) as AccountWallet
+        )
+        .filter(x => !!x);
+
+      this.events.emit('dataUpdated', {
+        name: 'wallets',
+        newValue: mapped,
+        oldValue: this.lastAccount.wallets,
+      });
+
+      this.lastAccount.wallets = mapped;
+
+      return mapped as AccountWallet[];
     }
   }
 
@@ -438,6 +441,8 @@ class EmbeddedWallet {
     privateKey?: string;
     authData?: AuthData;
     strategy?: AuthStrategyName;
+    internalLabel?: string;
+    internalData?: string;
   }) {
     if (!this.sapphireProvider) {
       abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
@@ -500,6 +505,8 @@ class EmbeddedWallet {
 
     const res = await this.processGaslessMethod({
       label: params.privateKey ? 'Import new account' : 'Add new account',
+      internalLabel: params.internalLabel,
+      internalData: params.internalData,
       strategy: params.strategy,
       authData: params.authData,
       data,
@@ -656,12 +663,30 @@ class EmbeddedWallet {
     this.lastAccount.wallets = wallets;
   }
 
+  async initContractAddress(authData: AuthData) {
+    if (!this.lastAccount.contractAddress) {
+      const hashedUsername = await getHashedUsername(authData.username);
+      this.lastAccount.contractAddress = (await this.accountManagerContract.getAccount(
+        hashedUsername as any,
+        BigInt(WalletType.EVM)
+      )) as string;
+
+      this.events.emit('dataUpdated', {
+        name: 'contractAddress',
+        newValue: this.lastAccount.contractAddress,
+        oldValue: '',
+      });
+    }
+  }
+
   /**
    * Get a wallet address for account and pass it to listeners.
    * Update the stored lastAccount.
    * This process includes getting all wallets (getAccountWallets) which requires authentication (when no cache is available).
    */
   async finalizeAccountAuth(strategy: AuthStrategyName, authData: AuthData) {
+    await this.initContractAddress(authData);
+
     const addr = await this.getAccountAddress(strategy, authData);
 
     if (addr && this.waitForAccountResolver) {
@@ -922,7 +947,8 @@ class EmbeddedWallet {
     signedTxData: ethers.BytesLike,
     chainId?: number,
     label = 'Transaction',
-    internalLabel?: string
+    internalLabel?: string,
+    internalData?: string
   ) {
     /**
      * Broadcast transaction
@@ -942,6 +968,7 @@ class EmbeddedWallet {
         : '',
       createdAt: Date.now(),
       internalLabel,
+      internalData,
     } as TransactionItem;
 
     this.events.emit('txSubmitted', txItem);
@@ -1147,6 +1174,7 @@ class EmbeddedWallet {
     }): any;
     label?: string;
     internalLabel?: string;
+    internalData?: string;
   }) {
     if (!this.sapphireProvider) {
       return abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
@@ -1217,7 +1245,8 @@ class EmbeddedWallet {
       signedTx,
       this.sapphireChainId,
       params.label || 'Gasless Transaction',
-      params.internalLabel || `gasless_${params.txType}`
+      params.internalLabel || `gasless_${params.txType}`,
+      params.internalData
     );
 
     if (res.txHash) {
@@ -1377,8 +1406,10 @@ class EmbeddedWallet {
   validateChainId(chainId?: number) {
     if (chainId && !networkIdIsSapphire(chainId) && !this.rpcUrls[chainId]) {
       abort('NO_RPC_URL_CONFIGURED_FOR_SELECTED_CHAINID');
+      return;
     } else if (!chainId && !!this.defaultNetworkId && !this.rpcUrls[this.defaultNetworkId]) {
       abort('NO_RPC_URL_CONFIGURED_FOR_SELECTED_CHAINID');
+      return;
     }
 
     /**

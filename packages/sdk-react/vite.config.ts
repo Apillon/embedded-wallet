@@ -12,7 +12,7 @@ function addStyles() {
     writeBundle(options: any, bundle: { [fileName: string]: any }) {
       if (bundle?.['react.js']) {
         const data = fs.readFileSync('./dist/react.js', { encoding: 'utf8' });
-        fs.writeFileSync('./dist/react.js', `import './style.css';\n` + data);
+        fs.writeFileSync('./dist/react.js', `import './react.css';\n` + data);
       }
     },
   };
@@ -44,19 +44,19 @@ export default defineConfig({
         'react',
         'react-dom',
         'react/jsx-runtime',
-        '@headlessui/react',
+        // '@headlessui/react',
         '@noble/curves',
-        '@oasisprotocol/sapphire-paratime',
+        // '@oasisprotocol/sapphire-paratime',
         'abitype',
-        'asn1js',
-        'cbor-redux',
+        // 'asn1js',
+        // 'cbor-redux',
         'ecdsa-secp256r1',
         'elliptic',
         'ethers',
-        'mitt',
-        'pbkdf2',
-        'react-qr-code',
-        'secp256r1',
+        // 'mitt',
+        // 'pbkdf2',
+        // 'react-qr-code',
+        // 'secp256r1',
         'viem',
       ],
     },

@@ -1,3 +1,4 @@
+import { getEmbeddedWallet } from '@apillon/wallet-sdk';
 import EmbeddedWallet from '../components/EmbeddedWallet';
 import TestEIP1193 from './TestEIP1193';
 import TestSign from './TestSign';
@@ -43,8 +44,27 @@ export default function TestApp() {
             explorerUrl: 'https://sepolia.etherscan.io',
             imageUrl: 'https://cryptologos.cc/logos/ethereum-eth-logo.png?v=022',
           },
+          {
+            name: 'Base Sepolia',
+            id: 84532,
+            rpcUrl: 'https://sepolia.base.org',
+            explorerUrl: 'https://sepolia.basescan.org/',
+            imageUrl:
+              'https://basescan.org/assets/base/images/svg/logos/chain-light.svg?v=25.1.4.0',
+          },
         ]}
       />
+
+      <div className="row">
+        <button
+          onClick={async () => {
+            const w = getEmbeddedWallet();
+            console.log(await w?.getGaspayingAddress());
+          }}
+        >
+          Get gaspaying address
+        </button>
+      </div>
 
       <br />
       <br />
@@ -66,6 +86,36 @@ export default function TestApp() {
       <h2>Transaction tests</h2>
 
       <TestTx />
+
+      <h2>Test addToken event</h2>
+
+      <div className="row">
+        <button
+          onClick={async () => {
+            const w = getEmbeddedWallet();
+            w?.events.emit('addToken', {
+              address: '0x3c8e129ca9e8439f7539fadd58e8c769ffdfc93e',
+              symbol: 'USDC',
+              decimals: 6,
+              name: 'USD Coin',
+            });
+          }}
+        >
+          Add some token
+        </button>
+
+        <button
+          onClick={async () => {
+            const w = getEmbeddedWallet();
+            w?.events.emit('addTokenNft', {
+              address: '0x14EeBa9Cf473c007997dB49a7600835e543BA3F5',
+              tokenId: 8,
+            });
+          }}
+        >
+          Add some NFT
+        </button>
+      </div>
     </div>
   );
 }

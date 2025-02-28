@@ -9,18 +9,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@apillon/wallet-vue": "*",
-    "ethers": "^6.13.3",
-    "ethers5": "npm:ethers@^5.7.2",
-    "viem": "^2.21.19",
-    "vue": "^3.4.31"
+    "@apillon/wallet-vue": "*"
   },
-  "devDependencies": {
-    "@vitejs/plugin-vue": "^5.0.5",
-    "typescript": "^5.2.2",
-    "vite": "^5.3.4",
-    "vite-plugin-mkcert": "^1.17.6",
-    "vite-plugin-node-polyfills": "^0.22.0",
-    "vue-tsc": "^2.0.24"
+  "global": {
+    "dependencies": ["ethers", "ethers5", "viem", "vue"]
   }
 }

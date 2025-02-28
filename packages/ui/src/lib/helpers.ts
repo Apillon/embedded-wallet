@@ -55,3 +55,11 @@ export function formatTxObjectData(data: Object) {
     acc += `${key}: ${value}`;
   }, '');
 }
+
+export function isLowerCaseEqual(s1?: string, s2?: string) {
+  if (!s1 || !s2) {
+    return false;
+  }
+
+  return s1.toLowerCase() === s2.toLowerCase();
+}
