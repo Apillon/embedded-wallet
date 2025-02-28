@@ -51,6 +51,7 @@ const initialState = (defaultNetworkId = 0, appProps: AppProps) => ({
   walletIndex: 0,
   accountWallets: [] as AccountWalletEx[],
   stagedWalletsCount: 0, // how many new wallets have been addedd, but are not in `accountWallets` yet
+  walletsCountBeforeStaging: 0,
   isAccountWalletsStale: false,
   contractAddress: '',
   privateKeys: {} as { [walletAddress: string]: string },
@@ -426,6 +427,11 @@ function WalletProvider({
 
       setStateValue('loadingWallets', false);
       setStateValue('isAccountWalletsStale', false);
+      setStateValue(
+        'stagedWalletsCount',
+        Math.max(0, state.stagedWalletsCount - wallets.length - state.walletsCountBeforeStaging)
+      );
+      setStateValue('walletsCountBeforeStaging', wallets.length);
       setStateValue('displayedError', '');
 
       reloadAccountBalances(

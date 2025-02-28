@@ -51,7 +51,10 @@ function ApproveProvider({ children }: { children: React.ReactNode }) {
     const onTxSubmittedEvent = async (params: Events['txSubmitted']) => {
       dispatchTx({ type: 'addTx', payload: params });
 
-      if (params.internalLabel && ['gasless_3', 'gasless_4'].includes(params.internalLabel)) {
+      if (
+        params.internalLabel &&
+        ['gasless_3', 'gasless_4', 'accountsAdd', 'accountsImport'].includes(params.internalLabel)
+      ) {
         // Dont show transaction submitted screen
         return;
       }

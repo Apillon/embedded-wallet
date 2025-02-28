@@ -11,7 +11,6 @@ export default function AccountsImport() {
     goScreenBack,
     handleError,
     handleSuccess,
-    saveAccountTitle,
     setStateValue: setForWallet,
   } = useWalletContext();
   const [type, setType] = useState('pk'); // used in <Select />
@@ -29,18 +28,24 @@ export default function AccountsImport() {
     handleError();
 
     try {
+      const predictedIndex =
+        accountWallets[accountWallets.length - 1].index + 1 + stagedWalletsCount;
+
+      // Save wallet name to tx metadata
+      // When updating also check <AccountsAdd />
       await wallet?.addAccountWallet({
         privateKey: !privateKey.startsWith('0x') ? `0x${privateKey}` : privateKey,
+        internalLabel: 'accountsImport',
+        internalData: JSON.stringify({
+          index: predictedIndex,
+          title,
+        }),
         // walletType??
       });
 
-      // Save wallet name to GS, using (probably) next index, because address is not available yet
-      // When updating also check <AccountsAdd />
-      saveAccountTitle(
-        title,
-        accountWallets[accountWallets.length - 1].index + 1 + stagedWalletsCount
-      );
+      // saveAccountTitle(title, predictedIndex);
 
+      setForWallet('walletsCountBeforeStaging', accountWallets.length);
       setForWallet('stagedWalletsCount', stagedWalletsCount + 1);
 
       setSuccess(true);

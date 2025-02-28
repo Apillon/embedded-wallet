@@ -31,7 +31,6 @@ export default function AccountsAdd() {
     handleError,
     goScreenBack,
     handleSuccess,
-    saveAccountTitle,
     setStateValue: setForWallet,
   } = useWalletContext();
   const [type, setType] = useState<AccountWalletTypes>(WalletType.EVM);
@@ -46,15 +45,23 @@ export default function AccountsAdd() {
     setLoading(true);
 
     try {
-      await wallet?.addAccountWallet({ walletType: type });
+      const predictedIndex =
+        accountWallets[accountWallets.length - 1].index + 1 + stagedWalletsCount;
 
-      // Save wallet name to GS, using (probably) next index, because address is not available yet
+      // Save wallet name to tx metadata
       // When updating also check <AccountsImport />
-      saveAccountTitle(
-        title,
-        accountWallets[accountWallets.length - 1].index + 1 + stagedWalletsCount
-      );
+      await wallet?.addAccountWallet({
+        walletType: type,
+        internalLabel: 'accountsAdd',
+        internalData: JSON.stringify({
+          index: predictedIndex,
+          title,
+        }),
+      });
 
+      // saveAccountTitle(title, predictedIndex);
+
+      setForWallet('walletsCountBeforeStaging', accountWallets.length);
       setForWallet('stagedWalletsCount', stagedWalletsCount + 1);
 
       handleSuccess('Account created. Wait for transaction to complete.');

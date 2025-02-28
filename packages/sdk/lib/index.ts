@@ -441,6 +441,8 @@ class EmbeddedWallet {
     privateKey?: string;
     authData?: AuthData;
     strategy?: AuthStrategyName;
+    internalLabel?: string;
+    internalData?: string;
   }) {
     if (!this.sapphireProvider) {
       abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
@@ -503,6 +505,8 @@ class EmbeddedWallet {
 
     const res = await this.processGaslessMethod({
       label: params.privateKey ? 'Import new account' : 'Add new account',
+      internalLabel: params.internalLabel,
+      internalData: params.internalData,
       strategy: params.strategy,
       authData: params.authData,
       data,
@@ -943,7 +947,8 @@ class EmbeddedWallet {
     signedTxData: ethers.BytesLike,
     chainId?: number,
     label = 'Transaction',
-    internalLabel?: string
+    internalLabel?: string,
+    internalData?: string
   ) {
     /**
      * Broadcast transaction
@@ -963,6 +968,7 @@ class EmbeddedWallet {
         : '',
       createdAt: Date.now(),
       internalLabel,
+      internalData,
     } as TransactionItem;
 
     this.events.emit('txSubmitted', txItem);
@@ -1168,6 +1174,7 @@ class EmbeddedWallet {
     }): any;
     label?: string;
     internalLabel?: string;
+    internalData?: string;
   }) {
     if (!this.sapphireProvider) {
       return abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
@@ -1238,7 +1245,8 @@ class EmbeddedWallet {
       signedTx,
       this.sapphireChainId,
       params.label || 'Gasless Transaction',
-      params.internalLabel || `gasless_${params.txType}`
+      params.internalLabel || `gasless_${params.txType}`,
+      params.internalData
     );
 
     if (res.txHash) {

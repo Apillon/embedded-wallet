@@ -180,6 +180,7 @@ export type TransactionItem = {
   explorerUrl: string;
   createdAt: number; // timestamp
   internalLabel?: string;
+  internalData?: string;
 };
 
 export type Events = {

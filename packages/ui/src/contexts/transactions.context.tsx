@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useReducer, useRef } from 'react';
-import { getEmbeddedWallet, TransactionItem } from '@apillon/wallet-sdk';
+import { EVMAccountAbi, getEmbeddedWallet, TransactionItem } from '@apillon/wallet-sdk';
 import { useWalletContext } from './wallet.context';
 import { WebStorageKeys } from '../lib/constants';
+import { ethers, TransactionReceipt } from 'ethers';
 
 const initialState = () => ({
   txs: {} as { [ownerAddress: string]: { [txHash: string]: TransactionItem } },
@@ -78,11 +79,12 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
   const initialized = useRef(false);
 
   const {
+    state: { accountWallets, stagedWalletsCount, walletsCountBeforeStaging },
     wallet,
     activeWallet,
     reloadAccountBalances,
+    saveAccountTitle,
     setStateValue: setForWallet,
-    handleInfo,
   } = useWalletContext();
 
   useEffect(() => {
@@ -217,9 +219,12 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
         });
 
         // set wallets data to stale if needed
+        // if (!failed && isAccountWalletsTx(txData)) {
+        //   setForWallet('isAccountWalletsStale', true);
+        //   handleInfo('stale');
+        // }
         if (!failed && isAccountWalletsTx(txData)) {
-          setForWallet('isAccountWalletsStale', true);
-          handleInfo('stale');
+          handleNewAccountName(txData);
         }
 
         wallet.events.emit('txDone', tx);
@@ -237,9 +242,12 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
           },
         });
 
+        // if (isAccountWalletsTx(txData)) {
+        //   setForWallet('isAccountWalletsStale', true);
+        //   handleInfo('stale');
+        // }
         if (isAccountWalletsTx(txData)) {
-          setForWallet('isAccountWalletsStale', true);
-          handleInfo('stale');
+          handleNewAccountName(txData, receipt);
         }
       } else {
         // Tx failed
@@ -259,6 +267,48 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  async function handleNewAccountName(
+    txData: TransactionItem,
+    txReceipt?: TransactionReceipt | null
+  ) {
+    if (!wallet) {
+      return;
+    }
+
+    if (!txReceipt) {
+      txReceipt = await wallet
+        .getRpcProviderForChainId(txData?.chainId)
+        .getTransactionReceipt(txData.hash);
+    }
+
+    console.log(txReceipt);
+
+    if (txReceipt) {
+      if (txReceipt?.logs?.[0]) {
+        const parsed = new ethers.Interface(EVMAccountAbi).parseLog(txReceipt.logs[0]);
+
+        console.log(parsed);
+
+        if (parsed?.args?.[0]) {
+          try {
+            const data = JSON.parse(txData.internalData || '""');
+            console.log(data);
+            if (data?.title && data?.index) {
+              saveAccountTitle(data.title, data.index);
+            }
+          } catch (e) {
+            console.error(e);
+          }
+
+          wallet.initAccountWallets([...accountWallets.map(x => x.address), parsed.args[0]]);
+
+          setForWallet('stagedWalletsCount', Math.max(0, stagedWalletsCount - 1));
+          setForWallet('walletsCountBeforeStaging', Math.max(0, walletsCountBeforeStaging + 1));
+        }
+      }
+    }
+  }
+
   return (
     <TransactionsContext.Provider value={{ state, dispatch, checkTransaction }}>
       {children}
@@ -273,13 +323,15 @@ function isAccountWalletsTx(tx?: TransactionItem) {
   return (
     tx?.internalLabel &&
     [
-      'proxyWrite_addWallet',
-      'proxyWrite_addWalletPassword',
-      'proxyWrite_manageCredential',
-      'proxyWrite_manageCredentialPassword',
-      'gasless_3', // AddWallet
-      'gasless_4', // AddWalletPassword
-      'updateAccountWalletTitle',
+      // 'proxyWrite_addWallet',
+      // 'proxyWrite_addWalletPassword',
+      // 'proxyWrite_manageCredential',
+      // 'proxyWrite_manageCredentialPassword',
+      // 'gasless_3', // AddWallet
+      // 'gasless_4', // AddWalletPassword
+      // 'updateAccountWalletTitle',
+      'accountsAdd',
+      'accountsImport',
     ].includes(tx.internalLabel)
   );
 }

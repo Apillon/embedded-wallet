@@ -16,6 +16,7 @@ export default function useSdkEvents() {
     setStateValue: setForWallet,
     activeWallet,
     initUserData,
+    parseAccountWallets,
   } = useWalletContext();
 
   const { dispatch: dispatchTokens, getTokenDetails, getNftDetails } = useTokensContext();
@@ -32,6 +33,8 @@ export default function useSdkEvents() {
         setForWallet('networkId', params.newValue);
       } else if (params.name === 'contractAddress') {
         setForWallet('contractAddress', params.newValue);
+      } else if (params.name === 'wallets') {
+        parseAccountWallets(params.newValue);
       }
     };
 
