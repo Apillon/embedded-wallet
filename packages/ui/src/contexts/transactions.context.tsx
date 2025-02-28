@@ -85,6 +85,7 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
     reloadAccountBalances,
     saveAccountTitle,
     setStateValue: setForWallet,
+    handleSuccess,
   } = useWalletContext();
 
   useEffect(() => {
@@ -281,29 +282,32 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
         .getTransactionReceipt(txData.hash);
     }
 
-    console.log(txReceipt);
-
     if (txReceipt) {
       if (txReceipt?.logs?.[0]) {
         const parsed = new ethers.Interface(EVMAccountAbi).parseLog(txReceipt.logs[0]);
 
-        console.log(parsed);
-
-        if (parsed?.args?.[0]) {
+        if (parsed?.args?.[0] && typeof parsed.args[0] === 'string') {
           try {
             const data = JSON.parse(txData.internalData || '""');
-            console.log(data);
+
             if (data?.title && data?.index) {
-              saveAccountTitle(data.title, data.index);
+              await saveAccountTitle(data.title, data.index, `0x${parsed.args[0].slice(-40)}`);
             }
+
+            setForWallet('stagedWalletsCount', Math.max(0, stagedWalletsCount - 1));
+            setForWallet('walletsCountBeforeStaging', Math.max(0, walletsCountBeforeStaging + 1));
+
+            /**
+             * Updates wallets in SDK
+             * -> emits `dataUpdated` event
+             * -> `useSdkEvents` handles event (parseAccountWallets)
+             */
+            wallet.initAccountWallets([...accountWallets.map(x => x.address), parsed.args[0]]);
+
+            handleSuccess('Accounts updated', 5000);
           } catch (e) {
             console.error(e);
           }
-
-          wallet.initAccountWallets([...accountWallets.map(x => x.address), parsed.args[0]]);
-
-          setForWallet('stagedWalletsCount', Math.max(0, stagedWalletsCount - 1));
-          setForWallet('walletsCountBeforeStaging', Math.max(0, walletsCountBeforeStaging + 1));
         }
       }
     }

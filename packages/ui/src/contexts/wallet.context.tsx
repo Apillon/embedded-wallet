@@ -170,7 +170,7 @@ const WalletContext = createContext<
         addresses?: string[],
         accountWallets?: AccountWalletEx[]
       ) => Promise<boolean | undefined>;
-      saveAccountTitle: (title: string, index?: number) => Promise<void>;
+      saveAccountTitle: (title: string, index?: number, accountAddress?: string) => Promise<void>;
       setScreen: (screen: WalletScreens) => void;
       goScreenBack: () => void;
       handleSuccess: (msg: string, timeout?: number) => void;
@@ -539,8 +539,9 @@ function WalletProvider({
 
   /**
    * Save new custom account name, or update existing one.
+   * @param accountAddress Save for specific account address (otherwise get address from state wallets with index)
    */
-  async function saveAccountTitle(title: string, index?: number) {
+  async function saveAccountTitle(title: string, index?: number, accountAddress?: string) {
     if (!index && index !== 0) {
       index = state.walletIndex;
     }
@@ -554,14 +555,17 @@ function WalletProvider({
         ...all,
         [state.contractAddress]: {
           ...current,
-          [index > state.accountWallets.length - 1
+          [accountAddress ||
+          (index > state.accountWallets.length - 1
             ? `${index}`
-            : state.accountWallets[index].address]: title,
+            : state.accountWallets[index].address)]: title,
         },
       })
     );
 
-    const found = state.accountWallets.findIndex(x => x.index === index);
+    const found = state.accountWallets.findIndex(x =>
+      accountAddress ? x.address === accountAddress : x.index === index
+    );
 
     // Update wallet title in state
     if (found > -1) {

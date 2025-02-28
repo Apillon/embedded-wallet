@@ -65,41 +65,49 @@ export default function AccountsImport() {
         Import your private key from an existing account
       </p>
 
-      <Select
-        value={type}
-        options={[
-          { label: 'Select type', value: '' },
-          { label: 'Private Key', value: 'pk' },
-          // { label: 'JSON File', value: 'json' },
-        ]}
-        className="w-full mb-6"
-        onChange={ev => setType(ev.target.value)}
-      />
+      <form
+        onSubmit={ev => {
+          ev.preventDefault();
+          importAccount();
+        }}
+      >
+        <Select
+          value={type}
+          options={[
+            { label: 'Select type', value: '' },
+            { label: 'Private Key', value: 'pk' },
+            // { label: 'JSON File', value: 'json' },
+          ]}
+          className="w-full mb-6"
+          onChange={ev => setType(ev.target.value)}
+        />
 
-      <Input
-        value={privateKey}
-        placeholder="Enter your private key string here"
-        type="password"
-        className="mb-6"
-        onChange={ev => setPrivateKey(ev.target.value)}
-      />
+        <Input
+          autoFocus
+          value={privateKey}
+          placeholder="Enter your private key string here"
+          type="password"
+          className="mb-6"
+          onChange={ev => setPrivateKey(ev.target.value)}
+        />
 
-      <Input
-        value={title}
-        placeholder="Enter name (for personal reference)"
-        className="mb-6"
-        onChange={ev => setTitle(ev.target.value)}
-      />
+        <Input
+          value={title}
+          placeholder="Enter name (for personal reference)"
+          className="mb-6"
+          onChange={ev => setTitle(ev.target.value)}
+        />
 
-      <div className="grid grid-cols-2 gap-2">
-        <Btn variant="ghost" onClick={() => goScreenBack()}>
-          Cancel
-        </Btn>
+        <div className="grid grid-cols-2 gap-2">
+          <Btn type="button" variant="ghost" onClick={() => goScreenBack()}>
+            Cancel
+          </Btn>
 
-        <Btn variant="primary" loading={loading} onClick={() => importAccount()}>
-          Import
-        </Btn>
-      </div>
+          <Btn type="submit" variant="primary" loading={loading}>
+            Import
+          </Btn>
+        </div>
+      </form>
 
       <div className="grow"></div>
 

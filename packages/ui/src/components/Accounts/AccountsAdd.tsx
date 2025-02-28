@@ -119,6 +119,7 @@ export default function AccountsAdd() {
           label="Account name"
           placeholder="Enter name (for personal reference)"
           value={title}
+          autoFocus
           className="w-full mb-6"
           onChange={ev => setTitle(ev.target.value)}
         />

@@ -31,7 +31,7 @@ export default ({ className }: { className?: string }) => {
             <Btn
               className="w-full"
               variant="ghost"
-              onClick={() => redirectBack({ username: '', authStrategy: 'passkey' })}
+              onClick={() => redirectBack({ username: '', authStrategy: 'passkey', address0: '' })}
             >
               Continue
             </Btn>
