@@ -9,7 +9,7 @@ export const AccountManagerAbi = [
   'error ECDSAInvalidSignatureS(bytes32 s)',
   'error ERC1967InvalidImplementation(address implementation)',
   'error ERC1967NonPayable()',
-  'error FailedInnerCall()',
+  'error FailedCall()',
   'error InvalidInitialization()',
   'error NotInitializing()',
   'error UUPSUnauthorizedCallContext()',
@@ -18,7 +18,7 @@ export const AccountManagerAbi = [
   'error k256Decompress_Invalid_Length_Error()',
   'error k256DeriveY_Invalid_Prefix_Error()',
   'error recoverV_Error()',
-  'event GaslessTransaction(bytes32 indexed dataHash, bytes32 indexed hashedUsername, address indexed publicAddress)',
+  'event GaslessTransaction(bytes32 indexed dataHash, address indexed publicAddress)',
   'event Initialized(uint64 version)',
   'event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole)',
   'event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender)',
@@ -64,10 +64,11 @@ export const EVMAccountAbi = [
   'error k256Decompress_Invalid_Length_Error()',
   'error k256DeriveY_Invalid_Prefix_Error()',
   'error recoverV_Error()',
+  'event WalletCreated(bytes32 indexed publicAddress)',
   'function addressToBytes32(address _addr) pure returns (bytes32)',
   'function bytes32ToAddress(bytes32 _b) pure returns (address)',
   'function call(address in_contract, bytes in_data) returns (bytes out_data)',
-  'function createWallet(bytes32 keypairSecret) returns (address)',
+  'function createWallet(bytes32 keypairSecret) returns (bytes32 publicAddress)',
   'function exportPrivateKey(uint256 walletId) view returns (bytes32)',
   'function getWalletList() view returns (bytes32[])',
   'function init(address initialController, bytes32 keypairSecret)',
@@ -80,6 +81,22 @@ export const EVMAccountAbi = [
   'function transfer(address in_target, uint256 amount)',
   'function walletAddress(uint256 walletId) view returns (bytes32)',
 ] as const;
+
+export const SubstrateAccountAbi = [
+  'event WalletCreated(bytes32 indexed publicAddress)',
+  'function call(address in_contract, bytes in_data) returns (bytes out_data)',
+  'function createWallet(bytes32 keypairSecret) returns (bytes32 publicAddress)',
+  'function exportPrivateKey(uint256 walletId) view returns (bytes32)',
+  'function getWalletList() view returns (bytes32[])',
+  'function init(address initialController, bytes32 keypairSecret)',
+  'function isController(address who) view returns (bool)',
+  'function modifyController(address who, bool status)',
+  'function removeWallet(uint256 walletId)',
+  'function sign(uint256 walletId, bytes data) view returns (bytes)',
+  'function staticcall(address in_contract, bytes in_data) view returns (bytes out_data)',
+  'function transfer(address in_target, uint256 amount)',
+  'function walletAddress(uint256 walletId) view returns (bytes32)',
+];
 
 export const ERC20Abi = [
   {
@@ -215,3 +232,320 @@ export const ERC20Abi = [
     type: 'function',
   },
 ];
+
+export const ERC721Abi = [
+  {
+    type: 'event',
+    name: 'Approval',
+    inputs: [
+      {
+        indexed: true,
+        name: 'owner',
+        type: 'address',
+      },
+      {
+        indexed: true,
+        name: 'spender',
+        type: 'address',
+      },
+      {
+        indexed: true,
+        name: 'tokenId',
+        type: 'uint256',
+      },
+    ],
+  },
+  {
+    type: 'event',
+    name: 'ApprovalForAll',
+    inputs: [
+      {
+        indexed: true,
+        name: 'owner',
+        type: 'address',
+      },
+      {
+        indexed: true,
+        name: 'operator',
+        type: 'address',
+      },
+      {
+        indexed: false,
+        name: 'approved',
+        type: 'bool',
+      },
+    ],
+  },
+  {
+    type: 'event',
+    name: 'Transfer',
+    inputs: [
+      {
+        indexed: true,
+        name: 'from',
+        type: 'address',
+      },
+      {
+        indexed: true,
+        name: 'to',
+        type: 'address',
+      },
+      {
+        indexed: true,
+        name: 'tokenId',
+        type: 'uint256',
+      },
+    ],
+  },
+  {
+    type: 'function',
+    name: 'approve',
+    stateMutability: 'payable',
+    inputs: [
+      {
+        name: 'spender',
+        type: 'address',
+      },
+      {
+        name: 'tokenId',
+        type: 'uint256',
+      },
+    ],
+    outputs: [],
+  },
+  {
+    type: 'function',
+    name: 'balanceOf',
+    stateMutability: 'view',
+    inputs: [
+      {
+        name: 'account',
+        type: 'address',
+      },
+    ],
+    outputs: [
+      {
+        type: 'uint256',
+      },
+    ],
+  },
+  {
+    type: 'function',
+    name: 'getApproved',
+    stateMutability: 'view',
+    inputs: [
+      {
+        name: 'tokenId',
+        type: 'uint256',
+      },
+    ],
+    outputs: [
+      {
+        type: 'address',
+      },
+    ],
+  },
+  {
+    type: 'function',
+    name: 'isApprovedForAll',
+    stateMutability: 'view',
+    inputs: [
+      {
+        name: 'owner',
+        type: 'address',
+      },
+      {
+        name: 'operator',
+        type: 'address',
+      },
+    ],
+    outputs: [
+      {
+        type: 'bool',
+      },
+    ],
+  },
+  {
+    type: 'function',
+    name: 'name',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [
+      {
+        type: 'string',
+      },
+    ],
+  },
+  {
+    type: 'function',
+    name: 'ownerOf',
+    stateMutability: 'view',
+    inputs: [
+      {
+        name: 'tokenId',
+        type: 'uint256',
+      },
+    ],
+    outputs: [
+      {
+        name: 'owner',
+        type: 'address',
+      },
+    ],
+  },
+  {
+    type: 'function',
+    name: 'safeTransferFrom',
+    stateMutability: 'payable',
+    inputs: [
+      {
+        name: 'from',
+        type: 'address',
+      },
+      {
+        name: 'to',
+        type: 'address',
+      },
+      {
+        name: 'tokenId',
+        type: 'uint256',
+      },
+    ],
+    outputs: [],
+  },
+  {
+    type: 'function',
+    name: 'safeTransferFrom',
+    stateMutability: 'nonpayable',
+    inputs: [
+      {
+        name: 'from',
+        type: 'address',
+      },
+      {
+        name: 'to',
+        type: 'address',
+      },
+      {
+        name: 'id',
+        type: 'uint256',
+      },
+      {
+        name: 'data',
+        type: 'bytes',
+      },
+    ],
+    outputs: [],
+  },
+  {
+    type: 'function',
+    name: 'setApprovalForAll',
+    stateMutability: 'nonpayable',
+    inputs: [
+      {
+        name: 'operator',
+        type: 'address',
+      },
+      {
+        name: 'approved',
+        type: 'bool',
+      },
+    ],
+    outputs: [],
+  },
+  {
+    type: 'function',
+    name: 'symbol',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [
+      {
+        type: 'string',
+      },
+    ],
+  },
+  {
+    type: 'function',
+    name: 'tokenByIndex',
+    stateMutability: 'view',
+    inputs: [
+      {
+        name: 'index',
+        type: 'uint256',
+      },
+    ],
+    outputs: [
+      {
+        type: 'uint256',
+      },
+    ],
+  },
+  {
+    type: 'function',
+    name: 'tokenByIndex',
+    stateMutability: 'view',
+    inputs: [
+      {
+        name: 'owner',
+        type: 'address',
+      },
+      {
+        name: 'index',
+        type: 'uint256',
+      },
+    ],
+    outputs: [
+      {
+        name: 'tokenId',
+        type: 'uint256',
+      },
+    ],
+  },
+  {
+    type: 'function',
+    name: 'tokenURI',
+    stateMutability: 'view',
+    inputs: [
+      {
+        name: 'tokenId',
+        type: 'uint256',
+      },
+    ],
+    outputs: [
+      {
+        type: 'string',
+      },
+    ],
+  },
+  {
+    type: 'function',
+    name: 'totalSupply',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [
+      {
+        type: 'uint256',
+      },
+    ],
+  },
+  {
+    type: 'function',
+    name: 'transferFrom',
+    stateMutability: 'payable',
+    inputs: [
+      {
+        name: 'sender',
+        type: 'address',
+      },
+      {
+        name: 'recipient',
+        type: 'address',
+      },
+      {
+        name: 'tokeId',
+        type: 'uint256',
+      },
+    ],
+    outputs: [],
+  },
+] as const;
