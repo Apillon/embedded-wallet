@@ -1,18 +1,27 @@
 import clsx from 'clsx';
 import IconChevron from '../ui/Icon/IconChevron';
 import { useState } from 'react';
+import IconCopy from '../ui/Icon/IconCopy';
+import useCopyToClipboard from '../../hooks/useCopyToClipboard';
+import IconCheckSmall from '../ui/Icon/IconCheckSmall';
 
 export default ({
   label,
   data,
   collapsable = false,
+  noLabelFormatting = false,
+  copyable = false,
   className,
 }: {
   label: string;
   data: string | React.ReactNode;
   collapsable?: boolean;
+  noLabelFormatting?: boolean;
+  copyable?: boolean;
   className?: string;
 }) => {
+  const { text: copyText, onCopy } = useCopyToClipboard('', '+');
+
   const [open, setOpen] = useState(false);
 
   const classes = clsx(
@@ -22,11 +31,13 @@ export default ({
   );
 
   // Split label into words and capitalize it
-  label = label
-    .split(/(?=[A-Z])/)
-    .join(' ')
-    .toLowerCase()
-    .replace(/^\w/, c => c.toUpperCase());
+  if (!noLabelFormatting) {
+    label = label
+      .split(/(?=[A-Z])/)
+      .join(' ')
+      .toLowerCase()
+      .replace(/^\w/, c => c.toUpperCase());
+  }
 
   if (collapsable) {
     return (
@@ -52,6 +63,40 @@ export default ({
           </div>
         )}
       </div>
+    );
+  }
+
+  if (copyable && typeof data === 'string') {
+    return (
+      <a
+        href="#"
+        className={clsx('group relative block', classes, className)}
+        onClick={ev => {
+          ev.preventDefault();
+          onCopy(data);
+        }}
+      >
+        <div className="font-bold shrink-0">{label}</div>
+
+        <div className="font-normal min-w-0 truncate" title={typeof data === 'string' ? data : ''}>
+          {data}
+        </div>
+
+        <div
+          className={clsx(
+            'absolute top-0 right-0 h-full w-[40px]',
+            'bg-primarylight rounded-md',
+            'hidden group-hover:flex',
+            'items-center justify-center'
+          )}
+        >
+          {copyText === '+' ? (
+            <IconCheckSmall className="text-green" />
+          ) : (
+            <IconCopy className="text-offwhite" />
+          )}
+        </div>
+      </a>
     );
   }
 

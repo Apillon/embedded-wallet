@@ -32,7 +32,7 @@ class PasskeyStrategy implements AuthStrategy {
 
     const newWallet = {
       walletType: WalletType.EVM,
-      keypairSecret: ethers.ZeroHash,
+      keypairSecret: authData.privateKey || ethers.ZeroHash,
     };
 
     if (this.wallet.xdomain?.mode === 'popup') {

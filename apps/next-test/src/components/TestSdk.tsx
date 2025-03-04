@@ -1,3 +1,5 @@
+'use client';
+
 import { useAccount, useContract, useWallet } from '@apillon/wallet-react';
 
 export default function TestSdk() {

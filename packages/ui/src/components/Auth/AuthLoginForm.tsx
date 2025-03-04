@@ -17,10 +17,7 @@ export default () => {
 
   return (
     <>
-      <AuthTitle
-        title="Sign in or sign up"
-        description="Enter your email to set up your passkey"
-      />
+      <AuthTitle title="Sign in or sign up" description="Enter your email to set up your passkey" />
 
       <form onSubmit={ev => onAuth(false, ev)}>
         <Input
@@ -33,6 +30,20 @@ export default () => {
 
         <Btn type="submit" loading={loading} className="w-full">
           Continue
+        </Btn>
+
+        <div className="text-center my-2 text-sm text-darkgrey">
+          <span>OR</span>
+        </div>
+
+        <Btn
+          type="button"
+          variant="ghost"
+          disabled={loading}
+          className="w-full"
+          onClick={() => setForAuth('screen', 'importWallet')}
+        >
+          Import wallet
         </Btn>
 
         {/* <button

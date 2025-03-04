@@ -6,12 +6,12 @@ import { useWalletContext } from '../../contexts/wallet.context';
 
 export default function AccountsImport() {
   const {
-    state: { accountWallets },
+    state: { accountWallets, stagedWalletsCount },
     wallet,
     goScreenBack,
     handleError,
     handleSuccess,
-    saveAccountTitle,
+    setStateValue: setForWallet,
   } = useWalletContext();
   const [type, setType] = useState('pk'); // used in <Select />
   const [title, setTitle] = useState('');
@@ -28,13 +28,25 @@ export default function AccountsImport() {
     handleError();
 
     try {
+      const predictedIndex =
+        accountWallets[accountWallets.length - 1].index + 1 + stagedWalletsCount;
+
+      // Save wallet name to tx metadata
+      // When updating also check <AccountsAdd />
       await wallet?.addAccountWallet({
         privateKey: !privateKey.startsWith('0x') ? `0x${privateKey}` : privateKey,
+        internalLabel: 'accountsImport',
+        internalData: JSON.stringify({
+          index: predictedIndex,
+          title,
+        }),
         // walletType??
       });
 
-      // Save wallet name to GS, using (probably) next index, because address is not available yet
-      saveAccountTitle(title, accountWallets[accountWallets.length - 1].index + 1);
+      // saveAccountTitle(title, predictedIndex);
+
+      setForWallet('walletsCountBeforeStaging', accountWallets.length);
+      setForWallet('stagedWalletsCount', stagedWalletsCount + 1);
 
       setSuccess(true);
       handleSuccess('Account imported. Wait for transaction to complete.');
@@ -53,41 +65,49 @@ export default function AccountsImport() {
         Import your private key from an existing account
       </p>
 
-      <Select
-        value={type}
-        options={[
-          { label: 'Select type', value: '' },
-          { label: 'Private Key', value: 'pk' },
-          // { label: 'JSON File', value: 'json' },
-        ]}
-        className="w-full mb-6"
-        onChange={ev => setType(ev.target.value)}
-      />
+      <form
+        onSubmit={ev => {
+          ev.preventDefault();
+          importAccount();
+        }}
+      >
+        <Select
+          value={type}
+          options={[
+            { label: 'Select type', value: '' },
+            { label: 'Private Key', value: 'pk' },
+            // { label: 'JSON File', value: 'json' },
+          ]}
+          className="w-full mb-6"
+          onChange={ev => setType(ev.target.value)}
+        />
 
-      <Input
-        value={privateKey}
-        placeholder="Enter your private key string here"
-        type="password"
-        className="mb-6"
-        onChange={ev => setPrivateKey(ev.target.value)}
-      />
+        <Input
+          autoFocus
+          value={privateKey}
+          placeholder="Enter your private key string here"
+          type="password"
+          className="mb-6"
+          onChange={ev => setPrivateKey(ev.target.value)}
+        />
 
-      <Input
-        value={title}
-        placeholder="Enter name (for personal reference)"
-        className="mb-6"
-        onChange={ev => setTitle(ev.target.value)}
-      />
+        <Input
+          value={title}
+          placeholder="Enter name (for personal reference)"
+          className="mb-6"
+          onChange={ev => setTitle(ev.target.value)}
+        />
 
-      <div className="grid grid-cols-2 gap-2">
-        <Btn variant="ghost" onClick={() => goScreenBack()}>
-          Cancel
-        </Btn>
+        <div className="grid grid-cols-2 gap-2">
+          <Btn type="button" variant="ghost" onClick={() => goScreenBack()}>
+            Cancel
+          </Btn>
 
-        <Btn variant="primary" loading={loading} onClick={() => importAccount()}>
-          Import
-        </Btn>
-      </div>
+          <Btn type="submit" variant="primary" loading={loading}>
+            Import
+          </Btn>
+        </div>
+      </form>
 
       <div className="grow"></div>
 

@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import React from 'react';
 
 export default ({
   title,
@@ -10,7 +11,7 @@ export default ({
 }: {
   title: string;
   description?: string;
-  header?: JSX.Element;
+  header?: React.JSX.Element;
   className?: string;
   titleClass?: string;
   headerClass?: string;
