@@ -34,7 +34,9 @@ export default function useSdkEvents() {
       } else if (params.name === 'contractAddress') {
         setForWallet('contractAddress', params.newValue);
       } else if (params.name === 'wallets') {
-        parseAccountWallets(params.newValue);
+        if (!!state.username) {
+          parseAccountWallets(params.newValue, state.username);
+        }
       }
     };
 
@@ -159,13 +161,14 @@ export default function useSdkEvents() {
               const url = new URL(window.location.href);
               url.searchParams.delete('username');
               url.searchParams.delete('authStrategy');
-              urlParams.has('address0');
+              url.searchParams.delete('address0');
               window.history.replaceState(null, '', url.toString());
             }, 50);
           } else {
             const url = new URL(window.location.href);
             url.searchParams.delete('username');
             url.searchParams.delete('authStrategy');
+            url.searchParams.delete('address0');
             window.history.replaceState(null, '', url.toString());
           }
         }

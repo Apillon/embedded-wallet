@@ -54,6 +54,7 @@ type ContextActions =
         owner: string;
         chainId: number;
         token: TokenInfo;
+        remove?: boolean;
       };
     }
   | {
@@ -62,6 +63,7 @@ type ContextActions =
         owner: string;
         chainId: number;
         nft: TokenNftInfo;
+        remove?: boolean;
       };
     };
 
@@ -83,8 +85,12 @@ function reducer(state: ContextState, action: ContextActions) {
         isLowerCaseEqual(x.address, action.payload.token.address)
       );
 
-      if (found < 0) {
+      console.log(found, action.payload.remove);
+
+      if (found < 0 && !action.payload.remove) {
         newTokens.push(action.payload.token);
+      } else if (action.payload.remove) {
+        newTokens.splice(found, 1);
       } else {
         newTokens[found] = action.payload.token;
       }
@@ -108,8 +114,10 @@ function reducer(state: ContextState, action: ContextActions) {
           x.tokenId === action.payload.nft.tokenId
       );
 
-      if (found < 0) {
+      if (found < 0 && !action.payload.remove) {
         newTokens.push(action.payload.nft);
+      } else if (action.payload.remove) {
+        newTokens.splice(found, 1);
       } else {
         newTokens[found] = action.payload.nft;
       }

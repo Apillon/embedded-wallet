@@ -16,6 +16,7 @@ const titles = {
   importAccount: 'Import private key',
   selectAccounts: 'Select account',
   addAccount: 'Add new account',
+  nftDetail: 'NFT',
 } as { [key in WalletScreens]: string };
 
 export default () => {

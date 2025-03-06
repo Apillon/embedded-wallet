@@ -4,9 +4,16 @@ import ApproveDataRow from '../Approve/ApproveDataRow';
 import Btn from '../ui/Btn';
 
 export default function TokensNftDetail() {
-  const { goScreenBack } = useWalletContext();
+  const {
+    state: { networkId },
+    activeWallet,
+    goScreenBack,
+    handleInfo,
+  } = useWalletContext();
+
   const {
     state: { selectedNft },
+    dispatch,
   } = useTokensContext();
 
   if (!selectedNft) {
@@ -47,6 +54,28 @@ export default function TokensNftDetail() {
           <ApproveDataRow label="Name" data={selectedNft.name} className="mb-3" />
         )}
       </div>
+
+      <Btn
+        variant="ghost"
+        className="w-full mb-3 !text-red"
+        onClick={() => {
+          goScreenBack();
+
+          dispatch({
+            type: 'addNft',
+            payload: {
+              owner: activeWallet?.address || '',
+              chainId: networkId,
+              nft: selectedNft,
+              remove: true,
+            },
+          });
+
+          handleInfo('NFT deleted', 5000);
+        }}
+      >
+        Remove
+      </Btn>
 
       <Btn variant="ghost" className="w-full" onClick={() => goScreenBack()}>
         Back

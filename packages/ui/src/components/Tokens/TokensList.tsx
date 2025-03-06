@@ -38,6 +38,26 @@ export default function TokensList({
             token={token}
             asButton={asButtons}
             disabled={highlightActiveToken && token.address === tokens.selectedToken}
+            menuItems={
+              !asButtons && !!token.address
+                ? [
+                    {
+                      label: 'Remove',
+                      onClick: () => {
+                        dispatch({
+                          type: 'updateToken',
+                          payload: {
+                            token,
+                            owner: state.contractAddress,
+                            chainId: state.networkId,
+                            remove: true,
+                          },
+                        });
+                      },
+                    },
+                  ]
+                : undefined
+            }
             className="w-full text-left"
             onClick={
               !asButtons

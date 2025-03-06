@@ -54,7 +54,7 @@ export default () => {
           title="Settings"
           onClick={() => setScreen('menuDot')}
         >
-          <IconVdots className="mx-auto" />
+          <IconVdots className="mx-auto text-[24px]" />
         </button>
       </div>
     </div>

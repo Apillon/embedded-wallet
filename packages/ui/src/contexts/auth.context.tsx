@@ -123,7 +123,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
    */
   async function onRegister(isPrivateKey = false) {
     if (!isPrivateKey) {
-      wallet?.xdomain?.storageSet(WebStorageKeys.REGISTER_PK, '');
+      wallet?.xdomain?.storageSet(WebStorageKeys.REGISTER_PK, '', true);
       setStateValue('privateKey', '');
     }
 

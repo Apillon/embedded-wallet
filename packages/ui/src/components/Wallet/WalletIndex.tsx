@@ -102,7 +102,9 @@ export default () => {
 
         <TabPanels>
           {tabs.map(t => (
-            <TabPanel key={t.title}>{t.content}</TabPanel>
+            <TabPanel key={t.title} className="focus:outline-none">
+              {t.content}
+            </TabPanel>
           ))}
         </TabPanels>
       </TabGroup>

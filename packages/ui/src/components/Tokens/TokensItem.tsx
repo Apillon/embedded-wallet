@@ -2,17 +2,21 @@ import clsx from 'clsx';
 import { TokenInfo } from '../../contexts/tokens.context';
 import IconChevron from '../ui/Icon/IconChevron';
 import { formatBalance } from '../../lib/helpers';
+import IconVdots from '../ui/Icon/IconVdots';
+import Menu, { MenuItemType } from '../ui/Menu';
 
 export default function TokensItem({
   token,
   asButton,
   disabled,
+  menuItems,
   className,
   onClick,
 }: {
   token: TokenInfo;
   asButton?: boolean;
   disabled?: boolean;
+  menuItems?: MenuItemType[];
   className?: string;
   onClick?: () => void;
 }) {
@@ -32,6 +36,19 @@ export default function TokensItem({
           {formatBalance(token.balance, token.symbol)}
         </p>
       </div>
+
+      {!!menuItems && (
+        <div className="self-start">
+          <Menu items={menuItems}>
+            <button
+              className="oaw-button-plain !rounded-full !bg-transparent relative w-4 h-4 text-offwhite shrink-0 -mr-1"
+              title="Options"
+            >
+              <IconVdots className="mx-auto text-[16px]" />
+            </button>
+          </Menu>
+        </div>
+      )}
 
       {asButton && <IconChevron />}
     </>

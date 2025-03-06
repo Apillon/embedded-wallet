@@ -158,6 +158,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
       );
 
       if (typeof res !== 'undefined') {
+        sessionStorage.setItem(WebStorageKeys.REGISTER_PK, '');
         // Redirects back to app
         setupUserInfo({ username: state.username, authStrategy: 'passkey', address0: res });
       }

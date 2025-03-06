@@ -83,6 +83,7 @@ type ContextActions =
       payload: Partial<ReturnType<typeof initialState>>;
     }
   | { type: 'setBalance'; payload: { address: string; balance?: string } }
+  | { type: 'updateAccounts'; payload: AccountWalletEx[] }
   | { type: 'reset' };
 
 function reducer(state: ContextState, action: ContextActions) {
@@ -138,6 +139,17 @@ function reducer(state: ContextState, action: ContextActions) {
         accountWallets: updated,
       };
     }
+    case 'updateAccounts': {
+      // Ignore change. Whatever triggered the change had stale account wallets
+      if (action.payload.length !== state.accountWallets.length) {
+        return { ...state };
+      }
+
+      return {
+        ...state,
+        accountWallets: action.payload,
+      };
+    }
     case 'reset':
       return initialState(state.networkId, state.appProps);
     default:
@@ -165,7 +177,10 @@ const WalletContext = createContext<
         strategy?: AuthStrategyName,
         username?: string
       ) => Promise<AccountWallet[] | undefined>;
-      parseAccountWallets: (wallets: AccountWallet[]) => Promise<AccountWalletEx[]>;
+      parseAccountWallets: (
+        wallets: AccountWallet[],
+        username?: string
+      ) => Promise<AccountWalletEx[]>;
       reloadAccountBalances: (
         addresses?: string[],
         accountWallets?: AccountWalletEx[]
@@ -387,11 +402,11 @@ function WalletProvider({
 
     if (!accountWalletsRes) {
       await loadAccountWallets(authStrategy, username);
+
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      parseAccountWallets(accountWalletsRes || [], username);
     }
-
-    await new Promise(resolve => setTimeout(resolve, 50));
-
-    parseAccountWallets(accountWalletsRes || []);
 
     await wallet?.initContractAddress({ username });
   }
@@ -529,7 +544,7 @@ function WalletProvider({
         }
       });
 
-      setStateValue('accountWallets', updatedWallets);
+      dispatch({ type: 'updateAccounts', payload: updatedWallets });
 
       return true;
     } catch (e) {
@@ -571,7 +586,7 @@ function WalletProvider({
     if (found > -1) {
       const n = [...state.accountWallets];
       n[found] = { ...n[found], title };
-      setStateValue('accountWallets', n);
+      dispatch({ type: 'updateAccounts', payload: n });
     }
   }
 
