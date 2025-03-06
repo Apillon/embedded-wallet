@@ -147,11 +147,11 @@ export default () => {
     }
   }
 
-  async function onSendAgain() {
+  async function onSendAgain(captcha?: string) {
     setForAuth('loading', true);
     handleError();
 
-    if (await sendConfirmationEmail()) {
+    if (await sendConfirmationEmail(captcha)) {
       setResendCooldown(true);
       setTimeout(() => setResendCooldown(false), 30000);
     }
@@ -205,8 +205,8 @@ export default () => {
               }}
             >
               <AuthCaptchaInput
-                onVerified={() => {
-                  onSendAgain();
+                onVerified={t => {
+                  onSendAgain(t);
                   setNeedsCaptcha(false);
                 }}
               />

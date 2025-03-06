@@ -10,7 +10,7 @@ import AuthCaptchaInput from './AuthCaptchaInput';
 export default () => {
   const { wallet, handleError } = useWalletContext();
   const {
-    state: { loading, username, lastCodeExpiretime },
+    state: { loading, username, lastCodeExpiretime, captcha },
     setStateValue: setForAuth,
     startRegister,
     sendConfirmationEmail,
@@ -145,11 +145,11 @@ export default () => {
     }
   }
 
-  async function onSendAgain() {
+  async function onSendAgain(captcha?: string) {
     setForAuth('loading', true);
     handleError();
 
-    if (await sendConfirmationEmail()) {
+    if (await sendConfirmationEmail(captcha)) {
       setResendCooldown(true);
       setTimeout(() => setResendCooldown(false), 30000);
     }
@@ -203,8 +203,8 @@ export default () => {
               }}
             >
               <AuthCaptchaInput
-                onVerified={() => {
-                  onSendAgain();
+                onVerified={t => {
+                  onSendAgain(t);
                   setNeedsCaptcha(false);
                 }}
               />
@@ -215,7 +215,13 @@ export default () => {
             variant="ghost"
             disabled={loading || resendCooldown}
             className="w-full"
-            onClick={() => onSendAgain()}
+            onClick={() => {
+              if (captcha) {
+                onSendAgain();
+              } else {
+                setNeedsCaptcha(true);
+              }
+            }}
           >
             Send again
           </Btn>

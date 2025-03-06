@@ -82,9 +82,9 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     setStateValue('loading', false);
   }
 
-  async function sendConfirmationEmail() {
+  async function sendConfirmationEmail(captcha?: string) {
     try {
-      if (!state.captcha) {
+      if (!captcha && !state.captcha) {
         throw new Error(
           'Captcha verification required. Please return to previous registration step.'
         );
@@ -101,7 +101,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
           body: JSON.stringify({
             email: state.username,
             captcha: {
-              token: state.captcha,
+              token: captcha || state.captcha,
               eKey: import.meta.env.VITE_PROCAPTCHA_KEY ?? 'N/A',
             },
           }),
@@ -214,7 +214,7 @@ const AuthContext = createContext<
         authStrategy: AuthStrategyName;
         address0: string;
       }) => void;
-      sendConfirmationEmail: () => Promise<true | undefined>;
+      sendConfirmationEmail: (captcha?: string) => Promise<true | undefined>;
       startRegister: () => void;
     }
   | undefined
