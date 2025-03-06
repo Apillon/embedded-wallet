@@ -78,7 +78,7 @@ wallet.events.on('txSubmitted', tx => {
 
 - EIP-1193 events: `connect`, `disconnect`, `chainChanged`, `accountsChanged`
 
-- UI events: `open`, `addToken`, `addTokenStatus`
+- UI events: `open`, `addToken`, `addTokenNft`, `addTokenStatus`
 
 ### Auth methods
 

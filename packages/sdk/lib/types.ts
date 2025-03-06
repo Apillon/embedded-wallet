@@ -236,6 +236,8 @@ export type Events = {
   addTokenStatus: {
     success: boolean;
     info?: string;
+    token?: Events['addToken'];
+    nft?: Events['addTokenNft'];
   };
 
   /**

@@ -85,8 +85,6 @@ function reducer(state: ContextState, action: ContextActions) {
         isLowerCaseEqual(x.address, action.payload.token.address)
       );
 
-      console.log(found, action.payload.remove);
-
       if (found < 0 && !action.payload.remove) {
         newTokens.push(action.payload.token);
       } else if (action.payload.remove) {

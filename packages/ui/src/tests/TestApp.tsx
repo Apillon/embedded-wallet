@@ -3,6 +3,7 @@ import EmbeddedWallet from '../components/EmbeddedWallet';
 import TestEIP1193 from './TestEIP1193';
 import TestSign from './TestSign';
 import TestTx from './TestTx';
+import TestTokenEvents from './TestTokenEvents';
 
 export default function TestApp() {
   return (
@@ -89,33 +90,7 @@ export default function TestApp() {
 
       <h2>Test addToken event</h2>
 
-      <div className="row">
-        <button
-          onClick={async () => {
-            const w = getEmbeddedWallet();
-            w?.events.emit('addToken', {
-              address: '0x3c8e129ca9e8439f7539fadd58e8c769ffdfc93e',
-              symbol: 'USDC',
-              decimals: 6,
-              name: 'USD Coin',
-            });
-          }}
-        >
-          Add some token
-        </button>
-
-        <button
-          onClick={async () => {
-            const w = getEmbeddedWallet();
-            w?.events.emit('addTokenNft', {
-              address: '0x14EeBa9Cf473c007997dB49a7600835e543BA3F5',
-              tokenId: 8,
-            });
-          }}
-        >
-          Add some NFT
-        </button>
-      </div>
+      <TestTokenEvents />
     </div>
   );
 }

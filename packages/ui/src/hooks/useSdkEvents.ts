@@ -54,7 +54,7 @@ export default function useSdkEvents() {
       }
 
       if (err) {
-        wallet?.events.emit('addTokenStatus', { success: false, info: err });
+        wallet?.events.emit('addTokenStatus', { success: false, info: err, token: params });
         console.error('onAddToken:', err);
         return;
       }
@@ -63,7 +63,7 @@ export default function useSdkEvents() {
 
       if (!res) {
         err = `Token does not exist on chain (ID: ${params.chainId || state.networkId})`;
-        wallet?.events.emit('addTokenStatus', { success: false, info: err });
+        wallet?.events.emit('addTokenStatus', { success: false, info: err, token: params });
         console.error('onAddToken:', err);
         return;
       }
@@ -76,6 +76,8 @@ export default function useSdkEvents() {
           token: { ...params, balance: '0.0' },
         },
       });
+
+      wallet?.events.emit('addTokenStatus', { success: true, token: params });
     };
 
     const onAddTokenNft = async (params: Events['addTokenNft']) => {
@@ -90,7 +92,7 @@ export default function useSdkEvents() {
       }
 
       if (err) {
-        wallet?.events.emit('addTokenStatus', { success: false, info: err });
+        wallet?.events.emit('addTokenStatus', { success: false, info: err, nft: params });
         console.error('onAddToken:', err);
         return;
       }
@@ -108,7 +110,7 @@ export default function useSdkEvents() {
       }
 
       if (err) {
-        wallet?.events.emit('addTokenStatus', { success: false, info: err });
+        wallet?.events.emit('addTokenStatus', { success: false, info: err, nft: params });
         console.error('onAddToken:', err);
         return;
       }
@@ -133,6 +135,8 @@ export default function useSdkEvents() {
           nft: res.data,
         },
       });
+
+      wallet?.events.emit('addTokenStatus', { success: true, nft: params });
     };
 
     // #endregion
