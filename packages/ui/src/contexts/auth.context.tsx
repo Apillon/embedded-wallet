@@ -98,6 +98,8 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       );
 
+      setStateValue('captcha', '');
+
       if (!res.ok || res.status >= 400) {
         throw new Error('Could not send confirmation email');
       }

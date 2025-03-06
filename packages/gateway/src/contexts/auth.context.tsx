@@ -24,14 +24,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         setStateValue('screen', 'confirmCode');
       }
     }
-
-    if (window) {
-      const procaptchaToken = sessionStorage.getItem(WebStorageKeys.PROCAPTCHA);
-
-      if (procaptchaToken) {
-        setStateValue('captcha', procaptchaToken);
-      }
-    }
   }, []);
 
   function setStateValue<T extends keyof ReturnType<typeof initialState>>(
@@ -115,6 +107,8 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
           }),
         }
       );
+
+      setStateValue('captcha', '');
 
       if (!res.ok || res.status >= 400) {
         throw new Error('Could not send confirmation email');
