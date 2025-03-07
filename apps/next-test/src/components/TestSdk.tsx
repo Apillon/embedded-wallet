@@ -27,7 +27,7 @@ export default function TestSdk() {
     >
       <button
         onClick={async () => {
-          console.log(await signMessage('test massage'));
+          console.log(await signMessage('test message'));
         }}
       >
         (SDK) Sign message

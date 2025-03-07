@@ -38,7 +38,7 @@ const contract = getContract({
 });
 
 async function sign() {
-  console.log(await account.signMessage({ message: 'test massage' }));
+  console.log(await account.signMessage({ message: 'test message' }));
 }
 
 async function getNativeBalance() {

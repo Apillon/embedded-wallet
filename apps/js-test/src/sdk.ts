@@ -5,7 +5,7 @@ document.getElementById('sdk-sign')?.addEventListener('click', async () => {
 
   if (w) {
     const result = await w.signMessage({
-      message: 'test massage',
+      message: 'test message',
       mustConfirm: true,
     });
 

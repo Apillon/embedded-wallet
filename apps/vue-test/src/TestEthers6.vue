@@ -26,7 +26,7 @@ onMounted(() => {
 });
 
 async function sign() {
-  console.log(await signer.signMessage('test massage'));
+  console.log(await signer.signMessage('test message'));
 }
 
 async function getNativeBalance() {

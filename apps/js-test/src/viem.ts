@@ -50,7 +50,7 @@ async function start() {
   });
 
   document.getElementById('viem-sign')?.addEventListener('click', async () => {
-    console.log(await account.signMessage({ message: 'test massage' }));
+    console.log(await account.signMessage({ message: 'test message' }));
   });
 
   document.getElementById('viem-native-balance')?.addEventListener('click', async () => {

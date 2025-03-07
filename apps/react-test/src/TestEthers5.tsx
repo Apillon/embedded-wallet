@@ -31,7 +31,7 @@ export default function TestEthers5() {
     >
       <button
         onClick={async () => {
-          console.log(await signer.signMessage('test massage'));
+          console.log(await signer.signMessage('test message'));
         }}
       >
         (ethers 5) Sign message
