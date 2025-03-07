@@ -8,7 +8,7 @@ const titles = {
   transactions: 'Transactions',
   sendToken: 'Send',
   selectToken: 'Select token',
-  addToken: 'Add token',
+  importToken: 'Import tokens',
   accountDetails: 'Account details',
   menuMore: 'Settings & security',
   settingsGeneral: 'General settings',
@@ -16,6 +16,7 @@ const titles = {
   importAccount: 'Import private key',
   selectAccounts: 'Select account',
   addAccount: 'Add new account',
+  nftDetail: 'NFT',
 } as { [key in WalletScreens]: string };
 
 export default () => {

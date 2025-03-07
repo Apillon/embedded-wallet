@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useReducer, useRef } from 'react';
-import { getEmbeddedWallet, TransactionItem } from '@apillon/wallet-sdk';
+import { EVMAccountAbi, getEmbeddedWallet, TransactionItem } from '@apillon/wallet-sdk';
 import { useWalletContext } from './wallet.context';
 import { WebStorageKeys } from '../lib/constants';
+import { ethers, TransactionReceipt } from 'ethers';
 
 const initialState = () => ({
   txs: {} as { [ownerAddress: string]: { [txHash: string]: TransactionItem } },
@@ -78,11 +79,13 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
   const initialized = useRef(false);
 
   const {
+    state: { accountWallets, stagedWalletsCount, walletsCountBeforeStaging },
     wallet,
     activeWallet,
     reloadAccountBalances,
+    saveAccountTitle,
     setStateValue: setForWallet,
-    handleInfo,
+    handleSuccess,
   } = useWalletContext();
 
   useEffect(() => {
@@ -217,9 +220,12 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
         });
 
         // set wallets data to stale if needed
+        // if (!failed && isAccountWalletsTx(txData)) {
+        //   setForWallet('isAccountWalletsStale', true);
+        //   handleInfo('stale');
+        // }
         if (!failed && isAccountWalletsTx(txData)) {
-          setForWallet('isAccountWalletsStale', true);
-          handleInfo('stale');
+          handleNewAccountName(txData);
         }
 
         wallet.events.emit('txDone', tx);
@@ -237,9 +243,12 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
           },
         });
 
+        // if (isAccountWalletsTx(txData)) {
+        //   setForWallet('isAccountWalletsStale', true);
+        //   handleInfo('stale');
+        // }
         if (isAccountWalletsTx(txData)) {
-          setForWallet('isAccountWalletsStale', true);
-          handleInfo('stale');
+          handleNewAccountName(txData, receipt);
         }
       } else {
         // Tx failed
@@ -259,6 +268,51 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  async function handleNewAccountName(
+    txData: TransactionItem,
+    txReceipt?: TransactionReceipt | null
+  ) {
+    if (!wallet) {
+      return;
+    }
+
+    if (!txReceipt) {
+      txReceipt = await wallet
+        .getRpcProviderForChainId(txData?.chainId)
+        .getTransactionReceipt(txData.hash);
+    }
+
+    if (txReceipt) {
+      if (txReceipt?.logs?.[0]) {
+        const parsed = new ethers.Interface(EVMAccountAbi).parseLog(txReceipt.logs[0]);
+
+        if (parsed?.args?.[0] && typeof parsed.args[0] === 'string') {
+          try {
+            const data = JSON.parse(txData.internalData || '""');
+
+            if (data?.title && data?.index) {
+              await saveAccountTitle(data.title, data.index, `0x${parsed.args[0].slice(-40)}`);
+            }
+
+            setForWallet('stagedWalletsCount', Math.max(0, stagedWalletsCount - 1));
+            setForWallet('walletsCountBeforeStaging', Math.max(0, walletsCountBeforeStaging + 1));
+
+            /**
+             * Updates wallets in SDK
+             * -> emits `dataUpdated` event
+             * -> `useSdkEvents` handles event (parseAccountWallets)
+             */
+            wallet.initAccountWallets([...accountWallets.map(x => x.address), parsed.args[0]]);
+
+            handleSuccess('Accounts updated', 5000);
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      }
+    }
+  }
+
   return (
     <TransactionsContext.Provider value={{ state, dispatch, checkTransaction }}>
       {children}
@@ -273,13 +327,15 @@ function isAccountWalletsTx(tx?: TransactionItem) {
   return (
     tx?.internalLabel &&
     [
-      'proxyWrite_addWallet',
-      'proxyWrite_addWalletPassword',
-      'proxyWrite_manageCredential',
-      'proxyWrite_manageCredentialPassword',
-      'gasless_3', // AddWallet
-      'gasless_4', // AddWalletPassword
-      'updateAccountWalletTitle',
+      // 'proxyWrite_addWallet',
+      // 'proxyWrite_addWalletPassword',
+      // 'proxyWrite_manageCredential',
+      // 'proxyWrite_manageCredentialPassword',
+      // 'gasless_3', // AddWallet
+      // 'gasless_4', // AddWalletPassword
+      // 'updateAccountWalletTitle',
+      'accountsAdd',
+      'accountsImport',
     ].includes(tx.internalLabel)
   );
 }

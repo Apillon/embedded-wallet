@@ -6,30 +6,34 @@ import WalletTransactions from './WalletTransactions';
 import { Tab, TabGroup, TabList, TabPanel, TabPanels } from '@headlessui/react';
 import { useTokensContext } from '../../contexts/tokens.context';
 import MsgInfo from '../ui/MsgInfo';
+import TokensList from '../Tokens/TokensList';
+import TokensNftList from '../Tokens/TokensNftList';
 
 export default () => {
   const {
-    state: { isAccountWalletsStale },
+    state: { isAccountWalletsStale, lastIndexTabIndex },
     activeWallet,
     setScreen,
+    setStateValue: setForWallet,
   } = useWalletContext();
 
   const { selectedToken, currentExchangeRate } = useTokensContext();
 
   const tabs = [
     {
-      title: 'Transactions',
-      content: <WalletTransactions />,
-    },
-    {
       title: 'Tokens',
-      content: <ContentPlaceholder />,
-      disabled: true,
+      content: <TokensList />,
+      disabled: false,
     },
     {
       title: 'NFTs',
-      content: <ContentPlaceholder />,
-      disabled: true,
+      content: <TokensNftList />,
+      disabled: false,
+    },
+    {
+      title: 'Transactions',
+      content: <WalletTransactions />,
+      disabled: false,
     },
   ];
 
@@ -70,7 +74,10 @@ export default () => {
         </div>
       </div>
 
-      <TabGroup>
+      <TabGroup
+        selectedIndex={lastIndexTabIndex || 0}
+        onChange={index => setForWallet('lastIndexTabIndex', index)}
+      >
         <div className="-mx-8 flex justify-center">
           <TabList className="flex rounded-full bg-brightdark mb-6">
             {tabs.map(t => (
@@ -95,17 +102,12 @@ export default () => {
 
         <TabPanels>
           {tabs.map(t => (
-            <TabPanel key={t.title}>{t.content}</TabPanel>
+            <TabPanel key={t.title} className="focus:outline-none">
+              {t.content}
+            </TabPanel>
           ))}
         </TabPanels>
       </TabGroup>
     </div>
   );
 };
-
-const ContentPlaceholder = () => (
-  <div className="flex gap-4 justify-center">
-    <div className="w-[125px] h-[144px] bg-primarybright rounded-lg"></div>
-    <div className="w-[125px] h-[144px] bg-primarybright rounded-lg"></div>
-  </div>
-);

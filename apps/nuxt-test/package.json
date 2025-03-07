@@ -11,14 +11,14 @@
   },
   "dependencies": {
     "@apillon/wallet-vue": "*",
-    "ethers": "^6.13.3",
-    "ethers5": "npm:ethers@^5.7.2",
-    "nuxt": "^3.13.0",
-    "viem": "^2.21.19",
+    "nuxt": "^3.15.4",
     "vue": "latest",
     "vue-router": "latest"
   },
   "devDependencies": {
-    "vite-plugin-node-polyfills": "^0.22.0"
+    "vite-plugin-node-polyfills": "^0.23.0"
+  },
+  "global": {
+    "dependencies": ["ethers", "ethers5", "viem"]
   }
 }

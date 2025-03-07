@@ -1,6 +1,6 @@
 import { WalletProvider, useWalletContext } from '../contexts/wallet.context';
 import { useEffect } from 'react';
-import { AppParams, Events, UserRejectedRequestError } from '@apillon/wallet-sdk';
+import { AppParams, UserRejectedRequestError } from '@apillon/wallet-sdk';
 import { TransactionsProvider } from '../contexts/transactions.context';
 import { AuthProvider } from '../contexts/auth.context';
 import Auth from './Auth/Auth';
@@ -10,6 +10,7 @@ import WalletLayout from './Wallet/WalletLayout';
 import WalletUnavailable from './Wallet/WalletUnavailable';
 import Loader from './ui/Loader';
 import { TokensProvider } from '../contexts/tokens.context';
+import useSdkEvents from '../hooks/useSdkEvents';
 
 export type AppProps = {
   /**
@@ -35,81 +36,18 @@ function Main({ disableDefaultActivatorStyle = false }: AppProps) {
     state,
     wallet,
     initialized: walletInitialized,
-    loadAccountWallets,
     reloadAccountBalances,
-    dispatch,
-    defaultNetworkId,
     setStateValue: setForWallet,
   } = useWalletContext();
   const { state: approveState, dispatch: dispatchApprove } = useApproveContext();
-
-  const loggedIn = !!state.username;
 
   /**
    * Handle wallet SDK Events
    * and auto login if redirected from gateway
    */
-  useEffect(() => {
-    const onOpen = (params: Events['open']) => {
-      setForWallet('isOpen', params);
-    };
+  useSdkEvents();
 
-    const onDataUpdated = (params: Events['dataUpdated']) => {
-      if (params.name === 'defaultNetworkId') {
-        reloadAccountBalances();
-        setForWallet('networkId', params.newValue);
-      } else if (params.name === 'contractAddress') {
-        setForWallet('contractAddress', params.newValue);
-      }
-    };
-
-    if (wallet && walletInitialized) {
-      wallet.events.on('open', onOpen);
-      wallet.events.on('dataUpdated', onDataUpdated);
-
-      // Login if account params are in the URL (redirected back from auth gateway)
-      // Delay a bit to prevent freeze
-      setTimeout(() => {
-        if (window.location.search) {
-          const urlParams = new URLSearchParams(window.location.search);
-
-          if (urlParams.has('username') && !!urlParams.get('username')) {
-            const loginData = {
-              username: urlParams.get('username') || '',
-              authStrategy: (urlParams.get('authStrategy') || 'passkey') as any,
-              networkId: defaultNetworkId || undefined,
-            };
-
-            dispatch({
-              type: 'setState',
-              payload: loginData,
-            });
-
-            setTimeout(() => {
-              loadAccountWallets(loginData.authStrategy, loginData.username);
-
-              const url = new URL(window.location.href);
-              url.searchParams.delete('username');
-              url.searchParams.delete('authStrategy');
-              window.history.replaceState(null, '', url.toString());
-            }, 50);
-          } else {
-            const url = new URL(window.location.href);
-            url.searchParams.delete('username');
-            url.searchParams.delete('authStrategy');
-            window.history.replaceState(null, '', url.toString());
-          }
-        }
-      }, 200);
-    }
-
-    return () => {
-      if (wallet) {
-        wallet.events.off('open', onOpen);
-        wallet.events.off('dataUpdated', onDataUpdated);
-      }
-    };
-  }, [wallet, reloadAccountBalances, walletInitialized]);
+  const loggedIn = !!state.username;
 
   /**
    * On modal close:

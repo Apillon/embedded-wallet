@@ -9,15 +9,25 @@ import AuthCodeSubmitted from './AuthCodeSubmitted';
 import clsx from 'clsx';
 import AuthTitle from './AuthTitle';
 import Btn from '../ui/Btn';
+import { useEffect, useState } from 'react';
 
 export default ({ className }: { className?: string }) => {
   const { referrer, redirectBack } = useGlobalContext();
+  const [initialized, setInitialized] = useState(false);
 
   const {
     state: { screen },
   } = useAuthContext();
 
+  useEffect(() => {
+    setInitialized(true);
+  }, []);
+
   function currentScreen() {
+    if (!initialized) {
+      return <></>;
+    }
+
     if (!referrer) {
       return (
         <>
@@ -31,7 +41,7 @@ export default ({ className }: { className?: string }) => {
             <Btn
               className="w-full"
               variant="ghost"
-              onClick={() => redirectBack({ username: '', authStrategy: 'passkey' })}
+              onClick={() => redirectBack({ username: '', authStrategy: 'passkey', address0: '' })}
             >
               Continue
             </Btn>

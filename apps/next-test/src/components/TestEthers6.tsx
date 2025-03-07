@@ -1,3 +1,5 @@
+'use client';
+
 import { useWallet } from '@apillon/wallet-react';
 import { EmbeddedEthersSigner } from '@apillon/wallet-sdk';
 import { ethers } from 'ethers';

@@ -170,7 +170,7 @@ export async function credentialCreate(
       pubKeyCredParams: [
         //{alg: -8, type: "public-key"},   // Ed25519
         { alg: -7, type: 'public-key' }, // ES256
-        //{alg: -257, type: "public-key"}  // RS256
+        { alg: -257, type: 'public-key' }, // RS256
       ],
       rp,
       user,

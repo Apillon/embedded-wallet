@@ -13,12 +13,14 @@ import AccountsExport from '../Accounts/AccountsExport';
 import AccountsImport from '../Accounts/AccountsImport';
 import SettingsGeneral from '../Settings/SettingsGeneral';
 import TokensSend from '../Tokens/TokensSend';
-import TokensSelect from '../Tokens/TokensSelect';
-import TokensAdd from '../Tokens/TokensAdd';
 import AccountsList from '../Accounts/AccountsList';
 import AccountsAdd from '../Accounts/AccountsAdd';
 import MsgSuccess from '../ui/MsgSuccess';
 import MsgInfo from '../ui/MsgInfo';
+import TokensList from '../Tokens/TokensList';
+import TokensImport from '../Tokens/TokensImport';
+import TokensNftImport from '../Tokens/TokensNftImport';
+import TokensNftDetail from '../Tokens/TokensNftDetail';
 
 /**
  * Base layout elements and screen display logic
@@ -48,40 +50,45 @@ export default () => {
         return <></>;
       case 'networks':
         return <WalletNetworkSelect />;
+
+      /**
+       * Menus
+       */
       case 'menuDot':
         return <SettingsMenuDot />;
       case 'menuMore':
         return <SettingsMenuMore />;
       case 'settingsGeneral':
         return <SettingsGeneral />;
+
+      /**
+       * Account settings
+       */
       case 'accountDetails':
         return <AccountsDetails />;
       case 'exportPrivateKey':
         return <AccountsExport />;
       case 'importAccount':
         return <AccountsImport />;
-      case 'selectToken':
-      case 'sendToken':
-      case 'addToken':
-        return (
-          <>
-            {(() => {
-              switch (walletScreen) {
-                case 'sendToken':
-                  return <TokensSend />;
-                case 'addToken':
-                  return <TokensAdd />;
-                case 'selectToken':
-                default:
-                  return <TokensSelect />;
-              }
-            })()}
-          </>
-        );
       case 'selectAccounts':
         return <AccountsList />;
       case 'addAccount':
         return <AccountsAdd />;
+
+      /**
+       * Tokens
+       */
+      case 'sendToken':
+        return <TokensSend />;
+      case 'importToken':
+        return <TokensImport />;
+      case 'selectToken':
+        return <TokensList asButtons highlightActiveToken className="pt-10 pb-2 min-h-full" />;
+      case 'importNft':
+        return <TokensNftImport />;
+      case 'nftDetail':
+        return <TokensNftDetail />;
+
       default:
         return <WalletIndex />;
     }

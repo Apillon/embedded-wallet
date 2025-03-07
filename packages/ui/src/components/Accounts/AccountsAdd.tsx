@@ -31,7 +31,6 @@ export default function AccountsAdd() {
     handleError,
     goScreenBack,
     handleSuccess,
-    saveAccountTitle,
     setStateValue: setForWallet,
   } = useWalletContext();
   const [type, setType] = useState<AccountWalletTypes>(WalletType.EVM);
@@ -46,14 +45,23 @@ export default function AccountsAdd() {
     setLoading(true);
 
     try {
-      await wallet?.addAccountWallet({ walletType: type });
+      const predictedIndex =
+        accountWallets[accountWallets.length - 1].index + 1 + stagedWalletsCount;
 
-      // Save wallet name to GS, using (probably) next index, because address is not available yet
-      saveAccountTitle(
-        title,
-        accountWallets[accountWallets.length - 1].index + 1 + stagedWalletsCount
-      );
+      // Save wallet name to tx metadata
+      // When updating also check <AccountsImport />
+      await wallet?.addAccountWallet({
+        walletType: type,
+        internalLabel: 'accountsAdd',
+        internalData: JSON.stringify({
+          index: predictedIndex,
+          title,
+        }),
+      });
 
+      // saveAccountTitle(title, predictedIndex);
+
+      setForWallet('walletsCountBeforeStaging', accountWallets.length);
       setForWallet('stagedWalletsCount', stagedWalletsCount + 1);
 
       handleSuccess('Account created. Wait for transaction to complete.');
@@ -111,6 +119,7 @@ export default function AccountsAdd() {
           label="Account name"
           placeholder="Enter name (for personal reference)"
           value={title}
+          autoFocus
           className="w-full mb-6"
           onChange={ev => setTitle(ev.target.value)}
         />

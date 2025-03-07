@@ -30,7 +30,7 @@ export type WalletScreens =
   | 'transactions'
   | 'sendToken'
   | 'selectToken'
-  | 'addToken'
+  | 'importToken'
   | 'exportPrivateKey'
   | 'selectAccounts'
   | 'addAccount'
@@ -40,7 +40,9 @@ export type WalletScreens =
   | 'menuDot'
   | 'menuMore'
   | 'accountDetails'
-  | 'settingsGeneral';
+  | 'settingsGeneral'
+  | 'importNft'
+  | 'nftDetail';
 
 type AccountWalletEx = AccountWallet & { balance: string; title: string };
 
@@ -49,6 +51,7 @@ const initialState = (defaultNetworkId = 0, appProps: AppProps) => ({
   walletIndex: 0,
   accountWallets: [] as AccountWalletEx[],
   stagedWalletsCount: 0, // how many new wallets have been addedd, but are not in `accountWallets` yet
+  walletsCountBeforeStaging: 0,
   isAccountWalletsStale: false,
   contractAddress: '',
   privateKeys: {} as { [walletAddress: string]: string },
@@ -56,6 +59,7 @@ const initialState = (defaultNetworkId = 0, appProps: AppProps) => ({
   networkId: defaultNetworkId,
   walletScreen: 'main' as WalletScreens,
   walletScreenHistory: [] as WalletScreens[],
+  lastIndexTabIndex: 0, // index of last tab opened on <WalletIndex />
   isOpen: false, // is wallet modal displayed
   displayedError: '',
   displayedSuccess: '',
@@ -79,6 +83,7 @@ type ContextActions =
       payload: Partial<ReturnType<typeof initialState>>;
     }
   | { type: 'setBalance'; payload: { address: string; balance?: string } }
+  | { type: 'updateAccounts'; payload: AccountWalletEx[] }
   | { type: 'reset' };
 
 function reducer(state: ContextState, action: ContextActions) {
@@ -134,6 +139,17 @@ function reducer(state: ContextState, action: ContextActions) {
         accountWallets: updated,
       };
     }
+    case 'updateAccounts': {
+      // Ignore change. Whatever triggered the change had stale account wallets
+      if (action.payload.length !== state.accountWallets.length) {
+        return { ...state };
+      }
+
+      return {
+        ...state,
+        accountWallets: action.payload,
+      };
+    }
     case 'reset':
       return initialState(state.networkId, state.appProps);
     default:
@@ -152,16 +168,24 @@ const WalletContext = createContext<
       wallet?: EmbeddedWallet;
       setWallet: (wallet: EmbeddedWallet) => void;
       initialized: boolean;
+      initUserData: (params: {
+        username: string;
+        authStrategy: AuthStrategyName;
+        address0: string;
+      }) => Promise<void>;
       loadAccountWallets: (
         strategy?: AuthStrategyName,
         username?: string
       ) => Promise<AccountWallet[] | undefined>;
-      parseAccountWallets: (wallets: AccountWallet[]) => Promise<AccountWalletEx[]>;
+      parseAccountWallets: (
+        wallets: AccountWallet[],
+        username?: string
+      ) => Promise<AccountWalletEx[]>;
       reloadAccountBalances: (
         addresses?: string[],
         accountWallets?: AccountWalletEx[]
       ) => Promise<boolean | undefined>;
-      saveAccountTitle: (title: string, index?: number) => Promise<void>;
+      saveAccountTitle: (title: string, index?: number, accountAddress?: string) => Promise<void>;
       setScreen: (screen: WalletScreens) => void;
       goScreenBack: () => void;
       handleSuccess: (msg: string, timeout?: number) => void;
@@ -184,26 +208,29 @@ function WalletProvider({
   children: ReactNode;
   networks?: Network[];
 } & AppProps) {
-  networks = [
-    import.meta.env.VITE_SAPPHIRE_TESTNET
-      ? {
-          name: 'Sapphire Testnet',
-          id: SapphireTestnet,
-          rpcUrl: 'https://testnet.sapphire.oasis.io',
-          explorerUrl: 'https://explorer.oasis.io/testnet/sapphire',
-          imageUrl: oasisLogo,
-          currencySymbol: 'ROSE',
-        }
-      : {
-          name: 'Oasis Sapphire',
-          id: SapphireMainnet,
-          rpcUrl: 'https://sapphire.oasis.io',
-          explorerUrl: 'https://explorer.oasis.io/mainnet/sapphire',
-          imageUrl: oasisLogo,
-          currencySymbol: 'ROSE',
-        },
-    ...networks,
-  ];
+  // If not already set, add sapphire network
+  if (!networks.some(n => n.id === SapphireTestnet || n.id === SapphireMainnet)) {
+    networks = [
+      import.meta.env.VITE_SAPPHIRE_TESTNET
+        ? {
+            name: 'Sapphire Testnet',
+            id: SapphireTestnet,
+            rpcUrl: 'https://testnet.sapphire.oasis.io',
+            explorerUrl: 'https://explorer.oasis.io/testnet/sapphire',
+            imageUrl: oasisLogo,
+            currencySymbol: 'ROSE',
+          }
+        : {
+            name: 'Oasis Sapphire',
+            id: SapphireMainnet,
+            rpcUrl: 'https://sapphire.oasis.io',
+            explorerUrl: 'https://explorer.oasis.io/mainnet/sapphire',
+            imageUrl: oasisLogo,
+            currencySymbol: 'ROSE',
+          },
+      ...networks,
+    ];
+  }
 
   const [state, dispatch] = useReducer(
     reducer,
@@ -212,8 +239,8 @@ function WalletProvider({
   const initializingWallet = useRef(false);
   const [initialized, setInitialized] = useState(false);
   const [wallet, setWallet] = useState<EmbeddedWallet>();
-  const successTimeout = useRef<ReturnType<typeof setTimeout>>();
-  const infoTimeout = useRef<ReturnType<typeof setTimeout>>();
+  const successTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const infoTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const networksById = networks.reduce(
     (acc, x) => {
@@ -335,6 +362,55 @@ function WalletProvider({
     dispatch({ type: 'setValue', payload: { key, value } });
   }
 
+  async function initUserData({
+    username,
+    authStrategy,
+    address0,
+  }: {
+    username: string;
+    authStrategy: AuthStrategyName;
+    address0: string;
+  }) {
+    wallet?.setAccount({
+      username,
+      strategy: authStrategy,
+    });
+
+    dispatch({
+      type: 'setState',
+      payload: {
+        walletIndex: 0,
+        username,
+        authStrategy,
+        // networkId: defaultNetworkId || undefined,
+      },
+    });
+
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    /**
+     * First wallet has been retrieved from contract event, dont need to load wallets again
+     */
+    let accountWalletsRes = undefined as AccountWallet[] | undefined;
+    if (address0) {
+      accountWalletsRes = wallet?.initAccountWallets([address0]);
+
+      if (Array.isArray(accountWalletsRes) && accountWalletsRes.length) {
+        wallet?.events.emit('accountsChanged', [accountWalletsRes[0].address]);
+      }
+    }
+
+    if (!accountWalletsRes) {
+      await loadAccountWallets(authStrategy, username);
+
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      parseAccountWallets(accountWalletsRes || [], username);
+    }
+
+    await wallet?.initContractAddress({ username });
+  }
+
   /**
    * Load all wallet accounts for user. Requires auth
    */
@@ -366,6 +442,11 @@ function WalletProvider({
 
       setStateValue('loadingWallets', false);
       setStateValue('isAccountWalletsStale', false);
+      setStateValue(
+        'stagedWalletsCount',
+        Math.max(0, state.stagedWalletsCount - wallets.length - state.walletsCountBeforeStaging)
+      );
+      setStateValue('walletsCountBeforeStaging', wallets.length);
       setStateValue('displayedError', '');
 
       reloadAccountBalances(
@@ -463,7 +544,7 @@ function WalletProvider({
         }
       });
 
-      setStateValue('accountWallets', updatedWallets);
+      dispatch({ type: 'updateAccounts', payload: updatedWallets });
 
       return true;
     } catch (e) {
@@ -473,8 +554,9 @@ function WalletProvider({
 
   /**
    * Save new custom account name, or update existing one.
+   * @param accountAddress Save for specific account address (otherwise get address from state wallets with index)
    */
-  async function saveAccountTitle(title: string, index?: number) {
+  async function saveAccountTitle(title: string, index?: number, accountAddress?: string) {
     if (!index && index !== 0) {
       index = state.walletIndex;
     }
@@ -488,20 +570,23 @@ function WalletProvider({
         ...all,
         [state.contractAddress]: {
           ...current,
-          [index > state.accountWallets.length - 1
+          [accountAddress ||
+          (index > state.accountWallets.length - 1
             ? `${index}`
-            : state.accountWallets[index].address]: title,
+            : state.accountWallets[index].address)]: title,
         },
       })
     );
 
-    const found = state.accountWallets.findIndex(x => x.index === index);
+    const found = state.accountWallets.findIndex(x =>
+      accountAddress ? x.address === accountAddress : x.index === index
+    );
 
     // Update wallet title in state
     if (found > -1) {
       const n = [...state.accountWallets];
       n[found] = { ...n[found], title };
-      setStateValue('accountWallets', n);
+      dispatch({ type: 'updateAccounts', payload: n });
     }
   }
 
@@ -542,6 +627,10 @@ function WalletProvider({
 
     if (e) {
       console.error(src ?? '', e);
+
+      if (typeof e === 'string') {
+        msg = e;
+      }
 
       if (e?.name) {
         msg = ErrorMessages[e.name];
@@ -629,6 +718,7 @@ function WalletProvider({
         wallet,
         setWallet,
         initialized,
+        initUserData,
         loadAccountWallets,
         parseAccountWallets,
         reloadAccountBalances,

@@ -265,6 +265,7 @@ export class XdomainPasskey {
     return new Promise<{
       username: string;
       authStrategy: AuthStrategyName;
+      address0: string;
     }>((resolve, reject) => {
       this.promises.push({
         id,

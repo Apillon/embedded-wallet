@@ -1,11 +1,12 @@
 import AuthLoginForm from './AuthLoginForm';
 import Logo from '../ui/Logo';
-import MsgError from '../ui/MsgError';
 import { useAuthContext } from '../../contexts/auth.context';
 import AuthConfiguringPasskey from './AuthConfiguringPasskey';
 import AuthConfirmCode from './AuthConfirmCode';
 import AuthCodeSubmitted from './AuthCodeSubmitted';
 import clsx from 'clsx';
+import AuthCaptcha from './AuthCaptcha';
+import AuthImport from './AuthImport';
 
 export default ({ className }: { className?: string }) => {
   const {
@@ -20,6 +21,10 @@ export default ({ className }: { className?: string }) => {
         return <AuthCodeSubmitted />;
       case 'configuringPasskey':
         return <AuthConfiguringPasskey />;
+      case 'captcha':
+        return <AuthCaptcha />;
+      case 'importWallet':
+        return <AuthImport />;
       case 'loginForm':
       default:
         return <AuthLoginForm />;
@@ -33,8 +38,6 @@ export default ({ className }: { className?: string }) => {
       </div>
 
       {currentScreen()}
-
-      <MsgError show className="mt-6" />
     </div>
   );
 };

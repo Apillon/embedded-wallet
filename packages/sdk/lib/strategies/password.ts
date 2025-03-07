@@ -43,7 +43,7 @@ class PasswordStrategy implements AuthStrategy {
       optionalPassword: ethers.encodeBytes32String(authData.password!),
       wallet: {
         walletType: WalletType.EVM,
-        keypairSecret: ethers.ZeroHash,
+        keypairSecret: authData.privateKey || ethers.ZeroHash,
       },
     };
   }

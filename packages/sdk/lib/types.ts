@@ -65,6 +65,7 @@ export type AuthData = {
   username: string;
   password?: string;
   hashedUsername?: Buffer | undefined;
+  privateKey?: string;
 };
 
 export type RegisterData = {
@@ -179,6 +180,7 @@ export type TransactionItem = {
   explorerUrl: string;
   createdAt: number; // timestamp
   internalLabel?: string;
+  internalData?: string;
 };
 
 export type Events = {
@@ -204,6 +206,39 @@ export type Events = {
    * Event for UI -- to enable programmatic opening
    */
   open: boolean;
+
+  /**
+   * Event for UI -- programmatically add a token
+   */
+  addToken: {
+    address: string;
+    name: string;
+    symbol: string;
+    decimals: number;
+    imageUrl?: string;
+    chainId?: number;
+  };
+
+  /**
+   * Event for UI -- programmatically add an NFT
+   */
+  addTokenNft: {
+    address: string;
+    tokenId: number;
+    name?: string;
+    imageUrl?: string;
+    chainId?: number;
+  };
+
+  /**
+   * Feedback for `addToken` and `addTokenNft` events
+   */
+  addTokenStatus: {
+    success: boolean;
+    info?: string;
+    token?: Events['addToken'];
+    nft?: Events['addTokenNft'];
+  };
 
   /**
    * Triggered in 'eth_requestAccounts' provider request handler.
