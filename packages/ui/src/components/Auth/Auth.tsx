@@ -7,6 +7,7 @@ import AuthCodeSubmitted from './AuthCodeSubmitted';
 import clsx from 'clsx';
 import AuthCaptcha from './AuthCaptcha';
 import AuthImport from './AuthImport';
+import MsgError from '../ui/MsgError';
 
 export default ({ className }: { className?: string }) => {
   const {
@@ -38,6 +39,8 @@ export default ({ className }: { className?: string }) => {
       </div>
 
       {currentScreen()}
+
+      <MsgError show className="mt-6" />
     </div>
   );
 };

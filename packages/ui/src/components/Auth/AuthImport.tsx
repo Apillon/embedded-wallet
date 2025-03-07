@@ -5,6 +5,7 @@ import Input from '../ui/Input';
 import AuthTitle from './AuthTitle';
 import { WebStorageKeys } from '../../lib/constants';
 import AuthCaptchaInput from './AuthCaptchaInput';
+import { ethers } from 'ethers';
 
 /**
  * Make a new wallet by providing a private key
@@ -25,6 +26,13 @@ export default function AuthImport() {
 
   async function onSubmit() {
     if (loading || !username || !privateKey || !captcha) {
+      return;
+    }
+
+    try {
+      new ethers.Wallet(privateKey);
+    } catch (e) {
+      handleError('Incorrect EVM private key', 'AuthImport');
       return;
     }
 
