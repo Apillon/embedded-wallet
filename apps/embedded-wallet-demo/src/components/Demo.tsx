@@ -6,6 +6,10 @@ export default function Demo() {
   const [message, setMessage] = useState('Hello from Apillon!');
   const [address, setAddress] = useState('');
   const [amount, setAmount] = useState('');
+  const [tokenAddress, setTokenAddress] = useState('');
+  const [tokenSymbol, setTokenSymbol] = useState('');
+  const [tokenDecimals, setTokenDecimals] = useState('');
+  const [tokenName, setTokenName] = useState('');
 
   const inputClass =
     'rounded-lg border border-lightgrey/25 bg-lightdark text-offwhite px-5 py-3 outline-none focus:border-lightgrey';
@@ -18,7 +22,7 @@ export default function Demo() {
 
   return (
     <div className="text-offwhite  px-4 py-4 max-w-lg w-[767px] mt-10">
-      <p className="my-4 flex gap-4 flex-col">
+      <p className="flex gap-4 flex-col">
         <input
           type="text"
           value={message}
@@ -35,16 +39,15 @@ export default function Demo() {
               strategy: 'passkey',
               message,
             });
-            console.log(msg);
+            window.alert(msg);
           }}
         >
           Sign message
         </button>
       </p>
 
-      <br />
       <form
-        className="my-4 flex gap-4 flex-col mt-16"
+        className="grid grid-cols-2 gap-4 mt-10"
         onSubmit={async ev => {
           ev.preventDefault();
           const wallet = getEmbeddedWallet();
@@ -74,50 +77,111 @@ export default function Demo() {
           onChange={ev => setAmount(ev.target.value)}
         />
 
-        <div className="flex flex-row">
-          <button
-            type="button"
-            className={btnClass + ' w-1/2'}
-            onClick={async () => {
-              const wallet = getEmbeddedWallet();
-              await wallet?.signPlainTransaction({
-                mustConfirm: true,
-                strategy: 'passkey',
-                tx: {
-                  to: address,
-                  data: '0x',
-                  gasLimit: 1_000_000,
-                  value: ethers.parseEther(amount),
-                  chainId: 23295, // 1287,
-                  gasPrice: 100_000_000_000,
-                },
-              });
-            }}
-          >
-            Plain Transfer
-          </button>
-          <button
-            type="button"
-            className={btnClass + ' w-1/2 ml-4'}
-            onClick={async () => {
-              const wallet = getEmbeddedWallet();
-              await wallet?.signPlainTransaction({
-                mustConfirm: true,
-                strategy: 'passkey',
-                tx: {
-                  to: address,
-                  data: '0x',
-                  gasLimit: 1_000_000,
-                  value: ethers.parseEther(amount),
-                  chainId: 1287,
-                  gasPrice: 100_000_000_000,
-                },
-              });
-            }}
-          >
-            Cross-chain Transfer
-          </button>
-        </div>
+        <button
+          type="button"
+          className={btnClass}
+          onClick={async () => {
+            const wallet = getEmbeddedWallet();
+            await wallet?.signPlainTransaction({
+              mustConfirm: true,
+              strategy: 'passkey',
+              tx: {
+                to: address,
+                data: '0x',
+                gasLimit: 1_000_000,
+                value: ethers.parseEther(amount),
+                chainId: 23295, // 1287,
+                gasPrice: 100_000_000_000,
+              },
+            });
+          }}
+        >
+          Plain Transfer
+        </button>
+        <button
+          type="button"
+          className={btnClass}
+          onClick={async () => {
+            const wallet = getEmbeddedWallet();
+            await wallet?.signPlainTransaction({
+              mustConfirm: true,
+              strategy: 'passkey',
+              tx: {
+                to: address,
+                data: '0x',
+                gasLimit: 1_000_000,
+                value: ethers.parseEther(amount),
+                chainId: 1287,
+                gasPrice: 100_000_000_000,
+              },
+            });
+          }}
+        >
+          Cross-chain Transfer
+        </button>
+      </form>
+
+      <form
+        className="grid grid-cols-2 gap-4 mt-10"
+        onSubmit={async ev => {
+          ev.preventDefault();
+          const wallet = getEmbeddedWallet();
+          wallet?.events.emit('addToken', {
+            address: tokenAddress,
+            symbol: tokenSymbol,
+            decimals: parseInt(tokenDecimals),
+            name: tokenName,
+          });
+          window.alert('Token imported');
+        }}
+      >
+        <input
+          value={tokenAddress}
+          placeholder="Token Address"
+          className={inputClass}
+          onChange={ev => setTokenAddress(ev.target.value)}
+        />
+
+        <input
+          value={tokenSymbol}
+          placeholder="Token Symbol"
+          className={inputClass}
+          onChange={ev => setTokenSymbol(ev.target.value)}
+        />
+
+        <input
+          value={tokenDecimals}
+          placeholder="Token ID/Decimals"
+          className={inputClass}
+          onChange={ev => setTokenDecimals(ev.target.value)}
+        />
+
+        <input
+          value={tokenName}
+          placeholder="Token Name"
+          className={inputClass}
+          onChange={ev => setTokenName(ev.target.value)}
+        />
+
+        <button
+          type="button"
+          className={`${btnClass} col-span-1`}
+          onClick={() => {
+            const wallet = getEmbeddedWallet();
+            wallet?.events.emit('addTokenNft', {
+              address: tokenAddress,
+              tokenId: parseInt(tokenDecimals),
+            });
+            window.alert('NFT imported');
+          }}
+        >
+          Import NFT
+        </button>
+
+        <button type="submit" className={`${btnClass} col-span-1`}>
+          Import Token
+        </button>
+
       </form>
     </div>
   );

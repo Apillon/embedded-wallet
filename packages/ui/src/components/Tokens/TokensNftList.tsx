@@ -26,7 +26,7 @@ export default function TokensNftList({ className }: { className?: string }) {
   return (
     <div className={clsx('flex flex-col', className)}>
       {!nftList.length && (
-        <p className="text-center text-lightgrey text-sm mb-3">No NFTs here, import it below.</p>
+        <p className="text-center text-lightgrey text-sm mb-3">No NFTs here, import them below.</p>
       )}
 
       {!!nftList.length && (

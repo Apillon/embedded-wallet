@@ -26,6 +26,7 @@ const AppWrapper = () => {
           id: 23295,
           rpcUrl: 'https://testnet.sapphire.oasis.io',
           explorerUrl: 'https://explorer.oasis.io/testnet/sapphire',
+          imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRcJLFfaXf1ps3rBkzl5mzkyKdWP6np5YLMEQ&s'
         },
         {
           name: 'Moonbase Testnet',
@@ -33,18 +34,14 @@ const AppWrapper = () => {
           rpcUrl: 'https://rpc.testnet.moonbeam.network',
           explorerUrl: 'https://moonbase.moonscan.io',
           currencySymbol: 'DEV',
+          imageUrl: 'https://moonbase.moonscan.io/assets/moonbase/images/svg/logos/token-light.svg?v=25.2.4.0'
         },
         {
-          name: 'Celo Alfajores Testnet',
-          id: 44787,
-          rpcUrl: 'https://alfajores-forno.celo-testnet.org',
-          explorerUrl: 'https://explorer.celo.org/alfajores',
-        },
-        {
-          name: 'Amoy',
+          name: 'Polygon Amoy',
           id: 80002,
           rpcUrl: 'https://rpc-amoy.polygon.technology',
           explorerUrl: 'https://www.oklink.com/amoy',
+          imageUrl: 'https://pbs.twimg.com/profile_images/1781426525083963392/FH-8AGTJ_400x400.jpg'
         },
         {
           name: 'Base Sepolia',

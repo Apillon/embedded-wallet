@@ -28,7 +28,7 @@ export default function TokensList({
       <div className="flex flex-col gap-3 mb-6">
         {!tokenList.length && (
           <p className="text-center text-lightgrey text-sm mb-2">
-            No tokens here, import it below.
+            No tokens here, import them below.
           </p>
         )}
 
