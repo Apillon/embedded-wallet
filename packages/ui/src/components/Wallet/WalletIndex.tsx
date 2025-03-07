@@ -17,7 +17,7 @@ export default () => {
     setStateValue: setForWallet,
   } = useWalletContext();
 
-  const { selectedToken, currentExchangeRate } = useTokensContext();
+  const { nativeToken, currentExchangeRate } = useTokensContext();
 
   const tabs = [
     {
@@ -46,7 +46,7 @@ export default () => {
         <div className="text-center mb-4">
           <p className="flex items-center justify-center gap-2">
             <span className="font-bold text-3xl" title={activeWallet?.balance || '0'}>
-              {formatBalance(activeWallet?.balance || '0', selectedToken.symbol)}
+              {formatBalance(activeWallet?.balance || '0', nativeToken.symbol)}
             </span>
 
             {!!currentExchangeRate && (

@@ -21,6 +21,7 @@ import TokensList from '../Tokens/TokensList';
 import TokensImport from '../Tokens/TokensImport';
 import TokensNftImport from '../Tokens/TokensNftImport';
 import TokensNftDetail from '../Tokens/TokensNftDetail';
+import clsx from 'clsx';
 
 /**
  * Base layout elements and screen display logic
@@ -31,17 +32,18 @@ export default () => {
   } = useWalletContext();
   const { state: approveState } = useApproveContext();
 
+  const isApprove =
+    !!approveState.targetChain ||
+    !!approveState.txToConfirm ||
+    !!approveState.messageToSign ||
+    !!approveState.contractFunctionData;
+
   function content() {
     if (approveState.successInfo) {
       return <ApproveSuccess />;
     }
 
-    if (
-      !!approveState.targetChain ||
-      !!approveState.txToConfirm ||
-      !!approveState.messageToSign ||
-      !!approveState.contractFunctionData
-    ) {
+    if (isApprove) {
       return <Approve />;
     }
 
@@ -100,7 +102,12 @@ export default () => {
 
       <div className="px-8 pb-4 grow overflow-y-auto">{content()}</div>
 
-      <div className="absolute z-10 -bottom-8 left-0 right-0 px-8 flex flex-col gap-2">
+      <div
+        className={clsx('absolute z-10 -bottom-8 left-0 right-0 px-8 flex flex-col gap-2', {
+          // Move notices up when action buttons are on screen, might need to add more conditions
+          'bottom-20': isApprove,
+        })}
+      >
         <MsgSuccess />
         <MsgInfo />
         <MsgError show />
