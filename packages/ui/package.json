@@ -34,6 +34,7 @@
   },
   "dependencies": {
     "@apillon/wallet-sdk": "*",
+    "@apillon/wallet-networks": "*",
     "dayjs": "^1.11.13",
     "react-qr-code": "^2.0.15"
   },

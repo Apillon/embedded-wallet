@@ -1,8 +1,9 @@
-import { useAccount, EmbeddedWallet } from '@apillon/wallet-react';
+import { networks } from '@apillon/wallet-networks';
+import { EmbeddedWallet, useAccount } from '@apillon/wallet-react';
+import TestEthers5 from './TestEthers5';
+import TestEthers6 from './TestEthers6';
 import TestSdk from './TestSdk';
 import TestViem from './TestViem';
-import TestEthers6 from './TestEthers6';
-import TestEthers5 from './TestEthers5';
 
 export default function Test() {
   const { info } = useAccount();
@@ -12,26 +13,8 @@ export default function Test() {
       <EmbeddedWallet
         clientId={import.meta.env.VITE_CLIENT_ID ?? 'YOUR INTEGRATION UUID HERE'}
         defaultNetworkId={1287}
-        networks={[
-          {
-            name: 'Moonbase Testnet',
-            id: 1287,
-            rpcUrl: 'https://rpc.testnet.moonbeam.network',
-            explorerUrl: 'https://moonbase.moonscan.io',
-          },
-          {
-            name: 'Celo Alfajores Testnet',
-            id: 44787,
-            rpcUrl: 'https://alfajores-forno.celo-testnet.org',
-            explorerUrl: 'https://explorer.celo.org/alfajores',
-          },
-          {
-            name: 'Amoy',
-            id: 80002,
-            rpcUrl: 'https://rpc-amoy.polygon.technology',
-            explorerUrl: 'https://www.oklink.com/amoy',
-          },
-        ]}
+        networks={networks}
+
       />
 
       <div

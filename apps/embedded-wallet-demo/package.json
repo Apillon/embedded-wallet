@@ -16,7 +16,8 @@
     "sonner": "^1.7.4"
   },
   "devDependencies": {
-    "@apillon/wallet-eslint-config": "*"
+    "@apillon/wallet-eslint-config": "*",
+    "@apillon/wallet-networks": "*"
   },
   "global": {
     "dependencies": ["@headlessui/react", "react", "react-dom"]

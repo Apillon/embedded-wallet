@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@apillon/wallet-vue": "*",
+    "@apillon/wallet-networks": "*",
     "nuxt": "^3.15.4",
     "vue": "latest",
     "vue-router": "latest"

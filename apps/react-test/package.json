@@ -13,7 +13,8 @@
     "@apillon/wallet-react": "*"
   },
   "devDependencies": {
-    "@apillon/wallet-eslint-config": "*"
+    "@apillon/wallet-eslint-config": "*",
+    "@apillon/wallet-networks": "*"
   },
   "global": {
     "dependencies": ["ethers", "ethers5", "react", "react-dom", "viem"]
