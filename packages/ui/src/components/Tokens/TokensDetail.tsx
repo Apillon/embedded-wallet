@@ -1,20 +1,27 @@
 import { useTokensContext } from '../../contexts/tokens.context';
 import { useWalletContext } from '../../contexts/wallet.context';
+import { formatBalance } from '../../lib/helpers';
 import ApproveDataRow from '../Approve/ApproveDataRow';
 import Btn from '../ui/Btn';
 
 export default function TokensDetail() {
   const {
-    state: { networkId, contractAddress },
+    state: { networkId },
+    activeWallet,
+    setScreen,
     goScreenBack,
     handleInfo,
   } = useWalletContext();
 
-  const { selectedToken, dispatch } = useTokensContext();
+  const {
+    state: { selectedToken: selectedTokenAddress },
+    selectedToken,
+    dispatch,
+  } = useTokensContext();
 
   return (
     <div className="pt-10 min-h-full flex flex-col">
-      <div key={selectedToken.address} className="mb-6 flex justify-center items-center">
+      <div key={selectedTokenAddress} className="mb-6 flex justify-center items-center">
         <div className="relative w-20 h-20 rounded-full bg-black text-white overflow-hidden flex justify-center items-center">
           {!!selectedToken.imageUrl && (
             <img src={selectedToken.imageUrl} alt={selectedToken.symbol} />
@@ -40,9 +47,19 @@ export default function TokensDetail() {
         <ApproveDataRow label="Symbol" data={selectedToken.symbol} className="mb-3" />
 
         <ApproveDataRow label="Decimals" data={selectedToken.decimals} className="mb-3" />
+
+        <ApproveDataRow
+          label="Balance"
+          data={formatBalance(selectedToken.balance, selectedToken.symbol)}
+          className="mb-3"
+        />
       </div>
 
       <div className="grow"></div>
+
+      <Btn variant="primary" className="w-full mb-3" onClick={() => setScreen('sendToken')}>
+        Send
+      </Btn>
 
       {!!selectedToken.address && (
         <Btn
@@ -55,7 +72,7 @@ export default function TokensDetail() {
               type: 'updateToken',
               payload: {
                 token: selectedToken,
-                owner: contractAddress,
+                owner: activeWallet?.address || '',
                 chainId: networkId,
                 remove: true,
               },

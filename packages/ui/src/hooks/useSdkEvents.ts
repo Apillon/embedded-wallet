@@ -71,7 +71,7 @@ export default function useSdkEvents() {
       dispatchTokens({
         type: 'updateToken',
         payload: {
-          owner: state.contractAddress,
+          owner: activeWallet?.address || '',
           chainId: params.chainId || state.networkId,
           token: { ...params, balance: '0.0' },
         },

@@ -18,14 +18,14 @@ export default function TokensList({
   className?: string;
   onItemClick?: (token: TokenInfo) => void;
 }) {
-  const { state, setScreen } = useWalletContext();
+  const { state, setScreen, activeWallet } = useWalletContext();
   const { state: tokens, dispatch, nativeToken } = useTokensContext();
 
   const tokenList = useMemo<TokenInfo[]>(() => {
-    return Array.isArray(tokens.list[state.contractAddress || '']?.[state.networkId])
-      ? [nativeToken, ...tokens.list[state.contractAddress || ''][state.networkId]]
+    return Array.isArray(tokens.list[activeWallet?.address || '']?.[state.networkId])
+      ? [nativeToken, ...tokens.list[activeWallet?.address || ''][state.networkId]]
       : [nativeToken];
-  }, [tokens.list, state.networkId, state.contractAddress, nativeToken]);
+  }, [tokens.list, state.networkId, state.contractAddress, nativeToken, activeWallet]);
 
   return (
     <div className={clsx('flex flex-col', className)}>
@@ -53,7 +53,7 @@ export default function TokensList({
             //               type: 'updateToken',
             //               payload: {
             //                 token,
-            //                 owner: state.contractAddress,
+            //                 owner: activeWallet?.address || '',
             //                 chainId: state.networkId,
             //                 remove: true,
             //               },

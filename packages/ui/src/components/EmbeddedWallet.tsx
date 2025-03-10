@@ -164,13 +164,13 @@ export default function EmbeddedWallet(props: AppProps) {
 
   return (
     <WalletProvider {...props2}>
-      <TransactionsProvider>
-        <ApproveProvider>
-          <TokensProvider>
+      <TokensProvider>
+        <TransactionsProvider>
+          <ApproveProvider>
             <Main {...props2} />
-          </TokensProvider>
-        </ApproveProvider>
-      </TransactionsProvider>
+          </ApproveProvider>
+        </TransactionsProvider>
+      </TokensProvider>
     </WalletProvider>
   );
 }
