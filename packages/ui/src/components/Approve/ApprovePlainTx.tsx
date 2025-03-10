@@ -129,6 +129,7 @@ export const PlainTxContent = ({
               )
             }
             collapsable={typeof v === 'object' || k === 'data'}
+            copyable={k === 'to'}
           />
         ))}
     </div>

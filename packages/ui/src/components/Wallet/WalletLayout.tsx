@@ -22,6 +22,7 @@ import TokensImport from '../Tokens/TokensImport';
 import TokensNftImport from '../Tokens/TokensNftImport';
 import TokensNftDetail from '../Tokens/TokensNftDetail';
 import clsx from 'clsx';
+import TokensDetail from '../Tokens/TokensDetail';
 
 /**
  * Base layout elements and screen display logic
@@ -29,6 +30,7 @@ import clsx from 'clsx';
 export default () => {
   const {
     state: { walletScreen },
+    goScreenBack,
   } = useWalletContext();
   const { state: approveState } = useApproveContext();
 
@@ -85,11 +87,21 @@ export default () => {
       case 'importToken':
         return <TokensImport />;
       case 'selectToken':
-        return <TokensList asButtons highlightActiveToken className="pt-10 pb-2 min-h-full" />;
+        return (
+          <TokensList
+            asButtons
+            highlightActiveToken
+            showArrow
+            className="pt-10 pb-2 min-h-full"
+            onItemClick={() => goScreenBack()}
+          />
+        );
       case 'importNft':
         return <TokensNftImport />;
       case 'nftDetail':
         return <TokensNftDetail />;
+      case 'tokenDetail':
+        return <TokensDetail />;
 
       default:
         return <WalletIndex />;

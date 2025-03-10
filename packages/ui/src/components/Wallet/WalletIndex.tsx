@@ -22,7 +22,7 @@ export default () => {
   const tabs = [
     {
       title: 'Tokens',
-      content: <TokensList />,
+      content: <TokensList asButtons onItemClick={() => setScreen('tokenDetail')} />,
       disabled: false,
     },
     {

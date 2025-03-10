@@ -8,13 +8,17 @@ import clsx from 'clsx';
 export default function TokensList({
   asButtons,
   highlightActiveToken,
+  showArrow,
   className,
+  onItemClick,
 }: {
   asButtons?: boolean;
   highlightActiveToken?: boolean;
+  showArrow?: boolean;
   className?: string;
+  onItemClick?: (token: TokenInfo) => void;
 }) {
-  const { state, setScreen, goScreenBack } = useWalletContext();
+  const { state, setScreen } = useWalletContext();
   const { state: tokens, dispatch, nativeToken } = useTokensContext();
 
   const tokenList = useMemo<TokenInfo[]>(() => {
@@ -38,26 +42,27 @@ export default function TokensList({
             token={token}
             asButton={asButtons}
             disabled={highlightActiveToken && token.address === tokens.selectedToken}
-            menuItems={
-              !asButtons && !!token.address
-                ? [
-                    {
-                      label: 'Remove',
-                      onClick: () => {
-                        dispatch({
-                          type: 'updateToken',
-                          payload: {
-                            token,
-                            owner: state.contractAddress,
-                            chainId: state.networkId,
-                            remove: true,
-                          },
-                        });
-                      },
-                    },
-                  ]
-                : undefined
-            }
+            showArrow={showArrow}
+            // menuItems={
+            //   !asButtons && !!token.address
+            //     ? [
+            //         {
+            //           label: 'Remove',
+            //           onClick: () => {
+            //             dispatch({
+            //               type: 'updateToken',
+            //               payload: {
+            //                 token,
+            //                 owner: state.contractAddress,
+            //                 chainId: state.networkId,
+            //                 remove: true,
+            //               },
+            //             });
+            //           },
+            //         },
+            //       ]
+            //     : undefined
+            // }
             className="w-full text-left"
             onClick={
               !asButtons
@@ -67,7 +72,7 @@ export default function TokensList({
                       type: 'setValue',
                       payload: { key: 'selectedToken', value: token.address },
                     });
-                    goScreenBack();
+                    onItemClick?.(token);
                   }
             }
           />

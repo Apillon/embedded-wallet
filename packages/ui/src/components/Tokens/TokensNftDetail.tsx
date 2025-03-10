@@ -21,7 +21,7 @@ export default function TokensNftDetail() {
   }
 
   return (
-    <div className="pt-10">
+    <div className="pt-10 min-h-full flex flex-col">
       <div
         key={`${selectedNft.address}-${selectedNft.tokenId}`}
         className="relative w-full pb-[100%] bg-darkgrey rounded-md mb-6"
@@ -54,6 +54,8 @@ export default function TokensNftDetail() {
           <ApproveDataRow label="Name" data={selectedNft.name} className="mb-3" />
         )}
       </div>
+
+      <div className="grow"></div>
 
       <Btn
         variant="ghost"

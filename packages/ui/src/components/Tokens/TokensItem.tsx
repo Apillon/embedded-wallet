@@ -10,6 +10,7 @@ export default function TokensItem({
   asButton,
   disabled,
   menuItems,
+  showArrow,
   className,
   onClick,
 }: {
@@ -17,6 +18,7 @@ export default function TokensItem({
   asButton?: boolean;
   disabled?: boolean;
   menuItems?: MenuItemType[];
+  showArrow?: boolean;
   className?: string;
   onClick?: () => void;
 }) {
@@ -50,7 +52,7 @@ export default function TokensItem({
         </div>
       )}
 
-      {asButton && <IconChevron />}
+      {!!showArrow && <IconChevron />}
     </>
   );
 

@@ -4,6 +4,7 @@ export const networks = [
     id: 23295,
     rpcUrl: 'https://testnet.sapphire.oasis.io',
     explorerUrl: 'https://explorer.oasis.io/testnet/sapphire',
+    currencySymbol: 'ROSE',
     imageUrl:
       'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRcJLFfaXf1ps3rBkzl5mzkyKdWP6np5YLMEQ&s',
   },
@@ -21,6 +22,7 @@ export const networks = [
     id: 80002,
     rpcUrl: 'https://rpc-amoy.polygon.technology',
     explorerUrl: 'https://www.oklink.com/amoy',
+    currencySymbol: 'MATIC',
     imageUrl: 'https://pbs.twimg.com/profile_images/1781426525083963392/FH-8AGTJ_400x400.jpg',
   },
   {

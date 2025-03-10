@@ -42,6 +42,7 @@ export default () => {
           <ApproveDataRow
             label="Contract address"
             data={contractFunctionData.contractAddress}
+            copyable
             className="mb-4"
           />
 
