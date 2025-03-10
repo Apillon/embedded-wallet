@@ -29,7 +29,7 @@ const initialState = () => ({
   list: {} as {
     [ownerContractAddress: string]: { [chainId: number]: TokenInfo[] };
   },
-  selectedToken: '', // address
+  selectedToken: '', // address (this is in reducer state, there is another selectedToken returned from context)
   exchangeRates: {} as { [token: string]: number }, // token exchange rates (from some price api, eg. coingecko)
   nfts: {} as {
     [ownerContractAddress: string]: { [chainId: number]: TokenNftInfo[] };

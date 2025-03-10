@@ -19,6 +19,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     handleError,
     state: { appProps, username: loggedInUsername },
     initUserData,
+    setStateValue: setForWallet,
   } = useWalletContext();
 
   function setStateValue<T extends keyof ReturnType<typeof initialState>>(
@@ -40,6 +41,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     setStateValue('loading', true);
+    setForWallet('loadingWallets', true);
     handleError();
 
     try {
@@ -55,6 +57,10 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
             authStrategy: 'passkey',
             address0: address,
           });
+
+          setTimeout(() => {
+            setForWallet('loadingWallets', false);
+          }, 1000);
 
           return true;
         }
@@ -72,6 +78,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     setStateValue('loading', false);
+    setForWallet('loadingWallets', false);
   }
 
   async function sendConfirmationEmail(captchaToken?: string) {

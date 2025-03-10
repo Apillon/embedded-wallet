@@ -117,7 +117,7 @@ function Main({ disableDefaultActivatorStyle = false }: AppProps) {
     /**
      * Must load wallets (authenticate again)
      */
-    if (!state.accountWallets.length) {
+    if (!state.loadingWallets && !state.accountWallets.length) {
       return <WalletUnavailable />;
     }
 
