@@ -42,7 +42,8 @@ export type WalletScreens =
   | 'accountDetails'
   | 'settingsGeneral'
   | 'importNft'
-  | 'nftDetail';
+  | 'nftDetail'
+  | 'tokenDetail';
 
 type AccountWalletEx = AccountWallet & { balance: string; title: string };
 
@@ -297,12 +298,13 @@ function WalletProvider({
    * Reload balance on:
    * - login
    * - account change
+   * - wallet modal open
    */
   useEffect(() => {
     if (state.walletIndex < state.accountWallets.length) {
       reloadAccountBalances([state.accountWallets[state.walletIndex].address]);
     }
-  }, [state.username, state.walletIndex, state.accountWallets.length]);
+  }, [state.username, state.walletIndex, state.accountWallets.length, state.isOpen]);
 
   async function initWallet() {
     let w = undefined as EmbeddedWallet | undefined;

@@ -110,6 +110,7 @@ export default () => {
       <TokensItem
         token={selectedToken}
         asButton
+        showArrow
         className="w-full mb-6"
         onClick={() => setScreen('selectToken')}
       />

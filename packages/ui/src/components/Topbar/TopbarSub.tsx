@@ -17,6 +17,7 @@ const titles = {
   selectAccounts: 'Select account',
   addAccount: 'Add new account',
   nftDetail: 'NFT',
+  tokenDetail: 'Token',
 } as { [key in WalletScreens]: string };
 
 export default () => {

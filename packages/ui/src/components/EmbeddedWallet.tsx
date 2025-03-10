@@ -1,5 +1,5 @@
 import { WalletProvider, useWalletContext } from '../contexts/wallet.context';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { AppParams, UserRejectedRequestError } from '@apillon/wallet-sdk';
 import { TransactionsProvider } from '../contexts/transactions.context';
 import { AuthProvider } from '../contexts/auth.context';
@@ -40,6 +40,7 @@ function Main({ disableDefaultActivatorStyle = false }: AppProps) {
     setStateValue: setForWallet,
   } = useWalletContext();
   const { state: approveState, dispatch: dispatchApprove } = useApproveContext();
+  const onCloseTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   /**
    * Handle wallet SDK Events
@@ -58,8 +59,13 @@ function Main({ disableDefaultActivatorStyle = false }: AppProps) {
    * - reset account login resolver
    */
   useEffect(() => {
+    // Prevent rejecting approve requests when changing chain first
+    if (onCloseTimeout.current) {
+      clearTimeout(onCloseTimeout.current);
+    }
+
     if (!state.isOpen) {
-      setTimeout(() => {
+      onCloseTimeout.current = setTimeout(() => {
         // Reject pending approve promises
         if (
           approveState.targetChain?.chainId !== state.networkId &&
@@ -117,7 +123,7 @@ function Main({ disableDefaultActivatorStyle = false }: AppProps) {
     /**
      * Must load wallets (authenticate again)
      */
-    if (!state.accountWallets.length) {
+    if (!state.loadingWallets && !state.accountWallets.length) {
       return <WalletUnavailable />;
     }
 
@@ -164,13 +170,13 @@ export default function EmbeddedWallet(props: AppProps) {
 
   return (
     <WalletProvider {...props2}>
-      <TransactionsProvider>
-        <ApproveProvider>
-          <TokensProvider>
+      <TokensProvider>
+        <TransactionsProvider>
+          <ApproveProvider>
             <Main {...props2} />
-          </TokensProvider>
-        </ApproveProvider>
-      </TransactionsProvider>
+          </ApproveProvider>
+        </TransactionsProvider>
+      </TokensProvider>
     </WalletProvider>
   );
 }

@@ -12,6 +12,7 @@ export default function TokensImport() {
     handleError,
     handleSuccess,
     goScreenBack,
+    activeWallet,
   } = useWalletContext();
   const { dispatch, getTokenDetails } = useTokensContext();
 
@@ -68,7 +69,7 @@ export default function TokensImport() {
         // Step 2 -> Confirmation
         dispatch({
           type: 'updateToken',
-          payload: { owner: contractAddress, chainId: networkId, token },
+          payload: { owner: activeWallet?.address || '', chainId: networkId, token },
         });
 
         handleSuccess(`Succesfully added ${token.symbol} token`);

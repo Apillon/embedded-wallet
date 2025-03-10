@@ -1,3 +1,4 @@
+import { ethers } from 'ethers';
 import { useAuthContext } from '../../contexts/auth.context';
 import { useGlobalContext } from '../../contexts/global.context';
 import { WebStorageKeys } from '../../helpers';
@@ -20,6 +21,13 @@ export default function AuthImport() {
 
   async function onSubmit() {
     if (loading || !username || !privateKey || !captcha) {
+      return;
+    }
+
+    try {
+      new ethers.Wallet(privateKey);
+    } catch (e) {
+      handleError('Incorrect EVM private key', 'AuthImport');
       return;
     }
 

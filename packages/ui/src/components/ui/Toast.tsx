@@ -43,9 +43,8 @@ export default function Toast({
         <button
           title="Dismiss"
           className={clsx(
-            'oaw-button-plain absolute z-20 right-0.5 top-0.5',
-            '!text-white/50 hover:!text-white',
-            'opacity-0 group-hover:opacity-100'
+            'oaw-button-plain absolute z-20 right-1.5 top-1',
+            '!text-white/50 hover:!text-white'
           )}
           onClick={onDismiss}
         >
