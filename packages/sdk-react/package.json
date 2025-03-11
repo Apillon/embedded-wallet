@@ -31,8 +31,8 @@
     }
   },
   "dependencies": {
-    "@apillon/wallet-sdk": "*",
-    "@apillon/wallet-ui": "*"
+    "@apillon/wallet-sdk": "2.1.0-beta.0",
+    "@apillon/wallet-ui": "2.1.0-beta.0"
   },
   "devDependencies": {
     "@apillon/wallet-eslint-config": "*"
