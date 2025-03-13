@@ -73,16 +73,10 @@ export default () => {
       {/* Private key loaded, hold to reveal */}
       {!!isPrivateKeyLoaded && (
         <>
-          <div className="text-sm text-center mb-6">
-            <p className="font-bold mb-6">
-              Your private key provides full access to your wallet and funds.
-            </p>
-
-            <p>
-              Do not share this with anyone. Apillon Support will never request this, but phishers
-              might.
-            </p>
-          </div>
+          <WarningBox
+            text="Warning: Your private key protects your assets. Never share it to keep your account secure and prevent unauthorized access."
+            className="mb-6"
+          />
 
           {!isRevealed && (
             <HoldToReveal

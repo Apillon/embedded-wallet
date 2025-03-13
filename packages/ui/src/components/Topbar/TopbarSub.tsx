@@ -10,7 +10,7 @@ const titles = {
   selectToken: 'Select token',
   importToken: 'Import tokens',
   accountDetails: 'Account details',
-  menuMore: 'Settings & security',
+  menuMore: 'Account Settings',
   settingsGeneral: 'General settings',
   exportPrivateKey: 'Export private key',
   importAccount: 'Import private key',

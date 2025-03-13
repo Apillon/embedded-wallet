@@ -41,39 +41,39 @@ type ContextState = ReturnType<typeof initialState>;
 
 type ContextActions =
   | {
-      type: 'setState';
-      payload: Partial<ReturnType<typeof initialState>>;
-    }
+    type: 'setState';
+    payload: Partial<ReturnType<typeof initialState>>;
+  }
   | {
-      type: 'setValue';
-      payload: { key: keyof ReturnType<typeof initialState>; value: any };
-    }
+    type: 'setValue';
+    payload: { key: keyof ReturnType<typeof initialState>; value: any };
+  }
   | {
-      type: 'updateToken';
-      payload: {
-        owner: string;
-        chainId: number;
-        token: TokenInfo;
-        remove?: boolean;
-      };
-    }
-  | {
-      type: 'setTokens';
-      payload: {
-        owner: string;
-        chainId: number;
-        tokens: TokenInfo[];
-      };
-    }
-  | {
-      type: 'addNft';
-      payload: {
-        owner: string;
-        chainId: number;
-        nft: TokenNftInfo;
-        remove?: boolean;
-      };
+    type: 'updateToken';
+    payload: {
+      owner: string;
+      chainId: number;
+      token: TokenInfo;
+      remove?: boolean;
     };
+  }
+  | {
+    type: 'setTokens';
+    payload: {
+      owner: string;
+      chainId: number;
+      tokens: TokenInfo[];
+    };
+  }
+  | {
+    type: 'addNft';
+    payload: {
+      owner: string;
+      chainId: number;
+      nft: TokenNftInfo;
+      remove?: boolean;
+    };
+  };
 
 function reducer(state: ContextState, action: ContextActions) {
   switch (action.type) {
@@ -157,29 +157,29 @@ function reducer(state: ContextState, action: ContextActions) {
 
 const TokensContext = createContext<
   | {
-      state: ContextState;
-      dispatch: (action: ContextActions) => void;
-      nativeToken: TokenInfo;
-      selectedToken: TokenInfo;
-      reloadTokenBalance: (address?: string) => Promise<void>;
-      currentExchangeRate: number;
-      getTokenDetails: (address: string, chainId?: number) => Promise<TokenInfo | undefined>;
-      formatNativeBalance: (balance: string | bigint | number) => {
-        amount: string;
-        symbol: string;
-      };
-      getNftDetails: (
-        address: string,
-        tokenId: number,
-        chainId?: number
-      ) => Promise<
-        | {
-            isOwner: boolean;
-            data?: TokenNftInfo;
-          }
-        | undefined
-      >;
-    }
+    state: ContextState;
+    dispatch: (action: ContextActions) => void;
+    nativeToken: TokenInfo;
+    selectedToken: TokenInfo;
+    reloadTokenBalance: (address?: string) => Promise<void>;
+    currentExchangeRate: number;
+    getTokenDetails: (address: string, chainId?: number) => Promise<TokenInfo | undefined>;
+    formatNativeBalance: (balance: string | bigint | number) => {
+      amount: string;
+      symbol: string;
+    };
+    getNftDetails: (
+      address: string,
+      tokenId: number,
+      chainId?: number
+    ) => Promise<
+      | {
+        isOwner: boolean;
+        data?: TokenNftInfo;
+      }
+      | undefined
+    >;
+  }
   | undefined
 >(undefined);
 
@@ -197,16 +197,17 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
     timeout: null as null | ReturnType<typeof setTimeout>,
   });
 
-  const nativeToken = useMemo<TokenInfo>(
-    () => ({
+  const nativeToken = useMemo<TokenInfo>(() => {
+    const network = networksById?.[walletState.networkId];
+    const currencySymbol = network?.currencySymbol || 'ETH';
+    return {
       address: '',
-      name: `${networksById?.[walletState.networkId]?.name} ETH`,
-      symbol: networksById?.[walletState.networkId]?.currencySymbol || 'ETH',
-      decimals: networksById?.[walletState.networkId]?.currencyDecimals || 18,
+      name: `${network?.name} ${currencySymbol}`,
+      symbol: currencySymbol,
+      decimals: network?.currencyDecimals || 18,
       balance: activeWallet?.balance || '',
-    }),
-    [activeWallet?.balance, walletState.networkId]
-  );
+    };
+  }, [activeWallet?.balance, walletState.networkId]);
 
   const selectedToken = useMemo<TokenInfo>(() => {
     if (state.selectedToken) {

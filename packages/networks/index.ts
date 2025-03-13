@@ -22,7 +22,7 @@ export const networks = [
     id: 80002,
     rpcUrl: 'https://rpc-amoy.polygon.technology',
     explorerUrl: 'https://www.oklink.com/amoy',
-    currencySymbol: 'MATIC',
+    currencySymbol: 'POL',
     imageUrl: 'https://pbs.twimg.com/profile_images/1781426525083963392/FH-8AGTJ_400x400.jpg',
   },
   {

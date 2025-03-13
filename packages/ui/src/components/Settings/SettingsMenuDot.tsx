@@ -18,12 +18,12 @@ export default () => {
 
   const items = [
     {
-      title: 'Account details',
+      title: 'Account Details',
       icon: <IconProfile />,
       screen: 'accountDetails' as const,
     },
     {
-      title: 'Settings & security',
+      title: 'Account Settings',
       icon: <IconLock />,
       screen: 'menuMore' as const,
     },

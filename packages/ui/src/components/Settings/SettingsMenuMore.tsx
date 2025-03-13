@@ -7,12 +7,12 @@ export default () => {
     //   screen: 'settingsGeneral' as const,
     // },
     {
-      title: 'Export private key',
-      screen: 'exportPrivateKey' as const,
-    },
-    {
       title: 'Import private key',
       screen: 'importAccount' as const,
+    },
+    {
+      title: 'Export private key',
+      screen: 'exportPrivateKey' as const,
     },
   ];
 

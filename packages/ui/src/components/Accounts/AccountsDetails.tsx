@@ -3,12 +3,11 @@ import SettingsUsername from '../Settings/SettingsUsername';
 // @ts-ignore
 import { QRCode } from 'react-qr-code';
 import IconCopy from '../ui/Icon/IconCopy';
-import Btn from '../ui/Btn';
 import useCopyToClipboard from '../../hooks/useCopyToClipboard';
 import IconCheckSmall from '../ui/Icon/IconCheckSmall';
 
 export default () => {
-  const { activeWallet, setScreen } = useWalletContext();
+  const { activeWallet } = useWalletContext();
   const { text: copyText, onCopy } = useCopyToClipboard('', '+');
 
   if (!activeWallet) {
@@ -48,16 +47,6 @@ export default () => {
           <span className="text-xs">Copy address</span>
         </button>
       </div>
-
-      <Btn
-        variant="ghost"
-        className="w-full"
-        onClick={() => {
-          setScreen('exportPrivateKey');
-        }}
-      >
-        Export private key
-      </Btn>
     </div>
   );
 };
