@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import { EmbeddedWalletUI } from '@apillon/wallet-ui';
+import { networks } from '@apillon/wallet-networks';
 import './index.css';
 
 const AppWrapper = () => {
@@ -20,33 +21,7 @@ const AppWrapper = () => {
       defaultNetworkId: 1287,
       broadcastAfterSign: true,
       passkeyAuthMode: mode as any,
-      networks: [
-        {
-          name: 'Sapphire Testnet',
-          id: 23295,
-          rpcUrl: 'https://testnet.sapphire.oasis.io',
-          explorerUrl: 'https://explorer.oasis.io/testnet/sapphire',
-        },
-        {
-          name: 'Moonbase Testnet',
-          id: 1287,
-          rpcUrl: 'https://rpc.testnet.moonbeam.network',
-          explorerUrl: 'https://moonbase.moonscan.io',
-          currencySymbol: 'DEV',
-        },
-        {
-          name: 'Celo Alfajores Testnet',
-          id: 44787,
-          rpcUrl: 'https://alfajores-forno.celo-testnet.org',
-          explorerUrl: 'https://explorer.celo.org/alfajores',
-        },
-        {
-          name: 'Amoy',
-          id: 80002,
-          rpcUrl: 'https://rpc-amoy.polygon.technology',
-          explorerUrl: 'https://www.oklink.com/amoy',
-        },
-      ],
+      networks,
     });
   }
 

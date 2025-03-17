@@ -49,6 +49,16 @@ The class instance is then available on window (`embeddedWallet`) and can be obt
 
 The SDK exposes some events on its `events` property.
 
+`events` has Typescript support and [`Events`](./lib/types.ts) type from SDK can be used to add types to handlers:
+
+```js
+import { Events } from '@apillon/wallet-sdk';
+
+const onDataUpdated = (params: Events['dataUpdated']) => {
+  // ...
+};
+```
+
 - `signatureRequest`
   e.g. display UI with message and approve/decline buttons
 
@@ -77,6 +87,18 @@ wallet.events.on('txSubmitted', tx => {
   Triggered in 'eth_requestAccounts' provider request handler. Payload is resolver fn that should be invoked when user's account is available (after sign in / register)
 
 - EIP-1193 events: `connect`, `disconnect`, `chainChanged`, `accountsChanged`
+
+- `open`
+  Emit to open or close Embedded wallet UI
+
+- `addToken`
+  Emit to programmatically add an ERC20 token
+
+- `addTokenNft`
+  Emit to programmatically add an NFT token
+
+- `addTokenStatus`
+  Emitted when `addToken` or `addTokenNft` resolves.
 
 ### Auth methods
 

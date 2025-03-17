@@ -1,3 +1,5 @@
+'use client';
+
 import { useWallet } from '@apillon/wallet-react';
 import { EmbeddedEthersSigner } from '@apillon/wallet-sdk';
 import { ethers } from 'ethers5';
@@ -31,7 +33,7 @@ export default function TestEthers5() {
     >
       <button
         onClick={async () => {
-          console.log(await signer.signMessage('test massage'));
+          console.log(await signer.signMessage('test message'));
         }}
       >
         (ethers 5) Sign message

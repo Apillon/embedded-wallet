@@ -37,11 +37,20 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
    * @param onlyLogin Just check that user has logged in, don't try to register if login fails.
    * @returns `true` if login is successful
    */
-  async function onAuth(onlyLogin = false, ev?: React.FormEvent<HTMLFormElement>) {
+  async function onAuth(
+    onlyLogin = false,
+    ev?: React.FormEvent<HTMLFormElement>,
+    isPrivateKey = false
+  ) {
     ev?.preventDefault();
 
     if (!state.username) {
       return;
+    }
+
+    if (!isPrivateKey) {
+      sessionStorage.setItem(WebStorageKeys.REGISTER_PK, '');
+      setStateValue('privateKey', '');
     }
 
     setStateValue('loading', true);
@@ -58,6 +67,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
           setupUserInfo({
             username: state.username,
             authStrategy: 'passkey',
+            address0: address,
           });
 
           return true;
@@ -72,21 +82,14 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     setStateValue('loading', false);
   }
 
-  async function setupUserInfo({
-    username,
-    authStrategy,
-  }: {
-    username: string;
-    authStrategy: AuthStrategyName;
-  }) {
-    redirectBack({
-      username,
-      authStrategy,
-    });
-  }
-
-  async function sendConfirmationEmail() {
+  async function sendConfirmationEmail(captcha?: string) {
     try {
+      if (!captcha && !state.captcha) {
+        throw new Error(
+          'Captcha verification required. Please return to previous registration step.'
+        );
+      }
+
       /**
        * Apillon email confirmation
        */
@@ -97,9 +100,15 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             email: state.username,
+            captcha: {
+              token: captcha || state.captcha,
+              eKey: import.meta.env.VITE_PROCAPTCHA_KEY ?? 'N/A',
+            },
           }),
         }
       );
+
+      setStateValue('captcha', '');
 
       if (!res.ok || res.status >= 400) {
         throw new Error('Could not send confirmation email');
@@ -123,23 +132,51 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     setStateValue('loading', true);
     handleError();
 
+    let privateKey =
+      sessionStorage.getItem(WebStorageKeys.REGISTER_PK) || state.privateKey || undefined;
+
+    if (privateKey && !privateKey.startsWith('0x')) {
+      privateKey = `0x${privateKey}`;
+    }
+
     try {
       const res = await wallet?.register(
         'passkey',
-        { username: state.username },
+        {
+          username: state.username,
+          privateKey,
+        },
         state.hashedUsername,
-        true,
+        false,
         referrer
       );
 
       if (typeof res !== 'undefined') {
-        setupUserInfo({ username: state.username, authStrategy: 'passkey' });
+        sessionStorage.setItem(WebStorageKeys.REGISTER_PK, '');
+        // Redirects back to app
+        setupUserInfo({ username: state.username, authStrategy: 'passkey', address0: res });
       }
     } catch (e) {
       handleError(e, 'startRegister');
     }
 
     setStateValue('loading', false);
+  }
+
+  function setupUserInfo({
+    username,
+    authStrategy,
+    address0,
+  }: {
+    username: string;
+    authStrategy: AuthStrategyName;
+    address0: string;
+  }) {
+    redirectBack({
+      username,
+      authStrategy,
+      address0,
+    });
   }
 
   return (
@@ -169,13 +206,15 @@ const AuthContext = createContext<
       ) => void;
       onAuth: (
         onlyLogin?: boolean,
-        ev?: React.FormEvent<HTMLFormElement>
+        ev?: React.FormEvent<HTMLFormElement>,
+        privateKey?: boolean
       ) => Promise<true | undefined>;
       setupUserInfo: (params: {
         username: string;
         authStrategy: AuthStrategyName;
-      }) => Promise<void>;
-      sendConfirmationEmail: () => Promise<true | undefined>;
+        address0: string;
+      }) => void;
+      sendConfirmationEmail: (captcha?: string) => Promise<true | undefined>;
       startRegister: () => void;
     }
   | undefined
@@ -187,6 +226,8 @@ const initialState = () => ({
   hashedUsername: undefined as Buffer | undefined,
   screen: 'loginForm' as AuthScreens,
   lastCodeExpiretime: 0, // get from /otp/generate and check before /otp/validate
+  captcha: '',
+  privateKey: '',
 });
 
 type ContextState = ReturnType<typeof initialState>;

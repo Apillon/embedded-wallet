@@ -1,7 +1,7 @@
 {
   "name": "gateway",
   "private": true,
-  "version": "2.0.0",
+  "version": "2.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite --port 5175",
@@ -10,26 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@apillon/wallet-sdk": "*",
-    "@headlessui/react": "^2.2.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "@apillon/wallet-sdk": "2.1.0"
   },
   "devDependencies": {
     "@apillon/wallet-eslint-config": "*",
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react-swc": "^3.5.0",
-    "autoprefixer": "^10.4.20",
-    "clsx": "^2.1.1",
-    "eslint": "^9.15.0",
-    "globals": "^15.12.0",
-    "postcss": "^8.4.49",
-    "tailwindcss": "^3.4.15",
-    "typescript": "~5.6.2",
-    "typescript-eslint": "^8.15.0",
-    "vite": "^5.4.11",
-    "vite-plugin-mkcert": "^1.17.6",
-    "vite-plugin-node-polyfills": "^0.22.0"
+    "globals": "^15.15.0"
+  },
+  "global": {
+    "dependencies": ["@headlessui/react", "react", "react-dom"]
   }
 }

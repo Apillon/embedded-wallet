@@ -1,7 +1,9 @@
 import { createContext, useContext, useEffect, useReducer, useRef } from 'react';
-import { getEmbeddedWallet, TransactionItem } from '@apillon/wallet-sdk';
+import { EVMAccountAbi, getEmbeddedWallet, TransactionItem } from '@apillon/wallet-sdk';
 import { useWalletContext } from './wallet.context';
 import { WebStorageKeys } from '../lib/constants';
+import { ethers, TransactionReceipt } from 'ethers';
+import { useTokensContext } from './tokens.context';
 
 const initialState = () => ({
   txs: {} as { [ownerAddress: string]: { [txHash: string]: TransactionItem } },
@@ -78,12 +80,16 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
   const initialized = useRef(false);
 
   const {
+    state: { accountWallets, stagedWalletsCount, walletsCountBeforeStaging },
     wallet,
     activeWallet,
     reloadAccountBalances,
+    saveAccountTitle,
     setStateValue: setForWallet,
-    handleInfo,
+    handleSuccess,
   } = useWalletContext();
+
+  const { reloadTokenBalance } = useTokensContext();
 
   useEffect(() => {
     if (wallet && !initializing.current) {
@@ -204,9 +210,6 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
 
         const failed = ev && !isNaN(ev.status) && ev.status === 0;
 
-        // Reload balance on every tx
-        reloadAccountBalances();
-
         // Finalize tx, also remove persist if tx failed
         dispatch({
           type: 'setTxStatus',
@@ -216,10 +219,8 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
           },
         });
 
-        // set wallets data to stale if needed
-        if (!failed && isAccountWalletsTx(txData)) {
-          setForWallet('isAccountWalletsStale', true);
-          handleInfo('stale');
+        if (!failed) {
+          onTxDone(txData);
         }
 
         wallet.events.emit('txDone', tx);
@@ -237,10 +238,7 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
           },
         });
 
-        if (isAccountWalletsTx(txData)) {
-          setForWallet('isAccountWalletsStale', true);
-          handleInfo('stale');
-        }
+        onTxDone(txData, receipt);
       } else {
         // Tx failed
         dispatch({
@@ -252,10 +250,65 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
         });
       }
 
-      // Reload balance on every tx
-      reloadAccountBalances();
-
       wallet.events.emit('txDone', tx);
+    }
+  }
+
+  async function onTxDone(txData: TransactionItem, txReceipt?: TransactionReceipt | null) {
+    if (!wallet) {
+      return;
+    }
+
+    if (!txReceipt) {
+      txReceipt = await wallet
+        .getRpcProviderForChainId(txData?.chainId)
+        .getTransactionReceipt(txData.hash);
+    }
+
+    reloadAccountBalances();
+
+    // Reload token if found in current account's storage
+    reloadTokenBalance(txReceipt?.to || undefined);
+
+    if (txData?.internalLabel && ['accountsAdd', 'accountsImport'].includes(txData.internalLabel)) {
+      handleNewAccountName(txData, txReceipt);
+    }
+  }
+
+  async function handleNewAccountName(
+    txData: TransactionItem,
+    txReceipt: TransactionReceipt | null
+  ) {
+    if (!wallet) {
+      return;
+    }
+
+    if (txReceipt?.logs?.[0]) {
+      const parsed = new ethers.Interface(EVMAccountAbi).parseLog(txReceipt.logs[0]);
+
+      if (parsed?.args?.[0] && typeof parsed.args[0] === 'string') {
+        try {
+          const data = JSON.parse(txData.internalData || '""');
+
+          if (data?.title && data?.index) {
+            await saveAccountTitle(data.title, data.index, `0x${parsed.args[0].slice(-40)}`);
+          }
+
+          setForWallet('stagedWalletsCount', Math.max(0, stagedWalletsCount - 1));
+          setForWallet('walletsCountBeforeStaging', Math.max(0, walletsCountBeforeStaging + 1));
+
+          /**
+           * Updates wallets in SDK
+           * -> emits `dataUpdated` event
+           * -> `useSdkEvents` handles event (parseAccountWallets)
+           */
+          wallet.initAccountWallets([...accountWallets.map(x => x.address), parsed.args[0]]);
+
+          handleSuccess('Accounts updated', 5000);
+        } catch (e) {
+          console.error(e);
+        }
+      }
     }
   }
 
@@ -263,24 +316,6 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
     <TransactionsContext.Provider value={{ state, dispatch, checkTransaction }}>
       {children}
     </TransactionsContext.Provider>
-  );
-}
-
-/**
- * Check if transaction is for a contract call that changes user's wallets
- */
-function isAccountWalletsTx(tx?: TransactionItem) {
-  return (
-    tx?.internalLabel &&
-    [
-      'proxyWrite_addWallet',
-      'proxyWrite_addWalletPassword',
-      'proxyWrite_manageCredential',
-      'proxyWrite_manageCredentialPassword',
-      'gasless_3', // AddWallet
-      'gasless_4', // AddWalletPassword
-      'updateAccountWalletTitle',
-    ].includes(tx.internalLabel)
   );
 }
 

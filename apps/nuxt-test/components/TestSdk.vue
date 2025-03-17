@@ -17,7 +17,7 @@ const { read, write } = useContract({
 });
 
 async function sign() {
-  console.log(await signMessage('test massage'));
+  console.log(await signMessage('test message'));
 }
 
 async function getNativeBalance() {

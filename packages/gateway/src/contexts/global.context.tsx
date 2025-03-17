@@ -13,7 +13,11 @@ const GlobalContext = createContext<
       setWallet: (wallet: EmbeddedWallet) => void;
       error: string;
       handleError: (e?: any, src?: string) => string;
-      redirectBack: (data: { username: string; authStrategy: AuthStrategyName }) => void;
+      redirectBack: (data: {
+        username: string;
+        authStrategy: AuthStrategyName;
+        address0: string;
+      }) => void;
       referrer: string;
     }
   | undefined

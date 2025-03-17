@@ -2,7 +2,7 @@
   "name": "@apillon/wallet-sdk",
   "description": "▶◀ Apillon Embedded Wallet SDK ▶◀",
   "private": false,
-  "version": "2.0.0",
+  "version": "2.1.0",
   "type": "module",
   "files": [
     "dist/"
@@ -24,38 +24,29 @@
   "main": "./dist/sdk.js",
   "exports": {
     ".": {
+      "types": "./dist/sdk.d.ts",
       "import": "./dist/sdk.js",
-      "require": "./dist/sdk.umd.cjs",
-      "types": "./dist/sdk.d.ts"
+      "require": "./dist/sdk.umd.cjs"
     }
   },
   "dependencies": {
-    "@headlessui/react": "^2.0.4",
     "@noble/curves": "^1.4.0",
-    "@oasisprotocol/sapphire-paratime": "^1.3.2",
-    "abitype": "^1.0.2",
+    "@oasisprotocol/sapphire-ethers-v6": "^6.0.1",
+    "@oasisprotocol/sapphire-paratime": "^2.0.1",
     "asn1js": "^3.0.5",
     "cbor-redux": "^1.0.0",
-    "ethers": "^6.13.3",
     "mitt": "^3.0.1",
     "pbkdf2": "^3.1.2",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "secp256r1": "^0.0.3",
-    "viem": "^2.21.19"
+    "secp256r1": "^0.0.3"
   },
   "devDependencies": {
     "@apillon/wallet-eslint-config": "*",
-    "@types/pbkdf2": "^3.1.0",
-    "@types/react": "^18.2.66",
-    "@types/react-dom": "^18.2.22",
-    "@vitejs/plugin-react-swc": "^3.5.0",
-    "eslint": "^8.57.0",
-    "ethers-abitype": "^1.0.3",
-    "typescript": "^5.2.2",
-    "vite": "^5.2.0",
-    "vite-plugin-dts": "^4.3.0",
-    "vite-plugin-mkcert": "^1.17.6",
-    "vite-plugin-node-polyfills": "^0.21.0"
+    "@apillon/wallet-networks": "*",
+    "@types/pbkdf2": "^3.1.2",
+    "abitype": "^1.0.8",
+    "ethers-abitype": "^1.0.3"
+  },
+  "global": {
+    "dependencies": ["ethers", "viem"]
   }
 }

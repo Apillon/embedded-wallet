@@ -9,7 +9,7 @@ export default function Input({
 }: { label?: string } & InputProps) {
   return (
     <Field>
-      {!!label && <Label className="text-xs leading-relaxed font-bold mb-2 block">{label}</Label>}
+      {!!label && <Label className="text-sm text-lightgrey font-normal mb-2 block">{label}</Label>}
 
       <HeadlessInput
         {...inputProps}
@@ -21,6 +21,7 @@ export default function Input({
           'placeholder:text-lightgrey',
           {
             'hover:border-lightgrey focus:border-offwhite': !disabled,
+            '!text-darkgrey': disabled,
           },
           className
         )}

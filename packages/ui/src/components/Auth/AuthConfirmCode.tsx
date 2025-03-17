@@ -5,11 +5,12 @@ import AuthTitle from './AuthTitle';
 import { useAuthContext } from '../../contexts/auth.context';
 import { useWalletContext } from '../../contexts/wallet.context';
 import { WebStorageKeys } from '../../lib/constants';
+import AuthCaptchaInput from './AuthCaptchaInput';
 
 export default () => {
   const { wallet, handleError } = useWalletContext();
   const {
-    state: { loading, username, lastCodeExpiretime },
+    state: { loading, username, lastCodeExpiretime, captcha },
     setStateValue: setForAuth,
     startRegister,
     sendConfirmationEmail,
@@ -18,6 +19,7 @@ export default () => {
   const [code, setCode] = useState('');
   const [resendCooldown, setResendCooldown] = useState(false);
   const [isExpired, setIsExpired] = useState(false);
+  const [needsCaptcha, setNeedsCaptcha] = useState(false);
 
   const inputRefs = [
     useRef<HTMLInputElement>(null),
@@ -143,11 +145,11 @@ export default () => {
     }
   }
 
-  async function onSendAgain() {
+  async function onSendAgain(captcha?: string) {
     setForAuth('loading', true);
     handleError();
 
-    if (await sendConfirmationEmail()) {
+    if (await sendConfirmationEmail(captcha)) {
       setResendCooldown(true);
       setTimeout(() => setResendCooldown(false), 30000);
     }
@@ -168,17 +170,6 @@ export default () => {
         header={!isExpired ? <IconBird className="mx-auto" /> : undefined}
         titleClass={isExpired ? 'text-red' : ''}
       />
-
-      {!!isExpired && (
-        <Btn
-          variant="primary"
-          disabled={loading || resendCooldown}
-          className="w-full mb-6"
-          onClick={() => onSendAgain()}
-        >
-          Send again
-        </Btn>
-      )}
 
       <p className="mb-6 font-bold text-center">Enter the 6-digit code you received</p>
 
@@ -203,14 +194,38 @@ export default () => {
       <p className="text-lightgrey text-xs mb-3 text-center">Didn't receive an email?</p>
 
       {!isExpired && (
-        <Btn
-          variant="ghost"
-          disabled={loading || resendCooldown}
-          className="w-full"
-          onClick={() => onSendAgain()}
-        >
-          Send again
-        </Btn>
+        <>
+          {!!needsCaptcha && (
+            <form
+              className="text-center mb-4"
+              onSubmit={ev => {
+                ev.preventDefault();
+              }}
+            >
+              <AuthCaptchaInput
+                onVerified={t => {
+                  onSendAgain(t);
+                  setNeedsCaptcha(false);
+                }}
+              />
+            </form>
+          )}
+
+          <Btn
+            variant="ghost"
+            disabled={loading || resendCooldown}
+            className="w-full"
+            onClick={() => {
+              if (captcha) {
+                onSendAgain();
+              } else {
+                setNeedsCaptcha(true);
+              }
+            }}
+          >
+            Send again
+          </Btn>
+        </>
       )}
 
       {!!resendCooldown && <p className="mt-2">Email sent!</p>}

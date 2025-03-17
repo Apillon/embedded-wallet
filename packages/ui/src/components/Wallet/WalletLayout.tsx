@@ -13,12 +13,16 @@ import AccountsExport from '../Accounts/AccountsExport';
 import AccountsImport from '../Accounts/AccountsImport';
 import SettingsGeneral from '../Settings/SettingsGeneral';
 import TokensSend from '../Tokens/TokensSend';
-import TokensSelect from '../Tokens/TokensSelect';
-import TokensAdd from '../Tokens/TokensAdd';
 import AccountsList from '../Accounts/AccountsList';
 import AccountsAdd from '../Accounts/AccountsAdd';
 import MsgSuccess from '../ui/MsgSuccess';
 import MsgInfo from '../ui/MsgInfo';
+import TokensList from '../Tokens/TokensList';
+import TokensImport from '../Tokens/TokensImport';
+import TokensNftImport from '../Tokens/TokensNftImport';
+import TokensNftDetail from '../Tokens/TokensNftDetail';
+import clsx from 'clsx';
+import TokensDetail from '../Tokens/TokensDetail';
 
 /**
  * Base layout elements and screen display logic
@@ -26,20 +30,22 @@ import MsgInfo from '../ui/MsgInfo';
 export default () => {
   const {
     state: { walletScreen },
+    goScreenBack,
   } = useWalletContext();
   const { state: approveState } = useApproveContext();
+
+  const isApprove =
+    !!approveState.targetChain ||
+    !!approveState.txToConfirm ||
+    !!approveState.messageToSign ||
+    !!approveState.contractFunctionData;
 
   function content() {
     if (approveState.successInfo) {
       return <ApproveSuccess />;
     }
 
-    if (
-      !!approveState.targetChain ||
-      !!approveState.txToConfirm ||
-      !!approveState.messageToSign ||
-      !!approveState.contractFunctionData
-    ) {
+    if (isApprove) {
       return <Approve />;
     }
 
@@ -48,40 +54,55 @@ export default () => {
         return <></>;
       case 'networks':
         return <WalletNetworkSelect />;
+
+      /**
+       * Menus
+       */
       case 'menuDot':
         return <SettingsMenuDot />;
       case 'menuMore':
         return <SettingsMenuMore />;
       case 'settingsGeneral':
         return <SettingsGeneral />;
+
+      /**
+       * Account settings
+       */
       case 'accountDetails':
         return <AccountsDetails />;
       case 'exportPrivateKey':
         return <AccountsExport />;
       case 'importAccount':
         return <AccountsImport />;
-      case 'selectToken':
-      case 'sendToken':
-      case 'addToken':
-        return (
-          <>
-            {(() => {
-              switch (walletScreen) {
-                case 'sendToken':
-                  return <TokensSend />;
-                case 'addToken':
-                  return <TokensAdd />;
-                case 'selectToken':
-                default:
-                  return <TokensSelect />;
-              }
-            })()}
-          </>
-        );
       case 'selectAccounts':
         return <AccountsList />;
       case 'addAccount':
         return <AccountsAdd />;
+
+      /**
+       * Tokens
+       */
+      case 'sendToken':
+        return <TokensSend />;
+      case 'importToken':
+        return <TokensImport />;
+      case 'selectToken':
+        return (
+          <TokensList
+            asButtons
+            highlightActiveToken
+            showArrow
+            className="pt-10 pb-2 min-h-full"
+            onItemClick={() => goScreenBack()}
+          />
+        );
+      case 'importNft':
+        return <TokensNftImport />;
+      case 'nftDetail':
+        return <TokensNftDetail />;
+      case 'tokenDetail':
+        return <TokensDetail />;
+
       default:
         return <WalletIndex />;
     }
@@ -93,7 +114,12 @@ export default () => {
 
       <div className="px-8 pb-4 grow overflow-y-auto">{content()}</div>
 
-      <div className="absolute z-10 -bottom-8 left-0 right-0 px-8 flex flex-col gap-2">
+      <div
+        className={clsx('absolute z-10 -bottom-8 left-0 right-0 px-8 flex flex-col gap-2', {
+          // Move notices up when action buttons are on screen, might need to add more conditions
+          'bottom-20': isApprove,
+        })}
+      >
         <MsgSuccess />
         <MsgInfo />
         <MsgError show />

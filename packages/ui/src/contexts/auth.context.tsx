@@ -1,9 +1,15 @@
 import { createContext, useContext, useReducer } from 'react';
 import { useWalletContext } from './wallet.context';
-import { abort, AuthStrategyName, getHashedUsername } from '@apillon/wallet-sdk';
+import { abort, getHashedUsername } from '@apillon/wallet-sdk';
 import { WebStorageKeys } from '../lib/constants';
 
-export type AuthScreens = 'loginForm' | 'confirmCode' | 'codeSubmitted' | 'configuringPasskey';
+export type AuthScreens =
+  | 'loginForm'
+  | 'captcha'
+  | 'confirmCode'
+  | 'codeSubmitted'
+  | 'configuringPasskey'
+  | 'importWallet';
 
 function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState());
@@ -12,9 +18,8 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     wallet,
     handleError,
     state: { appProps, username: loggedInUsername },
-    dispatch: dispatchWallet,
-    loadAccountWallets,
-    parseAccountWallets,
+    initUserData,
+    setStateValue: setForWallet,
   } = useWalletContext();
 
   function setStateValue<T extends keyof ReturnType<typeof initialState>>(
@@ -36,6 +41,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     setStateValue('loading', true);
+    setForWallet('loadingWallets', true);
     handleError();
 
     try {
@@ -46,33 +52,25 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         const address = await wallet?.authenticate('passkey', { username: state.username });
 
         if (address) {
-          setupUserInfo({
+          initUserData({
             username: state.username,
             authStrategy: 'passkey',
+            address0: address,
           });
+
+          setTimeout(() => {
+            setForWallet('loadingWallets', false);
+          }, 1000);
 
           return true;
         }
       } else if (!onlyLogin) {
-        if (await sendConfirmationEmail()) {
-          if (appProps.passkeyAuthMode === 'tab_form') {
-            if (!wallet?.xdomain) {
-              throw abort('XDOMAIN_NOT_INIT');
-            }
-
-            setStateValue('screen', 'configuringPasskey');
-
-            const res = await wallet.xdomain.createViaTab(state.username);
-
-            if (res && res.username) {
-              await loadAccountWallets(res.authStrategy, res.username);
-              setupUserInfo({ username: state.username, authStrategy: 'passkey' });
-            }
-          } else if (['redirect', 'tab_form'].includes(appProps.passkeyAuthMode || '')) {
-            redirectToGateway(state.username);
-          } else {
-            setStateValue('screen', 'confirmCode');
+        if (state.captcha) {
+          if (await sendConfirmationEmail()) {
+            onRegister();
           }
+        } else {
+          setStateValue('screen', 'captcha');
         }
       }
     } catch (e) {
@@ -80,34 +78,15 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     setStateValue('loading', false);
+    setForWallet('loadingWallets', false);
   }
 
-  async function setupUserInfo({
-    username,
-    authStrategy,
-  }: {
-    username: string;
-    authStrategy: AuthStrategyName;
-  }) {
-    dispatchWallet({
-      type: 'setState',
-      payload: {
-        walletIndex: 0,
-        username,
-        authStrategy,
-        // networkId: defaultNetworkId || undefined,
-      },
-    });
-
-    await new Promise(resolve => setTimeout(resolve, 50));
-
-    if (wallet?.lastAccount.wallets) {
-      parseAccountWallets(wallet?.lastAccount.wallets || []);
-    }
-  }
-
-  async function sendConfirmationEmail() {
+  async function sendConfirmationEmail(captchaToken?: string) {
     try {
+      if (!captchaToken && !state.captcha) {
+        throw new Error('Captcha verification required');
+      }
+
       /**
        * Apillon email confirmation
        */
@@ -118,9 +97,15 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             email: state.username,
+            captcha: {
+              token: captchaToken || state.captcha,
+              eKey: import.meta.env.VITE_PROCAPTCHA_KEY ?? 'N/A',
+            },
           }),
         }
       );
+
+      setStateValue('captcha', '');
 
       if (!res.ok || res.status >= 400) {
         throw new Error('Could not send confirmation email');
@@ -140,6 +125,39 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  /**
+   * Handle redirects (after email confimration code sent)
+   *
+   * @param isPrivateKey Wallet is created from private key provided in sessionStorage.
+   */
+  async function onRegister(isPrivateKey = false) {
+    if (!isPrivateKey) {
+      wallet?.xdomain?.storageSet(WebStorageKeys.REGISTER_PK, '', true);
+      setStateValue('privateKey', '');
+    }
+
+    if (appProps.passkeyAuthMode === 'tab_form') {
+      if (!wallet?.xdomain) {
+        throw abort('XDOMAIN_NOT_INIT');
+      }
+
+      setStateValue('screen', 'configuringPasskey');
+
+      const res = await wallet.xdomain.createViaTab(state.username);
+
+      if (res && res.username) {
+        initUserData({ username: res.username, authStrategy: 'passkey', address0: res.address0 });
+      }
+    } else if (['redirect', 'tab_form'].includes(appProps.passkeyAuthMode || '')) {
+      redirectToGateway(state.username);
+    } else {
+      setStateValue('screen', 'confirmCode');
+    }
+  }
+
+  /**
+   * Actually trigger SDK#register (after email code confirmed)
+   */
   async function startRegister() {
     setStateValue('loading', true);
     handleError();
@@ -158,7 +176,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
           throw new Error(`Couldn't authenticate account. Please try again.`);
         }
 
-        await loadAccountWallets(res.authStrategy, res.username);
+        res = res?.address0;
       } else {
         let hashed = state.hashedUsername;
 
@@ -167,11 +185,18 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
           setStateValue('hashedUsername', hashed);
         }
 
-        res = await wallet?.register('passkey', { username: state.username }, hashed);
+        let privateKey = state.privateKey || undefined;
+
+        if (privateKey && !privateKey.startsWith('0x')) {
+          privateKey = `0x${privateKey}`;
+        }
+
+        res = await wallet?.register('passkey', { username: state.username, privateKey }, hashed);
       }
 
+      // res === address of first account on the new wallet
       if (res) {
-        setupUserInfo({ username: state.username, authStrategy: 'passkey' });
+        initUserData({ username: state.username, authStrategy: 'passkey', address0: res });
       }
     } catch (e) {
       handleError(e, 'startRegister');
@@ -203,7 +228,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         dispatch,
         setStateValue,
         onAuth,
-        setupUserInfo,
+        onRegister,
         sendConfirmationEmail,
         startRegister,
       }}
@@ -225,11 +250,8 @@ const AuthContext = createContext<
         onlyLogin?: boolean,
         ev?: React.FormEvent<HTMLFormElement>
       ) => Promise<true | undefined>;
-      setupUserInfo: (params: {
-        username: string;
-        authStrategy: AuthStrategyName;
-      }) => Promise<void>;
-      sendConfirmationEmail: () => Promise<true | undefined>;
+      onRegister: (isPrivateKey?: boolean) => Promise<void>;
+      sendConfirmationEmail: (captchaToken?: string) => Promise<true | undefined>;
       startRegister: () => void;
     }
   | undefined
@@ -241,6 +263,8 @@ const initialState = () => ({
   hashedUsername: undefined as Buffer | undefined,
   screen: 'loginForm' as AuthScreens,
   lastCodeExpiretime: 0, // get from /otp/generate and check before /otp/validate
+  captcha: '',
+  privateKey: '',
 });
 
 type ContextState = ReturnType<typeof initialState>;

@@ -2,7 +2,7 @@
   "name": "@apillon/wallet-vue",
   "description": "▶◀ Apillon Embedded Wallet Vue UI ▶◀",
   "private": false,
-  "version": "2.0.0",
+  "version": "2.1.0",
   "type": "module",
   "files": [
     "dist/"
@@ -23,23 +23,19 @@
   "main": "./dist/vue.ts",
   "exports": {
     ".": {
+      "types": "./dist/vue.d.ts",
       "import": "./dist/vue.js",
-      "require": "./dist/vue.umd.cjs",
-      "types": "./dist/vue.d.ts"
+      "require": "./dist/vue.umd.cjs"
     }
   },
   "dependencies": {
-    "@apillon/wallet-sdk": "*",
-    "@apillon/wallet-ui": "*",
-    "vue": "^3.4.29"
+    "@apillon/wallet-sdk": "2.1.0",
+    "@apillon/wallet-ui": "2.1.0"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^5.0.5",
-    "typescript": "^5.2.2",
-    "vite": "^5.3.1",
-    "vite-plugin-dts": "^4.3.0",
-    "vite-plugin-mkcert": "^1.17.6",
-    "vite-plugin-node-polyfills": "^0.22.0",
-    "vue-tsc": "^2.0.21"
+    "@vitejs/plugin-vue": "^5.2.1"
+  },
+  "global": {
+    "dependencies": ["vue"]
   }
 }

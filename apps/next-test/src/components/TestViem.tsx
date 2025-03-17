@@ -1,3 +1,5 @@
+'use client';
+
 import { EmbeddedViemAdapter } from '@apillon/wallet-sdk';
 import {
   createPublicClient,
@@ -47,7 +49,7 @@ export default function TestViem() {
     >
       <button
         onClick={async () => {
-          console.log(await account.signMessage({ message: 'test massage' }));
+          console.log(await account.signMessage({ message: 'test message' }));
         }}
       >
         (Viem) Sign message

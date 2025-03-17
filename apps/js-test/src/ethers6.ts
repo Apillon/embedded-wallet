@@ -27,7 +27,7 @@ async function start() {
   );
 
   document.getElementById('ethers6-sign')?.addEventListener('click', async () => {
-    console.log(await signer.signMessage('test massage'));
+    console.log(await signer.signMessage('test message'));
   });
 
   document.getElementById('ethers6-native-balance')?.addEventListener('click', async () => {

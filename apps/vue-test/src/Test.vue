@@ -1,9 +1,10 @@
 <script lang="ts" setup>
-import { useAccount, EmbeddedWallet } from '@apillon/wallet-vue';
+import { networks } from '@apillon/wallet-networks';
+import { EmbeddedWallet, useAccount } from '@apillon/wallet-vue';
+import TestEthers5 from './TestEthers5.vue';
+import TestEthers6 from './TestEthers6.vue';
 import TestSdk from './TestSdk.vue';
 import TestViem from './TestViem.vue';
-import TestEthers6 from './TestEthers6.vue';
-import TestEthers5 from './TestEthers5.vue';
 
 const { info } = useAccount();
 
@@ -15,26 +16,7 @@ const clientId = import.meta.env.VITE_CLIENT_ID ?? 'YOUR INTEGRATION UUID HERE';
     <EmbeddedWallet
       :clientId="clientId"
       :defaultNetworkId="1287"
-      :networks="[
-        {
-          name: 'Moonbase Testnet',
-          id: 1287,
-          rpcUrl: 'https://rpc.testnet.moonbeam.network',
-          explorerUrl: 'https://moonbase.moonscan.io',
-        },
-        {
-          name: 'Celo Alfajores Testnet',
-          id: 44787,
-          rpcUrl: 'https://alfajores-forno.celo-testnet.org',
-          explorerUrl: 'https://explorer.celo.org/alfajores',
-        },
-        {
-          name: 'Amoy',
-          id: 80002,
-          rpcUrl: 'https://rpc-amoy.polygon.technology',
-          explorerUrl: 'https://www.oklink.com/amoy',
-        },
-      ]"
+      :networks="networks"
     />
 
     <div

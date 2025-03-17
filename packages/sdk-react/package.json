@@ -2,7 +2,7 @@
   "name": "@apillon/wallet-react",
   "description": "▶◀ Apillon Embedded Wallet React UI ▶◀",
   "private": false,
-  "version": "2.0.0",
+  "version": "2.1.0",
   "type": "module",
   "files": [
     "dist/"
@@ -25,27 +25,19 @@
   "main": "./dist/react.ts",
   "exports": {
     ".": {
+      "types": "./dist/react.d.ts",
       "import": "./dist/react.js",
-      "require": "./dist/react.umd.cjs",
-      "types": "./dist/react.d.ts"
+      "require": "./dist/react.umd.cjs"
     }
   },
   "dependencies": {
-    "@apillon/wallet-sdk": "*",
-    "@apillon/wallet-ui": "*",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "@apillon/wallet-sdk": "2.1.0",
+    "@apillon/wallet-ui": "2.1.0"
   },
   "devDependencies": {
-    "@apillon/wallet-eslint-config": "*",
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
-    "@vitejs/plugin-react-swc": "^3.5.0",
-    "eslint": "^8.57.0",
-    "typescript": "^5.2.2",
-    "vite": "^5.3.1",
-    "vite-plugin-dts": "^4.3.0",
-    "vite-plugin-mkcert": "^1.17.6",
-    "vite-plugin-node-polyfills": "^0.22.0"
+    "@apillon/wallet-eslint-config": "*"
+  },
+  "global": {
+    "dependencies": ["react", "react-dom"]
   }
 }

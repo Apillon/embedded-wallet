@@ -4,7 +4,7 @@ import { useEffect } from 'react';
  * Hook that alerts clicks outside of the passed ref
  */
 export default function useClickOutside(
-  ref: React.RefObject<HTMLElement>,
+  ref: React.RefObject<HTMLElement | null>,
   onClickOutside: () => void
 ) {
   useEffect(() => {

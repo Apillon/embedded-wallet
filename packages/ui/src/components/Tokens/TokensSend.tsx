@@ -5,11 +5,11 @@ import { useTokensContext } from '../../contexts/tokens.context';
 import { useWalletContext } from '../../contexts/wallet.context';
 import Btn from '../ui/Btn';
 import Input from '../ui/Input';
-import SettingsMenuItem from '../Settings/SettingsMenuItem';
 import TokensInput from '../Tokens/TokensInput';
+import TokensItem from './TokensItem';
 
 export default () => {
-  const { state, goScreenBack, wallet, handleError } = useWalletContext();
+  const { state, goScreenBack, wallet, handleError, setScreen } = useWalletContext();
   const { selectedToken } = useTokensContext();
 
   const [receiverAddress, setReceiverAddress] = useState('');
@@ -107,11 +107,12 @@ export default () => {
         onChange={ev => setAmount(ev.target.value)}
       />
 
-      <SettingsMenuItem
-        title={selectedToken.name}
-        description={`Balance: ${selectedToken.balance} ${selectedToken.symbol}`}
-        screen="selectToken"
+      <TokensItem
+        token={selectedToken}
+        asButton
+        showArrow
         className="w-full mb-6"
+        onClick={() => setScreen('selectToken')}
       />
 
       <div className="grid grid-cols-2 gap-2">

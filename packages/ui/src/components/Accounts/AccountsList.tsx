@@ -18,7 +18,7 @@ export default () => {
     loadAccountWallets,
   } = useWalletContext();
 
-  const { selectedToken, currentExchangeRate } = useTokensContext();
+  const { nativeToken, currentExchangeRate } = useTokensContext();
 
   const [search, setSearch] = useState('');
 
@@ -73,7 +73,7 @@ export default () => {
                   )}
                 </p>
 
-                <p>{formatBalance(aw.balance, selectedToken.symbol)}</p>
+                <p>{formatBalance(aw.balance, nativeToken.symbol)}</p>
               </div>
             </button>
           ))}
