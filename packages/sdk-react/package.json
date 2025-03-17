@@ -2,7 +2,7 @@
   "name": "@apillon/wallet-react",
   "description": "▶◀ Apillon Embedded Wallet React UI ▶◀",
   "private": false,
-  "version": "2.1.0",
+  "version": "2.1.1",
   "type": "module",
   "files": [
     "dist/"
@@ -31,8 +31,8 @@
     }
   },
   "dependencies": {
-    "@apillon/wallet-sdk": "2.1.0",
-    "@apillon/wallet-ui": "2.1.0"
+    "@apillon/wallet-sdk": "2.1.1",
+    "@apillon/wallet-ui": "2.1.1"
   },
   "devDependencies": {
     "@apillon/wallet-eslint-config": "*"
