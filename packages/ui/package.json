@@ -2,7 +2,7 @@
   "name": "@apillon/wallet-ui",
   "description": "▶◀ Apillon Embedded Wallet UI ▶◀",
   "private": false,
-  "version": "2.1.0-beta.1",
+  "version": "2.1.0",
   "type": "module",
   "files": [
     "dist/"
@@ -33,7 +33,7 @@
     }
   },
   "dependencies": {
-    "@apillon/wallet-sdk": "2.1.0-beta.1",
+    "@apillon/wallet-sdk": "2.1.0",
     "@apillon/wallet-networks": "*",
     "dayjs": "^1.11.13",
     "react-qr-code": "^2.0.15"
