@@ -2,7 +2,7 @@
   "name": "@apillon/wallet-ui",
   "description": "▶◀ Apillon Embedded Wallet UI ▶◀",
   "private": false,
-  "version": "2.1.0",
+  "version": "2.1.1",
   "type": "module",
   "files": [
     "dist/"
@@ -33,16 +33,20 @@
     }
   },
   "dependencies": {
-    "@apillon/wallet-sdk": "2.1.0",
-    "@apillon/wallet-networks": "*",
+    "@apillon/wallet-sdk": "2.1.1",
     "dayjs": "^1.11.13",
     "react-qr-code": "^2.0.15"
   },
   "devDependencies": {
     "@apillon/wallet-eslint-config": "*",
+    "@apillon/wallet-networks": "*",
     "vite-plugin-lib-inject-css": "^2.2.1"
   },
   "global": {
-    "dependencies": ["@headlessui/react" , "react", "react-dom"]
+    "dependencies": [
+      "@headlessui/react",
+      "react",
+      "react-dom"
+    ]
   }
 }

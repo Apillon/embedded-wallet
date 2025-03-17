@@ -20,6 +20,10 @@
     "@apillon/wallet-networks": "*"
   },
   "global": {
-    "dependencies": ["@headlessui/react", "react", "react-dom"]
+    "dependencies": [
+      "@headlessui/react",
+      "react",
+      "react-dom"
+    ]
   }
 }

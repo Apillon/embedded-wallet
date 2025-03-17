@@ -1,5 +1,5 @@
 import { getEmbeddedWallet } from '@apillon/wallet-sdk';
-import EmbeddedWallet from '../components/EmbeddedWallet';
+import EmbeddedWallet from '../src/components/EmbeddedWallet';
 import TestEIP1193 from './TestEIP1193';
 import TestSign from './TestSign';
 import TestTx from './TestTx';
