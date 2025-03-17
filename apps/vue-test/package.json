@@ -9,10 +9,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@apillon/wallet-vue": "*",
+    "@apillon/wallet-vue": "*"
+  },
+  "devDependencies": {
     "@apillon/wallet-networks": "*"
   },
   "global": {
-    "dependencies": ["ethers", "ethers5", "viem", "vue"]
+    "dependencies": [
+      "ethers",
+      "ethers5",
+      "viem",
+      "vue"
+    ]
   }
 }

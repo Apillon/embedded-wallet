@@ -10,12 +10,12 @@
   },
   "dependencies": {
     "@apillon/wallet-react": "*",
-    "@apillon/wallet-networks": "*",
     "react": "^18",
     "react-dom": "^18",
     "next": "14.2.24"
   },
   "devDependencies": {
+    "@apillon/wallet-networks": "*",
     "typescript": "^5",
     "@types/node": "^20",
     "@types/react": "^18",
