@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ethers } from 'ethers';
+import { ethers } from 'ethers6';
 import { getEmbeddedWallet, ERC20Abi } from '@apillon/wallet-sdk';
 
 export default function Demo() {
@@ -181,7 +181,6 @@ export default function Demo() {
         <button type="submit" className={`${btnClass} col-span-1`}>
           Import Token
         </button>
-
       </form>
     </div>
   );

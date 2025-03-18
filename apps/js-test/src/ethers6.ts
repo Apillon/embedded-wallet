@@ -1,5 +1,5 @@
 import { EmbeddedEthersSigner } from '@apillon/wallet-sdk';
-import { ethers } from 'ethers';
+import { ethers } from 'ethers6';
 
 start();
 

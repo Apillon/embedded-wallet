@@ -16,7 +16,7 @@
   },
   "global": {
     "dependencies": [
-      "ethers",
+      "ethers6",
       "ethers5",
       "viem",
       "vue"

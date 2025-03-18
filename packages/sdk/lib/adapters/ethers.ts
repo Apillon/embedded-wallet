@@ -1,4 +1,4 @@
-import { ethers } from 'ethers';
+import { ethers } from 'ethers6';
 import { abort, getEmbeddedWallet } from '../utils';
 import EmbeddedWallet from '..';
 

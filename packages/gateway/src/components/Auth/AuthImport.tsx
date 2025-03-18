@@ -1,4 +1,4 @@
-import { ethers } from 'ethers';
+import { ethers } from 'ethers6';
 import { useAuthContext } from '../../contexts/auth.context';
 import { useGlobalContext } from '../../contexts/global.context';
 import { WebStorageKeys } from '../../helpers';

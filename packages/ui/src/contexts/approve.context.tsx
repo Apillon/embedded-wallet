@@ -1,4 +1,4 @@
-import { ethers } from 'ethers';
+import { ethers } from 'ethers6';
 import { ContractReadParams, Events, UserRejectedRequestError } from '@apillon/wallet-sdk';
 import { createContext, useContext, useEffect, useReducer } from 'react';
 import { useTransactionsContext } from './transactions.context';

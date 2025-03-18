@@ -4,7 +4,7 @@
 
 import { CBOR } from 'cbor-redux';
 import * as asn1js from 'asn1js';
-import { keccak256, toBigInt } from 'ethers';
+import { keccak256, toBigInt } from 'ethers6';
 
 function toU32(buf: Uint8Array) {
   return (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];

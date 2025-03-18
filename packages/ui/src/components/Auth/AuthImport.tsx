@@ -5,7 +5,7 @@ import Input from '../ui/Input';
 import AuthTitle from './AuthTitle';
 import { WebStorageKeys } from '../../lib/constants';
 import AuthCaptchaInput from './AuthCaptchaInput';
-import { ethers } from 'ethers';
+import { ethers } from 'ethers6';
 
 /**
  * Make a new wallet by providing a private key

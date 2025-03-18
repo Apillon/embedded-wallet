@@ -25,10 +25,11 @@ export default defineConfig({
     },
     rollupOptions: {
       external: [
-        // ...Object.keys(pkg.dependencies).filter(x => x !== 'ethers'), // don't bundle dependencies
-        ...Object.keys(pkg.dependencies).filter(
-          x => !['ethers', '@oasisprotocol/sapphire-paratime'].includes(x)
-        ), // don't bundle dependencies
+        ...Object.keys(pkg.dependencies),
+        // ...Object.keys(pkg.dependencies).filter(x => x !== 'ethers6'), // don't bundle dependencies
+        // ...Object.keys(pkg.dependencies).filter(
+        //   x => !['ethers6', '@oasisprotocol/sapphire-paratime'].includes(x)
+        // ), // don't bundle dependencies
         /^node:.*/, // don't bundle built-in Node.js modules (use protocol imports!)
       ],
     },
