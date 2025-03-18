@@ -1,7 +1,7 @@
 {
   "name": "gateway",
   "private": true,
-  "version": "2.1.1",
+  "version": "2.1.2",
   "type": "module",
   "scripts": {
     "dev": "vite --port 5175",
@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@apillon/wallet-sdk": "2.1.1"
+    "@apillon/wallet-sdk": "2.1.2"
   },
   "devDependencies": {
     "@apillon/wallet-eslint-config": "*",
