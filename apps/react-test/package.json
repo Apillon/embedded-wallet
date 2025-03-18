@@ -17,6 +17,6 @@
     "@apillon/wallet-networks": "*"
   },
   "global": {
-    "dependencies": ["ethers", "ethers5", "react", "react-dom", "viem"]
+    "dependencies": ["ethers6", "ethers5", "react", "react-dom", "viem"]
   }
 }

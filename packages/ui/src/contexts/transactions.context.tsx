@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useReducer, useRef } from 'react'
 import { EVMAccountAbi, getEmbeddedWallet, TransactionItem } from '@apillon/wallet-sdk';
 import { useWalletContext } from './wallet.context';
 import { WebStorageKeys } from '../lib/constants';
-import { ethers, TransactionReceipt } from 'ethers';
+import { ethers, TransactionReceipt } from 'ethers6';
 import { useTokensContext } from './tokens.context';
 
 const initialState = () => ({

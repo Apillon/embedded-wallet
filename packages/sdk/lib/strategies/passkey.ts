@@ -1,4 +1,4 @@
-import { ethers } from 'ethers';
+import { ethers } from 'ethers6';
 import {
   AuthData,
   AuthPasskeyMode,

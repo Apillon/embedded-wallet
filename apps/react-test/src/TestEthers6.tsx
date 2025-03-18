@@ -1,6 +1,6 @@
 import { useWallet } from '@apillon/wallet-react';
 import { EmbeddedEthersSigner } from '@apillon/wallet-sdk';
-import { ethers } from 'ethers';
+import { ethers } from 'ethers6';
 
 export default function TestEthers6() {
   const { wallet } = useWallet();

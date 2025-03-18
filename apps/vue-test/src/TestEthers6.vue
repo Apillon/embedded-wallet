@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { EmbeddedEthersSigner } from '@apillon/wallet-sdk';
 import { useWallet } from '@apillon/wallet-vue';
-import { ethers } from 'ethers';
+import { ethers } from 'ethers6';
 import { onMounted } from 'vue';
 
 const { wallet } = useWallet();

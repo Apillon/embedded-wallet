@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ethers } from 'ethers';
+import { ethers } from 'ethers6';
 import { ERC20Abi } from '@apillon/wallet-sdk';
 import { useTokensContext } from '../../contexts/tokens.context';
 import { useWalletContext } from '../../contexts/wallet.context';

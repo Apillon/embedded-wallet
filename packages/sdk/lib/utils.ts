@@ -1,4 +1,4 @@
-import { ethers } from 'ethers';
+import { ethers } from 'ethers6';
 import { EmbeddedWallet } from '.';
 import { SapphireMainnet, SapphireTestnet, WindowId, Errors } from './constants';
 import { pbkdf2Sync } from 'pbkdf2';

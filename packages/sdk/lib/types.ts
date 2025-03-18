@@ -1,7 +1,7 @@
 import { parseAbi } from 'abitype';
 import { AccountManagerAbi } from './abi';
 import { TypedContract } from 'ethers-abitype';
-import { ethers } from 'ethers';
+import { ethers } from 'ethers6';
 import { ProviderRpcError } from 'viem';
 import { ProxyWriteFunctionsByStrategy, WalletType } from './constants';
 

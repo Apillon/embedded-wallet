@@ -1,7 +1,7 @@
 import { AuthData, AuthProxyWriteFns, AuthStrategy } from '../types';
 import { secp256r1 } from '@noble/curves/p256';
 import { bytesToHex } from '@noble/curves/abstract/utils';
-import { ethers } from 'ethers';
+import { ethers } from 'ethers6';
 import { abort, getHashedUsername } from '../utils';
 import { SapphireMainnet, SapphireTestnet, WalletType } from '../constants';
 import EmbeddedWallet from '..';
