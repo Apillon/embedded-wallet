@@ -10,10 +10,10 @@
   },
   "dependencies": {
     "@headlessui/react": "^2.2.0",
+    "ethers5": "npm:ethers@^5.7.2",
+    "ethers6": "npm:ethers@^6.13.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "ethers6": "npm:ethers@^6.13.5",
-    "ethers5": "npm:ethers@^5.7.2",
     "viem": "^2.23.2",
     "vue": "^3.5.13"
   },
