@@ -16,7 +16,7 @@ import {
   TransactionItem,
   WebauthnContract,
 } from './types';
-import { EVMAccountAbi, AccountManagerAbi } from './abi';
+import { EVMAccountAbi, AccountManagerAbi, SubstrateAccountAbi } from './abi';
 import PasswordStrategy from './strategies/password';
 import PasskeyStrategy from './strategies/passkey';
 import { networkIdIsSapphire, getHashedUsername, abort, JsonMultiRpcProvider } from './utils';
@@ -54,7 +54,7 @@ class EmbeddedWallet {
     username: '',
     authStrategy: 'passkey' as AuthStrategyName,
     wallets: [] as AccountWallet[],
-    walletIndex: 0,
+    walletIndex: 0, // last selected index, NOT actual index used on contracts. Actual index are duplicated on EVM vs SS
   };
 
   /**
@@ -217,7 +217,9 @@ class EmbeddedWallet {
         const parsed = new ethers.Interface(EVMAccountAbi).parseLog(txReceipt.logs[0]);
 
         if (parsed?.args?.[0]) {
-          this.initAccountWallets([parsed.args[0]]);
+          this.initAccountWallets([
+            { address: parsed.args[0], walletType: WalletType.EVM, index: 0 },
+          ]);
         }
       }
 
@@ -244,55 +246,10 @@ class EmbeddedWallet {
       return;
     }
 
+    // also saves wallets via initAccountWallets
     await this.getAccountWallets({ authData, strategy, reload: true });
 
     return await this.finalizeAccountAuth(strategy, authData);
-  }
-
-  /**
-   * Return public address for username.
-   */
-  async getAccountAddress(strategy?: AuthStrategyName, authData?: AuthData) {
-    if (!this.sapphireProvider) {
-      abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
-      return;
-    }
-
-    if (!this.accountManagerContract) {
-      abort('ACCOUNT_MANAGER_CONTRACT_NOT_INITIALIZED');
-      return;
-    }
-
-    if (!this.lastAccount.wallets.length) {
-      await this.getAccountWallets({ authData, strategy });
-    }
-
-    if (!authData?.username) {
-      if (this.lastAccount.wallets.length > this.lastAccount.walletIndex) {
-        return this.lastAccount.wallets[this.lastAccount.walletIndex].address;
-      }
-
-      abort('NO_USERNAME');
-      return;
-    }
-
-    if (this.lastAccount.wallets.length) {
-      if (this.lastAccount.wallets.length > this.lastAccount.walletIndex) {
-        return this.lastAccount.wallets[this.lastAccount.walletIndex].address;
-      } else {
-        this.events.emit('dataUpdated', {
-          name: 'walletIndex',
-          newValue: 0,
-          oldValue: this.lastAccount.walletIndex,
-        });
-
-        this.lastAccount.walletIndex = 0;
-
-        return this.lastAccount.wallets[this.lastAccount.walletIndex].address;
-      }
-    }
-
-    abort('CANT_GET_ACCOUNT_ADDRESS');
   }
 
   async getAccountBalance(address: string, networkId = this.defaultNetworkId, decimals = 18) {
@@ -311,7 +268,12 @@ class EmbeddedWallet {
   }
 
   async getAccountPrivateKey(
-    params: { strategy?: AuthStrategyName; authData?: AuthData; walletIndex?: number } = {}
+    params: {
+      strategy?: AuthStrategyName;
+      authData?: AuthData;
+      walletIndex?: number;
+      walletType?: AccountWalletTypes;
+    } = {}
   ) {
     if (!this.sapphireProvider) {
       abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
@@ -331,9 +293,13 @@ class EmbeddedWallet {
       }
     }
 
-    const AC = new ethers.Interface(EVMAccountAbi);
+    const AC = new ethers.Interface(
+      params.walletType === WalletType.SUBSTRATE ? SubstrateAccountAbi : EVMAccountAbi
+    );
     const data = AC.encodeFunctionData('exportPrivateKey', [
-      params.walletIndex || this.lastAccount.walletIndex,
+      !!params.walletIndex || params.walletIndex === 0
+        ? params.walletIndex
+        : this.lastAccount.wallets[this.lastAccount.walletIndex].index,
     ]);
 
     /**
@@ -342,7 +308,8 @@ class EmbeddedWallet {
     const res = await this.getProxyForStrategy(
       params.strategy || this.lastAccount.authStrategy,
       data,
-      params.authData!
+      params.authData!,
+      params.walletType
     );
 
     if (res) {
@@ -389,36 +356,73 @@ class EmbeddedWallet {
       }
     }
 
-    const AC = new ethers.Interface(EVMAccountAbi);
-    const data = AC.encodeFunctionData('getWalletList', []);
+    let wallets = [] as AccountWallet[];
 
-    const res = await this.getProxyForStrategy(params.strategy, data, params.authData!);
+    /**
+     * Get EVM accounts
+     */
+    const AC1 = new ethers.Interface(EVMAccountAbi);
+    const data1 = AC1.encodeFunctionData('getWalletList', []);
+    const res1 = await this.getProxyForStrategy(
+      params.strategy,
+      data1,
+      params.authData!,
+      WalletType.EVM
+    );
 
-    if (res) {
-      const [accountWallets] = AC.decodeFunctionResult('getWalletList', res).toArray();
+    if (res1) {
+      const [accountWallets] = AC1.decodeFunctionResult('getWalletList', res1).toArray();
 
-      const wallets = this.initAccountWallets(accountWallets);
-
-      if (wallets) {
-        return wallets;
+      if (accountWallets) {
+        wallets = accountWallets.map((x: string, index: number) => ({
+          address: x,
+          walletType: WalletType.EVM,
+          index,
+        }));
+      } else {
+        abort('CANT_GET_ACCOUNT_WALLETS');
+        return;
       }
-
-      abort('CANT_GET_ACCOUNT_WALLETS');
     }
+
+    /**
+     * Get SS accounts
+     */
+    const AC2 = new ethers.Interface(SubstrateAccountAbi);
+    const data2 = AC2.encodeFunctionData('getWalletList', []);
+    const res2 = await this.getProxyForStrategy(
+      params.strategy,
+      data2,
+      params.authData!,
+      WalletType.SUBSTRATE
+    );
+
+    if (res2) {
+      const [accountWallets] = AC2.decodeFunctionResult('getWalletList', res2).toArray();
+
+      if (accountWallets) {
+        wallets = [
+          ...wallets,
+          ...accountWallets.map((x: string, index: number) => ({
+            address: x,
+            walletType: WalletType.SUBSTRATE,
+            index,
+          })),
+        ];
+      }
+    }
+
+    return this.initAccountWallets(wallets) || [];
   }
 
-  initAccountWallets(accountWallets: any) {
+  initAccountWallets(accountWallets: AccountWallet[]) {
     if (Array.isArray(accountWallets) && accountWallets.length) {
       const mapped = accountWallets
-        .map(
-          (x, index) =>
-            ({
-              walletType: WalletType.EVM,
-              address: `0x${x.slice(-40)}`,
-              index,
-            }) as AccountWallet
-        )
-        .filter(x => !!x);
+        .map(x => ({
+          ...x,
+          address: x.walletType === WalletType.SUBSTRATE ? x.address : `0x${x.address.slice(-40)}`,
+        }))
+        .filter(x => !!x.address);
 
       this.events.emit('dataUpdated', {
         name: 'wallets',
@@ -687,7 +691,25 @@ class EmbeddedWallet {
   async finalizeAccountAuth(strategy: AuthStrategyName, authData: AuthData) {
     await this.initContractAddress(authData);
 
-    const addr = await this.getAccountAddress(strategy, authData);
+    // const addr = await this.getAccountAddress(strategy, authData);
+
+    let addr = '';
+
+    if (this.lastAccount.wallets.length) {
+      if (this.lastAccount.wallets.length > this.lastAccount.walletIndex) {
+        addr = this.lastAccount.wallets[this.lastAccount.walletIndex].address;
+      } else {
+        this.events.emit('dataUpdated', {
+          name: 'walletIndex',
+          newValue: 0,
+          oldValue: this.lastAccount.walletIndex,
+        });
+
+        this.lastAccount.walletIndex = 0;
+
+        addr = this.lastAccount.wallets[this.lastAccount.walletIndex].address;
+      }
+    }
 
     if (addr && this.waitForAccountResolver) {
       this.waitForAccountResolver(addr);
@@ -703,6 +725,7 @@ class EmbeddedWallet {
       newValue: strategy,
       oldValue: this.lastAccount.authStrategy,
     });
+
     this.events.emit('dataUpdated', {
       name: 'username',
       newValue: authData.username,
@@ -747,7 +770,19 @@ class EmbeddedWallet {
       }
     }
 
-    const AC = new ethers.Interface(EVMAccountAbi);
+    /**
+     * Get selected account - selected by walletIndex in params, or lastAccount.walletIndex by default
+     */
+    const selectedAccount =
+      this.lastAccount.wallets[
+        !!params.walletIndex || params.walletIndex === 0
+          ? params.walletIndex
+          : this.lastAccount.walletIndex
+      ];
+
+    const AC = new ethers.Interface(
+      selectedAccount.walletType === WalletType.SUBSTRATE ? SubstrateAccountAbi : EVMAccountAbi
+    );
 
     let data = params.data || '';
     const originalMessage = params.message;
@@ -758,10 +793,7 @@ class EmbeddedWallet {
         params.message = ethers.hashMessage(params.message);
       }
 
-      data = AC.encodeFunctionData('sign', [
-        params.walletIndex || this.lastAccount.walletIndex,
-        params.message,
-      ]);
+      data = AC.encodeFunctionData('sign', [selectedAccount.index, params.message]);
 
       /**
        * Emits 'signatureRequest' if confirmation is needed.
@@ -784,10 +816,23 @@ class EmbeddedWallet {
     /**
      * Authenticate user and sign message
      */
-    const res = await this.getProxyForStrategy(params.strategy, data, params.authData!);
+    const res = await this.getProxyForStrategy(
+      params.strategy,
+      data,
+      params.authData!,
+      selectedAccount.walletType
+    );
 
     if (res) {
       const [signedRSV] = AC.decodeFunctionResult('sign', res).toArray();
+
+      /**
+       * Not RSV when SS
+       * @TODO Confirm
+       */
+      if (selectedAccount.walletType === WalletType.SUBSTRATE) {
+        return signedRSV;
+      }
 
       if (Array.isArray(signedRSV) && signedRSV.length > 2) {
         const signedMsg = ethers.Signature.from({
@@ -818,12 +863,18 @@ class EmbeddedWallet {
 
     params.tx.chainId = chainId;
 
+    /**
+     * Get selected account - selected by walletIndex in params, or lastAccount.walletIndex by default
+     */
+    const selectedAccount =
+      this.lastAccount.wallets[
+        !!params.walletIndex || params.walletIndex === 0
+          ? params.walletIndex
+          : this.lastAccount.walletIndex
+      ];
+
     if (!params.strategy) {
       params.strategy = this.lastAccount.authStrategy;
-    }
-
-    if (!params.walletIndex) {
-      params.walletIndex = this.lastAccount.walletIndex;
     }
 
     if (!params.authData) {
@@ -846,7 +897,7 @@ class EmbeddedWallet {
      */
     if (!params.tx.nonce) {
       params.tx.nonce = await this.getRpcProviderForChainId(chainId).getTransactionCount(
-        this.lastAccount.wallets[this.lastAccount.walletIndex].address
+        selectedAccount.address
       );
     }
 
@@ -911,16 +962,23 @@ class EmbeddedWallet {
       });
     }
 
-    const AC = new ethers.Interface(EVMAccountAbi);
-    const data = AC.encodeFunctionData('signEIP155', [
-      params.walletIndex || this.lastAccount.walletIndex,
-      params.tx,
-    ]);
+    /**
+     * @TODO Use prepareUnsignedPayload for SS instead of sign EIP155?
+     */
+    const AC = new ethers.Interface(
+      selectedAccount.walletType === WalletType.SUBSTRATE ? SubstrateAccountAbi : EVMAccountAbi
+    );
+    const data = AC.encodeFunctionData('signEIP155', [selectedAccount.index, params.tx]);
 
     /**
      * Authenticate user and sign transaction
      */
-    const res = await this.getProxyForStrategy(params.strategy, data, params.authData!);
+    const res = await this.getProxyForStrategy(
+      params.strategy,
+      data,
+      params.authData!,
+      selectedAccount.walletType
+    );
 
     if (res) {
       const [signedTxData] = AC.decodeFunctionResult('signEIP155', res).toArray();
@@ -1021,12 +1079,18 @@ class EmbeddedWallet {
 
     await this.handleNetworkChange(chainId);
 
+    /**
+     * Get selected account - selected by walletIndex in params, or lastAccount.walletIndex by default
+     */
+    const selectedAccount =
+      this.lastAccount.wallets[
+        !!params.walletIndex || params.walletIndex === 0
+          ? params.walletIndex
+          : this.lastAccount.walletIndex
+      ];
+
     if (!params.strategy) {
       params.strategy = this.lastAccount.authStrategy;
-    }
-
-    if (!params.walletIndex) {
-      params.walletIndex = this.lastAccount.walletIndex;
     }
 
     if (!params.authData) {
@@ -1040,9 +1104,7 @@ class EmbeddedWallet {
       }
     }
 
-    const accountAddress = this.lastAccount.wallets[params.walletIndex]?.address;
-
-    if (!accountAddress) {
+    if (!selectedAccount.address) {
       abort('CANT_GET_ACCOUNT_ADDRESS');
       return;
     }
@@ -1076,10 +1138,10 @@ class EmbeddedWallet {
      * Prepare transaction
      */
     const tx = await new ethers.VoidSigner(
-      accountAddress,
+      selectedAccount.address,
       this.getRpcProviderForChainId(chainId)
     ).populateTransaction({
-      from: accountAddress,
+      from: selectedAccount.address,
       to: params.contractAddress,
       value: 0,
       data: contractData,
@@ -1109,9 +1171,19 @@ class EmbeddedWallet {
     /**
      * Encode tx data and authenticate it with selected auth strategy through sapphire "Account Manager"
      */
-    const AC = new ethers.Interface(EVMAccountAbi);
+    /**
+     * @TODO Use prepareUnsignedPayload for SS instead of sign EIP155?
+     */
+    const AC = new ethers.Interface(
+      selectedAccount.walletType === WalletType.SUBSTRATE ? SubstrateAccountAbi : EVMAccountAbi
+    );
     const data = AC.encodeFunctionData('signEIP155', [params.walletIndex, tx]);
-    const res = await this.getProxyForStrategy(params.strategy, data, params.authData!);
+    const res = await this.getProxyForStrategy(
+      params.strategy,
+      data,
+      params.authData!,
+      selectedAccount.walletType
+    );
 
     if (res) {
       const [signedTxData] = AC.decodeFunctionResult('signEIP155', res).toArray();
@@ -1262,16 +1334,17 @@ class EmbeddedWallet {
   async getProxyForStrategy(
     strategy: AuthStrategyName,
     data: any,
-    authData: AuthData
+    authData: AuthData,
+    walletType?: AccountWalletTypes
   ): Promise<any> {
     if (!this.accountManagerContract) {
       abort('ACCOUNT_MANAGER_CONTRACT_NOT_INITIALIZED');
     }
 
     if (strategy === 'password') {
-      return await new PasswordStrategy(this).getProxyResponse(data, authData);
+      return await new PasswordStrategy(this).getProxyResponse(data, authData, walletType);
     } else if (strategy === 'passkey') {
-      return await new PasskeyStrategy(this).getProxyResponse(data, authData);
+      return await new PasskeyStrategy(this).getProxyResponse(data, authData, walletType);
     }
   }
 

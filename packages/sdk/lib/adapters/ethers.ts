@@ -40,7 +40,7 @@ class EmbeddedEthersSigner extends ethers.AbstractSigner<ethers.JsonRpcProvider>
   }
 
   override async getAddress(): Promise<string> {
-    const a = await this.wallet.getAccountAddress();
+    const a = this.wallet.lastAccount?.wallets?.[this.wallet.lastAccount.walletIndex]?.address;
     return a || '';
   }
 
@@ -110,7 +110,7 @@ class InternalEmbeddedEthersSignerextends extends ethers.AbstractSigner<ethers.J
   }
 
   override async getAddress(): Promise<string> {
-    const a = await this.wallet.getAccountAddress();
+    const a = this.wallet.lastAccount?.wallets?.[this.wallet.lastAccount.walletIndex]?.address;
     return a || '';
   }
 

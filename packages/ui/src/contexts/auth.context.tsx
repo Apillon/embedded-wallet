@@ -55,7 +55,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
           initUserData({
             username: state.username,
             authStrategy: 'passkey',
-            address0: address,
           });
 
           setTimeout(() => {

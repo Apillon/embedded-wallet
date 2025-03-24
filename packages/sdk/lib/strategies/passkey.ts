@@ -1,5 +1,6 @@
 import { ethers } from 'ethers6';
 import {
+  AccountWalletTypes,
   AuthData,
   AuthPasskeyMode,
   AuthPasskeyModeInternal,
@@ -74,7 +75,7 @@ class PasskeyStrategy implements AuthStrategy {
     }
   }
 
-  async getProxyResponse(data: string, authData: AuthData) {
+  async getProxyResponse(data: string, authData: AuthData, walletType: AccountWalletTypes = WalletType.EVM) {
     if (!authData.username) {
       abort('NO_USERNAME');
       return;
@@ -102,7 +103,7 @@ class PasskeyStrategy implements AuthStrategy {
       cred.credentialIdHashed,
       // @ts-expect-error AbiTypes
       cred.resp,
-      BigInt(WalletType.EVM),
+      BigInt(walletType),
       data
     );
   }

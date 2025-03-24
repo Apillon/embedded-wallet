@@ -20,7 +20,7 @@ const walletTypeOptions = [
     title: 'Substrate',
     description: 'Polkadot, Kusama, Parachains',
     icon: polkadotIcon,
-    disabled: true,
+    disabled: false,
   },
 ];
 
@@ -56,6 +56,7 @@ export default function AccountsAdd() {
         internalData: JSON.stringify({
           index: predictedIndex,
           title,
+          walletType: type,
         }),
       });
 

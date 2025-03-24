@@ -17,7 +17,7 @@ document.getElementById('sdk-native-balance')?.addEventListener('click', async (
   const w = getEmbeddedWallet();
 
   if (w) {
-    const address = await w.getAccountAddress();
+    const address = w.lastAccount.wallets?.[w.lastAccount.walletIndex]?.address;
 
     if (address) {
       const result = await w.getAccountBalance(address);
@@ -50,7 +50,7 @@ document.getElementById('sdk-contract-read')?.addEventListener('click', async ()
   const w = getEmbeddedWallet();
 
   if (w) {
-    const address = await w.getAccountAddress();
+    const address = w.lastAccount.wallets?.[w.lastAccount.walletIndex]?.address;
 
     if (address) {
       const result = await w.contractRead({

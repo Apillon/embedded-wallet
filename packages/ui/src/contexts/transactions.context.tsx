@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useReducer, useRef } from 'react';
-import { EVMAccountAbi, getEmbeddedWallet, TransactionItem } from '@apillon/wallet-sdk';
+import { EVMAccountAbi, getEmbeddedWallet, TransactionItem, WalletType } from '@apillon/wallet-sdk';
 import { useWalletContext } from './wallet.context';
 import { WebStorageKeys } from '../lib/constants';
 import { ethers, TransactionReceipt } from 'ethers6';
@@ -288,6 +288,8 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
 
       if (parsed?.args?.[0] && typeof parsed.args[0] === 'string') {
         try {
+          console.log(parsed.args);
+          debugger;
           const data = JSON.parse(txData.internalData || '""');
 
           if (data?.title && data?.index) {
@@ -302,7 +304,10 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
            * -> emits `dataUpdated` event
            * -> `useSdkEvents` handles event (parseAccountWallets)
            */
-          wallet.initAccountWallets([...accountWallets.map(x => x.address), parsed.args[0]]);
+          wallet.initAccountWallets([
+            ...accountWallets,
+            { address: parsed.args[0], index: data.index || 0, walletType: WalletType.EVM },
+          ]);
 
           handleSuccess('Accounts updated', 5000);
         } catch (e) {

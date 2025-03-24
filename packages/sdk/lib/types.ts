@@ -90,7 +90,7 @@ export type AuthProxyWriteFns = AllValuesOf<
 export interface AuthStrategy {
   getRegisterData(authData: AuthData): Promise<RegisterData | undefined>;
 
-  getProxyResponse(data: string, authData: AuthData): Promise<any>;
+  getProxyResponse(data: string, authData: AuthData, walletType?: AccountWalletTypes): Promise<any>;
 
   proxyWrite(
     functionName: AuthProxyWriteFns,

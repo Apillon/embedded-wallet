@@ -35,7 +35,7 @@ export default () => {
       <div className="flex flex-col gap-3 mb-6">
         {accountWallets
           .filter(aw => aw.title.toLowerCase().includes(search.toLowerCase()))
-          .map(aw => (
+          .map((aw, index) => (
             <button
               key={aw.address}
               className={clsx(
@@ -43,16 +43,16 @@ export default () => {
                 '!border !border-solid border-brightdark hover:border-lightgrey !transition-colors',
                 '!flex justify-between items-center',
                 {
-                  '!border-yellow': aw.index === walletIndex,
+                  '!border-yellow': index === walletIndex,
                 }
               )}
               onClick={() => {
-                if (aw.index === walletIndex) {
+                if (index === walletIndex) {
                   return;
                 }
 
-                wallet?.setAccount({ walletIndex: aw.index });
-                dispatch({ type: 'setValue', payload: { key: 'walletIndex', value: aw.index } });
+                wallet?.setAccount({ walletIndex: index });
+                dispatch({ type: 'setValue', payload: { key: 'walletIndex', value: index } });
                 goScreenBack();
               }}
             >

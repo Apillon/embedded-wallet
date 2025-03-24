@@ -109,9 +109,6 @@ wallet.events.on('txSubmitted', tx => {
 - `authenticate`
   Check that credentials belong to some account.
 
-- `getAccountAddress`
-  Return EVM addresses (account and account contract) for username
-
 - `getAccountBalance`
 
 - `getAccountPrivateKey`

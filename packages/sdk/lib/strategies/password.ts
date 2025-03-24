@@ -1,4 +1,4 @@
-import { AuthData, AuthProxyWriteFns, AuthStrategy } from '../types';
+import { AccountWalletTypes, AuthData, AuthProxyWriteFns, AuthStrategy } from '../types';
 import { secp256r1 } from '@noble/curves/p256';
 import { bytesToHex } from '@noble/curves/abstract/utils';
 import { ethers } from 'ethers6';
@@ -48,7 +48,7 @@ class PasswordStrategy implements AuthStrategy {
     };
   }
 
-  async getProxyResponse(data: string, authData: AuthData) {
+  async getProxyResponse(data: string, authData: AuthData, walletType: AccountWalletTypes = WalletType.EVM) {
     if (!authData.username) {
       abort('NO_USERNAME');
       return;
@@ -73,7 +73,7 @@ class PasswordStrategy implements AuthStrategy {
 
     return await this.wallet.accountManagerContract.proxyViewPassword(
       hashedUsername as any,
-      BigInt(WalletType.EVM),
+      BigInt(walletType),
       digest,
       data
     );
