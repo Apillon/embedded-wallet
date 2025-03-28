@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { useWalletContext } from '../../contexts/wallet.context';
 import InputSearch from '../ui/InputSearch';
 import clsx from 'clsx';
+import { WalletType } from '@apillon/wallet-sdk';
 
 export default function WalletNetworkSelect() {
-  const { state, dispatch, networks, wallet, setScreen } = useWalletContext();
+  const { state, dispatch, networks, wallet, setScreen, activeWallet } = useWalletContext();
   const [search, setSearch] = useState('');
 
   if (!Array.isArray(networks) || !networks.length) {
@@ -27,7 +28,13 @@ export default function WalletNetworkSelect() {
 
       <div className="flex flex-col gap-3">
         {networks
-          .filter(network => network.name.toLowerCase().includes(search.toLowerCase()))
+          .filter(network => {
+            const envCheck =
+              activeWallet?.walletType === WalletType.SUBSTRATE
+                ? !!network.isSubstrate
+                : !network.isSubstrate;
+            return envCheck && network.name.toLowerCase().includes(search.toLowerCase());
+          })
           .map(network => (
             <button
               key={network.id}

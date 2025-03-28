@@ -289,7 +289,6 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
       if (parsed?.args?.[0] && typeof parsed.args[0] === 'string') {
         try {
           console.log(parsed.args);
-          debugger;
           const data = JSON.parse(txData.internalData || '""');
 
           if (data?.title && data?.index) {

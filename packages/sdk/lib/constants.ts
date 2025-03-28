@@ -1,3 +1,5 @@
+import { Network } from './types';
+
 export const WindowId = 'embeddedWallet'; // update "interface Window" manually in index.ts (.d.ts doesnt replace WindowId on build)
 export const SapphireMainnet = 23294;
 export const SapphireTestnet = 23295;
@@ -74,3 +76,63 @@ export const ApillonApiErrors: { [code: number]: string } = {
   40013002: 'Wallet usage limit reached', // MAX_NUMBER_OF_EMBEDDED_WALLET_SIGNATURES_REACHED
   40300001: 'Invalid origin', // INVALID_ORIGIN
 };
+
+const asNetworkDict = <K extends PropertyKey>(o: { [P in K]: Network }) => o;
+
+export const EthereumNetworks = asNetworkDict({
+  SapphireTestnet: {
+    name: 'Sapphire Testnet',
+    id: 23295,
+    rpcUrl: 'https://testnet.sapphire.oasis.io',
+    explorerUrl: 'https://explorer.oasis.io/testnet/sapphire',
+    currencySymbol: 'ROSE',
+    imageUrl:
+      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRcJLFfaXf1ps3rBkzl5mzkyKdWP6np5YLMEQ&s',
+  },
+  MoonbaseTestnet: {
+    name: 'Moonbase Testnet',
+    id: 1287,
+    rpcUrl: 'https://rpc.testnet.moonbeam.network',
+    explorerUrl: 'https://moonbase.moonscan.io',
+    currencySymbol: 'DEV',
+    imageUrl:
+      'https://moonbase.moonscan.io/assets/moonbase/images/svg/logos/token-light.svg?v=25.2.4.0',
+  },
+  PolygonAmoy: {
+    name: 'Polygon Amoy',
+    id: 80002,
+    rpcUrl: 'https://rpc-amoy.polygon.technology',
+    explorerUrl: 'https://www.oklink.com/amoy',
+    currencySymbol: 'MATIC',
+    imageUrl: 'https://pbs.twimg.com/profile_images/1781426525083963392/FH-8AGTJ_400x400.jpg',
+  },
+  BaseSepolia: {
+    name: 'Base Sepolia',
+    id: 84532,
+    rpcUrl: 'https://sepolia.base.org',
+    explorerUrl: 'https://sepolia.basescan.org',
+    imageUrl: 'https://basescan.org/assets/base/images/svg/logos/chain-light.svg?v=25.1.4.0',
+  },
+});
+
+export const SubstrateNetworks = asNetworkDict({
+  Westend: {
+    name: 'Westend',
+    id: -1,
+    rpcUrl: 'wss://rpc.ibp.network/westend',
+    explorerUrl: 'https://westend.subscan.io',
+    currencySymbol: 'WND',
+    currencyDecimals: 12,
+    imageUrl:
+      'https://raw.githubusercontent.com/TalismanSociety/chaindata/main/assets/chains/westend-testnet.svg',
+  },
+});
+
+export const DefaultEthereumNetworks = [
+  EthereumNetworks.SapphireTestnet,
+  EthereumNetworks.MoonbaseTestnet,
+  EthereumNetworks.PolygonAmoy,
+  EthereumNetworks.BaseSepolia,
+];
+
+export const DefaultSubstrateNetworks = [SubstrateNetworks.Westend];

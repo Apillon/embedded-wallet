@@ -22,14 +22,14 @@ export const networks = [
     id: 80002,
     rpcUrl: 'https://rpc-amoy.polygon.technology',
     explorerUrl: 'https://www.oklink.com/amoy',
-    currencySymbol: 'POL',
+    currencySymbol: 'MATIC',
     imageUrl: 'https://pbs.twimg.com/profile_images/1781426525083963392/FH-8AGTJ_400x400.jpg',
   },
   {
     name: 'Base Sepolia',
     id: 84532,
     rpcUrl: 'https://sepolia.base.org',
-    explorerUrl: 'https://sepolia.basescan.org/',
+    explorerUrl: 'https://sepolia.basescan.org',
     imageUrl: 'https://basescan.org/assets/base/images/svg/logos/chain-light.svg?v=25.1.4.0',
   },
 ];

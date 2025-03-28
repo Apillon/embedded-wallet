@@ -11,7 +11,7 @@ export type WebauthnContract = TypedContract<typeof wacAbi>;
 
 export type Network = {
   name: string;
-  id: number;
+  id: number | string; // strings for substrate networks
   rpcUrl: string;
   explorerUrl: string;
   imageUrl?: string; // Icon of the chain for display in UI
@@ -36,10 +36,11 @@ export type AppParams = {
   /**
    * Network ID for network (chain) selected on first use
    */
-  defaultNetworkId?: number;
+  defaultNetworkId?: number | string;
 
   /**
-   * Configuration of available networks. Oasis Sapphire is always included (ids 23294 and 23295)
+   * Configuration of available networks. Oasis Sapphire is always included (ids 23294 and 23295).
+   * You can use `EthereumNetworks` const or your own network details.
    *
    * @example
     ```ts
@@ -56,6 +57,13 @@ export type AppParams = {
   networks?: Network[];
 
   /**
+   * Substrate networks. If no network is provided, substrate is disabled.
+   *
+   * You can use `SubstrateNetworks` const or your own network details.
+   */
+  networksSubstrate?: Network[];
+
+  /**
    * Method for authenticating with passkey to make it global.
    */
   passkeyAuthMode?: AuthPasskeyMode;
@@ -66,6 +74,7 @@ export type AuthData = {
   password?: string;
   hashedUsername?: Buffer | undefined;
   privateKey?: string;
+  walletType?: AccountWalletTypes;
 };
 
 export type RegisterData = {

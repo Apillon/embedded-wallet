@@ -1,3 +1,5 @@
+import '@polkadot/api-augment';
+
 import { ethers } from 'ethers6';
 import {
   AccountWallet,
@@ -19,7 +21,13 @@ import {
 import { EVMAccountAbi, AccountManagerAbi, SubstrateAccountAbi } from './abi';
 import PasswordStrategy from './strategies/password';
 import PasskeyStrategy from './strategies/passkey';
-import { networkIdIsSapphire, getHashedUsername, abort, JsonMultiRpcProvider } from './utils';
+import {
+  networkIdIsSapphire,
+  getHashedUsername,
+  abort,
+  JsonMultiRpcProvider,
+  getAbiForType,
+} from './utils';
 import mitt, { Emitter } from 'mitt';
 import {
   ApillonApiErrors,
@@ -30,6 +38,8 @@ import {
 } from './constants';
 import { WalletDisconnectedError } from './adapters/eip1193';
 import { XdomainPasskey } from './xdomain';
+import EthereumEnvironment from './env/ethereum';
+import SubstrateEnvironment from './env/substrate';
 
 class EmbeddedWallet {
   sapphireProvider: ethers.JsonRpcProvider;
@@ -40,21 +50,17 @@ class EmbeddedWallet {
   events: Emitter<Events>;
   apillonClientId: string;
   xdomain?: XdomainPasskey;
+  eth: EthereumEnvironment;
+  ss: SubstrateEnvironment;
 
-  defaultNetworkId = 0;
-  rpcUrls = {} as { [networkId: number]: string };
-  rpcProviders = {} as { [networkId: number]: ethers.JsonRpcProvider };
-  explorerUrls = {
-    [SapphireMainnet]: 'https://explorer.oasis.io/mainnet/sapphire',
-    [SapphireTestnet]: 'https://explorer.oasis.io/testnet/sapphire',
-  } as { [networkId: number]: string };
+  defaultNetworkId = 0 as number | string;
 
-  lastAccount = {
+  user = {
     contractAddress: '',
     username: '',
     authStrategy: 'passkey' as AuthStrategyName,
-    wallets: [] as AccountWallet[],
-    walletIndex: 0, // last selected index, NOT actual index used on contracts. Actual index are duplicated on EVM vs SS
+    walletIndex: 0,
+    walletType: WalletType.EVM as AccountWalletTypes,
   };
 
   /**
@@ -74,9 +80,8 @@ class EmbeddedWallet {
         : []),
     ]);
 
-    // this.sapphireProvider = wrapEthereumProvider(ethSaphProvider);
-
     this.loadSapphireChainId();
+
     this.accountManagerAddress =
       import.meta.env.VITE_ACCOUNT_MANAGER_ADDRESS ?? '0x50dE236a7ce372E7a09956087Fb4862CA1a887aA';
 
@@ -87,29 +92,11 @@ class EmbeddedWallet {
     ) as unknown as WebauthnContract;
 
     this.defaultNetworkId = params?.defaultNetworkId || this.defaultNetworkId;
-
-    if (params?.networks) {
-      for (const ntw of params.networks) {
-        this.rpcUrls[ntw.id] = ntw.rpcUrl;
-        this.explorerUrls[ntw.id] = ntw.explorerUrl;
-      }
-    }
-
     this.events = mitt<Events>();
     this.apillonClientId = params?.clientId || '';
-
     this.xdomain = new XdomainPasskey(this.apillonClientId, params?.passkeyAuthMode || 'redirect');
-
-    /**
-     * Provider connection events
-     */
-    try {
-      if (this.getRpcProviderForChainId(this.defaultNetworkId)) {
-        this.events.emit('connect', { chainId: `0x${this.defaultNetworkId.toString(16)}` });
-      }
-    } catch (_e) {
-      /* empty */
-    }
+    this.eth = new EthereumEnvironment(this, params?.networks || []);
+    this.ss = new SubstrateEnvironment(this, params?.networksSubstrate || []);
   }
 
   // #region Auth utils
@@ -147,11 +134,13 @@ class EmbeddedWallet {
     origin?: string
   ) {
     if (!this.sapphireProvider) {
-      return abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
+      abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
+      return;
     }
 
     if (!this.accountManagerContract) {
-      return abort('ACCOUNT_MANAGER_CONTRACT_NOT_INITIALIZED');
+      abort('ACCOUNT_MANAGER_CONTRACT_NOT_INITIALIZED');
+      return;
     }
 
     let registerData = undefined as RegisterData | undefined;
@@ -193,7 +182,8 @@ class EmbeddedWallet {
     const gaslessParams = await this.getApillonSignature(gaslessData, origin);
 
     if (!gaslessParams.signature) {
-      return abort('CANT_GET_SIGNATURE');
+      abort('CANT_GET_SIGNATURE');
+      return;
     }
 
     const signedTx = await this.accountManagerContract.generateGaslessTx(
@@ -214,11 +204,17 @@ class EmbeddedWallet {
       }
 
       if (txReceipt?.logs?.[0]) {
-        const parsed = new ethers.Interface(EVMAccountAbi).parseLog(txReceipt.logs[0]);
+        const parsed = new ethers.Interface(getAbiForType(authData.walletType)).parseLog(
+          txReceipt.logs[0]
+        );
 
         if (parsed?.args?.[0]) {
           this.initAccountWallets([
-            { address: parsed.args[0], walletType: WalletType.EVM, index: 0 },
+            {
+              address: parsed.args[0],
+              walletType: authData.walletType || WalletType.EVM,
+              index: 0,
+            },
           ]);
         }
       }
@@ -253,18 +249,11 @@ class EmbeddedWallet {
   }
 
   async getAccountBalance(address: string, networkId = this.defaultNetworkId, decimals = 18) {
-    if (!networkId || (!this.rpcUrls[networkId] && networkIdIsSapphire(networkId))) {
-      return ethers.formatUnits((await this.sapphireProvider?.getBalance(address)) || 0n, decimals);
+    if (typeof networkId === 'string') {
+      return await this.ss.getAccountBalance(address, networkId, decimals);
     }
 
-    if (!this.rpcUrls[networkId]) {
-      return '0';
-    }
-
-    const ethProvider =
-      this.rpcProviders[networkId] || new ethers.JsonRpcProvider(this.rpcUrls[networkId]);
-
-    return ethers.formatUnits(await ethProvider.getBalance(address), decimals);
+    return await this.eth.getAccountBalance(address, networkId, decimals);
   }
 
   async getAccountPrivateKey(
@@ -831,6 +820,10 @@ class EmbeddedWallet {
        * @TODO Confirm
        */
       if (selectedAccount.walletType === WalletType.SUBSTRATE) {
+        if (params.resolve) {
+          params.resolve(signedRSV);
+        }
+
         return signedRSV;
       }
 
@@ -1493,41 +1486,6 @@ class EmbeddedWallet {
     }
 
     return chainId;
-  }
-
-  /**
-   * Get provider object for chainId.
-   * If no chainId specified, use sapphire network rpc.
-   */
-  getRpcProviderForChainId(chainId?: number) {
-    if (
-      !chainId ||
-      (chainId && !this.rpcUrls[chainId] && !!networkIdIsSapphire(+chainId.toString()))
-    ) {
-      /**
-       * On sapphire network, use sapphire provider
-       */
-      if (!this.sapphireProvider) {
-        this.events.emit('disconnect', { error: new WalletDisconnectedError() });
-        abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
-      }
-
-      return this.sapphireProvider;
-    } else {
-      /**
-       * On another network, use a provider for that chain
-       */
-      const ethProvider =
-        this.rpcProviders[chainId] || new ethers.JsonRpcProvider(this.rpcUrls[chainId]);
-
-      this.rpcProviders[chainId] = ethProvider;
-
-      if (!ethProvider) {
-        abort('CROSS_CHAIN_PROVIDER_NOT_INITIALIZED');
-      }
-
-      return ethProvider;
-    }
   }
 
   getGaspayingAddress() {

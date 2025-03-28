@@ -1,13 +1,13 @@
-import { ApiPromise, WsProvider } from "@polkadot/api";
+import { ApiPromise, WsProvider } from '@polkadot/api';
 import type { SignerPayloadJSON } from '@polkadot/types/types';
-import { Keyring } from "@polkadot/keyring";
-import { cryptoWaitReady, mnemonicGenerate } from "@polkadot/util-crypto";
-import { u8aToHex } from "@polkadot/util";
+import { Keyring } from '@polkadot/keyring';
+import { cryptoWaitReady, mnemonicGenerate } from '@polkadot/util-crypto';
+import { u8aToHex } from '@polkadot/util';
 import { injectExtension } from '@polkadot/extension-inject';
 import { Injected, InjectedAccount } from '@polkadot/extension-inject/types';
 import pkg from '../../package.json' assert { type: 'json' };
-import EmbeddedWallet from "..";
-import { abort, getEmbeddedWallet } from "../utils";
+import EmbeddedWallet from '..';
+import { abort, getEmbeddedWallet } from '../utils';
 
 class EmbeddedPolkadotAdapter {
   provider!: WsProvider;
@@ -43,19 +43,18 @@ class EmbeddedPolkadotAdapter {
   async enableFn(_originName: string): Promise<Injected> {
     return {
       signer: {
-        signPayload: async (payload) => {
+        signPayload: async payload => {
           const id = ++this.requestId;
 
           await cryptoWaitReady();
 
           const mnemonic = mnemonicGenerate();
 
-          const pair = this.keyring.addFromUri(
-            mnemonic,
-            { name: `acc ${id}`, type: 'ed25519' }
-          );
+          const pair = this.keyring.addFromUri(mnemonic, { name: `acc ${id}`, type: 'ed25519' });
 
-          const { signature } = this.api.registry.createType('ExtrinsicPayload', payload).sign(pair);
+          const { signature } = this.api.registry
+            .createType('ExtrinsicPayload', payload)
+            .sign(pair);
 
           return {
             id,
@@ -64,17 +63,14 @@ class EmbeddedPolkadotAdapter {
           };
         },
 
-        signRaw: async (payload) => {
+        signRaw: async payload => {
           const id = ++this.requestId;
 
           await cryptoWaitReady();
 
           const mnemonic = mnemonicGenerate();
 
-          const pair = this.keyring.addFromUri(
-            mnemonic,
-            { name: `acc ${id}`, type: 'ed25519' }
-          );
+          const pair = this.keyring.addFromUri(mnemonic, { name: `acc ${id}`, type: 'ed25519' });
 
           const signature = u8aToHex(pair.sign(payload.data));
 
@@ -88,16 +84,18 @@ class EmbeddedPolkadotAdapter {
 
       /**
        * polkadot extension event stuff? ignore
-       * 
+       *
        * Ref:
        * - polkadot/extension: extension-base/src/page/Accounts.ts
        * - polkadot/extension: extension-base/src/background/handlers/Extension.ts
        */
       accounts: {
         get: async () => this.accounts,
-        subscribe: (_cb) => {
+        subscribe: _cb => {
           console.log('accounts subscribe');
-          return () => { console.log('accounts unsubscribe') };
+          return () => {
+            console.log('accounts unsubscribe');
+          };
         },
       },
     };
