@@ -13,6 +13,7 @@ class EthereumEnvironment {
     [SapphireTestnet]: 'https://explorer.oasis.io/testnet/sapphire',
   } as { [networkId: number]: string };
   userWallets = [] as AccountWallet[];
+  userContractAddress = '';
 
   constructor(
     public wallet: EmbeddedWallet,

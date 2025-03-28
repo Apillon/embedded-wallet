@@ -8,6 +8,7 @@ class SubstrateEnvironment {
   apis = {} as { [networkId: string]: ApiPromise };
   explorerUrls = {} as { [networkId: string]: string };
   userWallets = [] as AccountWallet[];
+  userContractAddress = '';
 
   constructor(
     public wallet: EmbeddedWallet,

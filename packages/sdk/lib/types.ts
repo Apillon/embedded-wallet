@@ -203,10 +203,12 @@ export type Events = {
       | 'authStrategy'
       | 'defaultNetworkId'
       | 'sessionToken'
-      | 'wallets'
+      | 'walletsEVM'
+      | 'walletsSS'
       | 'walletIndex'
       | 'address'
-      | 'contractAddress';
+      | 'contractAddressEVM'
+      | 'contractAddressSS';
     newValue: any;
     oldValue: any;
   };

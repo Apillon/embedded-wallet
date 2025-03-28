@@ -36,7 +36,6 @@ import {
   SapphireTestnet,
   WalletType,
 } from './constants';
-import { WalletDisconnectedError } from './adapters/eip1193';
 import { XdomainPasskey } from './xdomain';
 import EthereumEnvironment from './env/ethereum';
 import SubstrateEnvironment from './env/substrate';
@@ -56,7 +55,6 @@ class EmbeddedWallet {
   defaultNetworkId = 0 as number | string;
 
   user = {
-    contractAddress: '',
     username: '',
     authStrategy: 'passkey' as AuthStrategyName,
     walletIndex: 0,
@@ -209,13 +207,7 @@ class EmbeddedWallet {
         );
 
         if (parsed?.args?.[0]) {
-          this.initAccountWallets([
-            {
-              address: parsed.args[0],
-              walletType: authData.walletType || WalletType.EVM,
-              index: 0,
-            },
-          ]);
+          this.initAccountWallets([parsed.args[0]], authData.walletType);
         }
       }
 
@@ -261,44 +253,38 @@ class EmbeddedWallet {
       strategy?: AuthStrategyName;
       authData?: AuthData;
       walletIndex?: number;
-      walletType?: AccountWalletTypes;
     } = {}
   ) {
     if (!this.sapphireProvider) {
       abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
+      return;
     }
 
     if (!params.strategy) {
-      params.strategy = this.lastAccount.authStrategy;
+      params.strategy = this.user.authStrategy;
     }
 
     if (!params.authData) {
-      if (params.strategy === 'passkey' && this.lastAccount.username) {
+      if (params.strategy === 'passkey' && this.user.username) {
         params.authData = {
-          username: this.lastAccount.username,
+          username: this.user.username,
         };
       } else {
         abort('AUTHENTICATION_DATA_NOT_PROVIDED');
+        return;
       }
     }
 
-    const AC = new ethers.Interface(
-      params.walletType === WalletType.SUBSTRATE ? SubstrateAccountAbi : EVMAccountAbi
-    );
-    const data = AC.encodeFunctionData('exportPrivateKey', [
-      !!params.walletIndex || params.walletIndex === 0
-        ? params.walletIndex
-        : this.lastAccount.wallets[this.lastAccount.walletIndex].index,
-    ]);
+    const AC = new ethers.Interface(getAbiForType(params.authData.walletType));
+    const data = AC.encodeFunctionData('exportPrivateKey', [params.walletIndex]);
 
     /**
      * Authenticate user and sign message
      */
     const res = await this.getProxyForStrategy(
-      params.strategy || this.lastAccount.authStrategy,
+      params.strategy || this.user.authStrategy,
       data,
-      params.authData!,
-      params.walletType
+      params.authData!
     );
 
     if (res) {
@@ -310,7 +296,7 @@ class EmbeddedWallet {
 
   // #region Account wallets
   /**
-   * Get all wallets added on user's account. Requires authentication.
+   * Get wallets added on user's account. Requires authentication.
    * @param reload Ignore cache and get wallets from contract again
    */
   async getAccountWallets(
@@ -326,18 +312,10 @@ class EmbeddedWallet {
       return;
     }
 
-    if (!params.reload && this.lastAccount.wallets.length) {
-      return this.lastAccount.wallets;
-    }
-
-    if (!params.strategy) {
-      params.strategy = this.lastAccount.authStrategy;
-    }
-
-    if (!params.authData || !params.authData.username) {
-      if (params.strategy === 'passkey' && this.lastAccount.username) {
+    if (!params?.authData?.username) {
+      if (params.strategy === 'passkey' && this.user.username) {
         params.authData = {
-          username: this.lastAccount.username,
+          username: this.user.username,
         };
       } else {
         abort('AUTHENTICATION_DATA_NOT_PROVIDED');
@@ -345,81 +323,72 @@ class EmbeddedWallet {
       }
     }
 
-    let wallets = [] as AccountWallet[];
+    if (!params?.authData?.walletType) {
+      params.authData.walletType = WalletType.EVM;
+    }
 
-    /**
-     * Get EVM accounts
-     */
-    const AC1 = new ethers.Interface(EVMAccountAbi);
-    const data1 = AC1.encodeFunctionData('getWalletList', []);
-    const res1 = await this.getProxyForStrategy(
-      params.strategy,
-      data1,
-      params.authData!,
-      WalletType.EVM
-    );
+    if (!params.reload) {
+      if (params.authData.walletType === WalletType.EVM && this.eth.userWallets.length) {
+        return this.eth.userWallets;
+      } else if (
+        params.authData.walletType === WalletType.SUBSTRATE &&
+        this.ss.userWallets.length
+      ) {
+        return this.ss.userWallets;
+      }
+    }
 
-    if (res1) {
-      const [accountWallets] = AC1.decodeFunctionResult('getWalletList', res1).toArray();
+    if (!params.strategy) {
+      params.strategy = this.user.authStrategy;
+    }
+
+    const AC = new ethers.Interface(getAbiForType(params.authData.walletType));
+    const data = AC.encodeFunctionData('getWalletList', []);
+    const res = await this.getProxyForStrategy(params.strategy, data, params.authData!);
+
+    if (res) {
+      const [accountWallets] = AC.decodeFunctionResult('getWalletList', res).toArray();
 
       if (accountWallets) {
-        wallets = accountWallets.map((x: string, index: number) => ({
-          address: x,
-          walletType: WalletType.EVM,
-          index,
-        }));
+        return (
+          this.initAccountWallets(accountWallets as string[], params.authData?.walletType) || []
+        );
       } else {
         abort('CANT_GET_ACCOUNT_WALLETS');
         return;
       }
     }
-
-    /**
-     * Get SS accounts
-     */
-    const AC2 = new ethers.Interface(SubstrateAccountAbi);
-    const data2 = AC2.encodeFunctionData('getWalletList', []);
-    const res2 = await this.getProxyForStrategy(
-      params.strategy,
-      data2,
-      params.authData!,
-      WalletType.SUBSTRATE
-    );
-
-    if (res2) {
-      const [accountWallets] = AC2.decodeFunctionResult('getWalletList', res2).toArray();
-
-      if (accountWallets) {
-        wallets = [
-          ...wallets,
-          ...accountWallets.map((x: string, index: number) => ({
-            address: x,
-            walletType: WalletType.SUBSTRATE,
-            index,
-          })),
-        ];
-      }
-    }
-
-    return this.initAccountWallets(wallets) || [];
   }
 
-  initAccountWallets(accountWallets: AccountWallet[]) {
+  initAccountWallets(accountWallets: string[], walletType: AccountWalletTypes = WalletType.EVM) {
     if (Array.isArray(accountWallets) && accountWallets.length) {
+      const isSubstrate = walletType === WalletType.SUBSTRATE;
+
       const mapped = accountWallets
-        .map(x => ({
-          ...x,
-          address: x.walletType === WalletType.SUBSTRATE ? x.address : `0x${x.address.slice(-40)}`,
+        .map((address, index) => ({
+          address: isSubstrate ? address : `0x${address.slice(-40)}`,
+          walletType,
+          index,
         }))
         .filter(x => !!x.address);
 
-      this.events.emit('dataUpdated', {
-        name: 'wallets',
-        newValue: mapped,
-        oldValue: this.lastAccount.wallets,
-      });
+      if (isSubstrate) {
+        this.events.emit('dataUpdated', {
+          name: 'walletsSS',
+          newValue: mapped,
+          oldValue: this.ss.userWallets,
+        });
 
-      this.lastAccount.wallets = mapped;
+        this.ss.userWallets = mapped;
+      } else {
+        this.events.emit('dataUpdated', {
+          name: 'walletsEVM',
+          newValue: mapped,
+          oldValue: this.eth.userWallets,
+        });
+
+        this.eth.userWallets = mapped;
+      }
 
       return mapped as AccountWallet[];
     }
@@ -657,19 +626,33 @@ class EmbeddedWallet {
   }
 
   async initContractAddress(authData: AuthData) {
-    if (!this.lastAccount.contractAddress) {
-      const hashedUsername = await getHashedUsername(authData.username);
-      this.lastAccount.contractAddress = (await this.accountManagerContract.getAccount(
-        hashedUsername as any,
-        BigInt(WalletType.EVM)
-      )) as string;
+    const walletType = authData.walletType || WalletType.EVM;
+    const isSubstrate = walletType === WalletType.SUBSTRATE;
 
-      this.events.emit('dataUpdated', {
-        name: 'contractAddress',
-        newValue: this.lastAccount.contractAddress,
-        oldValue: '',
-      });
+    if (isSubstrate && this.ss.userContractAddress) {
+      return this.ss.userContractAddress;
+    } else if (!isSubstrate && this.eth.userContractAddress) {
+      return this.eth.userContractAddress;
     }
+
+    const hashedUsername = await getHashedUsername(authData.username);
+
+    const address = (await this.accountManagerContract.getAccount(
+      hashedUsername as any,
+      BigInt(walletType)
+    )) as string;
+
+    if (isSubstrate) {
+      this.ss.userContractAddress = address;
+    } else {
+      this.eth.userContractAddress = address;
+    }
+
+    this.events.emit('dataUpdated', {
+      name: isSubstrate ? 'contractAddressSS' : 'contractAddressEVM',
+      newValue: address,
+      oldValue: '',
+    });
   }
 
   /**
