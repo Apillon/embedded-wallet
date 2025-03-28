@@ -49,7 +49,7 @@ class EmbeddedWallet {
   events: Emitter<Events>;
   apillonClientId: string;
   xdomain?: XdomainPasskey;
-  eth: EthereumEnvironment;
+  evm: EthereumEnvironment;
   ss: SubstrateEnvironment;
 
   defaultNetworkId = 0 as number | string;
@@ -93,7 +93,7 @@ class EmbeddedWallet {
     this.events = mitt<Events>();
     this.apillonClientId = params?.clientId || '';
     this.xdomain = new XdomainPasskey(this.apillonClientId, params?.passkeyAuthMode || 'redirect');
-    this.eth = new EthereumEnvironment(this, params?.networks || []);
+    this.evm = new EthereumEnvironment(this, params?.networks || []);
     this.ss = new SubstrateEnvironment(this, params?.networksSubstrate || []);
   }
 
@@ -245,7 +245,7 @@ class EmbeddedWallet {
       return await this.ss.getAccountBalance(address, networkId, decimals);
     }
 
-    return await this.eth.getAccountBalance(address, networkId, decimals);
+    return await this.evm.getAccountBalance(address, networkId, decimals);
   }
 
   async getAccountPrivateKey(
@@ -328,8 +328,8 @@ class EmbeddedWallet {
     }
 
     if (!params.reload) {
-      if (params.authData.walletType === WalletType.EVM && this.eth.userWallets.length) {
-        return this.eth.userWallets;
+      if (params.authData.walletType === WalletType.EVM && this.evm.userWallets.length) {
+        return this.evm.userWallets;
       } else if (
         params.authData.walletType === WalletType.SUBSTRATE &&
         this.ss.userWallets.length
@@ -384,10 +384,10 @@ class EmbeddedWallet {
         this.events.emit('dataUpdated', {
           name: 'walletsEVM',
           newValue: mapped,
-          oldValue: this.eth.userWallets,
+          oldValue: this.evm.userWallets,
         });
 
-        this.eth.userWallets = mapped;
+        this.evm.userWallets = mapped;
       }
 
       return mapped as AccountWallet[];
@@ -399,7 +399,6 @@ class EmbeddedWallet {
    * Returns tx hash on success.
    */
   async addAccountWallet(params: {
-    walletType?: AccountWalletTypes;
     privateKey?: string;
     authData?: AuthData;
     strategy?: AuthStrategyName;
@@ -417,17 +416,13 @@ class EmbeddedWallet {
     }
 
     if (!params.strategy) {
-      params.strategy = this.lastAccount.authStrategy;
-    }
-
-    if (!params.walletType) {
-      params.walletType = WalletType.EVM;
+      params.strategy = this.user.authStrategy;
     }
 
     if (!params.authData) {
-      if (params.strategy === 'passkey' && this.lastAccount.username) {
+      if (params.strategy === 'passkey' && this.user.username) {
         params.authData = {
-          username: this.lastAccount.username,
+          username: this.user.username,
         };
       } else {
         abort('AUTHENTICATION_DATA_NOT_PROVIDED');
@@ -435,23 +430,19 @@ class EmbeddedWallet {
       }
     }
 
+    if (!params?.authData?.walletType) {
+      params.authData.walletType = WalletType.EVM;
+    }
+
     const data = this.abiCoder.encode(
       ['tuple(uint256 walletType, bytes32 keypairSecret)'],
       [
         {
-          walletType: BigInt(params.walletType),
+          walletType: BigInt(params.authData.walletType),
           keypairSecret: params.privateKey || ethers.ZeroHash,
         },
       ]
     );
-
-    // const res = await this.proxyWriteForStrategy(
-    //   params.strategy,
-    //   'addWallet',
-    //   data,
-    //   params.authData,
-    //   'Add new account'
-    // );
 
     let txType = GaslessTxType.AddWallet;
     let funcDataTypes = '';
@@ -547,82 +538,114 @@ class EmbeddedWallet {
     return { signature: '', gasLimit: 0, timestamp: 0 };
   }
 
+  /**
+   * Update user data and trigger events
+   */
   setAccount(params: {
     username?: string;
     walletIndex?: number;
     strategy?: AuthStrategyName;
     contractAddress?: string;
     wallets?: AccountWallet[];
+    walletType?: AccountWalletTypes;
   }) {
-    if (typeof params.username !== 'undefined' && params.username !== this.lastAccount.username) {
+    if (typeof params.username !== 'undefined' && params.username !== this.user.username) {
       this.events.emit('dataUpdated', {
         name: 'username',
         newValue: params.username,
-        oldValue: this.lastAccount.username,
+        oldValue: this.user.username,
       });
-      this.lastAccount.username = params.username;
+      this.user.username = params.username;
     }
 
     if (
       typeof params.walletIndex !== 'undefined' &&
       params.walletIndex >= 0 &&
-      params.walletIndex !== this.lastAccount.walletIndex
+      params.walletIndex !== this.user.walletIndex
     ) {
       this.events.emit('dataUpdated', {
         name: 'walletIndex',
         newValue: params.walletIndex,
-        oldValue: this.lastAccount.walletIndex,
+        oldValue: this.user.walletIndex,
       });
-      this.lastAccount.walletIndex = params.walletIndex;
+      this.user.walletIndex = params.walletIndex;
     }
 
-    if (
-      typeof params.strategy !== 'undefined' &&
-      params.strategy !== this.lastAccount.authStrategy
-    ) {
+    if (typeof params.strategy !== 'undefined' && params.strategy !== this.user.authStrategy) {
       this.events.emit('dataUpdated', {
         name: 'authStrategy',
         newValue: params.strategy,
-        oldValue: this.lastAccount.authStrategy,
+        oldValue: this.user.authStrategy,
       });
-      this.lastAccount.authStrategy = params.strategy;
+      this.user.authStrategy = params.strategy;
     }
+
+    const isSubstrate = params.walletType === WalletType.SUBSTRATE;
 
     if (
       typeof params.contractAddress !== 'undefined' &&
-      params.contractAddress !== this.lastAccount.contractAddress
+      (((params.walletType === WalletType.EVM || !params.walletType) &&
+        params.contractAddress !== this.evm.userContractAddress) ||
+        (params.walletType === WalletType.SUBSTRATE &&
+          params.contractAddress !== this.ss.userContractAddress))
     ) {
       this.events.emit('dataUpdated', {
-        name: 'authStrategy',
+        name: isSubstrate ? 'contractAddressSS' : 'contractAddressEVM',
         newValue: params.contractAddress,
-        oldValue: this.lastAccount.contractAddress,
+        oldValue: isSubstrate ? this.ss.userContractAddress : this.evm.userContractAddress,
       });
 
-      this.lastAccount.contractAddress = params.contractAddress;
+      if (isSubstrate) {
+        this.ss.userContractAddress = params.contractAddress;
+      } else {
+        this.evm.userContractAddress = params.contractAddress;
+      }
     }
 
     if (
       Array.isArray(params.wallets) &&
-      params.wallets.length !== this.lastAccount.wallets.length
+      (((params.walletType === WalletType.EVM || !params.walletType) &&
+        params.wallets.length !== this.evm.userWallets.length) ||
+        (params.walletType === WalletType.SUBSTRATE &&
+          params.wallets.length !== this.ss.userWallets.length))
     ) {
       this.events.emit('dataUpdated', {
-        name: 'wallets',
+        name: isSubstrate ? 'walletsSS' : 'walletsEVM',
         newValue: params.wallets,
-        oldValue: this.lastAccount.wallets,
+        oldValue: isSubstrate ? this.ss.userWallets : this.evm.userWallets,
       });
 
-      this.lastAccount.wallets = [...params.wallets];
+      if (isSubstrate) {
+        this.ss.userWallets = [...params.wallets];
+      } else {
+        this.evm.userWallets = [...params.wallets];
+      }
+    }
+
+    if (typeof params.walletType !== 'undefined' && params.walletType !== this.user.walletType) {
+      this.events.emit('dataUpdated', {
+        name: 'walletType',
+        newValue: params.walletType,
+        oldValue: this.user.walletType,
+      });
+      this.user.walletType = params.walletType;
     }
   }
 
-  setWallets(wallets: AccountWallet[]) {
+  setWallets(wallets: AccountWallet[], walletType: AccountWalletTypes = WalletType.EVM) {
+    const isSubstrate = walletType === WalletType.SUBSTRATE;
+
     this.events.emit('dataUpdated', {
-      name: 'wallets',
+      name: isSubstrate ? 'walletsSS' : 'walletsEVM',
       newValue: wallets,
-      oldValue: this.lastAccount.wallets,
+      oldValue: isSubstrate ? this.ss.userWallets : this.evm.userWallets,
     });
 
-    this.lastAccount.wallets = wallets;
+    if (isSubstrate) {
+      this.ss.userWallets = [...wallets];
+    } else {
+      this.evm.userWallets = [...wallets];
+    }
   }
 
   async initContractAddress(authData: AuthData) {
@@ -631,8 +654,8 @@ class EmbeddedWallet {
 
     if (isSubstrate && this.ss.userContractAddress) {
       return this.ss.userContractAddress;
-    } else if (!isSubstrate && this.eth.userContractAddress) {
-      return this.eth.userContractAddress;
+    } else if (!isSubstrate && this.evm.userContractAddress) {
+      return this.evm.userContractAddress;
     }
 
     const hashedUsername = await getHashedUsername(authData.username);
@@ -645,7 +668,7 @@ class EmbeddedWallet {
     if (isSubstrate) {
       this.ss.userContractAddress = address;
     } else {
-      this.eth.userContractAddress = address;
+      this.evm.userContractAddress = address;
     }
 
     this.events.emit('dataUpdated', {
@@ -1225,11 +1248,13 @@ class EmbeddedWallet {
     internalData?: string;
   }) {
     if (!this.sapphireProvider) {
-      return abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
+      abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
+      return;
     }
 
     if (!this.accountManagerContract) {
-      return abort('ACCOUNT_MANAGER_CONTRACT_NOT_INITIALIZED');
+      abort('ACCOUNT_MANAGER_CONTRACT_NOT_INITIALIZED');
+      return;
     }
 
     if (!params.authData.hashedUsername) {
@@ -1276,7 +1301,8 @@ class EmbeddedWallet {
     const gaslessParams = await this.getApillonSignature(gaslessData);
 
     if (!gaslessParams.signature) {
-      return abort('CANT_GET_SIGNATURE');
+      abort('CANT_GET_SIGNATURE');
+      return;
     }
 
     // Invoke contract method to get plain tx data
@@ -1310,17 +1336,17 @@ class EmbeddedWallet {
   async getProxyForStrategy(
     strategy: AuthStrategyName,
     data: any,
-    authData: AuthData,
-    walletType?: AccountWalletTypes
+    authData: AuthData
   ): Promise<any> {
     if (!this.accountManagerContract) {
       abort('ACCOUNT_MANAGER_CONTRACT_NOT_INITIALIZED');
+      return;
     }
 
     if (strategy === 'password') {
-      return await new PasswordStrategy(this).getProxyResponse(data, authData, walletType);
+      return await new PasswordStrategy(this).getProxyResponse(data, authData);
     } else if (strategy === 'passkey') {
-      return await new PasskeyStrategy(this).getProxyResponse(data, authData, walletType);
+      return await new PasskeyStrategy(this).getProxyResponse(data, authData);
     }
   }
 
@@ -1338,6 +1364,7 @@ class EmbeddedWallet {
   ): Promise<any> {
     if (!this.accountManagerContract) {
       abort('ACCOUNT_MANAGER_CONTRACT_NOT_INITIALIZED');
+      return;
     }
 
     const functionNameForStrategy = ProxyWriteFunctionsByStrategy[functionName][strategy];

@@ -208,7 +208,8 @@ export type Events = {
       | 'walletIndex'
       | 'address'
       | 'contractAddressEVM'
-      | 'contractAddressSS';
+      | 'contractAddressSS'
+      | 'walletType';
     newValue: any;
     oldValue: any;
   };
