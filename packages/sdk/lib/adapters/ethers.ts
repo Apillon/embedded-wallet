@@ -4,7 +4,7 @@ import EmbeddedWallet from '..';
 
 class EmbeddedEthersSigner extends ethers.AbstractSigner<ethers.JsonRpcProvider> {
   wallet: EmbeddedWallet;
-  internalSigner: InternalEmbeddedEthersSignerextends;
+  internalSigner: InternalEmbeddedEthersSigner;
 
   constructor(provider?: ethers.JsonRpcProvider) {
     const w = getEmbeddedWallet();
@@ -13,10 +13,10 @@ class EmbeddedEthersSigner extends ethers.AbstractSigner<ethers.JsonRpcProvider>
       throw abort('OASIS_WALLET_NOT_INITIALIZED');
     }
 
-    super(provider || w.getRpcProviderForChainId(w.defaultNetworkId));
+    super(provider || w.evm.getRpcProviderForNetworkId(w.defaultNetworkId as number));
 
-    this.internalSigner = new InternalEmbeddedEthersSignerextends(
-      provider || w.getRpcProviderForChainId(w.defaultNetworkId),
+    this.internalSigner = new InternalEmbeddedEthersSigner(
+      provider || w.evm.getRpcProviderForNetworkId(w.defaultNetworkId as number)!,
       w
     );
 
@@ -27,8 +27,8 @@ class EmbeddedEthersSigner extends ethers.AbstractSigner<ethers.JsonRpcProvider>
      */
     w.events.on('dataUpdated', ({ name, newValue }) => {
       if (name === 'defaultNetworkId') {
-        this.internalSigner = new InternalEmbeddedEthersSignerextends(
-          w.getRpcProviderForChainId(newValue),
+        this.internalSigner = new InternalEmbeddedEthersSigner(
+          w.evm.getRpcProviderForNetworkId(newValue)!,
           this.wallet
         );
       }
@@ -40,7 +40,7 @@ class EmbeddedEthersSigner extends ethers.AbstractSigner<ethers.JsonRpcProvider>
   }
 
   override async getAddress(): Promise<string> {
-    const a = this.wallet.lastAccount?.wallets?.[this.wallet.lastAccount.walletIndex]?.address;
+    const a = this.wallet.evm.userWallets?.[this.wallet.user.walletIndex]?.address;
     return a || '';
   }
 
@@ -94,7 +94,10 @@ class EmbeddedEthersSigner extends ethers.AbstractSigner<ethers.JsonRpcProvider>
   }
 }
 
-class InternalEmbeddedEthersSignerextends extends ethers.AbstractSigner<ethers.JsonRpcProvider> {
+/**
+ * Internal signer, needed to enable switching between chains
+ */
+class InternalEmbeddedEthersSigner extends ethers.AbstractSigner<ethers.JsonRpcProvider> {
   // address = '';
   // override provider: ethers.JsonRpcProvider;
 
@@ -110,7 +113,7 @@ class InternalEmbeddedEthersSignerextends extends ethers.AbstractSigner<ethers.J
   }
 
   override async getAddress(): Promise<string> {
-    const a = this.wallet.lastAccount?.wallets?.[this.wallet.lastAccount.walletIndex]?.address;
+    const a = this.wallet.evm.userWallets?.[this.wallet.user.walletIndex]?.address;
     return a || '';
   }
 
@@ -118,10 +121,10 @@ class InternalEmbeddedEthersSignerextends extends ethers.AbstractSigner<ethers.J
     tx: ethers.TransactionRequest,
     mustConfirm = true
   ): Promise<string> {
-    const res = await this.wallet.signPlainTransaction({
-      strategy: this.wallet.lastAccount.authStrategy,
+    const res = await this.wallet.evm.signPlainTransaction({
+      strategy: this.wallet.user.authStrategy,
       authData: {
-        username: this.wallet.lastAccount.username,
+        username: this.wallet.user.username,
       },
       mustConfirm,
       tx: await this.populateTransaction(tx),
@@ -133,9 +136,9 @@ class InternalEmbeddedEthersSignerextends extends ethers.AbstractSigner<ethers.J
   override async signMessage(message: string | Uint8Array, mustConfirm = true): Promise<string> {
     const res = await this.wallet.signMessage({
       message,
-      strategy: this.wallet.lastAccount.authStrategy,
+      strategy: this.wallet.user.authStrategy,
       authData: {
-        username: this.wallet.lastAccount.username,
+        username: this.wallet.user.username,
       },
       mustConfirm,
     });
@@ -155,12 +158,12 @@ class InternalEmbeddedEthersSignerextends extends ethers.AbstractSigner<ethers.J
       chainId = +network.chainId.toString();
     }
 
-    const res = await this.wallet.broadcastTransaction(signedTxData, chainId);
+    const res = await this.wallet.evm.broadcastTransaction(signedTxData, chainId);
 
     const txResponse: ethers.TransactionResponse = {
       ...tx,
       chainId: BigInt(chainId),
-      hash: res.txHash,
+      hash: res?.txHash,
       blockHash: null,
       blockNumber: null,
       index: 0,

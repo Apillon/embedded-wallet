@@ -6,6 +6,7 @@ import {
   ContractWriteParams,
   Network,
   PlainTransactionParams,
+  TransactionItem,
 } from '../types';
 import { abort, networkIdIsSapphire } from '../utils';
 import EmbeddedWallet from '..';
@@ -415,6 +416,91 @@ class EthereumEnvironment {
       return await contract[params.contractFunctionName](...params.contractFunctionValues);
     } else {
       return await contract[params.contractFunctionName]();
+    }
+  }
+
+  /**
+   * Send raw EVM transaction data to network.
+   * If chainId is provided, the transaction is sent to that network (cross-chain).
+   */
+  async broadcastTransaction(
+    signedTxData: ethers.BytesLike,
+    chainId?: number,
+    label = 'Transaction',
+    internalLabel?: string,
+    internalData?: string
+  ) {
+    const ethProvider = this.getRpcProviderForNetworkId(chainId);
+
+    if (!ethProvider) {
+      abort('BROADCAST_TX_NO_PROVIDER');
+      return;
+    }
+
+    const txHash = await ethProvider.send('eth_sendRawTransaction', [signedTxData]);
+
+    let owner = 'none';
+    if (
+      this.wallet.user.walletType === WalletType.EVM &&
+      this.wallet.user.walletIndex < this.userWallets.length
+    ) {
+      owner = this.userWallets[this.wallet.user.walletIndex].address;
+    }
+
+    const txItem = {
+      hash: txHash,
+      label,
+      rawData: signedTxData,
+      owner,
+      status: 'pending' as const,
+      chainId: chainId || this.wallet.defaultNetworkId,
+      explorerUrl: this.explorerUrls[chainId || (this.wallet.defaultNetworkId as number)]
+        ? `${this.explorerUrls[chainId || (this.wallet.defaultNetworkId as number)]}/tx/${txHash}`
+        : '',
+      createdAt: Date.now(),
+      internalLabel,
+      internalData,
+    } as TransactionItem;
+
+    this.wallet.events.emit('txSubmitted', txItem);
+
+    return {
+      txHash,
+      ethProvider,
+      txItem,
+    };
+
+    // const receipt = await this.waitForTxReceipt(txHash, ethProvider);
+    // console.log(receipt);
+    // return receipt;
+  }
+
+  /**
+   * Helper for waiting for tx receipt
+   */
+  async waitForTxReceipt(txHash: string, provider?: ethers.JsonRpcProvider) {
+    if (!provider && !this.wallet.sapphireProvider) {
+      abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
+    }
+
+    const maxRetries = 60;
+    let retries = 0;
+
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const tr = await (provider || this.wallet.sapphireProvider).getTransactionReceipt(txHash);
+
+      if (tr) {
+        return tr;
+      }
+
+      retries += 1;
+
+      if (retries >= maxRetries) {
+        return;
+      }
+
+      await new Promise(f => setTimeout(f, 1000));
     }
   }
 

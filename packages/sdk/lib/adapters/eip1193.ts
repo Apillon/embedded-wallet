@@ -58,8 +58,8 @@ function getProvider(): EIP1193Provider & {
        * If not logged in, trigger login SDK event (open modal, wait for auth...)
        */
       case 'eth_requestAccounts': {
-        if (w.lastAccount.wallets[w.lastAccount.walletIndex].address) {
-          finalRes = [w.lastAccount.wallets[w.lastAccount.walletIndex].address];
+        if (w.evm.userWallets?.[w.user.walletIndex]?.address) {
+          finalRes = [w.evm.userWallets[w.user.walletIndex].address];
           break;
         }
 
@@ -74,8 +74,8 @@ function getProvider(): EIP1193Provider & {
       }
 
       case 'eth_accounts': {
-        if (w.lastAccount.wallets[w.lastAccount.walletIndex].address) {
-          finalRes = [w.lastAccount.wallets[w.lastAccount.walletIndex].address];
+        if (w.evm.userWallets?.[w.user.walletIndex]?.address) {
+          finalRes = [w.evm.userWallets[w.user.walletIndex].address];
           break;
         }
 
@@ -115,11 +115,11 @@ function getProvider(): EIP1193Provider & {
        * Return signed tx
        */
       case 'eth_signTransaction': {
-        const res = await w.signPlainTransaction({
+        const res = await w.evm.signPlainTransaction({
           mustConfirm: true,
-          strategy: w.lastAccount.authStrategy,
+          strategy: w.user.authStrategy,
           authData: {
-            username: w.lastAccount.username,
+            username: w.user.username,
           },
           tx: params[0],
         });
@@ -139,20 +139,22 @@ function getProvider(): EIP1193Provider & {
       }
 
       case 'eth_sendTransaction': {
-        const res = await w.signPlainTransaction({
+        const res = await w.evm.signPlainTransaction({
           mustConfirm: true,
-          strategy: w.lastAccount.authStrategy,
+          strategy: w.user.authStrategy,
           authData: {
-            username: w.lastAccount.username,
+            username: w.user.username,
           },
           tx: params[0],
         });
 
         if (res?.signedTxData) {
-          const res2 = await w.broadcastTransaction(res.signedTxData, params[0]?.chainId);
+          const res2 = await w.evm.broadcastTransaction(res.signedTxData, params[0]?.chainId);
 
-          finalRes = res2.txHash;
-          break;
+          if (res2) {
+            finalRes = res2.txHash;
+            break;
+          }
         }
 
         finalRes = null;
@@ -160,9 +162,12 @@ function getProvider(): EIP1193Provider & {
       }
 
       case 'eth_sendRawTransaction': {
-        const res = await w.broadcastTransaction(params[0], params[0]?.chainId);
+        const res = await w.evm.broadcastTransaction(params[0], params[0]?.chainId);
 
-        finalRes = res.txHash;
+        if (res) {
+          finalRes = res.txHash;
+        }
+
         break;
       }
 
@@ -170,7 +175,9 @@ function getProvider(): EIP1193Provider & {
        * Pass through to JsonRpcProvider ?
        */
       default: {
-        finalRes = await w.getRpcProviderForChainId(w.defaultNetworkId).send(method, params);
+        finalRes = await w.evm
+          .getRpcProviderForNetworkId(w.defaultNetworkId as number)!
+          .send(method, params);
         break;
       }
     }
@@ -191,7 +198,9 @@ function getProvider(): EIP1193Provider & {
       throw new WalletDisconnectedError();
     }
 
-    return new EmbeddedEthersSigner(w.getRpcProviderForChainId(w.defaultNetworkId));
+    return new EmbeddedEthersSigner(
+      w.evm.getRpcProviderForNetworkId(w.defaultNetworkId as number)!
+    );
   };
 
   /**

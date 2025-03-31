@@ -185,7 +185,7 @@ class EmbeddedWallet {
     );
 
     const txHash = await this.sapphireProvider.send('eth_sendRawTransaction', [signedTx]);
-    const txReceipt = await this.waitForTxReceipt(txHash);
+    const txReceipt = await this.evm.waitForTxReceipt(txHash);
 
     if (txReceipt) {
       if (skipAccountWallets) {
@@ -841,95 +841,62 @@ class EmbeddedWallet {
   }
 
   /**
-   * **EVM**
-   * Send raw EVM transaction data to network.
-   * If chainId is provided, the transaction is sent to that network (cross-chain).
+   * Helper for triggering different auth strategies
+   * Calls account manager method `proxyView`.
    */
-  async broadcastTransaction(
-    signedTxData: ethers.BytesLike,
-    chainId?: number,
-    label = 'Transaction',
-    internalLabel?: string,
-    internalData?: string
-  ) {
-    const ethProvider = this.evm.getRpcProviderForNetworkId(chainId);
-
-    if (!ethProvider) {
-      abort('BROADCAST_TX_NO_PROVIDER');
+  async getProxyForStrategy(
+    strategy: AuthStrategyName,
+    data: any,
+    authData: AuthData
+  ): Promise<any> {
+    if (!this.accountManagerContract) {
+      abort('ACCOUNT_MANAGER_CONTRACT_NOT_INITIALIZED');
       return;
     }
 
-    const txHash = await ethProvider.send('eth_sendRawTransaction', [signedTxData]);
-
-    let owner = 'none';
-    if (
-      this.user.walletType === WalletType.EVM &&
-      this.user.walletIndex < this.evm.userWallets.length
-    ) {
-      owner = this.evm.userWallets[this.user.walletIndex].address;
+    if (strategy === 'password') {
+      return await new PasswordStrategy(this).getProxyResponse(data, authData);
+    } else if (strategy === 'passkey') {
+      return await new PasskeyStrategy(this).getProxyResponse(data, authData);
     }
-
-    const txItem = {
-      hash: txHash,
-      label,
-      rawData: signedTxData,
-      owner,
-      status: 'pending' as const,
-      chainId: chainId || this.defaultNetworkId,
-      explorerUrl: this.evm.explorerUrls[chainId || (this.defaultNetworkId as number)]
-        ? `${this.evm.explorerUrls[chainId || (this.defaultNetworkId as number)]}/tx/${txHash}`
-        : '',
-      createdAt: Date.now(),
-      internalLabel,
-      internalData,
-    } as TransactionItem;
-
-    this.events.emit('txSubmitted', txItem);
-
-    return {
-      txHash,
-      ethProvider,
-      txItem,
-    };
-
-    // const receipt = await this.waitForTxReceipt(txHash, ethProvider);
-    // console.log(receipt);
-    // return receipt;
   }
 
   /**
-   * Prepare tx and emit `txSubmitted` event (to show tx in tx history in UI e.g.)
+   * Uses signContractWrite to invoke an account manager method and broadcast the tx
+   * @returns txHash | undefined
    */
-  submitTransaction(
-    txHash: string,
-    signedTxData?: any,
-    chainId?: number | string,
-    label = 'Transaction',
-    internalLabel?: string
-  ) {
-    const isSubstrate = this.user.walletType === WalletType.SUBSTRATE;
-    const owner = isSubstrate
-      ? this.ss.userWallets[this.user.walletIndex]
-      : this.evm.userWallets[this.user.walletIndex];
-    const explorer = isSubstrate
-      ? this.ss.explorerUrls[chainId || this.defaultNetworkId]
-      : this.evm.explorerUrls[(chainId || this.defaultNetworkId) as number];
+  async proxyWriteForStrategy(
+    strategy: AuthStrategyName,
+    functionName: keyof typeof ProxyWriteFunctionsByStrategy,
+    data: any,
+    authData: AuthData,
+    txLabel?: string,
+    dontWait = false
+  ): Promise<any> {
+    if (!this.accountManagerContract) {
+      abort('ACCOUNT_MANAGER_CONTRACT_NOT_INITIALIZED');
+      return;
+    }
 
-    const txItem = {
-      hash: txHash,
-      label,
-      rawData: signedTxData || '',
-      owner: owner.address || 'none',
-      status: 'pending' as const,
-      chainId: chainId || this.defaultNetworkId,
-      explorerUrl: explorer ? `${explorer}/tx/${txHash}` : '',
-      createdAt: Date.now(),
-      internalLabel,
-    } as TransactionItem;
+    const functionNameForStrategy = ProxyWriteFunctionsByStrategy[functionName][strategy];
 
-    this.events.emit('txSubmitted', txItem);
-
-    return txItem;
+    if (strategy === 'password') {
+      return await new PasswordStrategy(this).proxyWrite(
+        functionNameForStrategy,
+        data,
+        authData,
+        txLabel,
+        dontWait
+      );
+    } else if (strategy === 'passkey') {
+      return await new PasskeyStrategy(this).proxyWrite(
+        functionNameForStrategy,
+        data,
+        authData,
+        txLabel,
+        dontWait
+      );
+    }
   }
 
   /**
@@ -1027,7 +994,7 @@ class EmbeddedWallet {
       gaslessParams.signature
     );
 
-    const res = await this.broadcastTransaction(
+    const res = await this.evm.broadcastTransaction(
       signedTx,
       this.sapphireChainId,
       params.label || 'Gasless Transaction',
@@ -1039,68 +1006,44 @@ class EmbeddedWallet {
       return res.txHash;
     }
   }
+
+  /**
+   * Prepare tx and emit `txSubmitted` event (to show tx in tx history in UI e.g.)
+   */
+  submitTransaction(
+    txHash: string,
+    signedTxData?: any,
+    chainId?: number | string,
+    label = 'Transaction',
+    internalLabel?: string
+  ) {
+    const isSubstrate = this.user.walletType === WalletType.SUBSTRATE;
+    const owner = isSubstrate
+      ? this.ss.userWallets[this.user.walletIndex]
+      : this.evm.userWallets[this.user.walletIndex];
+    const explorer = isSubstrate
+      ? this.ss.explorerUrls[chainId || this.defaultNetworkId]
+      : this.evm.explorerUrls[(chainId || this.defaultNetworkId) as number];
+
+    const txItem = {
+      hash: txHash,
+      label,
+      rawData: signedTxData || '',
+      owner: owner.address || 'none',
+      status: 'pending' as const,
+      chainId: chainId || this.defaultNetworkId,
+      explorerUrl: explorer ? `${explorer}/tx/${txHash}` : '',
+      createdAt: Date.now(),
+      internalLabel,
+    } as TransactionItem;
+
+    this.events.emit('txSubmitted', txItem);
+
+    return txItem;
+  }
   // #endregion
 
   // #region Helpers
-  /**
-   * Helper for triggering different auth strategies
-   * Calls account manager method `proxyView`.
-   */
-  async getProxyForStrategy(
-    strategy: AuthStrategyName,
-    data: any,
-    authData: AuthData
-  ): Promise<any> {
-    if (!this.accountManagerContract) {
-      abort('ACCOUNT_MANAGER_CONTRACT_NOT_INITIALIZED');
-      return;
-    }
-
-    if (strategy === 'password') {
-      return await new PasswordStrategy(this).getProxyResponse(data, authData);
-    } else if (strategy === 'passkey') {
-      return await new PasskeyStrategy(this).getProxyResponse(data, authData);
-    }
-  }
-
-  /**
-   * Uses signContractWrite to invoke an account manager method and broadcast the tx
-   * @returns txHash | undefined
-   */
-  async proxyWriteForStrategy(
-    strategy: AuthStrategyName,
-    functionName: keyof typeof ProxyWriteFunctionsByStrategy,
-    data: any,
-    authData: AuthData,
-    txLabel?: string,
-    dontWait = false
-  ): Promise<any> {
-    if (!this.accountManagerContract) {
-      abort('ACCOUNT_MANAGER_CONTRACT_NOT_INITIALIZED');
-      return;
-    }
-
-    const functionNameForStrategy = ProxyWriteFunctionsByStrategy[functionName][strategy];
-
-    if (strategy === 'password') {
-      return await new PasswordStrategy(this).proxyWrite(
-        functionNameForStrategy,
-        data,
-        authData,
-        txLabel,
-        dontWait
-      );
-    } else if (strategy === 'passkey') {
-      return await new PasskeyStrategy(this).proxyWrite(
-        functionNameForStrategy,
-        data,
-        authData,
-        txLabel,
-        dontWait
-      );
-    }
-  }
-
   async getCredentialsForStrategy(strategy: AuthStrategyName, data: any, authData: AuthData) {
     const hashedUsername = authData.hashedUsername || (await getHashedUsername(authData.username));
 
@@ -1112,36 +1055,6 @@ class EmbeddedWallet {
         hashedUsername!,
         data
       );
-    }
-  }
-
-  /**
-   * **EVM**
-   * Helper for waiting for tx receipt
-   */
-  async waitForTxReceipt(txHash: string, provider?: ethers.JsonRpcProvider) {
-    if (!provider && !this.sapphireProvider) {
-      abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
-    }
-
-    const maxRetries = 60;
-    let retries = 0;
-
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-      const tr = await (provider || this.sapphireProvider).getTransactionReceipt(txHash);
-
-      if (tr) {
-        return tr;
-      }
-
-      retries += 1;
-
-      if (retries >= maxRetries) {
-        return;
-      }
-
-      await new Promise(f => setTimeout(f, 1000));
     }
   }
 
