@@ -1,6 +1,7 @@
 import { ApiPromise, WsProvider } from '@polkadot/api';
-import { AccountWallet, Network } from '../types';
-import { abort, EmbeddedWallet } from '../main';
+import { AccountWallet, Network, PlainTransactionParams } from '../types';
+import { abort, EmbeddedWallet, networkIdIsSapphire } from '../main';
+import { SubmittableExtrinsic } from '@polkadot/api/types';
 
 class SubstrateEnvironment {
   rpcUrls = {} as { [networkId: string]: string };
@@ -65,6 +66,52 @@ class SubstrateEnvironment {
     } = await api.query.system.account(address);
 
     return free.toString();
+  }
+
+  async signTransaction(
+    params: PlainTransactionParams<SubmittableExtrinsic<any, any>> & { chainId?: string }
+  ) {
+    const walletIndex =
+      params.walletIndex || params.walletIndex === 0
+        ? params.walletIndex
+        : this.wallet.user.walletIndex;
+
+    if (walletIndex >= this.userWallets.length) {
+      abort('SIGN_TX_INVALID_WALLET_INDEX');
+      return;
+    }
+
+    const chainId = this.validateChainId(params.chainId);
+
+    await this.wallet.handleNetworkChange(chainId);
+
+    // const signingPayload = createSigning
+  }
+
+  /**
+   * Check if rpc is configured for desired network ID.
+   */
+  validateChainId(chainId?: string | number) {
+    if (chainId && (typeof chainId === 'number' || !this.rpcUrls[chainId])) {
+      abort('NO_RPC_URL_CONFIGURED_FOR_SELECTED_CHAINID');
+      return;
+    } else if (
+      !chainId &&
+      ((!!this.wallet.defaultNetworkId && !this.rpcUrls[this.wallet.defaultNetworkId]) ||
+        typeof this.wallet.defaultNetworkId === 'number')
+    ) {
+      abort('NO_RPC_URL_CONFIGURED_FOR_SELECTED_CHAINID');
+      return;
+    }
+
+    /**
+     * If no chain specified use default from app params
+     */
+    if (!chainId && !!this.wallet.defaultNetworkId) {
+      chainId = this.wallet.defaultNetworkId as string;
+    }
+
+    return chainId as string;
   }
 }
 

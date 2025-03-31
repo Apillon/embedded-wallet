@@ -507,14 +507,17 @@ class EthereumEnvironment {
   /**
    * Check if rpc is configured for desired network ID.
    */
-  validateChainId(chainId?: number) {
-    if (chainId && !networkIdIsSapphire(chainId) && !this.rpcUrls[chainId]) {
+  validateChainId(chainId?: number | string) {
+    if (
+      chainId &&
+      (typeof chainId === 'string' || (!networkIdIsSapphire(chainId) && !this.rpcUrls[chainId]))
+    ) {
       abort('NO_RPC_URL_CONFIGURED_FOR_SELECTED_CHAINID');
       return;
     } else if (
       !chainId &&
-      !!this.wallet.defaultNetworkId &&
-      !this.rpcUrls[this.wallet.defaultNetworkId as number]
+      ((!!this.wallet.defaultNetworkId && !this.rpcUrls[this.wallet.defaultNetworkId as number]) ||
+        typeof this.wallet.defaultNetworkId === 'string')
     ) {
       abort('NO_RPC_URL_CONFIGURED_FOR_SELECTED_CHAINID');
       return;
@@ -527,7 +530,7 @@ class EthereumEnvironment {
       chainId = this.wallet.defaultNetworkId as number;
     }
 
-    return chainId;
+    return chainId as number;
   }
 }
 
