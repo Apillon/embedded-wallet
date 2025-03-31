@@ -7,11 +7,8 @@ import {
   AppParams,
   AuthData,
   AuthStrategyName,
-  ContractReadParams,
-  ContractWriteParams,
   Events,
   GaslessTxType,
-  PlainTransactionParams,
   RegisterData,
   SignMessageParams,
   SignatureCallback,
@@ -21,13 +18,7 @@ import {
 import { EVMAccountAbi, AccountManagerAbi, SubstrateAccountAbi } from './abi';
 import PasswordStrategy from './strategies/password';
 import PasskeyStrategy from './strategies/passkey';
-import {
-  networkIdIsSapphire,
-  getHashedUsername,
-  abort,
-  JsonMultiRpcProvider,
-  getAbiForType,
-} from './utils';
+import { getHashedUsername, abort, JsonMultiRpcProvider, getAbiForType } from './utils';
 import mitt, { Emitter } from 'mitt';
 import {
   ApillonApiErrors,
@@ -39,7 +30,6 @@ import {
 import { XdomainPasskey } from './xdomain';
 import EthereumEnvironment from './env/ethereum';
 import SubstrateEnvironment from './env/substrate';
-import { ApiTypes, SubmittableExtrinsic } from '@polkadot/api/types';
 
 class EmbeddedWallet {
   sapphireProvider: ethers.JsonRpcProvider;
@@ -851,7 +841,8 @@ class EmbeddedWallet {
   }
 
   /**
-   * Send raw transaction data to network.
+   * **EVM**
+   * Send raw EVM transaction data to network.
    * If chainId is provided, the transaction is sent to that network (cross-chain).
    */
   async broadcastTransaction(
@@ -911,21 +902,27 @@ class EmbeddedWallet {
    */
   submitTransaction(
     txHash: string,
-    signedTxData?: ethers.BytesLike,
-    chainId?: number,
+    signedTxData?: any,
+    chainId?: number | string,
     label = 'Transaction',
     internalLabel?: string
   ) {
+    const isSubstrate = this.user.walletType === WalletType.SUBSTRATE;
+    const owner = isSubstrate
+      ? this.ss.userWallets[this.user.walletIndex]
+      : this.evm.userWallets[this.user.walletIndex];
+    const explorer = isSubstrate
+      ? this.ss.explorerUrls[chainId || this.defaultNetworkId]
+      : this.evm.explorerUrls[(chainId || this.defaultNetworkId) as number];
+
     const txItem = {
       hash: txHash,
       label,
       rawData: signedTxData || '',
-      owner: this.lastAccount.wallets[this.lastAccount.walletIndex].address || 'none',
+      owner: owner.address || 'none',
       status: 'pending' as const,
       chainId: chainId || this.defaultNetworkId,
-      explorerUrl: this.explorerUrls[chainId || this.defaultNetworkId]
-        ? `${this.explorerUrls[chainId || this.defaultNetworkId]}/tx/${txHash}`
-        : '',
+      explorerUrl: explorer ? `${explorer}/tx/${txHash}` : '',
       createdAt: Date.now(),
       internalLabel,
     } as TransactionItem;
@@ -933,156 +930,6 @@ class EmbeddedWallet {
     this.events.emit('txSubmitted', txItem);
 
     return txItem;
-  }
-
-  /**
-   * Get signed tx for making a contract write call.
-   */
-  async signContractWrite(params: ContractWriteParams) {
-    const chainId = this.validateChainId(params.chainId);
-
-    await this.handleNetworkChange(chainId);
-
-    /**
-     * Get selected account - selected by walletIndex in params, or lastAccount.walletIndex by default
-     */
-    const selectedAccount =
-      this.lastAccount.wallets[
-        !!params.walletIndex || params.walletIndex === 0
-          ? params.walletIndex
-          : this.lastAccount.walletIndex
-      ];
-
-    if (!params.strategy) {
-      params.strategy = this.lastAccount.authStrategy;
-    }
-
-    if (!params.authData) {
-      if (params.strategy === 'passkey' && this.lastAccount.username) {
-        params.authData = {
-          username: this.lastAccount.username,
-        };
-      } else {
-        abort('AUTHENTICATION_DATA_NOT_PROVIDED');
-        return;
-      }
-    }
-
-    if (!selectedAccount.address) {
-      abort('CANT_GET_ACCOUNT_ADDRESS');
-      return;
-    }
-
-    /**
-     * Emit 'txApprove' if confirmation is needed.
-     * Handle confirmation in UI part of app (call this method again w/o `mustConfirm`).
-     */
-    if (params.mustConfirm) {
-      return await new Promise<{
-        signedTxData: string;
-        chainId?: number;
-      }>((resolve, reject) => {
-        this.events.emit('txApprove', {
-          contractWrite: { ...params, mustConfirm: false, resolve, reject },
-        });
-      });
-    }
-
-    /**
-     * Encode contract data
-     */
-    const contractInterface = new ethers.Interface(params.contractAbi);
-
-    const contractData = contractInterface.encodeFunctionData(
-      params.contractFunctionName,
-      params.contractFunctionValues
-    );
-
-    /**
-     * Prepare transaction
-     */
-    const tx = await new ethers.VoidSigner(
-      selectedAccount.address,
-      this.getRpcProviderForChainId(chainId)
-    ).populateTransaction({
-      from: selectedAccount.address,
-      to: params.contractAddress,
-      value: 0,
-      data: contractData,
-    });
-
-    if (!tx.gasPrice) {
-      const feeData = await this.getRpcProviderForChainId(params.chainId).getFeeData();
-      tx.gasPrice = feeData.gasPrice || 20_000_000_000;
-
-      if (feeData.maxPriorityFeePerGas) {
-        tx.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
-      }
-
-      if (feeData.maxFeePerGas) {
-        tx.maxFeePerGas = feeData.maxFeePerGas;
-      } else {
-        tx.maxFeePerGas =
-          BigInt(feeData.gasPrice || 0) * BigInt(2) + (feeData.maxPriorityFeePerGas || 0n);
-      }
-    }
-
-    if (!tx.gasLimit) {
-      const gas = await this.getRpcProviderForChainId(params.chainId).estimateGas(tx);
-      tx.gasLimit = !!gas ? Math.floor(Number(gas) * 1.01) : 1_000_000;
-    }
-
-    /**
-     * Encode tx data and authenticate it with selected auth strategy through sapphire "Account Manager"
-     */
-    /**
-     * @TODO Use prepareUnsignedPayload for SS instead of sign EIP155?
-     */
-    const AC = new ethers.Interface(
-      selectedAccount.walletType === WalletType.SUBSTRATE ? SubstrateAccountAbi : EVMAccountAbi
-    );
-    const data = AC.encodeFunctionData('signEIP155', [params.walletIndex, tx]);
-    const res = await this.getProxyForStrategy(
-      params.strategy,
-      data,
-      params.authData!,
-      selectedAccount.walletType
-    );
-
-    if (res) {
-      const [signedTxData] = AC.decodeFunctionResult('signEIP155', res).toArray();
-
-      if (params.resolve) {
-        params.resolve({
-          signedTxData,
-          chainId,
-        });
-      }
-
-      return {
-        signedTxData,
-        chainId,
-      };
-    }
-  }
-
-  /**
-   * Get result of contract read.
-   * Utility function, this has nothing to do with Oasis.
-   */
-  async contractRead(params: ContractReadParams) {
-    const chainId = this.validateChainId(params.chainId);
-    const ethProvider = this.getRpcProviderForChainId(chainId);
-
-    await this.handleNetworkChange(chainId);
-
-    const contract = new ethers.Contract(params.contractAddress, params.contractAbi, ethProvider);
-
-    if (params.contractFunctionValues) {
-      return await contract[params.contractFunctionName](...params.contractFunctionValues);
-    } else {
-      return await contract[params.contractFunctionName]();
-    }
   }
 
   /**
@@ -1188,7 +1035,7 @@ class EmbeddedWallet {
       params.internalData
     );
 
-    if (res.txHash) {
+    if (res?.txHash) {
       return res.txHash;
     }
   }
@@ -1197,6 +1044,7 @@ class EmbeddedWallet {
   // #region Helpers
   /**
    * Helper for triggering different auth strategies
+   * Calls account manager method `proxyView`.
    */
   async getProxyForStrategy(
     strategy: AuthStrategyName,
@@ -1216,7 +1064,7 @@ class EmbeddedWallet {
   }
 
   /**
-   * Use signContractWrite to invoke an account manager method and broadcast the tx
+   * Uses signContractWrite to invoke an account manager method and broadcast the tx
    * @returns txHash | undefined
    */
   async proxyWriteForStrategy(
@@ -1268,6 +1116,7 @@ class EmbeddedWallet {
   }
 
   /**
+   * **EVM**
    * Helper for waiting for tx receipt
    */
   async waitForTxReceipt(txHash: string, provider?: ethers.JsonRpcProvider) {
@@ -1296,15 +1145,35 @@ class EmbeddedWallet {
     }
   }
 
-  setDefaultNetworkId(networkId: number) {
-    if (this.rpcUrls[networkId] || networkId === SapphireMainnet || networkId === SapphireTestnet) {
+  setDefaultNetworkId(networkId: number | string) {
+    if (
+      (typeof networkId === 'number' && this.evm.rpcUrls[networkId]) ||
+      (typeof networkId === 'string' && this.ss.rpcUrls[networkId]) ||
+      networkId === SapphireMainnet ||
+      networkId === SapphireTestnet
+    ) {
       this.events.emit('dataUpdated', {
         name: 'defaultNetworkId',
         newValue: networkId,
         oldValue: this.defaultNetworkId,
       });
 
-      this.events.emit('chainChanged', { chainId: `0x${networkId.toString(16)}` });
+      if (typeof networkId === 'number') {
+        this.events.emit('chainChanged', { chainId: `0x${networkId.toString(16)}` });
+        this.events.emit('dataUpdated', {
+          name: 'walletType',
+          newValue: WalletType.EVM,
+          oldValue: this.user.walletType,
+        });
+        this.user.walletType = WalletType.EVM;
+      } else {
+        this.events.emit('dataUpdated', {
+          name: 'walletType',
+          newValue: WalletType.SUBSTRATE,
+          oldValue: this.user.walletType,
+        });
+        this.user.walletType = WalletType.SUBSTRATE;
+      }
 
       this.defaultNetworkId = networkId;
 
@@ -1318,14 +1187,20 @@ class EmbeddedWallet {
    * Send event requestChainChange, wait for it to resolve.
    * Throws error if chain was not changed.
    */
-  async handleNetworkChange(chainId?: number) {
+  async handleNetworkChange(chainId?: number | string) {
     if (chainId && chainId !== this.defaultNetworkId) {
-      const isChanged = await new Promise(resolve =>
-        this.events.emit('requestChainChange', { chainId, resolve })
-      );
+      if (typeof chainId === 'number') {
+        const isChanged = await new Promise(resolve =>
+          this.events.emit('requestChainChange', { chainId, resolve })
+        );
 
-      if (!isChanged) {
-        return abort('CHAIN_CHANGE_FAILED');
+        if (!isChanged) {
+          return abort('CHAIN_CHANGE_FAILED');
+        }
+      } else {
+        /**
+         * @TODO Handle substrate
+         */
       }
 
       this.setDefaultNetworkId(chainId);
@@ -1339,28 +1214,6 @@ class EmbeddedWallet {
     }
 
     return this.sapphireChainId;
-  }
-
-  /**
-   * Check if rpc is configured for desired network ID.
-   */
-  validateChainId(chainId?: number) {
-    if (chainId && !networkIdIsSapphire(chainId) && !this.rpcUrls[chainId]) {
-      abort('NO_RPC_URL_CONFIGURED_FOR_SELECTED_CHAINID');
-      return;
-    } else if (!chainId && !!this.defaultNetworkId && !this.rpcUrls[this.defaultNetworkId]) {
-      abort('NO_RPC_URL_CONFIGURED_FOR_SELECTED_CHAINID');
-      return;
-    }
-
-    /**
-     * If no chain specified use default from app params
-     */
-    if (!chainId && !!this.defaultNetworkId) {
-      chainId = this.defaultNetworkId;
-    }
-
-    return chainId;
   }
 
   getGaspayingAddress() {

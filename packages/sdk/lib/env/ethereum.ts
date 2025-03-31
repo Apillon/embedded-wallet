@@ -1,6 +1,12 @@
 import { ethers } from 'ethers6';
 import { SapphireMainnet, SapphireTestnet, WalletType } from '../constants';
-import { AccountWallet, Network, PlainTransactionParams } from '../types';
+import {
+  AccountWallet,
+  ContractReadParams,
+  ContractWriteParams,
+  Network,
+  PlainTransactionParams,
+} from '../types';
 import { abort, networkIdIsSapphire } from '../utils';
 import EmbeddedWallet from '..';
 import { EVMAccountAbi, WalletDisconnectedError } from '../main';
@@ -126,7 +132,7 @@ class EthereumEnvironment {
       return;
     }
 
-    const chainId = this.wallet.validateChainId(
+    const chainId = this.validateChainId(
       params?.tx?.chainId ? +params.tx.chainId.toString() || 0 : 0
     );
 
@@ -256,6 +262,186 @@ class EthereumEnvironment {
         chainId,
       };
     }
+  }
+
+  /**
+   * Get signed tx for making a contract write call.
+   */
+  async signContractWrite(params: ContractWriteParams) {
+    const walletIndex =
+      params.walletIndex || params.walletIndex === 0
+        ? params.walletIndex
+        : this.wallet.user.walletIndex;
+
+    if (walletIndex >= this.userWallets.length) {
+      abort('SIGN_TX_INVALID_WALLET_INDEX');
+      return;
+    }
+
+    const chainId = this.validateChainId(params.chainId);
+
+    await this.wallet.handleNetworkChange(chainId);
+
+    if (!params.strategy) {
+      params.strategy = this.wallet.user.authStrategy;
+    }
+
+    if (!params.authData) {
+      if (params.strategy === 'passkey' && this.wallet.user.username) {
+        params.authData = {
+          username: this.wallet.user.username,
+        };
+      } else {
+        abort('AUTHENTICATION_DATA_NOT_PROVIDED');
+        return;
+      }
+    }
+
+    if (!params.authData.walletType) {
+      params.authData.walletType = WalletType.EVM;
+    }
+
+    const provider = this.getRpcProviderForNetworkId(chainId);
+
+    if (!provider) {
+      abort('SIGN_TX_NO_PROVIDER');
+      return;
+    }
+
+    /**
+     * Emit 'txApprove' if confirmation is needed.
+     * Handle confirmation in UI part of app (call this method again w/o `mustConfirm`).
+     */
+    if (params.mustConfirm) {
+      return await new Promise<{
+        signedTxData: string;
+        chainId?: number;
+      }>((resolve, reject) => {
+        this.wallet.events.emit('txApprove', {
+          contractWrite: { ...params, mustConfirm: false, resolve, reject },
+        });
+      });
+    }
+
+    /**
+     * Encode contract data
+     */
+    const contractInterface = new ethers.Interface(params.contractAbi);
+
+    const contractData = contractInterface.encodeFunctionData(
+      params.contractFunctionName,
+      params.contractFunctionValues
+    );
+
+    /**
+     * Prepare transaction
+     */
+    const tx = await new ethers.VoidSigner(
+      this.userWallets[walletIndex].address,
+      provider
+    ).populateTransaction({
+      from: this.userWallets[walletIndex].address,
+      to: params.contractAddress,
+      value: 0,
+      data: contractData,
+    });
+
+    if (!tx.gasPrice) {
+      const feeData = await provider.getFeeData();
+      tx.gasPrice = feeData.gasPrice || 20_000_000_000;
+
+      if (feeData.maxPriorityFeePerGas) {
+        tx.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
+      }
+
+      if (feeData.maxFeePerGas) {
+        tx.maxFeePerGas = feeData.maxFeePerGas;
+      } else {
+        tx.maxFeePerGas =
+          BigInt(feeData.gasPrice || 0) * BigInt(2) + (feeData.maxPriorityFeePerGas || 0n);
+      }
+    }
+
+    if (!tx.gasLimit) {
+      const gas = await provider.estimateGas(tx);
+      tx.gasLimit = !!gas ? Math.floor(Number(gas) * 1.01) : 1_000_000;
+    }
+
+    /**
+     * Encode tx data and authenticate it with selected auth strategy through sapphire "Account Manager"
+     */
+    /**
+     * @TODO Use prepareUnsignedPayload for SS instead of sign EIP155?
+     */
+    const AC = new ethers.Interface(EVMAccountAbi);
+    const data = AC.encodeFunctionData('signEIP155', [params.walletIndex, tx]);
+    const res = await this.wallet.getProxyForStrategy(params.strategy, data, params.authData!);
+
+    if (res) {
+      const [signedTxData] = AC.decodeFunctionResult('signEIP155', res).toArray();
+
+      if (params.resolve) {
+        params.resolve({
+          signedTxData,
+          chainId,
+        });
+      }
+
+      return {
+        signedTxData,
+        chainId,
+      };
+    }
+  }
+
+  /**
+   * Get result of contract read.
+   * Utility function, this has nothing to do with Oasis.
+   */
+  async contractRead(params: ContractReadParams) {
+    const chainId = this.validateChainId(params.chainId);
+
+    await this.wallet.handleNetworkChange(chainId);
+
+    const provider = this.getRpcProviderForNetworkId(chainId);
+    if (!provider) {
+      abort('SIGN_TX_NO_PROVIDER');
+      return;
+    }
+
+    const contract = new ethers.Contract(params.contractAddress, params.contractAbi, provider);
+
+    if (params.contractFunctionValues) {
+      return await contract[params.contractFunctionName](...params.contractFunctionValues);
+    } else {
+      return await contract[params.contractFunctionName]();
+    }
+  }
+
+  /**
+   * Check if rpc is configured for desired network ID.
+   */
+  validateChainId(chainId?: number) {
+    if (chainId && !networkIdIsSapphire(chainId) && !this.rpcUrls[chainId]) {
+      abort('NO_RPC_URL_CONFIGURED_FOR_SELECTED_CHAINID');
+      return;
+    } else if (
+      !chainId &&
+      !!this.wallet.defaultNetworkId &&
+      !this.rpcUrls[this.wallet.defaultNetworkId as number]
+    ) {
+      abort('NO_RPC_URL_CONFIGURED_FOR_SELECTED_CHAINID');
+      return;
+    }
+
+    /**
+     * If no chain specified use default from app params
+     */
+    if (!chainId && !!this.wallet.defaultNetworkId) {
+      chainId = this.wallet.defaultNetworkId as number;
+    }
+
+    return chainId;
   }
 }
 

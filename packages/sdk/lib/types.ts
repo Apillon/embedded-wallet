@@ -185,7 +185,7 @@ export type TransactionItem = {
   rawData: any;
   owner: string;
   status: 'pending' | 'confirmed' | 'failed';
-  chainId: number;
+  chainId: number | string;
   explorerUrl: string;
   createdAt: number; // timestamp
   internalLabel?: string;
