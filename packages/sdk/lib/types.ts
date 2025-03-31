@@ -131,14 +131,14 @@ export type AccountWallet = {
   index: number;
 };
 
-export type PlainTransactionParams = {
+export type PlainTransactionParams<T = ethers.TransactionLike<ethers.AddressLike>> = {
   strategy?: AuthStrategyName;
   authData?: AuthData;
   walletIndex?: number;
-  tx: ethers.TransactionLike<ethers.AddressLike>;
+  tx: T;
   label?: string;
   mustConfirm?: boolean;
-  resolve?: (result: { signedTxData: any; chainId?: number }) => void;
+  resolve?: (result: { signedTxData: any; chainId?: number | string }) => void;
   reject?: (reason?: any) => void;
 };
 

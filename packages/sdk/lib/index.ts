@@ -39,6 +39,7 @@ import {
 import { XdomainPasskey } from './xdomain';
 import EthereumEnvironment from './env/ethereum';
 import SubstrateEnvironment from './env/substrate';
+import { ApiTypes, SubmittableExtrinsic } from '@polkadot/api/types';
 
 class EmbeddedWallet {
   sapphireProvider: ethers.JsonRpcProvider;
@@ -680,7 +681,7 @@ class EmbeddedWallet {
 
   /**
    * Get a wallet address for account and pass it to listeners.
-   * Update the stored lastAccount.
+   * Update the stored user.
    * This process includes getting all wallets (getAccountWallets) which requires authentication (when no cache is available).
    */
   async finalizeAccountAuth(strategy: AuthStrategyName, authData: AuthData) {
@@ -689,20 +690,25 @@ class EmbeddedWallet {
     // const addr = await this.getAccountAddress(strategy, authData);
 
     let addr = '';
+    const isSubstrate = authData.walletType === WalletType.SUBSTRATE;
 
-    if (this.lastAccount.wallets.length) {
-      if (this.lastAccount.wallets.length > this.lastAccount.walletIndex) {
-        addr = this.lastAccount.wallets[this.lastAccount.walletIndex].address;
+    if ((isSubstrate && this.ss.userWallets.length) || this.evm.userWallets.length) {
+      if (isSubstrate && this.ss.userWallets.length > this.user.walletIndex) {
+        addr = this.ss.userWallets[this.user.walletIndex].address;
+      } else if (!isSubstrate && this.evm.userWallets.length > this.user.walletIndex) {
+        addr = this.evm.userWallets[this.user.walletIndex].address;
       } else {
         this.events.emit('dataUpdated', {
           name: 'walletIndex',
           newValue: 0,
-          oldValue: this.lastAccount.walletIndex,
+          oldValue: this.user.walletIndex,
         });
 
-        this.lastAccount.walletIndex = 0;
+        this.user.walletIndex = 0;
 
-        addr = this.lastAccount.wallets[this.lastAccount.walletIndex].address;
+        addr = isSubstrate
+          ? this.ss.userWallets[this.user.walletIndex].address
+          : this.evm.userWallets[this.user.walletIndex].address;
       }
     }
 
@@ -718,17 +724,24 @@ class EmbeddedWallet {
     this.events.emit('dataUpdated', {
       name: 'authStrategy',
       newValue: strategy,
-      oldValue: this.lastAccount.authStrategy,
+      oldValue: this.user.authStrategy,
     });
 
     this.events.emit('dataUpdated', {
       name: 'username',
       newValue: authData.username,
-      oldValue: this.lastAccount.username,
+      oldValue: this.user.username,
     });
 
-    this.lastAccount.authStrategy = strategy;
-    this.lastAccount.username = authData.username;
+    this.events.emit('dataUpdated', {
+      name: 'walletType',
+      newValue: authData.walletType || WalletType.EVM,
+      oldValue: this.user.walletType,
+    });
+
+    this.user.authStrategy = strategy;
+    this.user.username = authData.username;
+    this.user.walletType = authData.walletType || WalletType.EVM;
 
     return addr;
   }
@@ -752,32 +765,22 @@ class EmbeddedWallet {
     }
 
     if (!params.strategy) {
-      params.strategy = this.lastAccount.authStrategy;
+      params.strategy = this.user.authStrategy;
     }
 
     if (!params.authData) {
-      if (params.strategy === 'passkey' && this.lastAccount.username) {
+      if (params.strategy === 'passkey' && this.user.username) {
         params.authData = {
-          username: this.lastAccount.username,
+          username: this.user.username,
         };
       } else {
         abort('AUTHENTICATION_DATA_NOT_PROVIDED');
       }
     }
 
-    /**
-     * Get selected account - selected by walletIndex in params, or lastAccount.walletIndex by default
-     */
-    const selectedAccount =
-      this.lastAccount.wallets[
-        !!params.walletIndex || params.walletIndex === 0
-          ? params.walletIndex
-          : this.lastAccount.walletIndex
-      ];
+    const isSubstrate = params.authData?.walletType === WalletType.SUBSTRATE;
 
-    const AC = new ethers.Interface(
-      selectedAccount.walletType === WalletType.SUBSTRATE ? SubstrateAccountAbi : EVMAccountAbi
-    );
+    const AC = new ethers.Interface(isSubstrate ? SubstrateAccountAbi : EVMAccountAbi);
 
     let data = params.data || '';
     const originalMessage = params.message;
@@ -788,7 +791,10 @@ class EmbeddedWallet {
         params.message = ethers.hashMessage(params.message);
       }
 
-      data = AC.encodeFunctionData('sign', [selectedAccount.index, params.message]);
+      data = AC.encodeFunctionData('sign', [
+        params.walletIndex || params.walletIndex === 0 ? params.walletIndex : this.user.walletIndex,
+        params.message,
+      ]);
 
       /**
        * Emits 'signatureRequest' if confirmation is needed.
@@ -811,12 +817,7 @@ class EmbeddedWallet {
     /**
      * Authenticate user and sign message
      */
-    const res = await this.getProxyForStrategy(
-      params.strategy,
-      data,
-      params.authData!,
-      selectedAccount.walletType
-    );
+    const res = await this.getProxyForStrategy(params.strategy, data, params.authData!);
 
     if (res) {
       const [signedRSV] = AC.decodeFunctionResult('sign', res).toArray();
@@ -825,7 +826,7 @@ class EmbeddedWallet {
        * Not RSV when SS
        * @TODO Confirm
        */
-      if (selectedAccount.walletType === WalletType.SUBSTRATE) {
+      if (isSubstrate) {
         if (params.resolve) {
           params.resolve(signedRSV);
         }
@@ -850,153 +851,6 @@ class EmbeddedWallet {
   }
 
   /**
-   * Authenticate with selected auth strategy through sapphire "Account Manager",
-   * then return signed tx data and chainId of tx.
-   */
-  async signPlainTransaction(params: PlainTransactionParams) {
-    const chainId = this.validateChainId(
-      params?.tx?.chainId ? +params.tx.chainId.toString() || 0 : 0
-    );
-
-    await this.handleNetworkChange(chainId);
-
-    params.tx.chainId = chainId;
-
-    /**
-     * Get selected account - selected by walletIndex in params, or lastAccount.walletIndex by default
-     */
-    const selectedAccount =
-      this.lastAccount.wallets[
-        !!params.walletIndex || params.walletIndex === 0
-          ? params.walletIndex
-          : this.lastAccount.walletIndex
-      ];
-
-    if (!params.strategy) {
-      params.strategy = this.lastAccount.authStrategy;
-    }
-
-    if (!params.authData) {
-      if (params.strategy === 'passkey' && this.lastAccount.username) {
-        params.authData = {
-          username: this.lastAccount.username,
-        };
-      } else {
-        return abort('AUTHENTICATION_DATA_NOT_PROVIDED');
-      }
-    }
-
-    // Data must be BytesLike
-    if (!params.tx.data) {
-      params.tx.data = '0x';
-    }
-
-    /**
-     * Get nonce if none provided
-     */
-    if (!params.tx.nonce) {
-      params.tx.nonce = await this.getRpcProviderForChainId(chainId).getTransactionCount(
-        selectedAccount.address
-      );
-    }
-
-    /**
-     * Change viem specific properties to ethers spec
-     */
-    if ((params.tx.type as any) === 'eip1559') {
-      params.tx.type = 2;
-      params.tx.gasLimit = (params.tx as any).gas;
-    }
-
-    /**
-     * Calculate gasPrice if missing
-     */
-    if (!params.tx.gasPrice) {
-      const feeData = await this.getRpcProviderForChainId(params.tx.chainId).getFeeData();
-
-      params.tx.gasPrice = feeData.gasPrice;
-
-      if (feeData.maxPriorityFeePerGas) {
-        params.tx.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
-      }
-
-      if (feeData.maxFeePerGas) {
-        params.tx.maxFeePerGas = feeData.maxFeePerGas;
-      } else {
-        params.tx.maxFeePerGas =
-          BigInt(feeData.gasPrice || 0) * BigInt(2) + (feeData.maxPriorityFeePerGas || 0n);
-      }
-    }
-
-    if (!params.tx.gasLimit) {
-      const gas = await this.getRpcProviderForChainId(params.tx.chainId).estimateGas(params.tx);
-      params.tx.gasLimit = !!gas ? Math.floor(Number(gas) * 1.01) : 1_000_000;
-    }
-
-    /**
-     * Set value to bigint to avoid contract type errors
-     *
-     * - When write tx doesnt have value
-     * - When value is set but is `undefined`
-     */
-    if (
-      (params.tx.type === 2 && !params.tx.value) ||
-      ('value' in params.tx && (typeof params.tx.value === 'undefined' || params.tx.value === null))
-    ) {
-      params.tx.value = 0n;
-    }
-
-    /**
-     * Emit 'txApprove' if confirmation is needed.
-     * Handle confirmation in UI part of app (call this method again w/o `mustConfirm`).
-     */
-    if (params.mustConfirm) {
-      return await new Promise<{
-        signedTxData: string;
-        chainId?: number;
-      }>((resolve, reject) => {
-        this.events.emit('txApprove', {
-          plain: { ...params, mustConfirm: false, resolve, reject },
-        });
-      });
-    }
-
-    /**
-     * @TODO Use prepareUnsignedPayload for SS instead of sign EIP155?
-     */
-    const AC = new ethers.Interface(
-      selectedAccount.walletType === WalletType.SUBSTRATE ? SubstrateAccountAbi : EVMAccountAbi
-    );
-    const data = AC.encodeFunctionData('signEIP155', [selectedAccount.index, params.tx]);
-
-    /**
-     * Authenticate user and sign transaction
-     */
-    const res = await this.getProxyForStrategy(
-      params.strategy,
-      data,
-      params.authData!,
-      selectedAccount.walletType
-    );
-
-    if (res) {
-      const [signedTxData] = AC.decodeFunctionResult('signEIP155', res).toArray();
-
-      if (params.resolve) {
-        params.resolve({
-          signedTxData,
-          chainId,
-        });
-      }
-
-      return {
-        signedTxData,
-        chainId,
-      };
-    }
-  }
-
-  /**
    * Send raw transaction data to network.
    * If chainId is provided, the transaction is sent to that network (cross-chain).
    */
@@ -1007,21 +861,32 @@ class EmbeddedWallet {
     internalLabel?: string,
     internalData?: string
   ) {
-    /**
-     * Broadcast transaction
-     */
-    const ethProvider = this.getRpcProviderForChainId(chainId);
+    const ethProvider = this.evm.getRpcProviderForNetworkId(chainId);
+
+    if (!ethProvider) {
+      abort('BROADCAST_TX_NO_PROVIDER');
+      return;
+    }
+
     const txHash = await ethProvider.send('eth_sendRawTransaction', [signedTxData]);
+
+    let owner = 'none';
+    if (
+      this.user.walletType === WalletType.EVM &&
+      this.user.walletIndex < this.evm.userWallets.length
+    ) {
+      owner = this.evm.userWallets[this.user.walletIndex].address;
+    }
 
     const txItem = {
       hash: txHash,
       label,
       rawData: signedTxData,
-      owner: this.lastAccount.wallets[this.lastAccount.walletIndex].address || 'none',
+      owner,
       status: 'pending' as const,
       chainId: chainId || this.defaultNetworkId,
-      explorerUrl: this.explorerUrls[chainId || this.defaultNetworkId]
-        ? `${this.explorerUrls[chainId || this.defaultNetworkId]}/tx/${txHash}`
+      explorerUrl: this.evm.explorerUrls[chainId || (this.defaultNetworkId as number)]
+        ? `${this.evm.explorerUrls[chainId || (this.defaultNetworkId as number)]}/tx/${txHash}`
         : '',
       createdAt: Date.now(),
       internalLabel,
