@@ -1,7 +1,8 @@
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { AccountWallet, Network, PlainTransactionParams } from '../types';
-import { abort, EmbeddedWallet, networkIdIsSapphire } from '../main';
+import { abort, EmbeddedWallet, SubstrateAccountAbi, WalletType } from '../main';
 import { SubmittableExtrinsic } from '@polkadot/api/types';
+import { ethers } from 'ethers6';
 
 class SubstrateEnvironment {
   rpcUrls = {} as { [networkId: string]: string };
@@ -25,8 +26,22 @@ class SubstrateEnvironment {
     }
   }
 
-  async getApiForNetworkId(networkId: string) {
-    if (!this.rpcUrls[networkId]) {
+  /**
+   * Get polkadot.js API instance. Initialize it if needed.
+   */
+  async getApiForNetworkId(networkId?: string) {
+    if (!networkId) {
+      /**
+       * Use default ID if none provided.
+       * If default ID doesnt work, use first network from config
+       */
+      networkId =
+        typeof this.wallet.defaultNetworkId === 'string'
+          ? this.wallet.defaultNetworkId
+          : Object.keys(this.rpcUrls)[0];
+    }
+
+    if (!networkId || !this.rpcUrls[networkId]) {
       return;
     }
 
@@ -85,7 +100,85 @@ class SubstrateEnvironment {
 
     await this.wallet.handleNetworkChange(chainId);
 
-    // const signingPayload = createSigning
+    if (!params.strategy) {
+      params.strategy = this.wallet.user.authStrategy;
+    }
+
+    if (!params.authData) {
+      if (params.strategy === 'passkey' && this.wallet.user.username) {
+        params.authData = {
+          username: this.wallet.user.username,
+        };
+      } else {
+        abort('AUTHENTICATION_DATA_NOT_PROVIDED');
+        return;
+      }
+    }
+
+    if (!params.authData.walletType) {
+      params.authData.walletType = WalletType.SUBSTRATE;
+    }
+
+    const api = await this.getApiForNetworkId(chainId);
+
+    if (!api) {
+      abort('SIGN_TX_NO_POLKADOT_API');
+      return;
+    }
+
+    /**
+     * Emit 'txApprove' if confirmation is needed.
+     * Handle confirmation in UI part of app (call this method again w/o `mustConfirm`).
+     */
+    if (params.mustConfirm) {
+      return await new Promise<{
+        signedTxData: string;
+        chainId?: number | string;
+      }>((resolve, reject) => {
+        this.wallet.events.emit('txApprove', {
+          polkadot: { ...params, mustConfirm: false, resolve, reject },
+        });
+      });
+    }
+
+    const signingPayload = api.registry.createType('ExtrinsicPayload', params.tx, {
+      version: params.tx.version,
+    });
+
+    // if (message.length > 256) {
+    //   message = api.registry.hash(message); // blake2b_256
+    // }
+
+    console.log('signing payload', signingPayload.toHuman());
+
+    const AC = new ethers.Interface(SubstrateAccountAbi);
+    const data = AC.encodeFunctionData('sign', [walletIndex, signingPayload.toU8a(true)]);
+
+    const res = await this.wallet.getProxyForStrategy(params.strategy, data, params.authData);
+
+    if (res) {
+      const [signature] = AC.decodeFunctionResult('sign', res).toArray();
+
+      // const tx = api.registry
+      //   .createType('Extrinsic', { method: params.tx.method }, { version: params.tx.version })
+      //   .addSignature(this.userWallets[walletIndex].address, signature, params.tx);
+      const signedTxData = params.tx.addSignature(
+        this.userWallets[walletIndex].address,
+        signature,
+        signingPayload.toU8a()
+      );
+
+      console.log('signed tx', signedTxData.toHuman());
+
+      const txHash = await api.rpc.author.submitExtrinsic(signedTxData);
+
+      console.log('tx hash', txHash);
+
+      return {
+        signedTxData,
+        chainId,
+      };
+    }
   }
 
   /**

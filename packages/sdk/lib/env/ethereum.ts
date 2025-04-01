@@ -55,6 +55,8 @@ class EthereumEnvironment {
   /**
    * Get provider object for networkId.
    * If no networkId specified, use sapphire network rpc.
+   *
+   * @TODO When no chainId provided, use wallet.defaultNetworkId
    */
   getRpcProviderForNetworkId(networkId?: number) {
     if (

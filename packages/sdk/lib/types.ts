@@ -4,6 +4,7 @@ import { TypedContract } from 'ethers-abitype';
 import { ethers } from 'ethers6';
 import { ProviderRpcError } from 'viem';
 import { ProxyWriteFunctionsByStrategy, WalletType } from './constants';
+import { SubmittableExtrinsic } from '@polkadot/api/types';
 
 const wacAbi = parseAbi(AccountManagerAbi);
 
@@ -194,7 +195,11 @@ export type TransactionItem = {
 
 export type Events = {
   signatureRequest: SignMessageParams;
-  txApprove: { plain?: PlainTransactionParams; contractWrite?: ContractWriteParams };
+  txApprove: {
+    plain?: PlainTransactionParams;
+    contractWrite?: ContractWriteParams;
+    polkadot?: PlainTransactionParams<SubmittableExtrinsic<any, any>>;
+  };
   txSubmitted: TransactionItem;
   txDone: TransactionItem; // emitted by UI
   dataUpdated: {
