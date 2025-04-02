@@ -225,6 +225,27 @@ class EmbeddedWallet {
       return;
     }
 
+    /**
+     * Update wallet type and default network id
+     */
+    if (typeof authData.walletType !== 'undefined') {
+      this.setAccount({ walletType: authData.walletType });
+
+      if (
+        authData.walletType === WalletType.SUBSTRATE &&
+        typeof this.defaultNetworkId === 'number' &&
+        this.ss.networks.length
+      ) {
+        this.setDefaultNetworkId(this.ss.networks[0].id);
+      } else if (
+        authData.walletType === WalletType.EVM &&
+        typeof this.defaultNetworkId === 'string' &&
+        this.evm.networks.length
+      ) {
+        this.setDefaultNetworkId(this.evm.networks[0].id);
+      }
+    }
+
     // also saves wallets via initAccountWallets
     await this.getAccountWallets({ authData, strategy, reload: true });
 
@@ -314,7 +335,7 @@ class EmbeddedWallet {
       }
     }
 
-    if (!params?.authData?.walletType) {
+    if (typeof params?.authData?.walletType === 'undefined') {
       params.authData.walletType = WalletType.EVM;
     }
 
@@ -389,13 +410,15 @@ class EmbeddedWallet {
    * Add new wallet or import from privateKey.
    * Returns tx hash on success.
    */
-  async addAccountWallet(params: {
-    privateKey?: string;
-    authData?: AuthData;
-    strategy?: AuthStrategyName;
-    internalLabel?: string;
-    internalData?: string;
-  }) {
+  async addAccountWallet(
+    params: {
+      privateKey?: string;
+      authData?: AuthData;
+      strategy?: AuthStrategyName;
+      internalLabel?: string;
+      internalData?: string;
+    } = {}
+  ) {
     if (!this.sapphireProvider) {
       abort('SAPPHIRE_PROVIDER_NOT_INITIALIZED');
       return;
@@ -421,8 +444,8 @@ class EmbeddedWallet {
       }
     }
 
-    if (!params?.authData?.walletType) {
-      params.authData.walletType = WalletType.EVM;
+    if (typeof params?.authData?.walletType === 'undefined') {
+      params.authData.walletType = this.user.walletType;
     }
 
     const data = this.abiCoder.encode(
@@ -479,6 +502,22 @@ class EmbeddedWallet {
     }
 
     abort('CANT_GET_WALLET_ADDRESS');
+  }
+
+  /**
+   * Get "currently active" account address.
+   * Active -> determined by `walletIndex` & `walletType` from `this.user`
+   */
+  getAddress() {
+    if (
+      this.user.walletType === WalletType.SUBSTRATE &&
+      this.user.walletIndex < this.ss.userWallets.length
+    ) {
+      return this.ss.userWallets[this.user.walletIndex].address;
+    } else if (this.user.walletIndex < this.evm.userWallets.length) {
+      return this.evm.userWallets[this.user.walletIndex].address;
+    }
+    return '';
   }
   // #endregion
 
@@ -765,7 +804,12 @@ class EmbeddedWallet {
         };
       } else {
         abort('AUTHENTICATION_DATA_NOT_PROVIDED');
+        return;
       }
+    }
+
+    if (typeof params.authData?.walletType === 'undefined') {
+      params.authData.walletType = this.user.walletType;
     }
 
     const isSubstrate = params.authData?.walletType === WalletType.SUBSTRATE;

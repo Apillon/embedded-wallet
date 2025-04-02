@@ -122,7 +122,7 @@ export const EthereumNetworks = asNetworkDict({
 export const SubstrateNetworks = asNetworkDict({
   Westend: {
     name: 'Westend',
-    id: -1,
+    id: 'westend',
     rpcUrl: 'wss://rpc.ibp.network/westend',
     explorerUrl: 'https://westend.subscan.io',
     currencySymbol: 'WND',

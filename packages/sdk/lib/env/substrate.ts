@@ -1,4 +1,7 @@
+import { SignerPayloadJSON } from '@polkadot/types/types';
 import { ApiPromise, WsProvider } from '@polkadot/api';
+import { formatBalance } from '@polkadot/util';
+import { decodeAddress, encodeAddress } from '@polkadot/util-crypto';
 import { AccountWallet, Network, PlainTransactionParams } from '../types';
 import { abort, EmbeddedWallet, SubstrateAccountAbi, WalletType } from '../main';
 import { SubmittableExtrinsic } from '@polkadot/api/types';
@@ -141,32 +144,97 @@ class SubstrateEnvironment {
       });
     }
 
-    const signingPayload = api.registry.createType('ExtrinsicPayload', params.tx, {
-      version: params.tx.version,
-    });
+    const extrinsicVersion = api.runtimeMetadata.asV15.extrinsic.version.toNumber();
 
-    // if (message.length > 256) {
-    //   message = api.registry.hash(message); // blake2b_256
+    console.log(params.tx.toHuman());
+
+    const [lastHash, genesisHash, property] = await Promise.all([
+      api.rpc.chain.getFinalizedHead(),
+      api.rpc.chain.getBlockHash(0),
+      api.rpc.system.properties(),
+    ]);
+
+    const { block } = await api.rpc.chain.getBlock(lastHash);
+
+    const address = encodeAddress(
+      decodeAddress(this.userWallets[walletIndex].address),
+      +property.ss58Format.unwrapOr(42).toString()
+    );
+
+    const accountInfo = await api.query.system.account(address);
+
+    // const { tx } = expandMetadata(api.registry, api.runtimeMetadata);
+    // const methodFn = tx[params.tx.method.section][params.tx.method.method];
+
+    const unsigned: SignerPayloadJSON = {
+      method: params.tx.method.toHex(),
+      address,
+      blockHash: block.header.hash.toHex(),
+      blockNumber: block.header.number.toHex(),
+      era: api.registry
+        .createType('ExtrinsicEra', {
+          current: block.header.number.toNumber(),
+          period: 64,
+        })
+        .toHex(),
+      genesisHash: genesisHash.toHex(),
+      nonce: accountInfo.nonce.toHex(),
+      specVersion: api.runtimeVersion.specVersion.toHex(),
+      transactionVersion: api.runtimeVersion.transactionVersion.toHex(),
+      tip: api.registry.createType('Compact<Balance>', 0).toHex(),
+      signedExtensions: api.registry.signedExtensions,
+      version: extrinsicVersion,
+    };
+
+    // let signingPayload = api.registry
+    //   .createType('ExtrinsicPayload', params.tx, {
+    //     // ...
+    //   })
+    //   .toU8a();
+    // signingPayload = `0x${signingPayload.substring(4, signingPayload.length)}`;
+
+    // if (signingPayload.length > 256) {
+    //   signingPayload = api.registry.hash(signingPayload); // blake2b_256
     // }
 
-    console.log('signing payload', signingPayload.toHuman());
+    const signingPayload = api.registry.createType('ExtrinsicPayload', unsigned, {
+      version: extrinsicVersion,
+    });
+
+    let message = signingPayload.toU8a({ method: true });
+    if (message.length > 256) {
+      message = api.registry.hash(message); // blake2b_256
+    }
 
     const AC = new ethers.Interface(SubstrateAccountAbi);
-    const data = AC.encodeFunctionData('sign', [walletIndex, signingPayload.toU8a(true)]);
+    const data = AC.encodeFunctionData('sign', [walletIndex, message]);
 
     const res = await this.wallet.getProxyForStrategy(params.strategy, data, params.authData);
 
     if (res) {
       const [signature] = AC.decodeFunctionResult('sign', res).toArray();
 
-      // const tx = api.registry
-      //   .createType('Extrinsic', { method: params.tx.method }, { version: params.tx.version })
-      //   .addSignature(this.userWallets[walletIndex].address, signature, params.tx);
-      const signedTxData = params.tx.addSignature(
-        this.userWallets[walletIndex].address,
-        signature,
-        signingPayload.toU8a()
-      );
+      // const extr = api.registry.createType(
+      //   'Extrinsic',
+      //   { method: params.tx.method },
+      //   { version: params.tx.version }
+      // );
+
+      // const signedTxData = extr.addSignature(
+      //   decodeAddress(this.userWallets[walletIndex].address),
+      //   signature,
+      //   signingPayload
+      // );
+
+      // const signedTxData = params.tx.addSignature(
+      //   this.userWallets[walletIndex].address,
+      //   signature,
+      //   signingPayload
+      // );
+
+      const signedTxData = api.registry
+        .createType('Extrinsic', { method: unsigned.method }, { version: extrinsicVersion })
+        .addSignature(unsigned.address, signature, unsigned);
 
       console.log('signed tx', signedTxData.toHuman());
 
@@ -206,6 +274,8 @@ class SubstrateEnvironment {
 
     return chainId as string;
   }
+
+  formatBalance = formatBalance;
 }
 
 export { SubstrateEnvironment };
