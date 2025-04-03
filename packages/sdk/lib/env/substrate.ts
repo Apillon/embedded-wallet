@@ -1,6 +1,6 @@
 import { SignerPayloadJSON } from '@polkadot/types/types';
 import { ApiPromise, WsProvider } from '@polkadot/api';
-import { formatBalance } from '@polkadot/util';
+import { formatBalance, hexToU8a } from '@polkadot/util';
 import { decodeAddress, encodeAddress } from '@polkadot/util-crypto';
 import { AccountWallet, Network, PlainTransactionParams } from '../types';
 import { abort, EmbeddedWallet, SubstrateAccountAbi, WalletType } from '../main';
@@ -146,8 +146,6 @@ class SubstrateEnvironment {
 
     const extrinsicVersion = api.runtimeMetadata.asV15.extrinsic.version.toNumber();
 
-    console.log(params.tx.toHuman());
-
     const [lastHash, genesisHash, property] = await Promise.all([
       api.rpc.chain.getFinalizedHead(),
       api.rpc.chain.getBlockHash(0),
@@ -162,9 +160,6 @@ class SubstrateEnvironment {
     );
 
     const accountInfo = await api.query.system.account(address);
-
-    // const { tx } = expandMetadata(api.registry, api.runtimeMetadata);
-    // const methodFn = tx[params.tx.method.section][params.tx.method.method];
 
     const unsigned: SignerPayloadJSON = {
       method: params.tx.method.toHex(),
@@ -186,61 +181,34 @@ class SubstrateEnvironment {
       version: extrinsicVersion,
     };
 
-    // let signingPayload = api.registry
-    //   .createType('ExtrinsicPayload', params.tx, {
-    //     // ...
-    //   })
-    //   .toU8a();
-    // signingPayload = `0x${signingPayload.substring(4, signingPayload.length)}`;
-
-    // if (signingPayload.length > 256) {
-    //   signingPayload = api.registry.hash(signingPayload); // blake2b_256
-    // }
-
     const signingPayload = api.registry.createType('ExtrinsicPayload', unsigned, {
       version: extrinsicVersion,
     });
 
-    let message = signingPayload.toU8a({ method: true });
-    if (message.length > 256) {
-      message = api.registry.hash(message); // blake2b_256
-    }
-
     const AC = new ethers.Interface(SubstrateAccountAbi);
-    const data = AC.encodeFunctionData('sign', [walletIndex, message]);
+    const data = AC.encodeFunctionData('sign', [
+      walletIndex,
+      // Fix payload: trim first 2 characters -- otherwise it doesn't work
+      `0x${signingPayload.toHex().slice(4)}`,
+    ]);
 
     const res = await this.wallet.getProxyForStrategy(params.strategy, data, params.authData);
 
     if (res) {
-      const [signature] = AC.decodeFunctionResult('sign', res).toArray();
+      let [signature] = AC.decodeFunctionResult('sign', res).toArray();
 
-      // const extr = api.registry.createType(
-      //   'Extrinsic',
-      //   { method: params.tx.method },
-      //   { version: params.tx.version }
-      // );
-
-      // const signedTxData = extr.addSignature(
-      //   decodeAddress(this.userWallets[walletIndex].address),
-      //   signature,
-      //   signingPayload
-      // );
-
-      // const signedTxData = params.tx.addSignature(
-      //   this.userWallets[walletIndex].address,
-      //   signature,
-      //   signingPayload
-      // );
+      // Add signature type
+      signature = hexToU8a(`0x01${signature.slice(2)}`);
 
       const signedTxData = api.registry
-        .createType('Extrinsic', { method: unsigned.method }, { version: extrinsicVersion })
+        .createType('Extrinsic', { method: params.tx.method }, { version: extrinsicVersion })
         .addSignature(unsigned.address, signature, unsigned);
 
-      console.log('signed tx', signedTxData.toHuman());
-
-      const txHash = await api.rpc.author.submitExtrinsic(signedTxData);
-
-      console.log('tx hash', txHash);
+      /**
+       * @TODO Don't send automatically? For usage with polkadot adapter (signPayload/signRaw)? Make a broadcastTx like for ethereum.
+       */
+      await api.rpc.author.submitExtrinsic(signedTxData);
+      // const txHash = await api.rpc.author.submitExtrinsic(signedTxData);
 
       return {
         signedTxData,

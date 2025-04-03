@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Embedded Wallet</title>
-    <script src="//unpkg.com/alpinejs" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
     <style>
       * {
@@ -169,6 +169,7 @@
         
           <button @click="async () => {
             const w = window?.embeddedWallet;
+            w?.setAccount({ walletIndex });
             const api = await w?.ss.getApiForNetworkId();
             const res = await api.query.system.account(w?.getAddress())
             console.log(res?.toHuman());
@@ -193,12 +194,14 @@
             const w = window?.embeddedWallet;
             const api = await w?.ss.getApiForNetworkId();
 
-            const txh = w?.ss.signTransaction({
+            const txh = await w?.ss.signTransaction({
               tx: api.tx.balances.transferAllowDeath(
                 '0xe88fbf66e26df57ebabba1cced7d404a864ca2c48420ea982dd2c69f86045924',
-                10000 // 0.001 * 1e12 // chainDecimals
+                0.01 * 1e12 // chainDecimals
               )
             });
+
+            console.log(txh);
           }">
             Try transfer
           </button>
