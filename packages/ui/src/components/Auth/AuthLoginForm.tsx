@@ -24,29 +24,32 @@ export default () => {
       <AuthTitle title="Sign in or sign up" description="Enter your email to set up your passkey" />
 
       <form onSubmit={ev => onAuth(false, ev)}>
-        <div className="flex items-center gap-2 mb-2">
-          <Btn
-            variant={walletType === WalletType.EVM ? 'secondary' : 'ghost'}
-            className="w-full"
-            onClick={() => wallet?.setAccount({ walletType: WalletType.EVM })}
-          >
-            <div className="flex items-center justify-center gap-4">
-              <img src={ethIcon} alt="EVM" className="w-6 h-6" />
-              EVM
-            </div>
-          </Btn>
+        {/* Display environment buttons if networks for both are supplied */}
+        {!!appProps?.networks?.length && !!appProps?.networksSubstrate?.length && (
+          <div className="flex items-center gap-2 mb-2">
+            <Btn
+              variant={walletType === WalletType.EVM ? 'secondary' : 'ghost'}
+              className="w-full"
+              onClick={() => wallet?.setAccount({ walletType: WalletType.EVM })}
+            >
+              <div className="flex items-center justify-center gap-4">
+                <img src={ethIcon} alt="EVM" className="w-6 h-6" />
+                EVM
+              </div>
+            </Btn>
 
-          <Btn
-            variant={walletType === WalletType.SUBSTRATE ? 'secondary' : 'ghost'}
-            className="w-full"
-            onClick={() => wallet?.setAccount({ walletType: WalletType.SUBSTRATE })}
-          >
-            <div className="flex items-center justify-center gap-4">
-              <img src={polkadotIcon} alt="Substrate" className="w-6 h-6" />
-              Substrate
-            </div>
-          </Btn>
-        </div>
+            <Btn
+              variant={walletType === WalletType.SUBSTRATE ? 'secondary' : 'ghost'}
+              className="w-full"
+              onClick={() => wallet?.setAccount({ walletType: WalletType.SUBSTRATE })}
+            >
+              <div className="flex items-center justify-center gap-4">
+                <img src={polkadotIcon} alt="Substrate" className="w-6 h-6" />
+                Substrate
+              </div>
+            </Btn>
+          </div>
+        )}
 
         <Input
           type="email"

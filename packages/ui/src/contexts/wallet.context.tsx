@@ -165,6 +165,7 @@ const WalletContext = createContext<
       state: ContextState;
       dispatch: (action: ContextActions) => void;
       networks: Network[];
+      networksSubstrate: Network[];
       networksById: { [networkId: number | string]: Network };
       defaultNetworkId: number | string;
       activeWallet?: AccountWalletEx;
@@ -211,7 +212,6 @@ function WalletProvider({
   ...restOfParams
 }: {
   children: ReactNode;
-  networks?: Network[];
 } & AppProps) {
   // If not already set, add sapphire network
   if (!networks.some(n => n.id === SapphireTestnet || n.id === SapphireMainnet)) {
@@ -239,7 +239,12 @@ function WalletProvider({
 
   const [state, dispatch] = useReducer(
     reducer,
-    initialState(defaultNetworkId || networks[0].id, { ...restOfParams, defaultNetworkId })
+    initialState(defaultNetworkId || networks[0].id, {
+      ...restOfParams,
+      defaultNetworkId,
+      networks,
+      networksSubstrate,
+    })
   );
   const initializingWallet = useRef(false);
   const [initialized, setInitialized] = useState(false);
@@ -313,10 +318,11 @@ function WalletProvider({
   async function initWallet() {
     let w = undefined as EmbeddedWallet | undefined;
 
-    if (networks && networks.length) {
+    if (networks?.length || networksSubstrate?.length) {
       w = EmbeddedWalletSDK({
         ...restOfParams,
         networks,
+        networksSubstrate,
         defaultNetworkId,
       });
     } else {
@@ -739,6 +745,7 @@ function WalletProvider({
         state,
         dispatch,
         networks,
+        networksSubstrate,
         networksById,
         defaultNetworkId: defaultNetworkId || 0,
         activeWallet,
