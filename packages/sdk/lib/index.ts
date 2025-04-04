@@ -132,6 +132,10 @@ class EmbeddedWallet {
       return;
     }
 
+    if (!authData.walletType) {
+      authData.walletType = this.user.walletType;
+    }
+
     let registerData = undefined as RegisterData | undefined;
 
     /**
@@ -223,6 +227,10 @@ class EmbeddedWallet {
     if (!authData.username) {
       abort('NO_USERNAME');
       return;
+    }
+
+    if (!authData.walletType) {
+      authData.walletType = this.user.walletType;
     }
 
     /**
@@ -679,13 +687,22 @@ class EmbeddedWallet {
   }
 
   async initContractAddress(authData: AuthData) {
-    const walletType = authData.walletType || WalletType.EVM;
+    const walletType =
+      typeof authData.walletType === 'undefined' ? this.user.walletType : authData.walletType;
     const isSubstrate = walletType === WalletType.SUBSTRATE;
 
     if (isSubstrate && this.ss.userContractAddress) {
       return this.ss.userContractAddress;
     } else if (!isSubstrate && this.evm.userContractAddress) {
       return this.evm.userContractAddress;
+    }
+
+    if (!authData.username || authData.username === '-') {
+      authData.username = this.user.username;
+    }
+
+    if (!authData.username) {
+      return;
     }
 
     const hashedUsername = await getHashedUsername(authData.username);

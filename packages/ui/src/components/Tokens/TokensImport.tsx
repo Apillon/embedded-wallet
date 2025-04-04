@@ -59,7 +59,7 @@ export default function TokensImport() {
         throw new Error(`Token does not exist on chain (ID: ${networkId})`);
       }
 
-      const contractAddress = getContractAddress();
+      const contractAddress = await getContractAddress();
 
       if (!contractAddress) {
         throw new Error('Could not get user wallet address');

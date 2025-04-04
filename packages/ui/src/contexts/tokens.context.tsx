@@ -242,7 +242,7 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
   }, [state]);
 
   useEffect(() => {
-    if (wallet && !initializing.current) {
+    if (wallet && !initializing.current && walletState.username) {
       initializing.current = true;
       init();
       loadExchangeRates();
@@ -266,7 +266,7 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
         const restored = JSON.parse(stored);
         dispatch({ type: 'setState', payload: restored });
 
-        const contractAddress = getContractAddress();
+        const contractAddress = await getContractAddress();
 
         if (
           !!activeWallet &&

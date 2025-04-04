@@ -1,12 +1,16 @@
+import { WalletType } from '@apillon/wallet-sdk';
 import { useAuthContext } from '../../contexts/auth.context';
 import { useWalletContext } from '../../contexts/wallet.context';
 import Btn from '../ui/Btn';
 import Input from '../ui/Input';
 import AuthTitle from './AuthTitle';
+import ethIcon from '../../assets/eth_logo.svg';
+import polkadotIcon from '../../assets/polkadot-logo.png';
 
 export default () => {
   const {
-    state: { appProps },
+    state: { appProps, walletType },
+    wallet,
   } = useWalletContext();
 
   const {
@@ -20,6 +24,30 @@ export default () => {
       <AuthTitle title="Sign in or sign up" description="Enter your email to set up your passkey" />
 
       <form onSubmit={ev => onAuth(false, ev)}>
+        <div className="flex items-center gap-2 mb-2">
+          <Btn
+            variant={walletType === WalletType.EVM ? 'secondary' : 'ghost'}
+            className="w-full"
+            onClick={() => wallet?.setAccount({ walletType: WalletType.EVM })}
+          >
+            <div className="flex items-center justify-center gap-4">
+              <img src={ethIcon} alt="EVM" className="w-6 h-6" />
+              EVM
+            </div>
+          </Btn>
+
+          <Btn
+            variant={walletType === WalletType.SUBSTRATE ? 'secondary' : 'ghost'}
+            className="w-full"
+            onClick={() => wallet?.setAccount({ walletType: WalletType.SUBSTRATE })}
+          >
+            <div className="flex items-center justify-center gap-4">
+              <img src={polkadotIcon} alt="Substrate" className="w-6 h-6" />
+              Substrate
+            </div>
+          </Btn>
+        </div>
+
         <Input
           type="email"
           placeholder={appProps.authFormPlaceholder}

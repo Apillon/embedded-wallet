@@ -32,12 +32,14 @@ export default function useSdkEvents() {
         reloadAccountBalances();
         setForWallet('networkId', params.newValue);
       } else if (params.name === 'walletsEVM') {
+        // Check for username -> dont run if during auth
         if (!!state.username && state.walletType === WalletType.EVM) {
-          parseAccountWallets(params.newValue, state.username);
+          parseAccountWallets(params.newValue);
         }
       } else if (params.name === 'walletsSS') {
+        // Check for username -> dont run if during auth
         if (!!state.username && state.walletType === WalletType.SUBSTRATE) {
-          parseAccountWallets(params.newValue, state.username);
+          parseAccountWallets(params.newValue);
         }
       } else if (params.name === 'walletType') {
         setForWallet('walletType', params.newValue);

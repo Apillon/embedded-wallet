@@ -22,7 +22,7 @@ import {
 } from '@apillon/wallet-sdk';
 import { AppProps } from '../main';
 import { WebStorageKeys } from '../lib/constants';
-import { logToStorage } from '../lib/helpers';
+import { logToStorage, sleep } from '../lib/helpers';
 import oasisLogo from '../assets/oasis.svg';
 
 export type WalletScreens =
@@ -189,7 +189,7 @@ const WalletContext = createContext<
         accountWallets?: AccountWalletEx[]
       ) => Promise<boolean | undefined>;
       saveAccountTitle: (title: string, index?: number, accountAddress?: string) => Promise<void>;
-      getContractAddress: () => string | undefined;
+      getContractAddress: () => Promise<string | undefined>;
       setScreen: (screen: WalletScreens) => void;
       goScreenBack: () => void;
       handleSuccess: (msg: string, timeout?: number) => void;
@@ -206,6 +206,7 @@ const WalletContext = createContext<
 function WalletProvider({
   children,
   networks = [],
+  networksSubstrate = [],
   defaultNetworkId = 0,
   ...restOfParams
 }: {
@@ -246,7 +247,7 @@ function WalletProvider({
   const successTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
   const infoTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  const networksById = networks.reduce(
+  const networksById = [...networks, ...networksSubstrate].reduce(
     (acc, x) => {
       acc[x.id] = x;
       return acc;
@@ -352,7 +353,7 @@ function WalletProvider({
 
       w.setWallets(mergedState.accountWallets);
 
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await sleep(10);
 
       initializingWallet.current = false;
       setInitialized(true);
@@ -370,7 +371,7 @@ function WalletProvider({
     username,
     authStrategy,
     address0,
-    walletType = WalletType.EVM,
+    walletType,
   }: {
     username: string;
     authStrategy: AuthStrategyName;
@@ -381,6 +382,10 @@ function WalletProvider({
       username,
       strategy: authStrategy,
     });
+
+    if (!walletType) {
+      walletType = state.walletType;
+    }
 
     dispatch({
       type: 'setState',
@@ -393,7 +398,7 @@ function WalletProvider({
       },
     });
 
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await sleep(50);
 
     let accountWalletsRes =
       walletType === WalletType.SUBSTRATE ? wallet?.ss.userWallets : wallet?.evm.userWallets;
@@ -403,21 +408,18 @@ function WalletProvider({
      */
     if (address0) {
       accountWalletsRes = wallet?.initAccountWallets([address0], walletType);
-
-      if (Array.isArray(accountWalletsRes) && accountWalletsRes.length) {
-        wallet?.events.emit('accountsChanged', [accountWalletsRes[0].address]);
-      }
     }
 
-    if (!accountWalletsRes) {
-      await loadAccountWallets(authStrategy, username);
+    if (Array.isArray(accountWalletsRes) && accountWalletsRes.length) {
+      wallet?.events.emit('accountsChanged', [accountWalletsRes[0].address]);
+      parseAccountWallets(accountWalletsRes, username);
+    } else {
+      accountWalletsRes = await loadAccountWallets(authStrategy, username);
 
-      await new Promise(resolve => setTimeout(resolve, 50));
-
-      parseAccountWallets(accountWalletsRes || [], username);
+      await sleep(50);
     }
 
-    await wallet?.initContractAddress({ username });
+    // await wallet?.initContractAddress({ username });
   }
 
   /**
@@ -476,12 +478,12 @@ function WalletProvider({
    * Add info from global storage, initialize some info, set state.
    */
   async function parseAccountWallets(wallets: AccountWallet[], username?: string) {
-    // Get account names from global storage
-    const { all: accountNamesStorage, current: accountNames } = await getAccountTitles();
-    const accountNamesUpdates = {} as { [accountAddress: string]: string };
-
     username = username || state.username || wallet?.user.username || '-';
-    const contractAddress = getContractAddress() || '-';
+    const contractAddress = (await getContractAddress(username)) || '-';
+
+    // Get account names from global storage
+    const { all: accountNamesStorage, current: accountNames } = await getAccountTitles(username);
+    const accountNamesUpdates = {} as { [accountAddress: string]: string };
 
     const newWallets = [] as AccountWalletEx[];
 
@@ -521,7 +523,7 @@ function WalletProvider({
     addresses?: string[],
     accountWallets: AccountWalletEx[] = state.accountWallets
   ) {
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await sleep(50);
 
     if (!addresses) {
       if (!activeWallet?.address) {
@@ -572,7 +574,7 @@ function WalletProvider({
 
     const { all, current } = await getAccountTitles();
 
-    const contractAddress = getContractAddress() || '-';
+    const contractAddress = (await getContractAddress()) || '-';
 
     // When address not available, use index instead to save the username (use e.g. when address is not available yet after creating account)
     wallet?.xdomain?.storageSet(
@@ -614,9 +616,9 @@ function WalletProvider({
    * },
    * ```
    */
-  async function getAccountTitles() {
+  async function getAccountTitles(username?: string) {
     const stored = await wallet?.xdomain?.storageGet(WebStorageKeys.WALLET_NAMES);
-    const contractAddress = getContractAddress() || '-';
+    const contractAddress = (await getContractAddress(username)) || '-';
 
     let all = {} as { [contractAddress: string]: { [accountAddress: string]: string } };
     let current = {} as { [accountAddress: string]: string };
@@ -636,7 +638,11 @@ function WalletProvider({
   /**
    * Get account contract address for current environment (evm/substrate)
    */
-  function getContractAddress() {
+  async function getContractAddress(username?: string) {
+    if (!wallet?.evm.userContractAddress && !wallet?.ss.userContractAddress) {
+      await wallet?.initContractAddress({ username: username || state.username });
+    }
+
     if (state.walletType === WalletType.SUBSTRATE) {
       return wallet?.ss.userContractAddress;
     }
