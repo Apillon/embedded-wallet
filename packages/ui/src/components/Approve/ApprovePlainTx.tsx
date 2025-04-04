@@ -48,16 +48,16 @@ export default function ApprovePlainTx() {
       <ApproveButtons
         onApprove={async () => {
           if (approveParams?.plain) {
-            const res = await wallet?.signPlainTransaction({
+            const res = await wallet?.evm.signPlainTransaction({
               ...approveParams.plain,
               authData: { username: username },
             });
 
             if (appProps.broadcastAfterSign && res) {
               const { signedTxData, chainId } = res;
-              await wallet?.broadcastTransaction(
+              await wallet?.evm.broadcastTransaction(
                 signedTxData,
-                chainId,
+                chainId as number,
                 approveParams.plain.label || 'Transaction'
               );
             }

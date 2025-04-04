@@ -1,10 +1,13 @@
-import { getEmbeddedWallet } from '@apillon/wallet-sdk';
+import {
+  DefaultEthereumNetworks,
+  DefaultSubstrateNetworks,
+  getEmbeddedWallet,
+} from '@apillon/wallet-sdk';
 import EmbeddedWallet from '../src/components/EmbeddedWallet';
 import TestEIP1193 from './TestEIP1193';
 import TestSign from './TestSign';
 import TestTx from './TestTx';
 import TestTokenEvents from './TestTokenEvents';
-import { networks } from '@apillon/wallet-networks';
 
 export default function TestApp() {
   return (
@@ -14,10 +17,11 @@ export default function TestApp() {
       <EmbeddedWallet
         clientId={import.meta.env.VITE_CLIENT_ID ?? 'YOUR INTEGRATION UUID HERE'}
         broadcastAfterSign
-        passkeyAuthMode="redirect"
+        passkeyAuthMode="popup"
         // disableDefaultActivatorStyle
-        defaultNetworkId={1287}
-        networks={networks}
+        defaultNetworkId={'westend'}
+        networks={DefaultEthereumNetworks}
+        networksSubstrate={DefaultSubstrateNetworks}
       />
 
       <div className="row">
@@ -36,7 +40,7 @@ export default function TestApp() {
 
       <h2>Test sign</h2>
 
-      <TestSign />
+      {/* <TestSign />
 
       <br />
       <br />
@@ -54,7 +58,7 @@ export default function TestApp() {
 
       <h2>Test addToken event</h2>
 
-      <TestTokenEvents />
+      <TestTokenEvents /> */}
     </div>
   );
 }

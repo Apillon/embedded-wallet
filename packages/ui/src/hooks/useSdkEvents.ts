@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useWalletContext } from '../contexts/wallet.context';
 import { useTokensContext } from '../contexts/tokens.context';
-import { Events } from '@apillon/wallet-sdk';
+import { Events, WalletType } from '@apillon/wallet-sdk';
 
 /**
  * Handle wallet SDK Events
@@ -31,12 +31,16 @@ export default function useSdkEvents() {
       if (params.name === 'defaultNetworkId') {
         reloadAccountBalances();
         setForWallet('networkId', params.newValue);
-      } else if (params.name === 'contractAddress') {
-        setForWallet('contractAddress', params.newValue);
-      } else if (params.name === 'wallets') {
-        if (!!state.username) {
+      } else if (params.name === 'walletsEVM') {
+        if (!!state.username && state.walletType === WalletType.EVM) {
           parseAccountWallets(params.newValue, state.username);
         }
+      } else if (params.name === 'walletsSS') {
+        if (!!state.username && state.walletType === WalletType.SUBSTRATE) {
+          parseAccountWallets(params.newValue, state.username);
+        }
+      } else if (params.name === 'walletType') {
+        setForWallet('walletType', params.newValue);
       }
     };
 
@@ -49,7 +53,7 @@ export default function useSdkEvents() {
         err = 'Invalid symbol (must be less than 11 characters)';
       } else if (!params.decimals || isNaN(params.decimals)) {
         err = 'Invalid decimals';
-      } else if (params.chainId && !wallet?.validateChainId(params.chainId)) {
+      } else if (params.chainId && !wallet?.evm.validateChainId(params.chainId)) {
         err = 'Selected chain is not supported';
       }
 
@@ -87,7 +91,7 @@ export default function useSdkEvents() {
         err = 'No address';
       } else if (!params.tokenId) {
         err = 'No token ID';
-      } else if (params.chainId && !wallet?.validateChainId(params.chainId)) {
+      } else if (params.chainId && !wallet?.evm?.validateChainId(params.chainId)) {
         err = 'Selected chain is not supported';
       }
 

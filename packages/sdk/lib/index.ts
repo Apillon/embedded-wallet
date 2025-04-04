@@ -336,7 +336,7 @@ class EmbeddedWallet {
     }
 
     if (typeof params?.authData?.walletType === 'undefined') {
-      params.authData.walletType = WalletType.EVM;
+      params.authData.walletType = this.user.walletType;
     }
 
     if (!params.reload) {
@@ -808,7 +808,7 @@ class EmbeddedWallet {
       }
     }
 
-    if (typeof params.authData?.walletType === 'undefined') {
+    if (typeof params?.authData?.walletType === 'undefined') {
       params.authData.walletType = this.user.walletType;
     }
 

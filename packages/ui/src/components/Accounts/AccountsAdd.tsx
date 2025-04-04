@@ -51,7 +51,6 @@ export default function AccountsAdd() {
       // Save wallet name to tx metadata
       // When updating also check <AccountsImport />
       await wallet?.addAccountWallet({
-        walletType: type,
         internalLabel: 'accountsAdd',
         internalData: JSON.stringify({
           index: predictedIndex,

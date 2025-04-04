@@ -25,7 +25,7 @@ export default function TokensList({
     return Array.isArray(tokens.list[activeWallet?.address || '']?.[state.networkId])
       ? [nativeToken, ...tokens.list[activeWallet?.address || ''][state.networkId]]
       : [nativeToken];
-  }, [tokens.list, state.networkId, state.contractAddress, nativeToken, activeWallet]);
+  }, [tokens.list, state.networkId, state.walletType, nativeToken, activeWallet]);
 
   return (
     <div className={clsx('flex flex-col', className)}>

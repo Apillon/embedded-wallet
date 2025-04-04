@@ -18,6 +18,7 @@ import {
   SapphireTestnet,
   AccountWallet,
   WalletType,
+  AccountWalletTypes,
 } from '@apillon/wallet-sdk';
 import { AppProps } from '../main';
 import { WebStorageKeys } from '../lib/constants';
@@ -48,14 +49,14 @@ export type WalletScreens =
 
 type AccountWalletEx = AccountWallet & { balance: string; title: string };
 
-const initialState = (defaultNetworkId = 0, appProps: AppProps) => ({
+const initialState = (defaultNetworkId: number | string = 0, appProps: AppProps) => ({
   username: '',
   walletIndex: 0,
+  walletType: WalletType.EVM as AccountWalletTypes,
   accountWallets: [] as AccountWalletEx[],
   stagedWalletsCount: 0, // how many new wallets have been addedd, but are not in `accountWallets` yet
   walletsCountBeforeStaging: 0,
   isAccountWalletsStale: false,
-  contractAddress: '',
   privateKeys: {} as { [walletAddress: string]: string },
   authStrategy: 'passkey' as AuthStrategyName,
   networkId: defaultNetworkId,
@@ -164,8 +165,8 @@ const WalletContext = createContext<
       state: ContextState;
       dispatch: (action: ContextActions) => void;
       networks: Network[];
-      networksById: { [networkId: number]: Network };
-      defaultNetworkId: number;
+      networksById: { [networkId: number | string]: Network };
+      defaultNetworkId: number | string;
       activeWallet?: AccountWalletEx;
       wallet?: EmbeddedWallet;
       setWallet: (wallet: EmbeddedWallet) => void;
@@ -188,6 +189,7 @@ const WalletContext = createContext<
         accountWallets?: AccountWalletEx[]
       ) => Promise<boolean | undefined>;
       saveAccountTitle: (title: string, index?: number, accountAddress?: string) => Promise<void>;
+      getContractAddress: () => string | undefined;
       setScreen: (screen: WalletScreens) => void;
       goScreenBack: () => void;
       handleSuccess: (msg: string, timeout?: number) => void;
@@ -249,7 +251,7 @@ function WalletProvider({
       acc[x.id] = x;
       return acc;
     },
-    {} as { [networkId: number]: Network }
+    {} as { [networkId: number | string]: Network }
   );
 
   const activeWallet = useMemo(() => {
@@ -346,7 +348,6 @@ function WalletProvider({
         username: mergedState.username,
         strategy: mergedState.authStrategy,
         walletIndex: mergedState.walletIndex,
-        contractAddress: mergedState.contractAddress,
       });
 
       w.setWallets(mergedState.accountWallets);
@@ -369,10 +370,12 @@ function WalletProvider({
     username,
     authStrategy,
     address0,
+    walletType = WalletType.EVM,
   }: {
     username: string;
     authStrategy: AuthStrategyName;
     address0?: string;
+    walletType?: AccountWalletTypes;
   }) {
     wallet?.setAccount({
       username,
@@ -386,20 +389,20 @@ function WalletProvider({
         username,
         authStrategy,
         // networkId: defaultNetworkId || undefined,
+        walletType,
       },
     });
 
     await new Promise(resolve => setTimeout(resolve, 50));
 
-    let accountWalletsRes = wallet?.lastAccount.wallets as AccountWallet[] | undefined;
+    let accountWalletsRes =
+      walletType === WalletType.SUBSTRATE ? wallet?.ss.userWallets : wallet?.evm.userWallets;
 
     /**
      * First wallet has been retrieved from contract event, dont need to load wallets again
      */
     if (address0) {
-      accountWalletsRes = wallet?.initAccountWallets([
-        { address: address0, walletType: WalletType.EVM, index: 0 },
-      ]);
+      accountWalletsRes = wallet?.initAccountWallets([address0], walletType);
 
       if (Array.isArray(accountWalletsRes) && accountWalletsRes.length) {
         wallet?.events.emit('accountsChanged', [accountWalletsRes[0].address]);
@@ -477,8 +480,8 @@ function WalletProvider({
     const { all: accountNamesStorage, current: accountNames } = await getAccountTitles();
     const accountNamesUpdates = {} as { [accountAddress: string]: string };
 
-    username = username || state.username || wallet?.lastAccount.username || '-';
-    const contractAddress = state.contractAddress || wallet?.lastAccount?.contractAddress || '-';
+    username = username || state.username || wallet?.user.username || '-';
+    const contractAddress = getContractAddress() || '-';
 
     const newWallets = [] as AccountWalletEx[];
 
@@ -569,12 +572,14 @@ function WalletProvider({
 
     const { all, current } = await getAccountTitles();
 
+    const contractAddress = getContractAddress() || '-';
+
     // When address not available, use index instead to save the username (use e.g. when address is not available yet after creating account)
     wallet?.xdomain?.storageSet(
       WebStorageKeys.WALLET_NAMES,
       JSON.stringify({
         ...all,
-        [state.contractAddress]: {
+        [contractAddress]: {
           ...current,
           [accountAddress ||
           (index > state.accountWallets.length - 1
@@ -611,7 +616,7 @@ function WalletProvider({
    */
   async function getAccountTitles() {
     const stored = await wallet?.xdomain?.storageGet(WebStorageKeys.WALLET_NAMES);
-    const contractAddress = state.contractAddress || wallet?.lastAccount?.contractAddress || '-';
+    const contractAddress = getContractAddress() || '-';
 
     let all = {} as { [contractAddress: string]: { [accountAddress: string]: string } };
     let current = {} as { [accountAddress: string]: string };
@@ -626,6 +631,16 @@ function WalletProvider({
     }
 
     return { all, current };
+  }
+
+  /**
+   * Get account contract address for current environment (evm/substrate)
+   */
+  function getContractAddress() {
+    if (state.walletType === WalletType.SUBSTRATE) {
+      return wallet?.ss.userContractAddress;
+    }
+    return wallet?.evm.userContractAddress;
   }
 
   function handleError(e?: any, src?: string) {
@@ -729,6 +744,7 @@ function WalletProvider({
         parseAccountWallets,
         reloadAccountBalances,
         saveAccountTitle,
+        getContractAddress,
         handleError,
         handleSuccess,
         handleInfo,

@@ -155,7 +155,7 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
       throw new Error('Wallet not initialized.' + txHash);
     }
 
-    const ethProvider = wallet.getRpcProviderForChainId(txData?.chainId);
+    const ethProvider = wallet.evm.getRpcProviderForNetworkId(txData?.chainId as number);
 
     if (!ethProvider) {
       throw new Error('Provider not initialized. ' + txHash);
@@ -260,9 +260,9 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (!txReceipt) {
-      txReceipt = await wallet
-        .getRpcProviderForChainId(txData?.chainId)
-        .getTransactionReceipt(txData.hash);
+      txReceipt = await wallet?.evm
+        ?.getRpcProviderForNetworkId?.(txData?.chainId as number)
+        ?.getTransactionReceipt(txData.hash);
     }
 
     reloadAccountBalances();
@@ -270,7 +270,11 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
     // Reload token if found in current account's storage
     reloadTokenBalance(txReceipt?.to || undefined);
 
-    if (txData?.internalLabel && ['accountsAdd', 'accountsImport'].includes(txData.internalLabel)) {
+    if (
+      !!txReceipt &&
+      txData?.internalLabel &&
+      ['accountsAdd', 'accountsImport'].includes(txData.internalLabel)
+    ) {
       handleNewAccountName(txData, txReceipt);
     }
   }
@@ -303,10 +307,10 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
            * -> emits `dataUpdated` event
            * -> `useSdkEvents` handles event (parseAccountWallets)
            */
-          wallet.initAccountWallets([
-            ...accountWallets,
-            { address: parsed.args[0], index: data.index || 0, walletType: WalletType.EVM },
-          ]);
+          wallet.initAccountWallets(
+            [...accountWallets.map(aw => aw.address), parsed.args[0]],
+            WalletType.EVM
+          );
 
           handleSuccess('Accounts updated', 5000);
         } catch (e) {

@@ -27,12 +27,12 @@ export type TokenNftInfo = {
  */
 const initialState = () => ({
   list: {} as {
-    [ownerContractAddress: string]: { [chainId: number]: TokenInfo[] };
+    [ownerContractAddress: string]: { [chainId: number | string]: TokenInfo[] };
   },
   selectedToken: '', // address (this is in reducer state, there is another selectedToken returned from context)
   exchangeRates: {} as { [token: string]: number }, // token exchange rates (from some price api, eg. coingecko)
   nfts: {} as {
-    [ownerContractAddress: string]: { [chainId: number]: TokenNftInfo[] };
+    [ownerContractAddress: string]: { [chainId: number | string]: TokenNftInfo[] };
   },
   selectedNft: undefined as TokenNftInfo | undefined, // NFT to be displayed on TokensNftDetail screen
 });
@@ -52,7 +52,7 @@ type ContextActions =
       type: 'updateToken';
       payload: {
         owner: string;
-        chainId: number;
+        chainId: number | string;
         token: TokenInfo;
         remove?: boolean;
       };
@@ -61,7 +61,7 @@ type ContextActions =
       type: 'setTokens';
       payload: {
         owner: string;
-        chainId: number;
+        chainId: number | string;
         tokens: TokenInfo[];
       };
     }
@@ -69,7 +69,7 @@ type ContextActions =
       type: 'addNft';
       payload: {
         owner: string;
-        chainId: number;
+        chainId: number | string;
         nft: TokenNftInfo;
         remove?: boolean;
       };
@@ -186,7 +186,13 @@ const TokensContext = createContext<
 function TokensProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState());
 
-  const { state: walletState, wallet, activeWallet, networksById } = useWalletContext();
+  const {
+    state: walletState,
+    wallet,
+    activeWallet,
+    networksById,
+    getContractAddress,
+  } = useWalletContext();
 
   const initializing = useRef(false);
   const initialized = useRef(false);
@@ -223,13 +229,7 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
     }
 
     return nativeToken;
-  }, [
-    nativeToken,
-    state.selectedToken,
-    state.list,
-    walletState.contractAddress,
-    walletState.networkId,
-  ]);
+  }, [nativeToken, state.selectedToken, state.list, walletState.walletType, walletState.networkId]);
 
   const currentExchangeRate = useMemo(() => {
     return state.exchangeRates[selectedToken.symbol] || 0;
@@ -266,23 +266,23 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
         const restored = JSON.parse(stored);
         dispatch({ type: 'setState', payload: restored });
 
+        const contractAddress = getContractAddress();
+
         if (
           !!activeWallet &&
-          Array.isArray(
-            restored?.list?.[walletState.contractAddress || '']?.[walletState.networkId]
-          )
+          Array.isArray(restored?.list?.[contractAddress || '']?.[walletState.networkId])
         ) {
-          restored.list[walletState.contractAddress][walletState.networkId].forEach(
+          restored.list[contractAddress || ''][walletState.networkId].forEach(
             async (t: TokenInfo) => {
               if (wallet) {
-                const res = await wallet.contractRead({
+                const res = await wallet.evm.contractRead({
                   contractAddress: t.address,
                   contractAbi: ERC20Abi,
                   contractFunctionName: 'balanceOf',
                   contractFunctionValues: [activeWallet.address],
                 });
 
-                if (res) {
+                if (res && typeof walletState.networkId === 'number') {
                   dispatch({
                     type: 'updateToken',
                     payload: {
@@ -317,13 +317,13 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
     if (wallet && activeWallet) {
       const userTokens = state.list?.[activeWallet?.address || '']?.[walletState.networkId];
 
-      if (userTokens) {
+      if (userTokens && typeof walletState.networkId === 'number') {
         if (!!address) {
           // Reload specific token
           const found = userTokens.find(x => isLowerCaseEqual(x.address, address));
 
           if (found) {
-            const balance = await wallet.contractRead({
+            const balance = await wallet.evm.contractRead({
               contractAddress: found.address,
               contractAbi: ERC20Abi,
               contractFunctionName: 'balanceOf',
@@ -344,12 +344,12 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
           // Reload all tokens of activeWallet
           const balances = await Promise.all(
             userTokens.map(t =>
-              wallet.contractRead({
+              wallet.evm.contractRead({
                 contractAddress: t.address,
                 contractAbi: ERC20Abi,
                 contractFunctionName: 'balanceOf',
                 contractFunctionValues: [activeWallet.address],
-                chainId: walletState.networkId,
+                chainId: walletState.networkId as number,
               })
             )
           );
@@ -374,25 +374,25 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
     if (wallet && activeWallet) {
       try {
         const [name, symbol, decimals, balance] = await Promise.all([
-          wallet.contractRead({
+          wallet.evm.contractRead({
             contractAddress: address,
             contractAbi: ERC20Abi,
             contractFunctionName: 'name',
             chainId,
           }),
-          wallet.contractRead({
+          wallet.evm.contractRead({
             contractAddress: address,
             contractAbi: ERC20Abi,
             contractFunctionName: 'symbol',
             chainId,
           }),
-          wallet.contractRead({
+          wallet.evm.contractRead({
             contractAddress: address,
             contractAbi: ERC20Abi,
             contractFunctionName: 'decimals',
             chainId,
           }),
-          wallet.contractRead({
+          wallet.evm.contractRead({
             contractAddress: address,
             contractAbi: ERC20Abi,
             contractFunctionName: 'balanceOf',
@@ -470,14 +470,14 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
     if (wallet && activeWallet) {
       try {
         const [ownerAddress, tokenURI] = await Promise.all([
-          wallet.contractRead({
+          wallet.evm.contractRead({
             contractAddress: address,
             contractAbi: ERC721Abi,
             contractFunctionName: 'ownerOf',
             contractFunctionValues: [tokenId],
             chainId,
           }),
-          wallet.contractRead({
+          wallet.evm.contractRead({
             contractAddress: address,
             contractAbi: ERC721Abi,
             contractFunctionName: 'tokenURI',

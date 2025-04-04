@@ -12,7 +12,7 @@ export default function WalletNetworkSelect() {
     return <></>;
   }
 
-  function selectNetwork(networkId: number) {
+  function selectNetwork(networkId: number | string) {
     if (networkId === state.networkId) {
       return;
     }
@@ -31,8 +31,8 @@ export default function WalletNetworkSelect() {
           .filter(network => {
             const envCheck =
               activeWallet?.walletType === WalletType.SUBSTRATE
-                ? !!network.isSubstrate
-                : !network.isSubstrate;
+                ? typeof network.id === 'string'
+                : typeof network.id === 'number';
             return envCheck && network.name.toLowerCase().includes(search.toLowerCase());
           })
           .map(network => (

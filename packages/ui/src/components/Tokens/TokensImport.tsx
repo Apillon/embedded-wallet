@@ -8,11 +8,12 @@ import TokensItem from './TokensItem';
 
 export default function TokensImport() {
   const {
-    state: { networkId, contractAddress },
+    state: { networkId },
     handleError,
     handleSuccess,
     goScreenBack,
     activeWallet,
+    getContractAddress,
   } = useWalletContext();
   const { dispatch, getTokenDetails } = useTokensContext();
 
@@ -57,6 +58,8 @@ export default function TokensImport() {
       if (!res) {
         throw new Error(`Token does not exist on chain (ID: ${networkId})`);
       }
+
+      const contractAddress = getContractAddress();
 
       if (!contractAddress) {
         throw new Error('Could not get user wallet address');
