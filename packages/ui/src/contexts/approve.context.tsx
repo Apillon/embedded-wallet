@@ -39,6 +39,10 @@ function ApproveProvider({ children }: { children: React.ReactNode }) {
         });
         setStateValue('approveParams', params);
         setForWallet('isOpen', true);
+      } else if (params.polkadot) {
+        /**
+         * @TODO Handle
+         */
       }
     };
 

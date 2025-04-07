@@ -670,19 +670,36 @@ class EmbeddedWallet {
     }
   }
 
-  setWallets(wallets: AccountWallet[], walletType: AccountWalletTypes = WalletType.EVM) {
-    const isSubstrate = walletType === WalletType.SUBSTRATE;
+  setWallets(wallets: AccountWallet[]) {
+    const walletsSS = [] as AccountWallet[];
+    const walletsEvm = [] as AccountWallet[];
 
-    this.events.emit('dataUpdated', {
-      name: isSubstrate ? 'walletsSS' : 'walletsEVM',
-      newValue: wallets,
-      oldValue: isSubstrate ? this.ss.userWallets : this.evm.userWallets,
-    });
+    for (const wallet of wallets) {
+      if (wallet.walletType === WalletType.SUBSTRATE) {
+        walletsSS.push(wallet);
+      } else {
+        walletsEvm.push(wallet);
+      }
+    }
 
-    if (isSubstrate) {
-      this.ss.userWallets = [...wallets];
-    } else {
-      this.evm.userWallets = [...wallets];
+    if (walletsSS.length) {
+      this.events.emit('dataUpdated', {
+        name: 'walletsSS',
+        newValue: walletsSS,
+        oldValue: this.ss.userWallets,
+      });
+
+      this.ss.userWallets = [...walletsSS];
+    }
+
+    if (walletsEvm.length) {
+      this.events.emit('dataUpdated', {
+        name: 'walletsEVM',
+        newValue: walletsEvm,
+        oldValue: this.evm.userWallets,
+      });
+
+      this.evm.userWallets = [...walletsEvm];
     }
   }
 
