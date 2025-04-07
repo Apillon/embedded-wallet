@@ -83,7 +83,11 @@ class SubstrateEnvironment {
       data: { free },
     } = await api.query.system.account(address);
 
-    return free.toString();
+    return formatBalance(free, {
+      decimals: api.registry.chainDecimals[0],
+      withSi: false,
+      withZero: false,
+    });
   }
 
   async signTransaction(
@@ -242,8 +246,6 @@ class SubstrateEnvironment {
 
     return chainId as string;
   }
-
-  formatBalance = formatBalance;
 }
 
 export { SubstrateEnvironment };

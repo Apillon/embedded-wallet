@@ -38,7 +38,7 @@ export default function TokensList({
 
         {tokenList.map(token => (
           <TokensItem
-            key={token.address}
+            key={token.address || token.assetId || 'native'}
             token={token}
             asButton={asButtons}
             disabled={highlightActiveToken && token.address === tokens.selectedToken}
@@ -70,7 +70,7 @@ export default function TokensList({
                 : () => {
                     dispatch({
                       type: 'setValue',
-                      payload: { key: 'selectedToken', value: token.address },
+                      payload: { key: 'selectedToken', value: token.address || token.assetId },
                     });
                     onItemClick?.(token);
                   }

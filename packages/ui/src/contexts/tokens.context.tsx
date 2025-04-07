@@ -3,10 +3,11 @@ import { ERC20Abi, ERC721Abi } from '@apillon/wallet-sdk';
 import { useWalletContext } from './wallet.context';
 import { ethers } from 'ethers6';
 import { WebStorageKeys } from '../lib/constants';
-import { isLowerCaseEqual } from '../lib/helpers';
+import { formatSubstrateBalance, isLowerCaseEqual } from '../lib/helpers';
 
 export type TokenInfo = {
-  address: string;
+  address?: string;
+  assetId?: number;
   name: string;
   symbol: string;
   decimals: number;
@@ -29,7 +30,7 @@ const initialState = () => ({
   list: {} as {
     [ownerContractAddress: string]: { [chainId: number | string]: TokenInfo[] };
   },
-  selectedToken: '', // address (this is in reducer state, there is another selectedToken returned from context)
+  selectedToken: '' as string | number, // address/assetId (this is in reducer state, there is another selectedToken returned from context)
   exchangeRates: {} as { [token: string]: number }, // token exchange rates (from some price api, eg. coingecko)
   nfts: {} as {
     [ownerContractAddress: string]: { [chainId: number | string]: TokenNftInfo[] };
@@ -89,9 +90,14 @@ function reducer(state: ContextState, action: ContextActions) {
       };
     case 'updateToken': {
       const newTokens = [...(state.list[action.payload.owner]?.[action.payload.chainId] || [])];
-      const found = newTokens.findIndex(x =>
-        isLowerCaseEqual(x.address, action.payload.token.address)
-      );
+      const found = newTokens.findIndex(x => {
+        if (action.payload.token.address) {
+          return isLowerCaseEqual(x.address, action.payload.token.address);
+        } else if (action.payload.token.assetId) {
+          return action.payload.token.assetId === x.assetId;
+        }
+        return false;
+      });
 
       if (found < 0 && !action.payload.remove) {
         newTokens.push(action.payload.token);
@@ -163,7 +169,10 @@ const TokensContext = createContext<
       selectedToken: TokenInfo;
       reloadTokenBalance: (address?: string) => Promise<void>;
       currentExchangeRate: number;
-      getTokenDetails: (address: string, chainId?: number) => Promise<TokenInfo | undefined>;
+      getTokenDetails: (
+        address: string | number,
+        chainId?: string | number
+      ) => Promise<TokenInfo | undefined>;
       formatNativeBalance: (balance: string | bigint | number) => {
         amount: string;
         symbol: string;
@@ -220,7 +229,9 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
       const userTokens = state.list?.[activeWallet?.address || '']?.[walletState.networkId];
 
       if (userTokens) {
-        const found = userTokens.find(x => x.address === state.selectedToken);
+        const found = userTokens.find(
+          x => x.address === state.selectedToken || x.assetId === state.selectedToken
+        );
 
         if (found) {
           return found;
@@ -247,7 +258,7 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
       init();
       loadExchangeRates();
     }
-  }, [wallet]);
+  }, [wallet, walletState.username]);
 
   useEffect(() => {
     reloadTokenBalance();
@@ -275,14 +286,33 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
           restored.list[contractAddress || ''][walletState.networkId].forEach(
             async (t: TokenInfo) => {
               if (wallet) {
-                const res = await wallet.evm.contractRead({
-                  contractAddress: t.address,
-                  contractAbi: ERC20Abi,
-                  contractFunctionName: 'balanceOf',
-                  contractFunctionValues: [activeWallet.address],
-                });
+                let balance = '0';
 
-                if (res && typeof walletState.networkId === 'number') {
+                if (!!t.address) {
+                  const res = await wallet.evm.contractRead({
+                    contractAddress: t.address,
+                    contractAbi: ERC20Abi,
+                    contractFunctionName: 'balanceOf',
+                    contractFunctionValues: [activeWallet.address],
+                  });
+
+                  if (res) {
+                    balance = ethers.formatUnits(res, t.decimals);
+                  }
+                } else {
+                  const api = await wallet.ss.getApiForNetworkId();
+
+                  balance = formatSubstrateBalance(
+                    (
+                      (
+                        await api!.query.assets.account((t.assetId, activeWallet.address))
+                      ).toHuman() as any
+                    )?.balance,
+                    { decimals: t.decimals }
+                  );
+                }
+
+                if (balance) {
                   dispatch({
                     type: 'updateToken',
                     payload: {
@@ -290,7 +320,7 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
                       chainId: walletState.networkId,
                       token: {
                         ...t,
-                        balance: ethers.formatUnits(res, t.decimals),
+                        balance,
                       },
                     },
                   });
@@ -322,7 +352,7 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
           // Reload specific token
           const found = userTokens.find(x => isLowerCaseEqual(x.address, address));
 
-          if (found) {
+          if (found?.address) {
             const balance = await wallet.evm.contractRead({
               contractAddress: found.address,
               contractAbi: ERC20Abi,
@@ -345,7 +375,7 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
           const balances = await Promise.all(
             userTokens.map(t =>
               wallet.evm.contractRead({
-                contractAddress: t.address,
+                contractAddress: t.address || '',
                 contractAbi: ERC20Abi,
                 contractFunctionName: 'balanceOf',
                 contractFunctionValues: [activeWallet.address],
@@ -370,45 +400,74 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  async function getTokenDetails(address: string, chainId?: number) {
+  async function getTokenDetails(
+    addressOrAssetId: string | number,
+    chainId?: number | string
+  ): Promise<TokenInfo | undefined> {
     if (wallet && activeWallet) {
-      try {
-        const [name, symbol, decimals, balance] = await Promise.all([
-          wallet.evm.contractRead({
-            contractAddress: address,
-            contractAbi: ERC20Abi,
-            contractFunctionName: 'name',
-            chainId,
-          }),
-          wallet.evm.contractRead({
-            contractAddress: address,
-            contractAbi: ERC20Abi,
-            contractFunctionName: 'symbol',
-            chainId,
-          }),
-          wallet.evm.contractRead({
-            contractAddress: address,
-            contractAbi: ERC20Abi,
-            contractFunctionName: 'decimals',
-            chainId,
-          }),
-          wallet.evm.contractRead({
-            contractAddress: address,
-            contractAbi: ERC20Abi,
-            contractFunctionName: 'balanceOf',
-            contractFunctionValues: [activeWallet.address],
-            chainId,
-          }),
-        ]);
+      if (!chainId) {
+        chainId = wallet.defaultNetworkId;
+      }
 
-        if (symbol) {
-          return {
-            address,
-            name,
-            symbol,
-            decimals: Number(decimals),
-            balance: ethers.formatUnits(balance, decimals),
-          };
+      try {
+        if (
+          typeof addressOrAssetId === 'string' &&
+          (typeof chainId === 'number' || typeof chainId === 'undefined')
+        ) {
+          const [name, symbol, decimals, balance] = await Promise.all([
+            wallet.evm.contractRead({
+              contractAddress: addressOrAssetId,
+              contractAbi: ERC20Abi,
+              contractFunctionName: 'name',
+              chainId,
+            }),
+            wallet.evm.contractRead({
+              contractAddress: addressOrAssetId,
+              contractAbi: ERC20Abi,
+              contractFunctionName: 'symbol',
+              chainId,
+            }),
+            wallet.evm.contractRead({
+              contractAddress: addressOrAssetId,
+              contractAbi: ERC20Abi,
+              contractFunctionName: 'decimals',
+              chainId,
+            }),
+            wallet.evm.contractRead({
+              contractAddress: addressOrAssetId,
+              contractAbi: ERC20Abi,
+              contractFunctionName: 'balanceOf',
+              contractFunctionValues: [activeWallet.address],
+              chainId,
+            }),
+          ]);
+
+          if (symbol) {
+            return {
+              address: addressOrAssetId,
+              name,
+              symbol,
+              decimals: Number(decimals),
+              balance: ethers.formatUnits(balance, decimals),
+            };
+          }
+        } else if (typeof addressOrAssetId === 'number' && typeof chainId === 'string') {
+          const api = await wallet.ss.getApiForNetworkId();
+          const res = (await api!.query.assets.metadata(addressOrAssetId)).toHuman() as any;
+
+          const balance = (
+            await api!.query.assets.account(addressOrAssetId, activeWallet.address)
+          ).toHuman() as any;
+
+          if (res) {
+            return {
+              assetId: +addressOrAssetId,
+              name: res?.name,
+              symbol: res?.symbol,
+              decimals: +res?.decimals,
+              balance: formatSubstrateBalance(balance?.balance, { decimals: +res?.decimals || 0 }),
+            };
+          }
         }
       } catch (e) {
         console.error(e);

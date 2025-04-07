@@ -171,6 +171,7 @@ const WalletContext = createContext<
       activeWallet?: AccountWalletEx;
       wallet?: EmbeddedWallet;
       setWallet: (wallet: EmbeddedWallet) => void;
+      isSubstrate: () => boolean;
       initialized: boolean;
       initUserData: (params: {
         username: string;
@@ -751,6 +752,7 @@ function WalletProvider({
         activeWallet,
         wallet,
         setWallet,
+        isSubstrate: () => state.walletType === WalletType.SUBSTRATE,
         initialized,
         initUserData,
         loadAccountWallets,
