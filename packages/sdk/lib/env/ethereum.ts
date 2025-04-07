@@ -442,6 +442,7 @@ class EthereumEnvironment {
     const txHash = await ethProvider.send('eth_sendRawTransaction', [signedTxData]);
 
     let owner = 'none';
+
     if (
       this.wallet.user.walletType === WalletType.EVM &&
       this.wallet.user.walletIndex < this.userWallets.length

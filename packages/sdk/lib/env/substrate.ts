@@ -1,11 +1,12 @@
-import { SignerPayloadJSON } from '@polkadot/types/types';
+import { AnyTuple, SignerPayloadJSON } from '@polkadot/types/types';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { formatBalance, hexToU8a } from '@polkadot/util';
 import { decodeAddress, encodeAddress } from '@polkadot/util-crypto';
-import { AccountWallet, Network, PlainTransactionParams } from '../types';
+import { AccountWallet, Network, PlainTransactionParams, TransactionItem } from '../types';
 import { abort, EmbeddedWallet, SubstrateAccountAbi, WalletType } from '../main';
 import { SubmittableExtrinsic } from '@polkadot/api/types';
 import { ethers } from 'ethers6';
+import { GenericExtrinsic } from '@polkadot/types';
 
 class SubstrateEnvironment {
   rpcUrls = {} as { [networkId: string]: string };
@@ -208,17 +209,59 @@ class SubstrateEnvironment {
         .createType('Extrinsic', { method: params.tx.method }, { version: extrinsicVersion })
         .addSignature(unsigned.address, signature, unsigned);
 
-      /**
-       * @TODO Don't send automatically? For usage with polkadot adapter (signPayload/signRaw)? Make a broadcastTx like for ethereum.
-       */
-      await api.rpc.author.submitExtrinsic(signedTxData);
-      // const txHash = await api.rpc.author.submitExtrinsic(signedTxData);
-
       return {
         signedTxData,
         chainId,
       };
     }
+  }
+
+  async broadcastTransaction(
+    signedTxData: string | GenericExtrinsic<AnyTuple>,
+    chainId?: string,
+    label = 'Transaction',
+    internalLabel?: string,
+    internalData?: string
+  ) {
+    const api = await this.getApiForNetworkId(chainId);
+
+    if (!api) {
+      abort('BROADCAST_TX_NO_POLKADOT_API');
+      return;
+    }
+
+    const txHash = await api.rpc.author.submitExtrinsic(signedTxData);
+
+    let owner = 'none';
+
+    if (
+      this.wallet.user.walletType === WalletType.SUBSTRATE &&
+      this.wallet.user.walletIndex < this.userWallets.length
+    ) {
+      owner = this.userWallets[this.wallet.user.walletIndex].address;
+    }
+
+    const txItem = {
+      hash: txHash.toHuman(),
+      label,
+      rawData: signedTxData,
+      owner,
+      status: 'pending' as const,
+      chainId: chainId || this.wallet.defaultNetworkId,
+      explorerUrl: this.explorerUrls[chainId || (this.wallet.defaultNetworkId as number)]
+        ? `${this.explorerUrls[chainId || (this.wallet.defaultNetworkId as number)]}/tx/${txHash}`
+        : '',
+      createdAt: Date.now(),
+      internalLabel,
+      internalData,
+    } as TransactionItem;
+
+    this.wallet.events.emit('txSubmitted', txItem);
+
+    return {
+      txHash,
+      txItem,
+    };
   }
 
   /**
