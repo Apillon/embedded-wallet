@@ -167,7 +167,7 @@ const TokensContext = createContext<
       dispatch: (action: ContextActions) => void;
       nativeToken: TokenInfo;
       selectedToken: TokenInfo;
-      reloadTokenBalance: (address?: string) => Promise<void>;
+      reloadTokenBalance: (addressOrAssetId?: string | number) => Promise<void>;
       currentExchangeRate: number;
       getTokenDetails: (
         address: string | number,
@@ -307,7 +307,7 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
                       (
                         await api!.query.assets.account((t.assetId, activeWallet.address))
                       ).toHuman() as any
-                    )?.balance,
+                    )?.balance || 0,
                     { decimals: t.decimals }
                   );
                 }
@@ -343,63 +343,119 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
    * Reload all current account imported token balances or a specific imported token balance.
    * @param address Specific token to reload
    */
-  async function reloadTokenBalance(address?: string) {
+  async function reloadTokenBalance(addressOrAssetId?: string | number) {
     if (wallet && activeWallet) {
       const userTokens = state.list?.[activeWallet?.address || '']?.[walletState.networkId];
 
-      if (userTokens && typeof walletState.networkId === 'number') {
-        if (!!address) {
-          // Reload specific token
-          const found = userTokens.find(x => isLowerCaseEqual(x.address, address));
+      if (userTokens) {
+        if (typeof walletState.networkId === 'number') {
+          /**
+           * Ethereum
+           */
+          if (!!addressOrAssetId && typeof addressOrAssetId === 'string') {
+            // Reload specific token
+            const found = userTokens.find(x => isLowerCaseEqual(x.address, addressOrAssetId));
 
-          if (found?.address) {
-            const balance = await wallet.evm.contractRead({
-              contractAddress: found.address,
-              contractAbi: ERC20Abi,
-              contractFunctionName: 'balanceOf',
-              contractFunctionValues: [activeWallet.address],
-              chainId: walletState.networkId,
-            });
-
-            dispatch({
-              type: 'updateToken',
-              payload: {
-                owner: activeWallet?.address || '',
-                chainId: walletState.networkId,
-                token: { ...found, balance: ethers.formatUnits(balance, found.decimals) },
-              },
-            });
-          }
-        } else {
-          // Reload all tokens of activeWallet
-          const balances = await Promise.all(
-            userTokens.map(t =>
-              wallet.evm.contractRead({
-                contractAddress: t.address || '',
+            if (found?.address) {
+              const balance = await wallet.evm.contractRead({
+                contractAddress: found.address,
                 contractAbi: ERC20Abi,
                 contractFunctionName: 'balanceOf',
                 contractFunctionValues: [activeWallet.address],
-                chainId: walletState.networkId as number,
-              })
-            )
-          );
+                chainId: walletState.networkId,
+              });
 
-          dispatch({
-            type: 'setTokens',
-            payload: {
-              owner: activeWallet?.address || '',
-              chainId: walletState.networkId,
-              tokens: userTokens.map((t, i) => ({
+              dispatch({
+                type: 'updateToken',
+                payload: {
+                  owner: activeWallet?.address || '',
+                  chainId: walletState.networkId,
+                  token: { ...found, balance: ethers.formatUnits(balance, found.decimals) },
+                },
+              });
+            }
+          } else {
+            // Reload all tokens of activeWallet
+            const balances = await Promise.all(
+              userTokens.map(t =>
+                wallet.evm.contractRead({
+                  contractAddress: t.address || '',
+                  contractAbi: ERC20Abi,
+                  contractFunctionName: 'balanceOf',
+                  contractFunctionValues: [activeWallet.address],
+                  chainId: walletState.networkId as number,
+                })
+              )
+            );
+
+            dispatch({
+              type: 'setTokens',
+              payload: {
+                owner: activeWallet?.address || '',
+                chainId: walletState.networkId,
+                tokens: userTokens.map((t, i) => ({
+                  ...t,
+                  balance: ethers.formatUnits(balances[i], t.decimals),
+                })),
+              },
+            });
+          }
+        } else if (typeof walletState.networkId === 'string') {
+          /**
+           * Substrate
+           */
+          const api = await wallet.ss.getApiForNetworkId();
+
+          if (!!addressOrAssetId && typeof addressOrAssetId === 'string') {
+            // Reload specific token
+            const found = userTokens.find(x => isLowerCaseEqual(x.address, addressOrAssetId));
+
+            if (found?.address) {
+              const balance = formatSubstrateBalance(
+                (
+                  (
+                    await api!.query.assets.account((found.assetId, activeWallet.address))
+                  ).toHuman() as any
+                )?.balance || '0',
+                { decimals: found.decimals }
+              );
+
+              dispatch({
+                type: 'updateToken',
+                payload: {
+                  owner: activeWallet?.address || '',
+                  chainId: walletState.networkId,
+                  token: { ...found, balance: ethers.formatUnits(balance, found.decimals) },
+                },
+              });
+            }
+          } else {
+            // Reload all tokens of activeWallet
+            const tokens = await Promise.all(
+              userTokens.map(async t => ({
                 ...t,
-                balance: ethers.formatUnits(balances[i], t.decimals),
-              })),
-            },
-          });
+                balance: formatSubstrateBalance(
+                  (
+                    (
+                      await api!.query.assets.account((t.assetId, activeWallet.address))
+                    ).toHuman() as any
+                  )?.balance || '0',
+                  { decimals: t.decimals }
+                ),
+              }))
+            );
+
+            dispatch({
+              type: 'setTokens',
+              payload: {
+                owner: activeWallet?.address || '',
+                chainId: walletState.networkId,
+                tokens,
+              },
+            });
+          }
         }
       }
-      /**
-       * @TODO Substrate reload?
-       */
     }
   }
 
