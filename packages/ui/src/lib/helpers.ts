@@ -63,8 +63,9 @@ export function formatTxObjectData(data: Object) {
     return data.join(`\n`);
   }
 
-  return Object.values(data).reduce((acc, [key, value]) => {
-    acc += `${key}: ${value}`;
+  return Object.entries(data).reduce((acc, [key, value]) => {
+    acc += `${key}: ${typeof value === 'object' ? `\n${formatTxObjectData(value)}` : value}\n`;
+    return acc;
   }, '');
 }
 

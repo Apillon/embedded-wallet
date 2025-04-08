@@ -41,23 +41,33 @@ export default () => {
            * Substrate native token
            */
           const api = await wallet.ss.getApiForNetworkId();
+          const decimals = api!.registry.chainDecimals[0];
+
           const res = await wallet.ss.signTransaction({
             mustConfirm: true,
             strategy: 'passkey',
             tx: api!.tx.balances.transferAllowDeath(
               receiverAddress,
-              +amount * Math.pow(10, api!.registry.chainDecimals[0])
+              +amount * Math.pow(10, decimals)
             ),
             label,
           });
 
-          if (res) {
-            return await wallet.ss.broadcastTransaction(
-              res.signedTxData,
-              res.chainId as string | undefined,
-              label
-            );
-          }
+          return res;
+          /**
+           * Tx is broadcast in txApprove event handler (approve.context.ts)
+           */
+          // if (res) {
+          //   return await wallet.ss.broadcastTransaction(
+          //     res.signedTxData,
+          //     res.chainId as string | undefined,
+          //     label,
+          //     undefined,
+          //     JSON.stringify({
+          //       decimals,
+          //     })
+          //   );
+          // }
         } else {
           /**
            * EVM Native token
@@ -74,15 +84,19 @@ export default () => {
             label,
           });
 
-          if (!state.appProps.broadcastAfterSign && res) {
-            return await wallet.evm.broadcastTransaction(
-              res.signedTxData,
-              res.chainId as number,
-              label
-            );
-          } else {
-            return res;
-          }
+          return res;
+          /**
+           * Tx is broadcast in txApprove event handler (approve.context.ts)
+           */
+          // if (!state.appProps.broadcastAfterSign && res) {
+          //   return await wallet.evm.broadcastTransaction(
+          //     res.signedTxData,
+          //     res.chainId as number,
+          //     label
+          //   );
+          // } else {
+          //   return res;
+          // }
         }
       } else if (selectedToken.address) {
         /**

@@ -5,6 +5,7 @@ import ApproveChainChange from './ApproveChainChange';
 import ApproveContractTx from './ApproveContractTx';
 import ApprovePlainTx from './ApprovePlainTx';
 import ApproveSignMessage from './ApproveSignMessage';
+import ApproveSubstrateTx from './ApproveSubstrateTx';
 
 export default () => {
   const {
@@ -38,6 +39,10 @@ export default () => {
 
   if (!!state.contractFunctionData) {
     return <ApproveContractTx />;
+  }
+
+  if (!!state.substrateTxData) {
+    return <ApproveSubstrateTx />;
   }
 
   return <></>;
