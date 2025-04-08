@@ -437,7 +437,7 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
                 balance: formatSubstrateBalance(
                   (
                     (
-                      await api!.query.assets.account((t.assetId, activeWallet.address))
+                      await api!.query.assets.account(t.assetId, activeWallet.address)
                     ).toHuman() as any
                   )?.balance || '0',
                   { decimals: t.decimals }

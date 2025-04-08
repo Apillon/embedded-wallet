@@ -123,9 +123,26 @@ export default () => {
         }
       } else if (selectedToken.assetId) {
         /**
-         * @TODO
+         * Substrate custom token/asset
          */
-        console.log('TODO 2');
+        const label = 'Transfer polkadot asset';
+
+        const api = await wallet.ss.getApiForNetworkId();
+
+        const res = await wallet.ss.signTransaction({
+          mustConfirm: true,
+          strategy: 'passkey',
+          tx: api!.tx.assets.transfer(
+            selectedToken.assetId,
+            receiverAddress,
+            +amount * Math.pow(10, selectedToken.decimals)
+          ),
+          label,
+        });
+
+        console.log(res);
+
+        return res;
       }
     } catch (e) {
       handleError(e, 'onTokensTransfer');

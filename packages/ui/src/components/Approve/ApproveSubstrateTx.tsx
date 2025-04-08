@@ -40,7 +40,7 @@ export default function ApproveSubstrateTx() {
                 key={k}
                 label={k}
                 data={
-                  k === 'value' ? (
+                  k === 'amount' ? (
                     <Balance amount={v} />
                   ) : typeof v === 'object' ? (
                     JSON.stringify(v, undefined, 2)

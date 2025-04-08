@@ -12,7 +12,8 @@ export type DisplayedContractParams = Pick<
 
 export type DisplayedContractParamsSubstrate = {
   address: string;
-  value: string;
+  amount: string;
+  assetId: string;
   method: string;
   section: string;
   raw: any;
@@ -61,7 +62,8 @@ function ApproveProvider({ children }: { children: React.ReactNode }) {
 
         const data = {
           address: '',
-          value: '',
+          amount: '',
+          assetId: '',
           section: '',
           method: '',
           raw: tx,
@@ -71,8 +73,20 @@ function ApproveProvider({ children }: { children: React.ReactNode }) {
           data.address = (tx as any).method.args.dest.Id;
         }
 
+        if (!data.address && (tx as any)?.method?.args?.target?.Id) {
+          data.address = (tx as any).method.args.target.Id;
+        }
+
         if ((tx as any)?.method?.args?.value) {
-          data.value = (tx as any).method.args.value;
+          data.amount = (tx as any).method.args.value;
+        }
+
+        if (!data.amount && (tx as any)?.method?.args?.amount) {
+          data.amount = (tx as any)?.method?.args?.amount;
+        }
+
+        if ((tx as any)?.method?.args?.id) {
+          data.assetId = (tx as any).method.args.id.replace(/,/g, '');
         }
 
         if ((tx as any)?.method?.method) {
