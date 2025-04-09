@@ -448,6 +448,11 @@ class EthereumEnvironment {
       this.wallet.user.walletIndex < this.userWallets.length
     ) {
       owner = this.userWallets[this.wallet.user.walletIndex].address;
+    } else if (
+      this.wallet.user.walletType === WalletType.SUBSTRATE &&
+      this.wallet.user.walletIndex < this.wallet.ss.userWallets.length
+    ) {
+      owner = this.wallet.ss.userWallets[this.wallet.user.walletIndex].address;
     }
 
     const txItem = {

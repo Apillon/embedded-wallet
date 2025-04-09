@@ -61,8 +61,10 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         typeof networkId !== 'string' &&
         appProps?.networksSubstrate?.[0]?.id
       ) {
+        console.log('set ss network');
         wallet?.setDefaultNetworkId(appProps.networksSubstrate[0].id);
       } else if (typeof networkId !== 'number' && appProps?.networks?.[0]?.id) {
+        console.log('set evm enetow');
         wallet?.setDefaultNetworkId(appProps.networks[0].id);
       }
 

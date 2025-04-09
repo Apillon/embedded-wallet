@@ -380,7 +380,11 @@ class EmbeddedWallet {
     }
   }
 
-  initAccountWallets(accountWallets: string[], walletType: AccountWalletTypes = WalletType.EVM) {
+  initAccountWallets(accountWallets: string[], walletType?: AccountWalletTypes) {
+    if (typeof walletType === 'undefined') {
+      walletType = this.user.walletType;
+    }
+
     if (Array.isArray(accountWallets) && accountWallets.length) {
       const isSubstrate = walletType === WalletType.SUBSTRATE;
 
@@ -666,6 +670,7 @@ class EmbeddedWallet {
         newValue: params.walletType,
         oldValue: this.user.walletType,
       });
+      console.log('ACC @setAccount', params.walletType);
       this.user.walletType = params.walletType;
     }
   }
@@ -804,6 +809,8 @@ class EmbeddedWallet {
 
     this.user.authStrategy = strategy;
     this.user.username = authData.username;
+
+    console.log('ACC @finalizeAccountAuth', authData.walletType);
     this.user.walletType = authData.walletType || WalletType.EVM;
 
     return addr;
@@ -1156,6 +1163,7 @@ class EmbeddedWallet {
           newValue: WalletType.EVM,
           oldValue: this.user.walletType,
         });
+        console.log('ACC @setDefaultNetworkId');
         this.user.walletType = WalletType.EVM;
       } else {
         this.events.emit('dataUpdated', {
@@ -1163,6 +1171,7 @@ class EmbeddedWallet {
           newValue: WalletType.SUBSTRATE,
           oldValue: this.user.walletType,
         });
+        console.log('ACC @setDefaultNetworkId 2');
         this.user.walletType = WalletType.SUBSTRATE;
       }
 
