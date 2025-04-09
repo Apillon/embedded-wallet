@@ -212,6 +212,7 @@ class SubstrateEnvironment {
       return {
         signedTxData,
         chainId,
+        blockHash: unsigned.blockHash,
       };
     }
   }

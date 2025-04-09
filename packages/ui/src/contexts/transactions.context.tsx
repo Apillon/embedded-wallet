@@ -8,6 +8,7 @@ import { useTokensContext } from './tokens.context';
 const initialState = () => ({
   txs: {} as { [ownerAddress: string]: { [txHash: string]: TransactionItem } },
   pending: [] as string[],
+  pendingSs: [] as string[],
 });
 
 type ContextState = ReturnType<typeof initialState>;
@@ -56,9 +57,17 @@ function reducer(state: ContextState, action: ContextActions) {
           },
         },
         pending:
-          action.payload.status === 'pending'
-            ? [...new Set([...state.pending, action.payload.tx.hash])]
-            : state.pending.filter(x => x !== action.payload.tx.hash),
+          typeof action.payload.tx.chainId !== 'number'
+            ? state.pending
+            : action.payload.status === 'pending'
+              ? [...new Set([...state.pending, action.payload.tx.hash])]
+              : state.pending.filter(x => x !== action.payload.tx.hash),
+        pendingSs:
+          typeof action.payload.tx.chainId !== 'string'
+            ? state.pendingSs
+            : action.payload.status === 'pending'
+              ? [...new Set([...state.pendingSs, action.payload.tx.hash])]
+              : state.pendingSs.filter(x => x !== action.payload.tx.hash),
       };
     default:
       throw new Error('Unhandled action type.' + JSON.stringify(action));
@@ -78,6 +87,7 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState());
   const initializing = useRef(false);
   const initialized = useRef(false);
+  const ssBlockListenerUnsubscribe = useRef<() => void>(undefined);
 
   const {
     state: { accountWallets, stagedWalletsCount, walletsCountBeforeStaging },
@@ -113,10 +123,33 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
       Object.keys(state.txs[activeWallet.address]).length
     ) {
       for (const tx of Object.values(state.txs[activeWallet.address])) {
-        checkTransaction(tx);
+        if (typeof tx.chainId === 'number') {
+          checkTransaction(tx);
+        } else {
+          /**
+           * @TODO
+           * Substrate tx status
+           * @url https://github.com/TalismanSociety/talisman/blob/ddb5e62d5c3eb2b0dc8b44c778f04d1f63976215/packages/extension-core/src/domains/transactions/watchSubstrateTransaction.ts
+           */
+        }
       }
     }
   }, [activeWallet, state.txs]);
+
+  useEffect(() => {
+    return () => {
+      if (ssBlockListenerUnsubscribe.current) {
+        ssBlockListenerUnsubscribe.current();
+        ssBlockListenerUnsubscribe.current = undefined;
+      }
+    };
+  }, []);
+
+  // useEffect(() => {
+  //   if (isSubstrate() && !ssBlockListenerUnsubscribe.current) {
+  //     ssBlockListener();
+  //   }
+  // }, [walletType]);
 
   async function init() {
     const stored = await wallet?.xdomain?.storageGet(WebStorageKeys.TRANSACTIONS_CONTEXT);
@@ -319,6 +352,18 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
       }
     }
   }
+
+  // async function ssBlockListener() {
+  //   const api = await wallet?.ss.getApiForNetworkId();
+
+  //   if (!api) {
+  //     return;
+  //   }
+
+  //   ssBlockListenerUnsubscribe.current = await api.rpc.chain.subscribeNewHeads(header => {
+  //     console.log(header.toHuman());
+  //   });
+  // }
 
   return (
     <TransactionsContext.Provider value={{ state, dispatch, checkTransaction }}>

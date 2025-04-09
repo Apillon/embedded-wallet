@@ -308,7 +308,7 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
                         await api!.query.assets.account((t.assetId, activeWallet.address))
                       ).toHuman() as any
                     )?.balance || 0,
-                    { decimals: t.decimals }
+                    t.decimals
                   );
                 }
 
@@ -417,7 +417,7 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
                     await api!.query.assets.account((found.assetId, activeWallet.address))
                   ).toHuman() as any
                 )?.balance || '0',
-                { decimals: found.decimals }
+                found.decimals
               );
 
               dispatch({
@@ -440,7 +440,7 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
                       await api!.query.assets.account(t.assetId, activeWallet.address)
                     ).toHuman() as any
                   )?.balance || '0',
-                  { decimals: t.decimals }
+                  t.decimals
                 ),
               }))
             );
@@ -524,7 +524,7 @@ function TokensProvider({ children }: { children: React.ReactNode }) {
               name: res?.name,
               symbol: res?.symbol,
               decimals: +res?.decimals,
-              balance: formatSubstrateBalance(balance?.balance, { decimals: +res?.decimals || 0 }),
+              balance: formatSubstrateBalance(balance?.balance, +res?.decimals || 0),
             };
           }
         }

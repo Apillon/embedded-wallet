@@ -93,7 +93,7 @@ const Balance = ({ amount }: { amount: string }) => {
   const { selectedToken } = useTokensContext();
 
   if (!!selectedToken.assetId || (!selectedToken.address && walletType === WalletType.SUBSTRATE)) {
-    amount = formatSubstrateBalance(amount, { decimals: selectedToken.decimals });
+    amount = formatSubstrateBalance(amount, selectedToken.decimals);
   }
 
   return (

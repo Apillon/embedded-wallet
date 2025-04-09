@@ -48,16 +48,18 @@ function Transaction({ tx }: { tx: TransactionItem }) {
           </a>
         </span>
 
-        <Pill
-          text={tx.status}
-          bg={''}
-          color={''}
-          className={clsx({
-            'text-pink': tx.status === 'failed',
-            'text-green': tx.status === 'confirmed',
-            'text-orange': tx.status === 'pending',
-          })}
-        />
+        {typeof tx.chainId === 'number' && (
+          <Pill
+            text={tx.status}
+            bg={''}
+            color={''}
+            className={clsx({
+              'text-pink': tx.status === 'failed',
+              'text-green': tx.status === 'confirmed',
+              'text-orange': tx.status === 'pending',
+            })}
+          />
+        )}
       </div>
 
       <div className="flex justify-between items-end">

@@ -1,5 +1,5 @@
+import { formatUnits } from 'viem';
 import { WebStorageKeys } from './constants';
-import { formatBalance as formatBalanceSs } from '@polkadot/util';
 
 export function sleep(ms = 1000) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -44,15 +44,8 @@ export function formatBalance(balance: string | number, unit = 'ETH', maxDecimal
   return `${parsed}${!!unit ? ` ${unit}` : ''}`;
 }
 
-export function formatSubstrateBalance(
-  balance = '0',
-  options: Parameters<typeof formatBalanceSs>[1]
-) {
-  return formatBalanceSs(balance.replace(/,/g, ''), {
-    withSi: false,
-    withZero: false,
-    ...options,
-  });
+export function formatSubstrateBalance(balance = '0', decimals = 12) {
+  return formatUnits(BigInt(balance.replace(/,/g, '')), decimals);
 }
 
 /**
