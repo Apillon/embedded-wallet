@@ -14,6 +14,7 @@ const walletTypeOptions = [
     title: 'EVM',
     description: 'Ethereum, Arbitrum, Moonbeam etc',
     icon: ethIcon,
+    disabled: false,
   },
   {
     type: WalletType.SUBSTRATE,
@@ -26,7 +27,7 @@ const walletTypeOptions = [
 
 export default function AccountsAdd() {
   const {
-    state: { accountWallets, stagedWalletsCount },
+    state: { accountWallets, stagedWalletsCount, walletType },
     wallet,
     handleError,
     goScreenBack,
@@ -81,38 +82,40 @@ export default function AccountsAdd() {
           onSubmit();
         }}
       >
-        <p className="mb-3 font-bold text-sm">Select type</p>
+        <p className="mb-2 font-normal text-sm text-lightgrey">Account type</p>
 
         <div className="flex flex-col gap-3 mb-6">
-          {walletTypeOptions.map(wt => (
-            <button
-              key={wt.type}
-              type="button"
-              className={clsx(
-                'oaw-button-plain !bg-primarylight !px-3 !py-2 !rounded-md relative',
-                '!border !border-solid border-brightdark hover:border-lightgrey !transition-colors',
-                '!flex items-center gap-3',
-                {
-                  '!border-yellow': type === wt.type,
-                  'pointer-events-none': wt.disabled,
-                }
-              )}
-              onClick={() => setType(wt.type)}
-            >
-              {!!wt.disabled && (
-                <span className="absolute inset-0 bg-primarylight/60">
-                  <Pill text="Coming soon" className="absolute top-2 right-2" />
-                </span>
-              )}
+          {walletTypeOptions
+            .filter(wt => wt.type === walletType)
+            .map(wt => (
+              <button
+                key={wt.type}
+                type="button"
+                className={clsx(
+                  'oaw-button-plain !bg-primarylight !px-3 !py-2 !rounded-md relative',
+                  '!border !border-solid border-brightdark hover:border-lightgrey !transition-colors',
+                  '!flex items-center gap-3',
+                  {
+                    // '!border-yellow': type === wt.type,
+                    'pointer-events-none': wt.disabled || true, // there is no choice so the button can be disabled
+                  }
+                )}
+                onClick={() => setType(wt.type)}
+              >
+                {!!wt.disabled && (
+                  <span className="absolute inset-0 bg-primarylight/60">
+                    <Pill text="Coming soon" className="absolute top-2 right-2" />
+                  </span>
+                )}
 
-              <img src={wt.icon} alt={wt.title} className="w-10 h-10" />
+                <img src={wt.icon} alt={wt.title} className="w-10 h-10" />
 
-              <div className="text-left">
-                <p className="text-sm font-bold text-offwhite mb-1">{wt.title}</p>
-                <p className="text-xs text-lightgrey">{wt.description}</p>
-              </div>
-            </button>
-          ))}
+                <div className="text-left">
+                  <p className="text-sm font-bold text-offwhite mb-1">{wt.title}</p>
+                  <p className="text-xs text-lightgrey">{wt.description}</p>
+                </div>
+              </button>
+            ))}
         </div>
 
         <Input

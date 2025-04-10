@@ -8,11 +8,24 @@ import clsx from 'clsx';
 import AuthCaptcha from './AuthCaptcha';
 import AuthImport from './AuthImport';
 import MsgError from '../ui/MsgError';
+import { useEffect } from 'react';
+import { useWalletContext } from '../../contexts/wallet.context';
 
 export default ({ className }: { className?: string }) => {
   const {
     state: { screen },
   } = useAuthContext();
+
+  const {
+    wallet,
+    state: { walletType },
+  } = useWalletContext();
+
+  useEffect(() => {
+    if (wallet && wallet.user.walletType !== walletType) {
+      wallet.setAccount({ walletType });
+    }
+  }, [wallet, walletType]);
 
   function currentScreen() {
     switch (screen) {
