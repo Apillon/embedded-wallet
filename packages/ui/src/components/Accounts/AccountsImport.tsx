@@ -96,7 +96,7 @@ export default function AccountsImport() {
           value={type}
           options={[
             { label: 'Select type', value: '' },
-            ...(walletType === WalletType.EVM ? [{ label: 'Private Key', value: 'pk' }] : []),
+            { label: 'Private Key', value: 'pk' },
             ...(walletType === WalletType.SUBSTRATE
               ? [{ label: 'Mnemonic', value: 'mnemonic' }]
               : []),

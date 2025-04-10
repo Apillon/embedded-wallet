@@ -9,4 +9,5 @@ export const WebStorageKeys = {
   OTP_EXPIRATION: 'oaw_otp_expire_time',
   WALLET_NAMES: 'oaw_names',
   REGISTER_PK: 'oaw_reg_pk',
+  WALLET_TYPE: 'oaw_wallet_t',
 };
