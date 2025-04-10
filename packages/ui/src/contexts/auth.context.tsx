@@ -164,6 +164,17 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
 
     wallet?.xdomain?.storageSet(WebStorageKeys.WALLET_TYPE, `${walletType}`, true);
 
+    const se = [] as number[];
+    if (appProps?.networks?.length) {
+      se.push(WalletType.EVM);
+    }
+
+    if (appProps?.networksSubstrate?.length) {
+      se.push(WalletType.SUBSTRATE);
+    }
+
+    wallet?.xdomain?.storageSet(WebStorageKeys.SUPPORTED_ENVS, se.join(','), true);
+
     if (appProps.passkeyAuthMode === 'tab_form') {
       if (!wallet?.xdomain) {
         throw abort('XDOMAIN_NOT_INIT');

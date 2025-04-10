@@ -59,9 +59,9 @@ export default function TestApp() {
       <br />
       <br />
 
-      <h2>Test sign</h2>
+      {/* <h2>Test sign</h2>
 
-      {/* <TestSign />
+      <TestSign />
 
       <br />
       <br />

@@ -72,7 +72,6 @@ export default function AuthImport() {
 
       if (await sendConfirmationEmail()) {
         wallet?.xdomain?.storageSet(WebStorageKeys.REGISTER_PK, pk, true);
-        wallet?.xdomain?.storageSet(WebStorageKeys.WALLET_TYPE, `${walletType}`, true);
         await onRegister(true);
       }
 

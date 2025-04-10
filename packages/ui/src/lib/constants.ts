@@ -10,4 +10,5 @@ export const WebStorageKeys = {
   WALLET_NAMES: 'oaw_names',
   REGISTER_PK: 'oaw_reg_pk',
   WALLET_TYPE: 'oaw_wallet_t',
+  SUPPORTED_ENVS: 'oaw_supp_env',
 };
