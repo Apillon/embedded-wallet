@@ -229,7 +229,7 @@ class EmbeddedWallet {
       return;
     }
 
-    if (!authData.walletType) {
+    if (typeof authData.walletType === 'undefined') {
       authData.walletType = this.user.walletType;
     }
 
@@ -237,6 +237,7 @@ class EmbeddedWallet {
      * Update wallet type and default network id
      */
     if (typeof authData.walletType !== 'undefined') {
+      console.log('ACC @authenticate', authData.walletType);
       this.setAccount({ walletType: authData.walletType });
 
       if (
@@ -293,6 +294,10 @@ class EmbeddedWallet {
         abort('AUTHENTICATION_DATA_NOT_PROVIDED');
         return;
       }
+    }
+
+    if (typeof params?.authData?.walletType === 'undefined') {
+      params.authData.walletType = this.user.walletType;
     }
 
     const AC = new ethers.Interface(getAbiForType(params.authData.walletType));
