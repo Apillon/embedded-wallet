@@ -237,7 +237,6 @@ class EmbeddedWallet {
      * Update wallet type and default network id
      */
     if (typeof authData.walletType !== 'undefined') {
-      console.log('ACC @authenticate', authData.walletType);
       this.setAccount({ walletType: authData.walletType });
 
       if (
@@ -675,7 +674,6 @@ class EmbeddedWallet {
         newValue: params.walletType,
         oldValue: this.user.walletType,
       });
-      console.log('ACC @setAccount', params.walletType);
       this.user.walletType = params.walletType;
     }
   }
@@ -815,7 +813,6 @@ class EmbeddedWallet {
     this.user.authStrategy = strategy;
     this.user.username = authData.username;
 
-    console.log('ACC @finalizeAccountAuth', authData.walletType);
     this.user.walletType = authData.walletType || WalletType.EVM;
 
     return addr;
@@ -1168,7 +1165,6 @@ class EmbeddedWallet {
           newValue: WalletType.EVM,
           oldValue: this.user.walletType,
         });
-        console.log('ACC @setDefaultNetworkId');
         this.user.walletType = WalletType.EVM;
       } else {
         this.events.emit('dataUpdated', {
@@ -1176,7 +1172,6 @@ class EmbeddedWallet {
           newValue: WalletType.SUBSTRATE,
           oldValue: this.user.walletType,
         });
-        console.log('ACC @setDefaultNetworkId 2');
         this.user.walletType = WalletType.SUBSTRATE;
       }
 

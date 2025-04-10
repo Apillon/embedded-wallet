@@ -140,8 +140,6 @@ export default () => {
           label,
         });
 
-        console.log(res);
-
         return res;
       }
     } catch (e) {
