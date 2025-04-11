@@ -71,8 +71,8 @@ export function isLowerCaseEqual(s1?: string, s2?: string) {
   return s1.toLowerCase() === s2.toLowerCase();
 }
 
-export function getSS58Address(pk: string, prefix?: number) {
-  if (!pk) {
+export function getSS58Address(pk: string, prefix?: number, isPublicKey = false) {
+  if (!pk || isPublicKey) {
     return pk;
   }
 
@@ -81,7 +81,7 @@ export function getSS58Address(pk: string, prefix?: number) {
     const pair = keyring.createFromUri(pk);
 
     if (prefix) {
-      keyring.setSS58Format(42);
+      keyring.setSS58Format(prefix);
     }
 
     return pair.address;
