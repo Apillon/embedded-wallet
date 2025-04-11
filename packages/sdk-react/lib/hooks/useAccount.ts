@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react';
-import { AccountWallet, AuthStrategyName, Events } from '@apillon/wallet-sdk';
+import {
+  AccountWallet,
+  AccountWalletTypes,
+  AuthStrategyName,
+  Events,
+  WalletType,
+} from '@apillon/wallet-sdk';
 import useWallet from './useWallet';
 
 export function useAccount() {
@@ -9,20 +15,17 @@ export function useAccount() {
     username: '',
     activeWallet: undefined as AccountWallet | undefined,
     authStrategy: 'passkey' as AuthStrategyName,
+    walletType: WalletType.EVM as AccountWalletTypes,
   });
-
-  // const [username, setUsername] = useState('');
-  // const [address, setAddress] = useState('');
-  // const [authStrategy, setAuthStrategy] = useState<AuthStrategyName>('passkey');
 
   useEffect(() => {
     const onDataUpdated = ({ name, newValue }: Events['dataUpdated']) => {
       if (name === 'username') {
         setInfo(i => ({ ...i, username: newValue }));
       } else if (name === 'walletIndex') {
-        setInfo(i => ({ ...i, activeWallet: wallet.lastAccount.wallets[newValue] }));
-      } else if (name === 'wallets' && newValue.length) {
-        setInfo(i => ({ ...i, activeWallet: newValue[wallet.lastAccount.walletIndex] }));
+        setInfo(i => ({ ...i, activeWallet: wallet.getCurrentWallet() }));
+      } else if ((name === 'walletsSS' || name === 'walletsEVM') && newValue.length) {
+        setInfo(i => ({ ...i, activeWallet: wallet.getCurrentWallet() }));
       } else if (name === 'authStrategy') {
         setInfo(i => ({ ...i, authStrategy: newValue }));
       }
@@ -30,9 +33,10 @@ export function useAccount() {
 
     if (wallet) {
       setInfo({
-        username: wallet.lastAccount.username,
-        activeWallet: wallet.lastAccount.wallets[wallet.lastAccount.walletIndex],
-        authStrategy: wallet.lastAccount.authStrategy,
+        username: wallet.user.username,
+        activeWallet: wallet.getCurrentWallet(),
+        authStrategy: wallet.user.authStrategy,
+        walletType: wallet.user.walletType,
       });
 
       wallet.events.on('dataUpdated', onDataUpdated);

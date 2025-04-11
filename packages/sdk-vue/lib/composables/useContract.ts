@@ -24,7 +24,7 @@ export function useContract({
       return;
     }
 
-    if (wallet.value?.user.walletType !== WalletType.EVM) {
+    if (wallet.value.user.walletType !== WalletType.EVM) {
       abort('WRONG_WALLET_ENVIRONMENT');
       return;
     }
