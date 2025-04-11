@@ -1,4 +1,4 @@
-import { abort } from '@apillon/wallet-sdk';
+import { abort, WalletType } from '@apillon/wallet-sdk';
 import useAccount from './useAccount';
 import useWallet from './useWallet';
 
@@ -24,7 +24,12 @@ export function useContract({
       return;
     }
 
-    return await wallet.value.contractRead({
+    if (wallet.value?.user.walletType !== WalletType.EVM) {
+      abort('WRONG_WALLET_ENVIRONMENT');
+      return;
+    }
+
+    return await wallet.value.evm.contractRead({
       contractAbi: abi,
       contractAddress: address,
       contractFunctionName: fn,
@@ -39,7 +44,12 @@ export function useContract({
       return;
     }
 
-    const result = await wallet.value.signContractWrite({
+    if (wallet.value?.user.walletType !== WalletType.EVM) {
+      abort('WRONG_WALLET_ENVIRONMENT');
+      return;
+    }
+
+    const result = await wallet.value.evm.signContractWrite({
       contractAbi: abi,
       contractAddress: address,
       contractFunctionName: fn,
@@ -52,7 +62,11 @@ export function useContract({
     });
 
     if (broadcast && result) {
-      return await wallet.value.broadcastTransaction(result.signedTxData, result.chainId, label);
+      return await wallet.value.evm.broadcastTransaction(
+        result.signedTxData,
+        result.chainId,
+        label
+      );
     } else {
       return result;
     }

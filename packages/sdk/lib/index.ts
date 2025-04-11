@@ -535,6 +535,22 @@ class EmbeddedWallet {
     }
     return '';
   }
+
+  /**
+   * Get "currently active" account wallet.
+   * Active -> determined by `walletIndex` & `walletType` from `this.user`
+   */
+  getCurrentWallet() {
+    if (
+      this.user.walletType === WalletType.SUBSTRATE &&
+      this.user.walletIndex < this.ss.userWallets.length
+    ) {
+      return this.ss.userWallets[this.user.walletIndex];
+    } else if (this.user.walletIndex < this.evm.userWallets.length) {
+      return this.evm.userWallets[this.user.walletIndex];
+    }
+    return undefined;
+  }
   // #endregion
 
   // #region Auth helpers
