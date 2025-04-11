@@ -47,7 +47,7 @@ export type WalletScreens =
   | 'nftDetail'
   | 'tokenDetail';
 
-type AccountWalletEx = AccountWallet & { balance: string; title: string };
+export type AccountWalletEx = AccountWallet & { balance: string; title: string };
 
 const initialState = (defaultNetworkId: number | string = 0, appProps: AppProps) => ({
   username: '',

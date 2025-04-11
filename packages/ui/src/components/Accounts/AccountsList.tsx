@@ -1,24 +1,20 @@
 import clsx from 'clsx';
-import { useWalletContext } from '../../contexts/wallet.context';
-import { formatBalance, shortHash } from '../../lib/helpers';
+import { AccountWalletEx, useWalletContext } from '../../contexts/wallet.context';
+import { formatBalance, getSS58Address, shortHash } from '../../lib/helpers';
 import Btn from '../ui/Btn';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import InputSearch from '../ui/InputSearch';
 import { useTokensContext } from '../../contexts/tokens.context';
 import MsgInfo from '../ui/MsgInfo';
+import { WalletType } from '@apillon/wallet-sdk';
 
-export default () => {
+export default function AccountsList() {
   const {
-    wallet,
-    state: { accountWallets, walletIndex, isAccountWalletsStale, loadingWallets },
-    dispatch,
+    state: { accountWallets, isAccountWalletsStale, loadingWallets },
     setScreen,
     reloadAccountBalances,
-    goScreenBack,
     loadAccountWallets,
   } = useWalletContext();
-
-  const { nativeToken, currentExchangeRate } = useTokensContext();
 
   const [search, setSearch] = useState('');
 
@@ -36,46 +32,7 @@ export default () => {
         {accountWallets
           .filter(aw => aw.title.toLowerCase().includes(search.toLowerCase()))
           .map((aw, index) => (
-            <button
-              key={aw.address}
-              className={clsx(
-                'oaw-button-plain !bg-primarylight !px-3 !py-2 !rounded-md',
-                '!border !border-solid border-brightdark hover:border-lightgrey !transition-colors',
-                '!flex justify-between items-center',
-                {
-                  '!border-yellow': index === walletIndex,
-                }
-              )}
-              onClick={() => {
-                if (index === walletIndex) {
-                  return;
-                }
-
-                wallet?.setAccount({ walletIndex: index });
-                dispatch({ type: 'setValue', payload: { key: 'walletIndex', value: index } });
-                goScreenBack();
-              }}
-            >
-              <div className="text-left">
-                <p className="text-sm font-bold text-offwhite mb-1.5">{aw.title}</p>
-
-                <p title={aw.address} className="text-xs text-lightgrey">
-                  {shortHash(aw.address)}
-                </p>
-              </div>
-
-              <div className="text-xs text-offwhite text-right">
-                <p>
-                  {!!currentExchangeRate ? (
-                    `$${formatBalance(+aw.balance * currentExchangeRate, '', 2)}`
-                  ) : (
-                    <>&nbsp;</>
-                  )}
-                </p>
-
-                <p>{formatBalance(aw.balance, nativeToken.symbol)}</p>
-              </div>
-            </button>
+            <ListItem key={aw.address} aw={aw} index={index} />
           ))}
       </div>
 
@@ -99,4 +56,64 @@ export default () => {
       </Btn>
     </div>
   );
-};
+}
+
+function ListItem({ aw, index }: { aw: AccountWalletEx; index: number }) {
+  const {
+    wallet,
+    state: { walletIndex, walletType },
+    dispatch,
+    goScreenBack,
+  } = useWalletContext();
+
+  const { nativeToken, currentExchangeRate } = useTokensContext();
+
+  const address = useMemo(() => {
+    if (walletType === WalletType.SUBSTRATE) {
+      return getSS58Address(aw.address || '');
+    }
+    return aw.address || '';
+  }, [aw, walletType]);
+
+  return (
+    <button
+      className={clsx(
+        'oaw-button-plain !bg-primarylight !px-3 !py-2 !rounded-md',
+        '!border !border-solid border-brightdark hover:border-lightgrey !transition-colors',
+        '!flex justify-between items-center',
+        {
+          '!border-yellow': index === walletIndex,
+        }
+      )}
+      onClick={() => {
+        if (index === walletIndex) {
+          return;
+        }
+
+        wallet?.setAccount({ walletIndex: index });
+        dispatch({ type: 'setValue', payload: { key: 'walletIndex', value: index } });
+        goScreenBack();
+      }}
+    >
+      <div className="text-left">
+        <p className="text-sm font-bold text-offwhite mb-1.5">{aw.title}</p>
+
+        <p title={address} className="text-xs text-lightgrey">
+          {shortHash(address)}
+        </p>
+      </div>
+
+      <div className="text-xs text-offwhite text-right">
+        <p>
+          {!!currentExchangeRate ? (
+            `$${formatBalance(+aw.balance * currentExchangeRate, '', 2)}`
+          ) : (
+            <>&nbsp;</>
+          )}
+        </p>
+
+        <p>{formatBalance(aw.balance, nativeToken.symbol)}</p>
+      </div>
+    </button>
+  );
+}

@@ -1,5 +1,6 @@
 import { formatUnits } from 'viem';
 import { WebStorageKeys } from './constants';
+import { Keyring } from '@polkadot/keyring';
 
 export function sleep(ms = 1000) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -68,4 +69,25 @@ export function isLowerCaseEqual(s1?: string, s2?: string) {
   }
 
   return s1.toLowerCase() === s2.toLowerCase();
+}
+
+export function getSS58Address(pk: string, prefix?: number) {
+  if (!pk) {
+    return pk;
+  }
+
+  try {
+    const keyring = new Keyring({ type: 'sr25519' });
+    const pair = keyring.createFromUri(pk);
+
+    if (prefix) {
+      keyring.setSS58Format(42);
+    }
+
+    return pair.address;
+  } catch (e) {
+    console.error(e);
+  }
+
+  return pk;
 }
