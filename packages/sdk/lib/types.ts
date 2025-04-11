@@ -1,3 +1,4 @@
+import { SignerPayloadJSON } from '@polkadot/types/types';
 import { parseAbi } from 'abitype';
 import { AccountManagerAbi } from './abi';
 import { TypedContract } from 'ethers-abitype';
@@ -139,7 +140,12 @@ export type PlainTransactionParams<T = ethers.TransactionLike<ethers.AddressLike
   tx: T;
   label?: string;
   mustConfirm?: boolean;
-  resolve?: (result: { signedTxData: any; chainId?: number | string }) => void;
+  resolve?: (result: {
+    signedTxData: any;
+    chainId?: number | string;
+    signature?: any;
+    blockHash?: string;
+  }) => void;
   reject?: (reason?: any) => void;
 };
 
@@ -198,7 +204,9 @@ export type Events = {
   txApprove: {
     plain?: PlainTransactionParams;
     contractWrite?: ContractWriteParams;
-    polkadot?: PlainTransactionParams<SubmittableExtrinsic<any, any>>;
+    polkadot?: PlainTransactionParams<SubmittableExtrinsic<any, any>> & {
+      payload?: SignerPayloadJSON;
+    };
   };
   txSubmitted: TransactionItem;
   txDone: TransactionItem; // emitted by UI

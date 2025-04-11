@@ -92,7 +92,10 @@ class SubstrateEnvironment {
   }
 
   async signTransaction(
-    params: PlainTransactionParams<SubmittableExtrinsic<any, any>> & { chainId?: string }
+    params: PlainTransactionParams<SubmittableExtrinsic<any, any>> & {
+      chainId?: string;
+      payload?: SignerPayloadJSON;
+    }
   ) {
     const walletIndex =
       params.walletIndex || params.walletIndex === 0
@@ -140,8 +143,10 @@ class SubstrateEnvironment {
      */
     if (params.mustConfirm) {
       return await new Promise<{
+        signature?: any;
         signedTxData: string;
         chainId?: number | string;
+        blockHash?: string;
       }>((resolve, reject) => {
         this.wallet.events.emit('txApprove', {
           polkadot: { ...params, mustConfirm: false, resolve, reject },
@@ -151,40 +156,52 @@ class SubstrateEnvironment {
 
     const extrinsicVersion = api.runtimeMetadata.asV15.extrinsic.version.toNumber();
 
-    const [lastHash, genesisHash, property] = await Promise.all([
-      api.rpc.chain.getFinalizedHead(),
-      api.rpc.chain.getBlockHash(0),
-      api.rpc.system.properties(),
-    ]);
+    let unsigned: SignerPayloadJSON;
 
-    const { block } = await api.rpc.chain.getBlock(lastHash);
+    if (params.payload) {
+      /**
+       * User provided SignerPayloadJSON
+       */
+      unsigned = params.payload;
+    } else {
+      /**
+       * Prepare payload from tx
+       */
+      const [lastHash, genesisHash, property] = await Promise.all([
+        api.rpc.chain.getFinalizedHead(),
+        api.rpc.chain.getBlockHash(0),
+        api.rpc.system.properties(),
+      ]);
 
-    const address = encodeAddress(
-      decodeAddress(this.userWallets[walletIndex].address),
-      +property.ss58Format.unwrapOr(42).toString()
-    );
+      const { block } = await api.rpc.chain.getBlock(lastHash);
 
-    const accountInfo = await api.query.system.account(address);
+      const address = encodeAddress(
+        decodeAddress(this.userWallets[walletIndex].address),
+        +property.ss58Format.unwrapOr(42).toString()
+      );
 
-    const unsigned: SignerPayloadJSON = {
-      method: params.tx.method.toHex(),
-      address,
-      blockHash: block.header.hash.toHex(),
-      blockNumber: block.header.number.toHex(),
-      era: api.registry
-        .createType('ExtrinsicEra', {
-          current: block.header.number.toNumber(),
-          period: 64,
-        })
-        .toHex(),
-      genesisHash: genesisHash.toHex(),
-      nonce: accountInfo.nonce.toHex(),
-      specVersion: api.runtimeVersion.specVersion.toHex(),
-      transactionVersion: api.runtimeVersion.transactionVersion.toHex(),
-      tip: api.registry.createType('Compact<Balance>', 0).toHex(),
-      signedExtensions: api.registry.signedExtensions,
-      version: extrinsicVersion,
-    };
+      const accountInfo = await api.query.system.account(address);
+
+      unsigned = {
+        method: params.tx.method.toHex(),
+        address,
+        blockHash: block.header.hash.toHex(),
+        blockNumber: block.header.number.toHex(),
+        era: api.registry
+          .createType('ExtrinsicEra', {
+            current: block.header.number.toNumber(),
+            period: 64,
+          })
+          .toHex(),
+        genesisHash: genesisHash.toHex(),
+        nonce: accountInfo.nonce.toHex(),
+        specVersion: api.runtimeVersion.specVersion.toHex(),
+        transactionVersion: api.runtimeVersion.transactionVersion.toHex(),
+        tip: api.registry.createType('Compact<Balance>', 0).toHex(),
+        signedExtensions: api.registry.signedExtensions,
+        version: extrinsicVersion,
+      };
+    }
 
     const signingPayload = api.registry.createType('ExtrinsicPayload', unsigned, {
       version: extrinsicVersion,
@@ -210,6 +227,7 @@ class SubstrateEnvironment {
         .addSignature(unsigned.address, signature, unsigned);
 
       return {
+        signature,
         signedTxData,
         chainId,
         blockHash: unsigned.blockHash,

@@ -58,7 +58,15 @@ function ApproveProvider({ children }: { children: React.ReactNode }) {
         /**
          * Substrate tx
          */
-        const tx = params.polkadot.tx.toHuman();
+        let tx = undefined as any;
+        let method = undefined as any;
+
+        if (params.polkadot.tx) {
+          tx = params.polkadot.tx.toHuman() || undefined;
+          method = (tx as any)?.method;
+        } else if (params.polkadot.payload) {
+          method = params.polkadot.payload.method;
+        }
 
         const data = {
           address: '',
@@ -69,32 +77,34 @@ function ApproveProvider({ children }: { children: React.ReactNode }) {
           raw: tx,
         };
 
-        if ((tx as any)?.method?.args?.dest?.Id) {
-          data.address = (tx as any).method.args.dest.Id;
-        }
+        if (method) {
+          if (method?.args?.dest?.Id) {
+            data.address = method.args.dest.Id;
+          }
 
-        if (!data.address && (tx as any)?.method?.args?.target?.Id) {
-          data.address = (tx as any).method.args.target.Id;
-        }
+          if (!data.address && method?.args?.target?.Id) {
+            data.address = method.args.target.Id;
+          }
 
-        if ((tx as any)?.method?.args?.value) {
-          data.amount = (tx as any).method.args.value;
-        }
+          if (method?.args?.value) {
+            data.amount = method.args.value;
+          }
 
-        if (!data.amount && (tx as any)?.method?.args?.amount) {
-          data.amount = (tx as any)?.method?.args?.amount;
-        }
+          if (!data.amount && method?.args?.amount) {
+            data.amount = method?.args?.amount;
+          }
 
-        if ((tx as any)?.method?.args?.id) {
-          data.assetId = (tx as any).method.args.id.replace(/,/g, '');
-        }
+          if (method?.args?.id) {
+            data.assetId = method.args.id.replace(/,/g, '');
+          }
 
-        if ((tx as any)?.method?.method) {
-          data.method = (tx as any).method.method;
-        }
+          if (method?.method) {
+            data.method = method.method;
+          }
 
-        if ((tx as any)?.method?.section) {
-          data.section = (tx as any).method.section;
+          if (method?.section) {
+            data.section = method.section;
+          }
         }
 
         setStateValue('substrateTxData', data);
