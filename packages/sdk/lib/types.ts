@@ -69,6 +69,12 @@ export type AppParams = {
    * Method for authenticating with passkey to make it global.
    */
   passkeyAuthMode?: AuthPasskeyMode;
+
+  /**
+   * Register wallet as an injected web3 wallet, which can then be used via @polkadot/extension-dapp
+   * @url https://polkadot.js.org/docs/extension/usage
+   */
+  injectPolkadot?: boolean;
 };
 
 export type AuthData = {

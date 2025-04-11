@@ -21,7 +21,7 @@ export default function Demo() {
     'bg-lightdark text-dark border-b-lightdark border-t-lightdark';
 
   return (
-    <div className="text-offwhite  px-4 py-4 max-w-lg w-[767px] mt-10">
+    <div className="text-offwhite px-4 py-4 max-w-lg w-[767px] mt-10">
       <p className="flex gap-4 flex-col">
         <input
           type="text"

@@ -1,38 +1,34 @@
 import { injectExtension } from '@polkadot/extension-inject';
 import { Injected } from '@polkadot/extension-inject/types';
 import pkg from '../../package.json' assert { type: 'json' };
-import EmbeddedWallet from '..';
 import { abort, getEmbeddedWallet } from '../utils';
 
 class EmbeddedPolkadotInject {
-  requestId = 0;
-  wallet: EmbeddedWallet | undefined = undefined;
-
   constructor() {
-    const w = getEmbeddedWallet();
-
-    if (!w) {
-      abort('OASIS_WALLET_NOT_INITIALIZED');
-      return;
-    }
-
-    if (!w.ss.networks.length) {
-      abort('NO_POLKADOT_NETWORKS');
-      return;
-    }
-
-    this.wallet = w;
-    injectExtension(this.enableFn, { name: 'Apillon Embedded Wallet', version: pkg.version });
+    injectExtension(this.enableFn, { name: 'apillon-embedded-wallet', version: pkg.version });
   }
 
   // originName is used for extension messaging (window.postMessage)
   async enableFn(_originName: string): Promise<Injected> {
+    const w = getEmbeddedWallet();
+    let requestId = 0;
+
+    if (!w) {
+      abort('OASIS_WALLET_NOT_INITIALIZED');
+      throw 0;
+    }
+
+    if (!w.ss.networks.length) {
+      abort('NO_POLKADOT_NETWORKS');
+      throw 0;
+    }
+
     return {
       signer: {
         signPayload: async payload => {
-          const id = ++this.requestId;
+          const id = ++requestId;
 
-          if (!this.wallet) {
+          if (!w) {
             abort('OASIS_WALLET_NOT_INITIALIZED');
             return {
               id,
@@ -40,9 +36,12 @@ class EmbeddedPolkadotInject {
             };
           }
 
-          const res = await this.wallet.ss.signTransaction({
+          const res = await w.ss.signTransaction({
             tx: undefined as any,
-            mustConfirm: true,
+            /**
+             * @TODO add back once done testing in sdk
+             */
+            // mustConfirm: true,
             payload,
           });
 
@@ -64,9 +63,9 @@ class EmbeddedPolkadotInject {
         },
 
         signRaw: async payload => {
-          const id = ++this.requestId;
+          const id = ++requestId;
 
-          if (!this.wallet) {
+          if (!w) {
             abort('OASIS_WALLET_NOT_INITIALIZED');
             return {
               id,
@@ -74,9 +73,12 @@ class EmbeddedPolkadotInject {
             };
           }
 
-          const signature = await this.wallet.signMessage({
+          const signature = await w.signMessage({
             message: payload.address,
-            mustConfirm: true,
+            /**
+             * @TODO add back once done testing in sdk
+             */
+            // mustConfirm: true,
           });
 
           return {
@@ -95,7 +97,15 @@ class EmbeddedPolkadotInject {
        * - polkadot/extension: extension-base/src/background/handlers/Extension.ts
        */
       accounts: {
-        get: async () => this.wallet?.ss.userWallets || [],
+        get: async () => {
+          let n = 1;
+          // retry for max 2.5s
+          while (!w?.ss.userWallets.length && n < 50) {
+            await new Promise(resolve => setTimeout(resolve, 50));
+            n++;
+          }
+          return w?.ss?.userWallets || [];
+        },
         subscribe: _cb => {
           console.log('accounts subscribe');
           return () => {

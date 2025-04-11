@@ -223,7 +223,11 @@ class SubstrateEnvironment {
       signature = hexToU8a(`0x01${signature.slice(2)}`);
 
       const signedTxData = api.registry
-        .createType('Extrinsic', { method: params.tx.method }, { version: extrinsicVersion })
+        .createType(
+          'Extrinsic',
+          { method: params.tx?.method || params.payload?.method },
+          { version: extrinsicVersion }
+        )
         .addSignature(unsigned.address, signature, unsigned);
 
       return {

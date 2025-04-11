@@ -30,6 +30,7 @@ import {
 import { XdomainPasskey } from './xdomain';
 import EthereumEnvironment from './env/ethereum';
 import SubstrateEnvironment from './env/substrate';
+import { EmbeddedPolkadotInject } from './main';
 
 class EmbeddedWallet {
   sapphireProvider: ethers.JsonRpcProvider;
@@ -86,6 +87,10 @@ class EmbeddedWallet {
     this.xdomain = new XdomainPasskey(this.apillonClientId, params?.passkeyAuthMode || 'redirect');
     this.evm = new EthereumEnvironment(this, params?.networks || []);
     this.ss = new SubstrateEnvironment(this, params?.networksSubstrate || []);
+
+    if (params?.injectPolkadot) {
+      setTimeout(() => new EmbeddedPolkadotInject(), 100);
+    }
   }
 
   // #region Auth utils

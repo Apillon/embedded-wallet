@@ -3,6 +3,7 @@
   "scripts": {
     "build": "turbo build --filter=!next-test",
     "build:packages": "turbo build --filter=\"./packages/*\"",
+    "build:ui": "turbo build --filter=@apillon/wallet-ui --filter=@apillon/wallet-sdk",
     "dev": "turbo dev",
     "dev:react": "turbo run dev --filter=@apillon/wallet-react",
     "lint": "turbo lint",
