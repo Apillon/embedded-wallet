@@ -61,7 +61,7 @@ export default function AccountsList() {
 function ListItem({ aw, index }: { aw: AccountWalletEx; index: number }) {
   const {
     wallet,
-    state: { walletIndex, walletType },
+    state: { walletIndex, walletType, isPolkadotCryptoReady },
     dispatch,
     goScreenBack,
   } = useWalletContext();
@@ -69,11 +69,11 @@ function ListItem({ aw, index }: { aw: AccountWalletEx; index: number }) {
   const { nativeToken, currentExchangeRate } = useTokensContext();
 
   const address = useMemo(() => {
-    if (walletType === WalletType.SUBSTRATE) {
+    if (walletType === WalletType.SUBSTRATE && isPolkadotCryptoReady) {
       return getSS58Address(aw.address || '');
     }
     return aw.address || '';
-  }, [aw, walletType]);
+  }, [aw, walletType, isPolkadotCryptoReady]);
 
   return (
     <button

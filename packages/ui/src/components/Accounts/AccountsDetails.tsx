@@ -13,7 +13,7 @@ import Input from '../ui/Input';
 
 export default () => {
   const {
-    state: { walletType },
+    state: { walletType, isPolkadotCryptoReady },
     activeWallet,
     isSubstrate,
   } = useWalletContext();
@@ -23,7 +23,7 @@ export default () => {
   const [ss58CustomPrefix, setSs58CustomPrefix] = useState('0');
 
   const address = useMemo(() => {
-    if (walletType === WalletType.SUBSTRATE) {
+    if (walletType === WalletType.SUBSTRATE && isPolkadotCryptoReady) {
       return getSS58Address(
         activeWallet?.address || '',
         ss58Prefix === 'custom' ? Math.abs(+ss58CustomPrefix) : undefined,
@@ -31,7 +31,7 @@ export default () => {
       );
     }
     return activeWallet?.address || '';
-  }, [activeWallet, walletType, ss58Prefix, ss58CustomPrefix]);
+  }, [activeWallet, walletType, ss58Prefix, ss58CustomPrefix, isPolkadotCryptoReady]);
 
   if (!address) {
     return <></>;

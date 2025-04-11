@@ -71,6 +71,9 @@ export function isLowerCaseEqual(s1?: string, s2?: string) {
   return s1.toLowerCase() === s2.toLowerCase();
 }
 
+/**
+ * Must wait for polkadot utils to get ready -> check for `isPolkadotCryptoReady` from wallet.context
+ */
 export function getSS58Address(pk: string, prefix?: number, isPublicKey = false) {
   if (!pk || isPublicKey) {
     return pk;

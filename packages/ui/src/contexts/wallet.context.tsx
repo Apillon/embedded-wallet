@@ -24,6 +24,7 @@ import { AppProps } from '../main';
 import { WebStorageKeys } from '../lib/constants';
 import { logToStorage, sleep } from '../lib/helpers';
 import oasisLogo from '../assets/oasis.svg';
+import { cryptoWaitReady } from '@polkadot/util-crypto';
 
 export type WalletScreens =
   | 'main'
@@ -49,7 +50,7 @@ export type WalletScreens =
 
 export type AccountWalletEx = AccountWallet & { balance: string; title: string };
 
-const initialState = (defaultNetworkId: number | string = 0, appProps: AppProps) => ({
+const defaultState = {
   username: '',
   walletIndex: 0,
   walletType: WalletType.EVM as AccountWalletTypes,
@@ -59,7 +60,7 @@ const initialState = (defaultNetworkId: number | string = 0, appProps: AppProps)
   isAccountWalletsStale: false,
   privateKeys: {} as { [walletAddress: string]: string },
   authStrategy: 'passkey' as AuthStrategyName,
-  networkId: defaultNetworkId,
+  networkId: 0 as string | number,
   walletScreen: 'main' as WalletScreens,
   walletScreenHistory: [] as WalletScreens[],
   lastIndexTabIndex: 0, // index of last tab opened on <WalletIndex />
@@ -67,8 +68,14 @@ const initialState = (defaultNetworkId: number | string = 0, appProps: AppProps)
   displayedError: '',
   displayedSuccess: '',
   displayedInfo: '',
-  appProps,
+  appProps: {} as AppProps,
   loadingWallets: false,
+  isPolkadotCryptoReady: false,
+};
+
+const initialState = (initialValues: Partial<typeof defaultState>) => ({
+  ...defaultState,
+  ...initialValues,
 });
 
 type ContextState = ReturnType<typeof initialState>;
@@ -154,7 +161,11 @@ function reducer(state: ContextState, action: ContextActions) {
       };
     }
     case 'reset':
-      return initialState(state.networkId, state.appProps);
+      return initialState({
+        networkId: state.networkId,
+        appProps: state.appProps,
+        isPolkadotCryptoReady: state.isPolkadotCryptoReady,
+      });
     default:
       throw new Error('Unhandled action type.' + JSON.stringify(action));
   }
@@ -240,11 +251,14 @@ function WalletProvider({
 
   const [state, dispatch] = useReducer(
     reducer,
-    initialState(defaultNetworkId || networks[0].id, {
-      ...restOfParams,
-      defaultNetworkId,
-      networks,
-      networksSubstrate,
+    initialState({
+      networkId: defaultNetworkId || networks[0].id,
+      appProps: {
+        ...restOfParams,
+        defaultNetworkId,
+        networks,
+        networksSubstrate,
+      },
     })
   );
   const initializingWallet = useRef(false);
@@ -360,6 +374,8 @@ function WalletProvider({
 
       w.setWallets(mergedState.accountWallets);
 
+      initPolkadotCrypto();
+
       await sleep(10);
 
       initializingWallet.current = false;
@@ -427,6 +443,15 @@ function WalletProvider({
     }
 
     // await wallet?.initContractAddress({ username });
+  }
+
+  async function initPolkadotCrypto() {
+    try {
+      await cryptoWaitReady();
+      setStateValue('isPolkadotCryptoReady', true);
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   /**

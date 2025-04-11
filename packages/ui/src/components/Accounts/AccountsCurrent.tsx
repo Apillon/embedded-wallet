@@ -10,18 +10,18 @@ import { WalletType } from '@apillon/wallet-sdk';
 
 export default ({ noChevron = false, className }: { noChevron?: boolean; className?: string }) => {
   const {
-    state: { username, walletType },
+    state: { username, walletType, isPolkadotCryptoReady },
     activeWallet,
     setScreen,
   } = useWalletContext();
   const { text: copyText, onCopy } = useCopyToClipboard('', '+');
 
   const address = useMemo(() => {
-    if (walletType === WalletType.SUBSTRATE) {
+    if (walletType === WalletType.SUBSTRATE && isPolkadotCryptoReady) {
       return getSS58Address(activeWallet?.address || '');
     }
     return activeWallet?.address || '';
-  }, [activeWallet, walletType]);
+  }, [activeWallet, walletType, isPolkadotCryptoReady]);
 
   return (
     <div className={clsx('text-center', className)}>
