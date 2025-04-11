@@ -41,7 +41,6 @@
   },
   "devDependencies": {
     "@apillon/wallet-eslint-config": "*",
-    "@apillon/wallet-networks": "*",
     "vite-plugin-lib-inject-css": "^2.2.1"
   },
   "global": {

@@ -52,7 +52,7 @@ export default function Demo() {
           ev.preventDefault();
           const wallet = getEmbeddedWallet();
 
-          await wallet?.signContractWrite({
+          await wallet?.evm.signContractWrite({
             mustConfirm: true,
             strategy: 'passkey',
             contractAbi: ERC20Abi,
@@ -82,7 +82,7 @@ export default function Demo() {
           className={btnClass}
           onClick={async () => {
             const wallet = getEmbeddedWallet();
-            await wallet?.signPlainTransaction({
+            await wallet?.evm.signPlainTransaction({
               mustConfirm: true,
               strategy: 'passkey',
               tx: {
@@ -103,7 +103,7 @@ export default function Demo() {
           className={btnClass}
           onClick={async () => {
             const wallet = getEmbeddedWallet();
-            await wallet?.signPlainTransaction({
+            await wallet?.evm.signPlainTransaction({
               mustConfirm: true,
               strategy: 'passkey',
               tx: {

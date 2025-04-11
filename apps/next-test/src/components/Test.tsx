@@ -1,11 +1,11 @@
 'use client';
 
-import { networks } from '@apillon/wallet-networks';
 import { EmbeddedWallet, useAccount } from '@apillon/wallet-react';
 import TestEthers5 from './TestEthers5';
 import TestEthers6 from './TestEthers6';
 import TestSdk from './TestSdk';
 import TestViem from './TestViem';
+import { DefaultEthereumNetworks, DefaultSubstrateNetworks } from '@apillon/wallet-sdk';
 
 export default function Test() {
   const { info } = useAccount();
@@ -15,7 +15,8 @@ export default function Test() {
       <EmbeddedWallet
         clientId={process.env.NEXT_PUBLIC_CLIENT_ID ?? 'YOUR INTEGRATION UUID HERE'}
         defaultNetworkId={1287}
-        networks={networks}
+        networks={DefaultEthereumNetworks}
+        networksSubstrate={DefaultSubstrateNetworks}
       />
 
       <div

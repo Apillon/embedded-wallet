@@ -16,7 +16,6 @@
     "vue-router": "latest"
   },
   "devDependencies": {
-    "@apillon/wallet-networks": "*",
     "vite-plugin-node-polyfills": "^0.23.0"
   },
   "global": {

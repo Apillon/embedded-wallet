@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { networks } from '@apillon/wallet-networks';
 import { EmbeddedWallet, useAccount } from '@apillon/wallet-vue';
+import { DefaultEthereumNetworks, DefaultSubstrateNetworks } from '@apillon/wallet-sdk';
 import TestEthers5 from './TestEthers5.vue';
 import TestEthers6 from './TestEthers6.vue';
 import TestSdk from './TestSdk.vue';
@@ -16,7 +16,8 @@ const clientId = import.meta.env.VITE_CLIENT_ID ?? 'YOUR INTEGRATION UUID HERE';
     <EmbeddedWallet
       :clientId="clientId"
       :defaultNetworkId="1287"
-      :networks="networks"
+      :networks="DefaultEthereumNetworks"
+      :networksSubstrate="DefaultSubstrateNetworks"
     />
 
     <div

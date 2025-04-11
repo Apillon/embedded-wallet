@@ -44,7 +44,6 @@
   },
   "devDependencies": {
     "@apillon/wallet-eslint-config": "*",
-    "@apillon/wallet-networks": "*",
     "@types/pbkdf2": "^3.1.2",
     "abitype": "^1.0.8",
     "ethers-abitype": "^1.0.3"

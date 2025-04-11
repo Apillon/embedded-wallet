@@ -1,7 +1,7 @@
 {
   "private": true,
   "scripts": {
-    "build": "turbo build",
+    "build": "turbo build --filter=!next-test",
     "build:packages": "turbo build --filter=\"./packages/*\"",
     "dev": "turbo dev",
     "dev:react": "turbo run dev --filter=@apillon/wallet-react",

@@ -135,7 +135,7 @@ export const SubstrateNetworks = asNetworkDict({
   WestendAssetHub: {
     name: 'Westend Asset Hub',
     id: 'westend-asset-hub',
-    rpcUrl: 'wss://westmint-rpc.dwellir.com',
+    rpcUrl: 'wss://westmint-rpc-tn.dwellir.com',
     explorerUrl: 'https://assethub-westend.subscan.io',
     currencySymbol: 'WND',
     currencyDecimals: 12,
