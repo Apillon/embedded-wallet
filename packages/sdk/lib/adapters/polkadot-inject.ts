@@ -90,8 +90,6 @@ class EmbeddedPolkadotInject {
       },
 
       /**
-       * polkadot extension event stuff? ignore
-       *
        * Ref:
        * - polkadot/extension: extension-base/src/page/Accounts.ts
        * - polkadot/extension: extension-base/src/background/handlers/Extension.ts
@@ -106,6 +104,7 @@ class EmbeddedPolkadotInject {
           }
           return w?.ss?.userWallets || [];
         },
+        // polkadot extension event stuff? ignore
         subscribe: _cb => {
           console.log('accounts subscribe');
           return () => {

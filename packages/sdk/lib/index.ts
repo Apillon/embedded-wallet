@@ -699,6 +699,9 @@ class EmbeddedWallet {
     }
   }
 
+  /**
+   * Used by UI to initialize wallets from localStorage
+   */
   setWallets(wallets: AccountWallet[]) {
     const walletsSS = [] as AccountWallet[];
     const walletsEvm = [] as AccountWallet[];
@@ -732,6 +735,9 @@ class EmbeddedWallet {
     }
   }
 
+  /**
+   * Set account contract address (oasis) for current environment (wallet) type
+   */
   async initContractAddress(authData: AuthData) {
     const walletType =
       typeof authData.walletType === 'undefined' ? this.user.walletType : authData.walletType;
