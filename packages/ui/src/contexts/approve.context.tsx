@@ -64,7 +64,11 @@ function ApproveProvider({ children }: { children: React.ReactNode }) {
         if (params.polkadot.tx) {
           tx = params.polkadot.tx.toHuman() || undefined;
           method = (tx as any)?.method;
+        } else if (params.polkadot.readableMethod) {
+          tx = params.polkadot.payload;
+          method = params.polkadot.readableMethod;
         } else if (params.polkadot.payload) {
+          tx = params.polkadot.payload;
           method = params.polkadot.payload.method;
         }
 

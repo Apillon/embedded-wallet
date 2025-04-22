@@ -164,6 +164,23 @@ class SubstrateEnvironment {
      * Handle confirmation in UI part of app (call this method again w/o `mustConfirm`).
      */
     if (params.mustConfirm) {
+      let readableMethod = undefined as any;
+
+      // Decode method to show it on approve screen
+      if (
+        !params.tx &&
+        typeof params.payload?.method === 'string' &&
+        params.payload.method.startsWith('0x')
+      ) {
+        readableMethod = (
+          api.registry
+            .createType('Extrinsic', {
+              method: params.payload?.method,
+            })
+            .toHuman() as any
+        )?.method;
+      }
+
       return await new Promise<{
         signature?: any;
         signedTxData: string;
@@ -171,7 +188,7 @@ class SubstrateEnvironment {
         blockHash?: string;
       }>((resolve, reject) => {
         this.wallet.events.emit('txApprove', {
-          polkadot: { ...params, mustConfirm: false, resolve, reject },
+          polkadot: { ...params, readableMethod, mustConfirm: false, resolve, reject },
         });
       });
     }

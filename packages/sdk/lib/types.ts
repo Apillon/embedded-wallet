@@ -219,6 +219,7 @@ export type Events = {
     contractWrite?: ContractWriteParams;
     polkadot?: PlainTransactionParams<SubmittableExtrinsic<any, any>> & {
       payload?: SignerPayloadJSON;
+      readableMethod?: any;
     };
   };
   txSubmitted: TransactionItem;

@@ -8,6 +8,7 @@ import TestEIP1193 from './TestEIP1193';
 import TestSign from './TestSign';
 import TestTx from './TestTx';
 import TestTokenEvents from './TestTokenEvents';
+import TestPolkadotInjected from './TestPolkadotInjected';
 
 export default function TestApp() {
   return (
@@ -22,6 +23,7 @@ export default function TestApp() {
         defaultNetworkId={'westend'}
         networks={DefaultEthereumNetworks}
         networksSubstrate={DefaultSubstrateNetworks}
+        injectPolkadot
       />
 
       <div className="row">
@@ -59,6 +61,10 @@ export default function TestApp() {
       <h2>Test addToken event</h2>
 
       <TestTokenEvents />
+
+      <h2>Test polkadot injected extension</h2>
+
+      <TestPolkadotInjected />
     </div>
   );
 }
