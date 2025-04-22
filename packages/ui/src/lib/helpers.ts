@@ -83,7 +83,7 @@ export function getSS58Address(pk: string, prefix?: number, isPublicKey = false)
     const keyring = new Keyring({ type: 'sr25519' });
     const pair = keyring.createFromUri(pk);
 
-    if (prefix) {
+    if (typeof prefix !== 'undefined') {
       keyring.setSS58Format(prefix);
     }
 

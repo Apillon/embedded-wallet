@@ -77,7 +77,7 @@ export default () => {
             label="Address type"
             value={ss58Prefix}
             options={[
-              { label: 'Generic', value: 'generic' },
+              { label: 'Generic Substrate', value: 'generic' },
               { label: 'Public Key', value: 'public_key' },
               { label: 'Custom prefix', value: 'custom' },
             ]}
