@@ -13,6 +13,7 @@ class EmbeddedPolkadotInject {
   async enableFn(_originName: string): Promise<Injected> {
     const w = getEmbeddedWallet();
     let requestId = 0;
+    const o = w?.ss.injectPolkadotOptions;
 
     if (!w) {
       abort('OASIS_WALLET_NOT_INITIALIZED');
@@ -39,11 +40,9 @@ class EmbeddedPolkadotInject {
 
           const res = await w.ss.signTransaction({
             tx: undefined as any,
-            /**
-             * @TODO add back once done testing in sdk
-             */
-            // mustConfirm: true,
             payload,
+            mustConfirm: true,
+            ...o?.signPayload,
           });
 
           if (res) {
@@ -77,10 +76,8 @@ class EmbeddedPolkadotInject {
           const signature = await w.signMessage({
             message: payload.address,
             authData: { walletType: WalletType.SUBSTRATE, username: w?.user.username },
-            /**
-             * @TODO add back once done testing in sdk
-             */
-            // mustConfirm: true,
+            mustConfirm: true,
+            ...o?.signRaw,
           });
 
           return {

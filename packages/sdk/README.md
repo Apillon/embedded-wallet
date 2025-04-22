@@ -281,12 +281,20 @@ This will register the standard signer and options for injected wallets and allo
 [https://polkadot.js.org/docs/extension/usage](https://polkadot.js.org/docs/extension/usage)
 
 ```ts
-async function sign() {
+/**
+ * Sign a raw message
+ */
+async function signMessage() {
   await web3Enable('my cool dapp');
 
   const allAccounts = await web3Accounts();
 
-  const account = allAccounts[0];
+  const account = allAccounts.find(a => a.meta.source === 'apillon-embedded-wallet');
+
+  if (!account) {
+    // no embedded wallet account
+    return;
+  }
   const injector = await web3FromSource(account.meta.source);
 
   const signRaw = injector?.signer?.signRaw;
@@ -300,6 +308,55 @@ async function sign() {
       })
     );
   }
+}
+```
+
+```ts
+/**
+ * Sign a polkadot.js transaction (extrinsic)
+ */
+async function signTransaction() {
+  await web3Enable('my cool dapp');
+
+  const w = getEmbeddedWallet();
+  const api = await w?.ss.getApiForNetworkId();
+
+  if (!api) {
+    // no polkadot api
+    return;
+  }
+
+  const allAccounts = await web3Accounts();
+
+  const account = allAccounts.find(a => a.meta.source === 'apillon-embedded-wallet');
+
+  if (!account) {
+    // no embedded wallet account
+    return;
+  }
+
+  const injector = await web3FromSource(account.meta.source);
+
+  const transferExtrinsic = api.tx.balances.transferAllowDeath(
+    '5H6Ym2FDEn8u5sfitLyKfGRMMZhmp2u855bxQBxDUn4ekhbK',
+    0.01 * 1e12
+  );
+
+  transferExtrinsic
+    .signAndSend(
+      account.address,
+      { signer: injector.signer, withSignedTransaction: true },
+      ({ status }) => {
+        if (status.isInBlock) {
+          console.log(`Completed at block hash #${status.asInBlock.toString()}`);
+        } else {
+          console.log(`Current status: ${status.type}`);
+        }
+      }
+    )
+    .catch((error: any) => {
+      console.log(':( transaction failed', error);
+    });
 }
 ```
 

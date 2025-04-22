@@ -10,6 +10,14 @@ document.addEventListener('DOMContentLoaded', () => {
     networks: DefaultEthereumNetworks,
     networksSubstrate: DefaultSubstrateNetworks,
     injectPolkadot: true,
+    injectPolkadotOptions: {
+      signRaw: {
+        mustConfirm: false,
+      },
+      signPayload: {
+        mustConfirm: false,
+      },
+    },
   });
 });
 
@@ -26,7 +34,11 @@ document.getElementById('pdInjectedSign')?.addEventListener('click', async () =>
 
   const allAccounts = await web3Accounts();
 
-  const account = allAccounts[1];
+  const account = allAccounts.find(a => a.meta.source === 'apillon-embedded-wallet');
+
+  if (!account) {
+    return;
+  }
   const injector = await web3FromSource(account.meta.source);
 
   const signRaw = injector?.signer?.signRaw;
@@ -55,7 +67,12 @@ document.getElementById('pdInjectedTransfer')?.addEventListener('click', async (
 
   const allAccounts = await web3Accounts();
 
-  const account = allAccounts[1];
+  const account = allAccounts.find(a => a.meta.source === 'apillon-embedded-wallet');
+
+  if (!account) {
+    return;
+  }
+
   const injector = await web3FromSource(account.meta.source);
 
   const transferExtrinsic = api.tx.balances.transferAllowDeath(
@@ -63,9 +80,6 @@ document.getElementById('pdInjectedTransfer')?.addEventListener('click', async (
     0.01 * 1e12
   );
 
-  // passing the injected account address as the first argument of signAndSend
-  // will allow the api to retrieve the signer and the user will see the extension
-  // popup asking to sign the balance transfer transaction
   transferExtrinsic
     .signAndSend(
       account.address,

@@ -2,8 +2,20 @@ import { AnyTuple, SignerPayloadJSON } from '@polkadot/types/types';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { formatBalance, hexToU8a } from '@polkadot/util';
 import { decodeAddress, encodeAddress } from '@polkadot/util-crypto';
-import { AccountWallet, Network, PlainTransactionParams, TransactionItem } from '../types';
-import { abort, EmbeddedWallet, SubstrateAccountAbi, WalletType } from '../main';
+import {
+  AccountWallet,
+  AppParams,
+  Network,
+  PlainTransactionParams,
+  TransactionItem,
+} from '../types';
+import {
+  abort,
+  EmbeddedPolkadotInject,
+  EmbeddedWallet,
+  SubstrateAccountAbi,
+  WalletType,
+} from '../main';
 import { SubmittableExtrinsic } from '@polkadot/api/types';
 import { ethers } from 'ethers6';
 import { GenericExtrinsic } from '@polkadot/types';
@@ -15,18 +27,28 @@ class SubstrateEnvironment {
   explorerUrls = {} as { [networkId: string]: string };
   userWallets = [] as AccountWallet[];
   userContractAddress = '';
+  networks: Network[] = [];
+  injectPolkadotOptions: AppParams['injectPolkadotOptions'] = {};
 
   constructor(
     public wallet: EmbeddedWallet,
-    public networks: Network[]
+    appParams?: AppParams
   ) {
-    if (networks) {
-      for (const ntw of networks) {
+    if (appParams?.networksSubstrate) {
+      this.networks = appParams.networksSubstrate || [];
+
+      for (const ntw of this.networks) {
         if (typeof ntw.id === 'string') {
           this.rpcUrls[ntw.id] = ntw.rpcUrl;
           this.explorerUrls[ntw.id] = ntw.explorerUrl;
         }
       }
+    }
+
+    this.injectPolkadotOptions = appParams?.injectPolkadotOptions || {};
+
+    if (appParams?.injectPolkadot) {
+      setTimeout(() => new EmbeddedPolkadotInject(), 100);
     }
   }
 

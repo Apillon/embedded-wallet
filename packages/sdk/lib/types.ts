@@ -75,6 +75,13 @@ export type AppParams = {
    * @url https://polkadot.js.org/docs/extension/usage
    */
   injectPolkadot?: boolean;
+
+  injectPolkadotOptions?: {
+    signPayload?: Partial<
+      Omit<PlainTransactionParams<SubmittableExtrinsic<any, any>>, 'payload' | 'tx'>
+    >;
+    signRaw?: Partial<SignMessageParams>;
+  };
 };
 
 export type AuthData = {
