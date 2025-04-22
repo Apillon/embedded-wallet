@@ -2,6 +2,7 @@ import { injectExtension } from '@polkadot/extension-inject';
 import { Injected } from '@polkadot/extension-inject/types';
 import pkg from '../../package.json' assert { type: 'json' };
 import { abort, getEmbeddedWallet } from '../utils';
+import { WalletType } from '../constants';
 
 class EmbeddedPolkadotInject {
   constructor() {
@@ -75,6 +76,7 @@ class EmbeddedPolkadotInject {
 
           const signature = await w.signMessage({
             message: payload.address,
+            authData: { walletType: WalletType.SUBSTRATE, username: w?.user.username },
             /**
              * @TODO add back once done testing in sdk
              */
@@ -106,9 +108,9 @@ class EmbeddedPolkadotInject {
         },
         // polkadot extension event stuff? ignore
         subscribe: _cb => {
-          console.log('accounts subscribe');
+          console.info('accounts subscribe');
           return () => {
-            console.log('accounts unsubscribe');
+            console.info('accounts unsubscribe');
           };
         },
       },
