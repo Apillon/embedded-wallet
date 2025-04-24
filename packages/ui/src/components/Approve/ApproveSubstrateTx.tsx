@@ -70,7 +70,11 @@ export default function ApproveSubstrateTx() {
               await wallet?.ss.broadcastTransaction(
                 signedTxData,
                 chainId as string,
-                approveParams.polkadot.label || 'Transaction'
+                approveParams.polkadot.label || 'Transaction',
+                undefined,
+                JSON.stringify({
+                  blockHash: res.blockHash,
+                })
               );
             }
 
