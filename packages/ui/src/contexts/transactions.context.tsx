@@ -17,7 +17,12 @@ const initialState = () => ({
    * Substrate txs that are being monitored for.
    * Txs should only be added here when listed. After reloading, monitoring does not continue.
    */
-  monitoredSubstrateTxs: [] as { txHash: string; blockHash: string }[],
+  monitoredSubstrateTxs: [] as {
+    hash: string;
+    blockHash: string;
+    owner: string;
+    chainId: string;
+  }[],
 });
 
 type ContextState = ReturnType<typeof initialState>;
@@ -30,7 +35,10 @@ type ContextActions =
   | { type: 'addTx'; payload: TransactionItem }
   | {
       type: 'setTxStatus';
-      payload: { tx: TransactionItem; status: 'pending' | 'confirmed' | 'failed' };
+      payload: {
+        tx: Pick<TransactionItem, 'hash' | 'owner' | 'chainId'>;
+        status: 'pending' | 'confirmed' | 'failed';
+      };
     };
 
 function reducer(state: ContextState, action: ContextActions) {
@@ -52,8 +60,10 @@ function reducer(state: ContextState, action: ContextActions) {
 
           if (p?.blockHash) {
             monitoredSubstrateTxs.push({
-              txHash: action.payload.hash,
+              hash: action.payload.hash,
               blockHash: p.blockHash,
+              owner: action.payload.owner,
+              chainId: action.payload.chainId,
             });
           }
         } catch (_) {
@@ -116,7 +126,7 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
   const ssMonitoringUnsubscribe = useRef<() => void>(undefined);
 
   const {
-    state: { accountWallets, stagedWalletsCount, walletsCountBeforeStaging, walletType },
+    state: { accountWallets, stagedWalletsCount, walletsCountBeforeStaging, walletType, networkId },
     wallet,
     activeWallet,
     reloadAccountBalances,
@@ -384,6 +394,20 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
     }
   }, [walletType, state.monitoredSubstrateTxs]);
 
+  useEffect(() => {
+    setTimeout(() => {
+      const monitoredTxsForChain = state.monitoredSubstrateTxs.filter(x => x.chainId === networkId);
+
+      dispatch({ type: 'setState', payload: { monitoredSubstrateTxs: monitoredTxsForChain } });
+
+      if (!monitoredTxsForChain.length) {
+        ssStopMonitoring();
+      } else {
+        ssStartMonitoring();
+      }
+    }, 500);
+  }, [networkId]);
+
   async function ssStartMonitoring() {
     const api = await wallet?.ss.getApiForNetworkId();
 
@@ -395,7 +419,7 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
       ssMonitoringUnsubscribe.current();
     }
 
-    console.log(':: MONITOR START');
+    // console.log(':: MONITOR START');
 
     ssMonitoringUnsubscribe.current = await api.rpc.chain.subscribeFinalizedHeads(async header => {
       try {
@@ -404,30 +428,12 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
         const blockData = await api.rpc.chain.getBlock(blockHash);
         const signedBlock: any = api.registry.createType('SignedBlock', blockData);
 
-        // const key = `0x${xxhashAsHex('System', 128).slice(2)}${xxhashAsHex('Events', 128).slice(2)}`;
-
-        // const eventsStorage: any = await api.rpc.state.queryStorageAt([key], blockHash);
-
-        // const eventsFrame = eventsStorage?.[0]?.changes?.[0]?.[1] || [];
-
-        // const events = (() => {
-        //   try {
-        //     return api.registry.createType('Vec<FrameSystemEventRecord>', eventsFrame);
-        //   } catch (error) {
-        //     console.error(
-        //       'Failed to decode events as `FrameSystemEventRecord`, trying again as just `EventRecord` for old (pre metadata v14) chains'
-        //     );
-        //     return api.registry.createType('Vec<EventRecord>', eventsFrame);
-        //   }
-        // })();
-
-        // get the api and events at a specific block
         const apiAt = await api.at(signedBlock.block.header.hash);
         const events = (await apiAt.query.system.events()) as any;
 
         signedBlock.block.extrinsics.forEach((x: any, txIndex: number) => {
           for (const monitoredTx of state.monitoredSubstrateTxs) {
-            if (x.hash.eq(monitoredTx.txHash)) {
+            if (x.hash.eq(monitoredTx.hash)) {
               const matchedEvent = events.find(
                 ({ phase, event }: any) =>
                   phase.isApplyExtrinsic &&
@@ -436,35 +442,31 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
               );
 
               if (matchedEvent) {
-                if (matchedEvent.method === 'ExtrinsicSuccess') {
-                  // set tx Success
+                if (matchedEvent.event.method === 'ExtrinsicSuccess') {
+                  dispatch({
+                    type: 'setTxStatus',
+                    payload: { tx: monitoredTx, status: 'confirmed' },
+                  });
                 } else {
-                  // set tx Failed
+                  dispatch({
+                    type: 'setTxStatus',
+                    payload: { tx: monitoredTx, status: 'failed' },
+                  });
                 }
+
                 // remove tx from monitored
+                dispatch({
+                  type: 'setState',
+                  payload: {
+                    monitoredSubstrateTxs: state.monitoredSubstrateTxs.filter(
+                      x => x.hash !== monitoredTx.hash
+                    ),
+                  },
+                });
               }
             }
           }
         });
-
-        // for (const [txIndex, x] of signedBlock.block.extrinsics.entries()) {
-        //   console.log(x.hash.toHex());
-
-        //   for (const monitoredTx of state.monitoredSubstrateTxs) {
-        //     if (x.hash.eq(monitoredTx.txHash)) {
-        //       console.log('hash matched', monitoredTx.txHash);
-
-        //       const relevantEvent = events.find(
-        //         ({ phase, event }: any) =>
-        //           phase.isApplyExtrinsic &&
-        //           phase.asApplyExtrinsic.eqn(txIndex) &&
-        //           ['ExtrinsicSuccess', 'ExtrinsicFailed'].includes(event.method)
-        //       );
-
-        //       console.log(relevantEvent);
-        //     }
-        //   }
-        // }
       } catch (e) {
         console.error(e);
       }
@@ -473,7 +475,7 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
 
   function ssStopMonitoring() {
     if (!state.monitoredSubstrateTxs.length && ssMonitoringUnsubscribe.current) {
-      console.log(':: MONITOR END');
+      // console.log(':: MONITOR END');
       ssMonitoringUnsubscribe.current();
       ssMonitoringUnsubscribe.current = undefined;
     }
