@@ -18,7 +18,7 @@ export default ({ noChevron = false, className }: { noChevron?: boolean; classNa
 
   const address = useMemo(() => {
     if (walletType === WalletType.SUBSTRATE && isPolkadotCryptoReady) {
-      return getSS58Address(activeWallet?.address || '');
+      return getSS58Address(activeWallet?.address || '', 0); // prefix 0 = unified ss address
     }
     return activeWallet?.address || '';
   }, [activeWallet, walletType, isPolkadotCryptoReady]);

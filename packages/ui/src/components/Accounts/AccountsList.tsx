@@ -70,7 +70,7 @@ function ListItem({ aw, index }: { aw: AccountWalletEx; index: number }) {
 
   const address = useMemo(() => {
     if (walletType === WalletType.SUBSTRATE && isPolkadotCryptoReady) {
-      return getSS58Address(aw.address || '');
+      return getSS58Address(aw.address || '', 0); // prefix 0 = unified ss address
     }
     return aw.address || '';
   }, [aw, walletType, isPolkadotCryptoReady]);

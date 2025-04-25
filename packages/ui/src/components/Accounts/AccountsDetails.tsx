@@ -19,14 +19,20 @@ export default () => {
   } = useWalletContext();
   const { text: copyText, onCopy } = useCopyToClipboard('', '+');
 
-  const [ss58Prefix, setSs58Prefix] = useState<'generic' | 'public_key' | 'custom'>('generic');
+  const [ss58Prefix, setSs58Prefix] = useState<'unified' | 'generic' | 'public_key' | 'custom'>(
+    'unified'
+  );
   const [ss58CustomPrefix, setSs58CustomPrefix] = useState('0');
 
   const address = useMemo(() => {
     if (walletType === WalletType.SUBSTRATE && isPolkadotCryptoReady) {
       return getSS58Address(
         activeWallet?.address || '',
-        ss58Prefix === 'custom' ? Math.abs(+ss58CustomPrefix) : undefined,
+        ss58Prefix === 'custom'
+          ? Math.abs(+ss58CustomPrefix)
+          : ss58Prefix === 'unified'
+            ? 0
+            : undefined,
         ss58Prefix === 'public_key'
       );
     }
@@ -77,6 +83,7 @@ export default () => {
             label="Address type"
             value={ss58Prefix}
             options={[
+              { label: 'Unified address', value: 'unified' },
               { label: 'Generic Substrate', value: 'generic' },
               { label: 'Public Key', value: 'public_key' },
               { label: 'Custom prefix', value: 'custom' },
