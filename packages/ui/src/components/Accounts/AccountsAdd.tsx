@@ -34,7 +34,7 @@ export default function AccountsAdd() {
     handleSuccess,
     setStateValue: setForWallet,
   } = useWalletContext();
-  const [type, setType] = useState<AccountWalletTypes>(WalletType.EVM);
+  const [type, setType] = useState<AccountWalletTypes>(walletType);
   const [title, setTitle] = useState('');
   const [loading, setLoading] = useState(false);
 

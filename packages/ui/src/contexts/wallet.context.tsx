@@ -71,6 +71,7 @@ const defaultState = {
   appProps: {} as AppProps,
   loadingWallets: false,
   isPolkadotCryptoReady: false,
+  loadingBalances: false,
 };
 
 const initialState = (initialValues: Partial<typeof defaultState>) => ({
@@ -370,6 +371,7 @@ function WalletProvider({
         username: mergedState.username,
         strategy: mergedState.authStrategy,
         walletIndex: mergedState.walletIndex,
+        walletType: mergedState.walletType,
       });
 
       w.setWallets(mergedState.accountWallets);
@@ -565,6 +567,8 @@ function WalletProvider({
       addresses = [activeWallet.address];
     }
 
+    setStateValue('loadingBalances', true);
+
     try {
       const balances = await Promise.all(
         addresses.map(async address => {
@@ -588,11 +592,14 @@ function WalletProvider({
       });
 
       dispatch({ type: 'updateAccounts', payload: updatedWallets });
+      setStateValue('loadingBalances', false);
 
       return true;
     } catch (e) {
       console.error('Reloading balance', e);
     }
+
+    setStateValue('loadingBalances', false);
   }
 
   /**
@@ -678,6 +685,7 @@ function WalletProvider({
     if (state.walletType === WalletType.SUBSTRATE) {
       return wallet?.ss.userContractAddress;
     }
+
     return wallet?.evm.userContractAddress;
   }
 
