@@ -2,7 +2,7 @@
   "name": "@apillon/wallet-vue",
   "description": "▶◀ Apillon Embedded Wallet Vue UI ▶◀",
   "private": false,
-  "version": "2.1.2",
+  "version": "2.2.0-alpha.0",
   "type": "module",
   "files": [
     "dist/"
@@ -29,8 +29,8 @@
     }
   },
   "dependencies": {
-    "@apillon/wallet-sdk": "2.1.2",
-    "@apillon/wallet-ui": "2.1.2"
+    "@apillon/wallet-sdk": "2.2.0-alpha.0",
+    "@apillon/wallet-ui": "2.2.0-alpha.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.1"

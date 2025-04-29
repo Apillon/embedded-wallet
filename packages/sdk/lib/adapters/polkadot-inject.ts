@@ -1,6 +1,6 @@
 import { injectExtension } from '@polkadot/extension-inject';
 import { Injected } from '@polkadot/extension-inject/types';
-import pkg from '../../package.json' assert { type: 'json' };
+import pkg from '../../package.json' with { type: 'json' };
 import { abort, getEmbeddedWallet } from '../utils';
 import { WalletType } from '../constants';
 
