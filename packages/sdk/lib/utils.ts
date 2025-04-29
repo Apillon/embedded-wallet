@@ -1,9 +1,10 @@
 import { ethers } from 'ethers6';
 import { EmbeddedWallet } from '.';
-import { SapphireMainnet, SapphireTestnet, WindowId, Errors } from './constants';
+import { SapphireMainnet, SapphireTestnet, WindowId, Errors, WalletType } from './constants';
 import { pbkdf2Sync } from 'pbkdf2';
-import { AppParams } from './types';
+import { AccountWalletTypes, AppParams } from './types';
 import { wrapEthersProvider } from '@oasisprotocol/sapphire-ethers-v6';
+import { EVMAccountAbi, SubstrateAccountAbi } from './abi';
 
 /**
  * Global wallet object.
@@ -154,4 +155,11 @@ export function getPasskeyOrigin() {
 export function isSafari() {
   var ua = navigator.userAgent.toLowerCase();
   return ua.indexOf('safari') != -1 && ua.indexOf('chrome') === -1;
+}
+
+export function getAbiForType(walletType: AccountWalletTypes = WalletType.EVM) {
+  if (walletType === WalletType.SUBSTRATE) {
+    return SubstrateAccountAbi;
+  }
+  return EVMAccountAbi;
 }

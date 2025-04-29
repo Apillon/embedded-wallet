@@ -1,3 +1,5 @@
+import { Network } from './types';
+
 export const WindowId = 'embeddedWallet'; // update "interface Window" manually in index.ts (.d.ts doesnt replace WindowId on build)
 export const SapphireMainnet = 23294;
 export const SapphireTestnet = 23295;
@@ -26,12 +28,19 @@ export const Errors = {
   INVALID_APILLON_SESSION_TOKEN: 'INVALID_APILLON_SESSION_TOKEN',
   NO_APILLON_CLIENT_ID: 'NO_APILLON_CLIENT_ID',
   CANT_GET_SIGNED_TX: 'CANT_GET_SIGNED_TX',
+  SIGN_TX_NO_PROVIDER: 'SIGN_TX_NO_PROVIDER',
+  SIGN_TX_NO_POLKADOT_API: 'SIGN_TX_NO_POLKADOT_API',
+  SIGN_TX_INVALID_WALLET_INDEX: 'SIGN_TX_INVALID_WALLET_INDEX',
+  BROADCAST_TX_NO_PROVIDER: 'BROADCAST_TX_NO_PROVIDER',
+  BROADCAST_TX_NO_POLKADOT_API: 'BROADCAST_TX_NO_POLKADOT_API',
   CHAIN_CHANGE_FAILED: 'CHAIN_CHANGE_FAILED',
   XDOMAIN_NOT_INIT: 'XDOMAIN_NOT_INIT',
   XDOMAIN_STOPPED: 'XDOMAIN_STOPPED',
   XDOMAIN_BLOCKED: 'XDOMAIN_BLOCKED',
   CANT_GET_WALLET_ADDRESS: 'CANT_GET_WALLET_ADDRESS',
   WALLET_TITLE_UPDATE_FAILED: 'WALLET_TITLE_UPDATE_FAILED',
+  WRONG_WALLET_ENVIRONMENT: 'WRONG_WALLET_ENVIRONMENT',
+  NO_POLKADOT_NETWORKS: 'NO_POLKADOT_NETWORKS',
 };
 
 export const ErrorMessages = {
@@ -74,3 +83,76 @@ export const ApillonApiErrors: { [code: number]: string } = {
   40013002: 'Wallet usage limit reached', // MAX_NUMBER_OF_EMBEDDED_WALLET_SIGNATURES_REACHED
   40300001: 'Invalid origin', // INVALID_ORIGIN
 };
+
+const asNetworkDict = <K extends PropertyKey>(o: { [P in K]: Network }) => o;
+
+export const EthereumNetworks = asNetworkDict({
+  SapphireTestnet: {
+    name: 'Sapphire Testnet',
+    id: 23295,
+    rpcUrl: 'https://testnet.sapphire.oasis.io',
+    explorerUrl: 'https://explorer.oasis.io/testnet/sapphire',
+    currencySymbol: 'ROSE',
+    imageUrl:
+      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRcJLFfaXf1ps3rBkzl5mzkyKdWP6np5YLMEQ&s',
+  },
+  MoonbaseTestnet: {
+    name: 'Moonbase Testnet',
+    id: 1287,
+    rpcUrl: 'https://rpc.testnet.moonbeam.network',
+    explorerUrl: 'https://moonbase.moonscan.io',
+    currencySymbol: 'DEV',
+    imageUrl:
+      'https://moonbase.moonscan.io/assets/moonbase/images/svg/logos/token-light.svg?v=25.2.4.0',
+  },
+  PolygonAmoy: {
+    name: 'Polygon Amoy',
+    id: 80002,
+    rpcUrl: 'https://rpc-amoy.polygon.technology',
+    explorerUrl: 'https://www.oklink.com/amoy',
+    currencySymbol: 'MATIC',
+    imageUrl: 'https://pbs.twimg.com/profile_images/1781426525083963392/FH-8AGTJ_400x400.jpg',
+  },
+  BaseSepolia: {
+    name: 'Base Sepolia',
+    id: 84532,
+    rpcUrl: 'https://sepolia.base.org',
+    explorerUrl: 'https://sepolia.basescan.org',
+    imageUrl: 'https://basescan.org/assets/base/images/svg/logos/chain-light.svg?v=25.1.4.0',
+  },
+});
+
+export const SubstrateNetworks = asNetworkDict({
+  Westend: {
+    name: 'Westend',
+    id: 'westend',
+    rpcUrl: 'wss://rpc.ibp.network/westend',
+    explorerUrl: 'https://westend.subscan.io',
+    currencySymbol: 'WND',
+    currencyDecimals: 12,
+    imageUrl:
+      'https://raw.githubusercontent.com/TalismanSociety/chaindata/main/assets/chains/westend-testnet.svg',
+  },
+  WestendAssetHub: {
+    name: 'Westend Asset Hub',
+    id: 'westend-asset-hub',
+    rpcUrl: 'wss://westmint-rpc-tn.dwellir.com',
+    explorerUrl: 'https://assethub-westend.subscan.io',
+    currencySymbol: 'WND',
+    currencyDecimals: 12,
+    imageUrl:
+      'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDI3LjIuMCwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPgo8c3ZnIHZlcnNpb249IjEuMSIgaWQ9IkxheWVyXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4IgoJIHZpZXdCb3g9IjAgMCA2NDAgNjQwIiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCA2NDAgNjQwOyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+CjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+Cgkuc3Qwe2ZpbGw6IzMyMUQ0Nzt9Cgkuc3Qxe2ZpbGw6I0ZGRkZGRjt9Cgkuc3Qye2ZpbGw6I0U2MDA3QTt9Cjwvc3R5bGU+CjxnPgoJPHBhdGggY2xhc3M9InN0MCIgZD0iTTYzNy4zLDMxOS4zYzAsMTc1LjItMTQyLDMxNy4zLTMxNy4zLDMxNy4zUzIuNyw0OTQuNiwyLjcsMzE5LjNTMTQ0LjgsMi4xLDMyMCwyLjFTNjM3LjMsMTQ0LjEsNjM3LjMsMzE5LjN6IgoJCS8+Cgk8cGF0aCBjbGFzcz0ic3QxIiBkPSJNNDQ0LjIsMzkyLjRoLTY3LjZsLTEyLjctMzFoLTg1LjhsLTEyLjcsMzFoLTY3LjZsODAuOS0xODQuM2g4NC41TDQ0NC4yLDM5Mi40eiBNMzIxLjEsMjU2bC0yMi40LDU1aDQ0LjcKCQlMMzIxLjEsMjU2eiIvPgoJPGNpcmNsZSBjbGFzcz0ic3QyIiBjeD0iMzIxIiBjeT0iMTIyLjEiIHI9IjQ2LjkiLz4KCTxjaXJjbGUgY2xhc3M9InN0MiIgY3g9IjMyMSIgY3k9IjUxNy4xIiByPSI0Ni45Ii8+Cgk8Y2lyY2xlIGNsYXNzPSJzdDIiIGN4PSIxNDcuOCIgY3k9IjIxNiIgcj0iNDYuOSIvPgoJPGNpcmNsZSBjbGFzcz0ic3QyIiBjeD0iNDk0LjMiIGN5PSIyMTYiIHI9IjQ2LjkiLz4KCTxjaXJjbGUgY2xhc3M9InN0MiIgY3g9IjE0Ny44IiBjeT0iNDI0LjgiIHI9IjQ2LjkiLz4KCTxjaXJjbGUgY2xhc3M9InN0MiIgY3g9IjQ5NC4zIiBjeT0iNDI0LjgiIHI9IjQ2LjkiLz4KPC9nPgo8L3N2Zz4K',
+  },
+});
+
+export const DefaultEthereumNetworks = [
+  EthereumNetworks.SapphireTestnet,
+  EthereumNetworks.MoonbaseTestnet,
+  EthereumNetworks.PolygonAmoy,
+  EthereumNetworks.BaseSepolia,
+];
+
+export const DefaultSubstrateNetworks = [
+  SubstrateNetworks.Westend,
+  SubstrateNetworks.WestendAssetHub,
+];

@@ -40,7 +40,7 @@ const { info, getBalance } = useAccount();
 
 ### useContract
 
-Helper methods to interact with contracts.
+Helper methods to interact with EVM contracts.
 
 ```ts
 import { useContract } from '@apillon/wallet-vue';
@@ -57,4 +57,16 @@ const txHash = await write(
   ['0x700cebAA997ecAd7B0797f8f359C621604Cce6Bf', '10000000'],
   'React Transfer'
 );
+```
+
+### usePolkadot
+
+Helpers for interacting with polkadot API.
+
+```ts
+import { usePolkadot } from '@apillon/wallet-vue';
+
+const { polkadotApi, sendTransaction } = usePolkadot();
+
+sendTransaction(polkadotApi.tx.balances.transferAllowDeath(...));
 ```

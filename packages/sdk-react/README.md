@@ -58,3 +58,15 @@ const txHash = await write(
   'React Transfer'
 );
 ```
+
+### usePolkadot
+
+Helpers for interacting with polkadot API.
+
+```ts
+import { usePolkadot } from '@apillon/wallet-react';
+
+const { polkadotApi, sendTransaction } = usePolkadot();
+
+sendTransaction(polkadotApi.tx.balances.transferAllowDeath(...));
+```

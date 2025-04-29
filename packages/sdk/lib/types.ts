@@ -1,9 +1,11 @@
+import { SignerPayloadJSON } from '@polkadot/types/types';
 import { parseAbi } from 'abitype';
 import { AccountManagerAbi } from './abi';
 import { TypedContract } from 'ethers-abitype';
 import { ethers } from 'ethers6';
 import { ProviderRpcError } from 'viem';
 import { ProxyWriteFunctionsByStrategy, WalletType } from './constants';
+import { SubmittableExtrinsic } from '@polkadot/api/types';
 
 const wacAbi = parseAbi(AccountManagerAbi);
 
@@ -11,7 +13,7 @@ export type WebauthnContract = TypedContract<typeof wacAbi>;
 
 export type Network = {
   name: string;
-  id: number;
+  id: number | string; // strings for substrate networks
   rpcUrl: string;
   explorerUrl: string;
   imageUrl?: string; // Icon of the chain for display in UI
@@ -36,10 +38,11 @@ export type AppParams = {
   /**
    * Network ID for network (chain) selected on first use
    */
-  defaultNetworkId?: number;
+  defaultNetworkId?: number | string;
 
   /**
-   * Configuration of available networks. Oasis Sapphire is always included (ids 23294 and 23295)
+   * Configuration of available networks. Oasis Sapphire is always included (ids 23294 and 23295).
+   * You can use `EthereumNetworks` const or your own network details.
    *
    * @example
     ```ts
@@ -56,9 +59,29 @@ export type AppParams = {
   networks?: Network[];
 
   /**
+   * Substrate networks. If no network is provided, substrate is disabled.
+   *
+   * You can use `SubstrateNetworks` const or your own network details.
+   */
+  networksSubstrate?: Network[];
+
+  /**
    * Method for authenticating with passkey to make it global.
    */
   passkeyAuthMode?: AuthPasskeyMode;
+
+  /**
+   * Register wallet as an injected web3 wallet, which can then be used via @polkadot/extension-dapp
+   * @url https://polkadot.js.org/docs/extension/usage
+   */
+  injectPolkadot?: boolean;
+
+  injectPolkadotOptions?: {
+    signPayload?: Partial<
+      Omit<PlainTransactionParams<SubmittableExtrinsic<any, any>>, 'payload' | 'tx'>
+    >;
+    signRaw?: Partial<SignMessageParams>;
+  };
 };
 
 export type AuthData = {
@@ -66,6 +89,7 @@ export type AuthData = {
   password?: string;
   hashedUsername?: Buffer | undefined;
   privateKey?: string;
+  walletType?: AccountWalletTypes;
 };
 
 export type RegisterData = {
@@ -90,7 +114,7 @@ export type AuthProxyWriteFns = AllValuesOf<
 export interface AuthStrategy {
   getRegisterData(authData: AuthData): Promise<RegisterData | undefined>;
 
-  getProxyResponse(data: string, authData: AuthData): Promise<any>;
+  getProxyResponse(data: string, authData: AuthData, walletType?: AccountWalletTypes): Promise<any>;
 
   proxyWrite(
     functionName: AuthProxyWriteFns,
@@ -122,14 +146,19 @@ export type AccountWallet = {
   index: number;
 };
 
-export type PlainTransactionParams = {
+export type PlainTransactionParams<T = ethers.TransactionLike<ethers.AddressLike>> = {
   strategy?: AuthStrategyName;
   authData?: AuthData;
   walletIndex?: number;
-  tx: ethers.TransactionLike<ethers.AddressLike>;
+  tx: T;
   label?: string;
   mustConfirm?: boolean;
-  resolve?: (result: { signedTxData: any; chainId?: number }) => void;
+  resolve?: (result: {
+    signedTxData: any;
+    chainId?: number | string;
+    signature?: any;
+    blockHash?: string;
+  }) => void;
   reject?: (reason?: any) => void;
 };
 
@@ -176,7 +205,7 @@ export type TransactionItem = {
   rawData: any;
   owner: string;
   status: 'pending' | 'confirmed' | 'failed';
-  chainId: number;
+  chainId: number | string;
   explorerUrl: string;
   createdAt: number; // timestamp
   internalLabel?: string;
@@ -185,7 +214,14 @@ export type TransactionItem = {
 
 export type Events = {
   signatureRequest: SignMessageParams;
-  txApprove: { plain?: PlainTransactionParams; contractWrite?: ContractWriteParams };
+  txApprove: {
+    plain?: PlainTransactionParams;
+    contractWrite?: ContractWriteParams;
+    polkadot?: PlainTransactionParams<SubmittableExtrinsic<any, any>> & {
+      payload?: SignerPayloadJSON;
+      readableMethod?: any;
+    };
+  };
   txSubmitted: TransactionItem;
   txDone: TransactionItem; // emitted by UI
   dataUpdated: {
@@ -194,10 +230,13 @@ export type Events = {
       | 'authStrategy'
       | 'defaultNetworkId'
       | 'sessionToken'
-      | 'wallets'
+      | 'walletsEVM'
+      | 'walletsSS'
       | 'walletIndex'
       | 'address'
-      | 'contractAddress';
+      | 'contractAddressEVM'
+      | 'contractAddressSS'
+      | 'walletType';
     newValue: any;
     oldValue: any;
   };

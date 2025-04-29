@@ -53,6 +53,7 @@ export default () => {
                   strategy: 'passkey',
                   walletIndex: activeWallet.index,
                 });
+
                 dispatch({
                   type: 'setValue',
                   payload: {

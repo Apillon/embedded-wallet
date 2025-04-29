@@ -38,7 +38,8 @@ export default () => {
     !!approveState.targetChain ||
     !!approveState.txToConfirm ||
     !!approveState.messageToSign ||
-    !!approveState.contractFunctionData;
+    !!approveState.contractFunctionData ||
+    !!approveState.substrateTxData;
 
   function content() {
     if (approveState.successInfo) {

@@ -6,6 +6,12 @@ import AuthTitle from './AuthTitle';
 import { WebStorageKeys } from '../../lib/constants';
 import AuthCaptchaInput from './AuthCaptchaInput';
 import { ethers } from 'ethers6';
+import AuthEnvironmentPicker from './AuthEnvironmentPicker';
+import { useEffect, useState } from 'react';
+import { WalletType } from '@apillon/wallet-sdk';
+import Select from '../ui/Select';
+import { mnemonicToMiniSecret } from '@polkadot/util-crypto';
+import { u8aToHex } from '@polkadot/util';
 
 /**
  * Make a new wallet by providing a private key
@@ -13,24 +19,44 @@ import { ethers } from 'ethers6';
 export default function AuthImport() {
   const {
     wallet,
-    state: { appProps },
+    state: { appProps, walletType },
     handleError,
   } = useWalletContext();
 
   const {
-    state: { username, privateKey, loading, captcha },
+    state: { username, loading, captcha },
     setStateValue: setForAuth,
     sendConfirmationEmail,
     onRegister,
   } = useAuthContext();
 
+  const [type, setType] = useState<'' | 'pk' | 'mnemonic'>(''); // used in <Select />
+  const [privateKey, setPrivateKey] = useState('');
+  const [mnemonic, setMnemonic] = useState('');
+
+  useEffect(() => {
+    if (walletType === WalletType.SUBSTRATE) {
+      setType('mnemonic');
+    } else {
+      setType('pk');
+    }
+  }, [walletType]);
+
   async function onSubmit() {
-    if (loading || !username || !privateKey || !captcha) {
+    if (loading || !username || (!privateKey && !mnemonic) || !captcha) {
       return;
     }
 
+    let pk = '';
+
+    if (type === 'mnemonic') {
+      pk = u8aToHex(mnemonicToMiniSecret(mnemonic));
+    } else {
+      pk = !privateKey.startsWith('0x') ? `0x${privateKey}` : privateKey;
+    }
+
     try {
-      new ethers.Wallet(privateKey);
+      new ethers.Wallet(pk);
     } catch (e) {
       handleError('Incorrect EVM private key', 'AuthImport');
       return;
@@ -45,7 +71,7 @@ export default function AuthImport() {
       }
 
       if (await sendConfirmationEmail()) {
-        wallet?.xdomain?.storageSet(WebStorageKeys.REGISTER_PK, privateKey, true);
+        wallet?.xdomain?.storageSet(WebStorageKeys.REGISTER_PK, pk, true);
         await onRegister(true);
       }
 
@@ -70,13 +96,42 @@ export default function AuthImport() {
           onSubmit();
         }}
       >
-        <Input
-          value={privateKey}
-          placeholder="Enter your private key string here"
-          type="password"
-          className="mb-6"
-          onChange={ev => setForAuth('privateKey', ev.target.value)}
+        <AuthEnvironmentPicker className="mb-6" />
+
+        <Select
+          value={type}
+          options={[
+            { label: 'Select type', value: '' },
+            { label: 'Private Key', value: 'pk' },
+            ...(walletType === WalletType.SUBSTRATE
+              ? [{ label: 'Mnemonic', value: 'mnemonic' }]
+              : []),
+          ]}
+          className="w-full mb-6"
+          onChange={ev => setType(ev.target.value as any)}
         />
+
+        {type === 'pk' && (
+          <Input
+            autoFocus
+            value={privateKey}
+            placeholder="Enter your private key string here"
+            type="password"
+            className="mb-6"
+            onChange={ev => setPrivateKey(ev.target.value)}
+          />
+        )}
+
+        {type === 'mnemonic' && (
+          <Input
+            autoFocus
+            value={mnemonic}
+            placeholder="Enter your seed phrase"
+            type="text"
+            className="mb-6"
+            onChange={ev => setMnemonic(ev.target.value)}
+          />
+        )}
 
         <Input
           type="email"

@@ -5,12 +5,41 @@ import { QRCode } from 'react-qr-code';
 import IconCopy from '../ui/Icon/IconCopy';
 import useCopyToClipboard from '../../hooks/useCopyToClipboard';
 import IconCheckSmall from '../ui/Icon/IconCheckSmall';
+import { useMemo, useState } from 'react';
+import { WalletType } from '@apillon/wallet-sdk';
+import { getSS58Address } from '../../lib/helpers';
+import Select from '../ui/Select';
+import Input from '../ui/Input';
 
 export default () => {
-  const { activeWallet } = useWalletContext();
+  const {
+    state: { walletType, isPolkadotCryptoReady },
+    activeWallet,
+    isSubstrate,
+  } = useWalletContext();
   const { text: copyText, onCopy } = useCopyToClipboard('', '+');
 
-  if (!activeWallet) {
+  const [ss58Prefix, setSs58Prefix] = useState<'unified' | 'generic' | 'public_key' | 'custom'>(
+    'unified'
+  );
+  const [ss58CustomPrefix, setSs58CustomPrefix] = useState('0');
+
+  const address = useMemo(() => {
+    if (walletType === WalletType.SUBSTRATE && isPolkadotCryptoReady) {
+      return getSS58Address(
+        activeWallet?.address || '',
+        ss58Prefix === 'custom'
+          ? Math.abs(+ss58CustomPrefix)
+          : ss58Prefix === 'unified'
+            ? 0
+            : undefined,
+        ss58Prefix === 'public_key'
+      );
+    }
+    return activeWallet?.address || '';
+  }, [activeWallet, walletType, ss58Prefix, ss58CustomPrefix, isPolkadotCryptoReady]);
+
+  if (!address) {
     return <></>;
   }
 
@@ -20,7 +49,7 @@ export default () => {
 
       <div className="mb-6 text-center">
         <QRCode
-          value={`ethereum:${activeWallet.address}`}
+          value={`${!isSubstrate() ? 'ethereum:' : ''}${address}`}
           size={256}
           bgColor="#F0F2DA"
           style={{
@@ -36,17 +65,45 @@ export default () => {
         />
       </div>
 
-      <p className="text-center text-xs text-lightgrey break-all mb-2">{activeWallet.address}</p>
+      <p className="text-center text-xs text-lightgrey break-all mb-2">{address}</p>
 
-      <div className="flex justify-center mb-6">
+      <div className="flex justify-center">
         <button
           className="oaw-button-plain !inline-flex items-center gap-2 !text-yellow"
-          onClick={() => onCopy(activeWallet.address)}
+          onClick={() => onCopy(address)}
         >
           {copyText === '+' ? <IconCheckSmall /> : <IconCopy />}
           <span className="text-xs">Copy address</span>
         </button>
       </div>
+
+      {isSubstrate() && (
+        <div className="mt-4">
+          <Select
+            label="Address type"
+            value={ss58Prefix}
+            options={[
+              { label: 'Unified address', value: 'unified' },
+              { label: 'Generic Substrate', value: 'generic' },
+              { label: 'Public Key', value: 'public_key' },
+              { label: 'Custom prefix', value: 'custom' },
+            ]}
+            className="w-full mb-6"
+            onChange={ev => setSs58Prefix(ev.target.value as any)}
+          />
+
+          {ss58Prefix === 'custom' && (
+            <Input
+              label="Prefix"
+              placeholder="Enter the network prefix"
+              type="number"
+              value={ss58CustomPrefix}
+              className="w-full mb-6"
+              onChange={ev => setSs58CustomPrefix(ev.target.value)}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 };

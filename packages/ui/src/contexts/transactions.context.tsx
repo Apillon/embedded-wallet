@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useReducer, useRef } from 'react';
-import { EVMAccountAbi, getEmbeddedWallet, TransactionItem } from '@apillon/wallet-sdk';
+import { EVMAccountAbi, getEmbeddedWallet, TransactionItem, WalletType } from '@apillon/wallet-sdk';
 import { useWalletContext } from './wallet.context';
 import { WebStorageKeys } from '../lib/constants';
 import { ethers, TransactionReceipt } from 'ethers6';
@@ -7,7 +7,22 @@ import { useTokensContext } from './tokens.context';
 
 const initialState = () => ({
   txs: {} as { [ownerAddress: string]: { [txHash: string]: TransactionItem } },
+
+  /**
+   * Pending EVM tx hashes
+   */
   pending: [] as string[],
+
+  /**
+   * Substrate txs that are being monitored for.
+   * Txs should only be added here when listed. After reloading, monitoring does not continue.
+   */
+  monitoredSubstrateTxs: [] as {
+    hash: string;
+    blockHash: string;
+    owner: string;
+    chainId: string;
+  }[],
 });
 
 type ContextState = ReturnType<typeof initialState>;
@@ -20,7 +35,10 @@ type ContextActions =
   | { type: 'addTx'; payload: TransactionItem }
   | {
       type: 'setTxStatus';
-      payload: { tx: TransactionItem; status: 'pending' | 'confirmed' | 'failed' };
+      payload: {
+        tx: Pick<TransactionItem, 'hash' | 'owner' | 'chainId'>;
+        status: 'pending' | 'confirmed' | 'failed';
+      };
     };
 
 function reducer(state: ContextState, action: ContextActions) {
@@ -31,6 +49,28 @@ function reducer(state: ContextState, action: ContextActions) {
         ...action.payload,
       };
     case 'addTx':
+      const monitoredSubstrateTxs = [...state.monitoredSubstrateTxs];
+
+      /**
+       * If adding a substrate transaction, add it to `monitoredSubstrateTxs` as well and start checking for its status
+       */
+      if (typeof action.payload.chainId === 'string') {
+        try {
+          const p = JSON.parse(action.payload.internalData || '{}');
+
+          if (p?.blockHash) {
+            monitoredSubstrateTxs.push({
+              hash: action.payload.hash,
+              blockHash: p.blockHash,
+              owner: action.payload.owner,
+              chainId: action.payload.chainId,
+            });
+          }
+        } catch (_) {
+          console.error('addTx', 'Cant get blockhash');
+        }
+      }
+
       return {
         ...state,
         txs: {
@@ -40,6 +80,7 @@ function reducer(state: ContextState, action: ContextActions) {
             [action.payload.hash]: action.payload,
           },
         },
+        monitoredSubstrateTxs,
         // pending: [...new Set([...state.pending, action.payload.hash])],
       };
     case 'setTxStatus':
@@ -55,10 +96,14 @@ function reducer(state: ContextState, action: ContextActions) {
             },
           },
         },
+
+        // Only EVM txs are in here
         pending:
-          action.payload.status === 'pending'
-            ? [...new Set([...state.pending, action.payload.tx.hash])]
-            : state.pending.filter(x => x !== action.payload.tx.hash),
+          typeof action.payload.tx.chainId !== 'number'
+            ? state.pending
+            : action.payload.status === 'pending'
+              ? [...new Set([...state.pending, action.payload.tx.hash])]
+              : state.pending.filter(x => x !== action.payload.tx.hash),
       };
     default:
       throw new Error('Unhandled action type.' + JSON.stringify(action));
@@ -78,9 +123,10 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState());
   const initializing = useRef(false);
   const initialized = useRef(false);
+  const ssMonitoringUnsubscribe = useRef<() => void>(undefined);
 
   const {
-    state: { accountWallets, stagedWalletsCount, walletsCountBeforeStaging },
+    state: { accountWallets, stagedWalletsCount, walletsCountBeforeStaging, walletType, networkId },
     wallet,
     activeWallet,
     reloadAccountBalances,
@@ -101,7 +147,7 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (initialized.current && wallet) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { pending, ...save } = state;
+      const { pending, monitoredSubstrateTxs, ...save } = state;
       wallet.xdomain?.storageSet(WebStorageKeys.TRANSACTIONS_CONTEXT, JSON.stringify(save));
     }
   }, [state]);
@@ -113,10 +159,24 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
       Object.keys(state.txs[activeWallet.address]).length
     ) {
       for (const tx of Object.values(state.txs[activeWallet.address])) {
-        checkTransaction(tx);
+        if (typeof tx.chainId === 'number') {
+          checkTransaction(tx);
+        } else {
+          /**
+           * @TODO
+           * Substrate tx status
+           * @url https://github.com/TalismanSociety/talisman/blob/ddb5e62d5c3eb2b0dc8b44c778f04d1f63976215/packages/extension-core/src/domains/transactions/watchSubstrateTransaction.ts
+           */
+        }
       }
     }
   }, [activeWallet, state.txs]);
+
+  useEffect(() => {
+    return () => {
+      ssStopMonitoring();
+    };
+  }, []);
 
   async function init() {
     const stored = await wallet?.xdomain?.storageGet(WebStorageKeys.TRANSACTIONS_CONTEXT);
@@ -155,7 +215,7 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
       throw new Error('Wallet not initialized.' + txHash);
     }
 
-    const ethProvider = wallet.getRpcProviderForChainId(txData?.chainId);
+    const ethProvider = wallet.evm.getRpcProviderForNetworkId(txData?.chainId as number);
 
     if (!ethProvider) {
       throw new Error('Provider not initialized. ' + txHash);
@@ -260,9 +320,9 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (!txReceipt) {
-      txReceipt = await wallet
-        .getRpcProviderForChainId(txData?.chainId)
-        .getTransactionReceipt(txData.hash);
+      txReceipt = await wallet?.evm
+        ?.getRpcProviderForNetworkId?.(txData?.chainId as number)
+        ?.getTransactionReceipt(txData.hash);
     }
 
     reloadAccountBalances();
@@ -270,7 +330,11 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
     // Reload token if found in current account's storage
     reloadTokenBalance(txReceipt?.to || undefined);
 
-    if (txData?.internalLabel && ['accountsAdd', 'accountsImport'].includes(txData.internalLabel)) {
+    if (
+      !!txReceipt &&
+      txData?.internalLabel &&
+      ['accountsAdd', 'accountsImport'].includes(txData.internalLabel)
+    ) {
       handleNewAccountName(txData, txReceipt);
     }
   }
@@ -291,7 +355,13 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
           const data = JSON.parse(txData.internalData || '""');
 
           if (data?.title && data?.index) {
-            await saveAccountTitle(data.title, data.index, `0x${parsed.args[0].slice(-40)}`);
+            await saveAccountTitle(
+              data.title,
+              data.index,
+              data.walletType === WalletType.SUBSTRATE
+                ? parsed.args[0]
+                : `0x${parsed.args[0].slice(-40)}`
+            );
           }
 
           setForWallet('stagedWalletsCount', Math.max(0, stagedWalletsCount - 1));
@@ -302,13 +372,112 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
            * -> emits `dataUpdated` event
            * -> `useSdkEvents` handles event (parseAccountWallets)
            */
-          wallet.initAccountWallets([...accountWallets.map(x => x.address), parsed.args[0]]);
+          wallet.initAccountWallets([...accountWallets.map(aw => aw.address), parsed.args[0]]);
 
           handleSuccess('Accounts updated', 5000);
         } catch (e) {
           console.error(e);
         }
       }
+    }
+  }
+
+  useEffect(() => {
+    if (
+      walletType === WalletType.SUBSTRATE &&
+      state.monitoredSubstrateTxs.length &&
+      !ssMonitoringUnsubscribe.current
+    ) {
+      ssStartMonitoring();
+    } else if (ssMonitoringUnsubscribe.current) {
+      ssStopMonitoring();
+    }
+  }, [walletType, state.monitoredSubstrateTxs]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      const monitoredTxsForChain = state.monitoredSubstrateTxs.filter(x => x.chainId === networkId);
+
+      dispatch({ type: 'setState', payload: { monitoredSubstrateTxs: monitoredTxsForChain } });
+
+      if (!monitoredTxsForChain.length) {
+        ssStopMonitoring();
+      } else {
+        ssStartMonitoring();
+      }
+    }, 500);
+  }, [networkId]);
+
+  async function ssStartMonitoring() {
+    const api = await wallet?.ss.getApiForNetworkId();
+
+    if (!api) {
+      return;
+    }
+
+    if (ssMonitoringUnsubscribe.current) {
+      ssMonitoringUnsubscribe.current();
+    }
+
+    // console.log(':: MONITOR START');
+
+    ssMonitoringUnsubscribe.current = await api.rpc.chain.subscribeFinalizedHeads(async header => {
+      try {
+        const { hash: blockHash } = api.registry.createType('Header', header);
+
+        const blockData = await api.rpc.chain.getBlock(blockHash);
+        const signedBlock: any = api.registry.createType('SignedBlock', blockData);
+
+        const apiAt = await api.at(signedBlock.block.header.hash);
+        const events = (await apiAt.query.system.events()) as any;
+
+        signedBlock.block.extrinsics.forEach((x: any, txIndex: number) => {
+          for (const monitoredTx of state.monitoredSubstrateTxs) {
+            if (x.hash.eq(monitoredTx.hash)) {
+              const matchedEvent = events.find(
+                ({ phase, event }: any) =>
+                  phase.isApplyExtrinsic &&
+                  phase.asApplyExtrinsic.eq(txIndex) &&
+                  ['ExtrinsicSuccess', 'ExtrinsicFailed'].includes(event.method)
+              );
+
+              if (matchedEvent) {
+                if (matchedEvent.event.method === 'ExtrinsicSuccess') {
+                  dispatch({
+                    type: 'setTxStatus',
+                    payload: { tx: monitoredTx, status: 'confirmed' },
+                  });
+                } else {
+                  dispatch({
+                    type: 'setTxStatus',
+                    payload: { tx: monitoredTx, status: 'failed' },
+                  });
+                }
+
+                // remove tx from monitored
+                dispatch({
+                  type: 'setState',
+                  payload: {
+                    monitoredSubstrateTxs: state.monitoredSubstrateTxs.filter(
+                      x => x.hash !== monitoredTx.hash
+                    ),
+                  },
+                });
+              }
+            }
+          }
+        });
+      } catch (e) {
+        console.error(e);
+      }
+    });
+  }
+
+  function ssStopMonitoring() {
+    if (!state.monitoredSubstrateTxs.length && ssMonitoringUnsubscribe.current) {
+      // console.log(':: MONITOR END');
+      ssMonitoringUnsubscribe.current();
+      ssMonitoringUnsubscribe.current = undefined;
     }
   }
 

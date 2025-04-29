@@ -38,9 +38,22 @@ defaultNetworkId?: number;
 networks?: Network[];
 
 /**
+ * Substrate networks. If no network is provided, substrate is disabled.
+ *
+ * You can use `SubstrateNetworks` const or your own network details.
+ */
+networksSubstrate?: Network[];
+
+/**
  * Method for authenticating with passkey to make it global.
  */
 passkeyAuthMode: 'redirect' | 'popup' | 'tab_form' = 'redirect';
+
+/**
+ * Register wallet as an injected web3 wallet, which can then be used via @polkadot/extension-dapp
+ * @url https://polkadot.js.org/docs/extension/usage
+ */
+injectPolkadot?: boolean;
 ```
 
 The class instance is then available on window (`embeddedWallet`) and can be obtained with the `getEmbeddedWallet()` utility.
@@ -109,9 +122,6 @@ wallet.events.on('txSubmitted', tx => {
 - `authenticate`
   Check that credentials belong to some account.
 
-- `getAccountAddress`
-  Return EVM addresses (account and account contract) for username
-
 - `getAccountBalance`
 
 - `getAccountPrivateKey`
@@ -124,16 +134,15 @@ wallet.events.on('txSubmitted', tx => {
 - `addAccountWallet`
   Add new wallet or import from privateKey.
 
+- `getAddress`
+  Get "currently active" account address.
+
+- `getCurrentWallet`
+  Get "currently active" account wallet.
+
 ### Transaction methods
 
 - `signMessage`
-
-- `signPlainTransaction`
-  Authenticate with selected auth strategy through sapphire "Account Manager", then return signed tx data and chainId of tx.
-
-- `broadcastTransaction`
-  Send raw transaction data to network.
-  If chainId is provided, the transaction is sent to that network (cross-chain).
 
 - `submitTransaction`
   Prepare transaction and emit `txSubmitted` event (to show tx in tx history in UI e.g.).
@@ -143,12 +152,37 @@ wallet.events.on('txSubmitted', tx => {
 - `signContractWrite`
   Get signed tx for making a contract write call.
 
+- `processGaslessMethod`
+  Call a contract method with a gasless transaction (app owner pays for the transaction fees instead of user).
+
+### EVM methods
+
+EVM specific API is available in `window.embeddedWallet.evm`
+
+- `getRpcProviderForNetworkId`
+
+- `signPlainTransaction`
+  Authenticate with selected auth strategy through sapphire "Account Manager", then return signed tx data and chainId of tx.
+
+- `broadcastTransaction`
+  Send raw transaction data to network.
+  If chainId is provided, the transaction is sent to that network (cross-chain).
+
 - `contractRead`
   Get result of contract read.
   Utility function, this has nothing to do with Oasis.
 
-- `processGaslessMethod`
-  Call a contract method with a gasless transaction (app owner pays for the transaction fees instead of user).
+### Substrate (Polkadot) methods
+
+Substrate specifc API is available in `window.embeddedWallet.ss`
+
+- `getApiForNetworkId`
+  Get polkadot.js API object for network (`defaultNetworkId` if none provided)
+
+- `signTransaction`
+  Sign a polkadot extrinsic. Either directly, e.g. `api.tx.balances.transferAllowDeath`, or a prepared `SignerPayloadJSON`.
+
+- `broadcastTransaction`
 
 ### mustConfirm
 
@@ -240,29 +274,104 @@ const testContract = getContract({
 });
 ```
 
+## Use as polkadot.js injected wallet (WIP)
+
+Must set `injectPolkadot` in configuration to `true`.
+This will register the standard signer and options for injected wallets and allow you to use the `@polkadot/extension-dapp` interface.
+[https://polkadot.js.org/docs/extension/usage](https://polkadot.js.org/docs/extension/usage)
+
+```ts
+/**
+ * Sign a raw message
+ */
+async function signMessage() {
+  await web3Enable('my cool dapp');
+
+  const allAccounts = await web3Accounts();
+
+  const account = allAccounts.find(a => a.meta.source === 'apillon-embedded-wallet');
+
+  if (!account) {
+    // no embedded wallet account
+    return;
+  }
+  const injector = await web3FromSource(account.meta.source);
+
+  const signRaw = injector?.signer?.signRaw;
+
+  if (!!signRaw) {
+    console.log(
+      await signRaw({
+        address: account.address,
+        data: stringToHex('message to sign'),
+        type: 'bytes',
+      })
+    );
+  }
+}
+```
+
+```ts
+/**
+ * Sign a polkadot.js transaction (extrinsic)
+ */
+async function signTransaction() {
+  await web3Enable('my cool dapp');
+
+  const w = getEmbeddedWallet();
+  const api = await w?.ss.getApiForNetworkId();
+
+  if (!api) {
+    // no polkadot api
+    return;
+  }
+
+  const allAccounts = await web3Accounts();
+
+  const account = allAccounts.find(a => a.meta.source === 'apillon-embedded-wallet');
+
+  if (!account) {
+    // no embedded wallet account
+    return;
+  }
+
+  const injector = await web3FromSource(account.meta.source);
+
+  const transferExtrinsic = api.tx.balances.transferAllowDeath(
+    '5H6Ym2FDEn8u5sfitLyKfGRMMZhmp2u855bxQBxDUn4ekhbK',
+    0.01 * 1e12
+  );
+
+  transferExtrinsic
+    .signAndSend(
+      account.address,
+      { signer: injector.signer, withSignedTransaction: true },
+      ({ status }) => {
+        if (status.isInBlock) {
+          console.log(`Completed at block hash #${status.asInBlock.toString()}`);
+        } else {
+          console.log(`Current status: ${status.type}`);
+        }
+      }
+    )
+    .catch((error: any) => {
+      console.log(':( transaction failed', error);
+    });
+}
+```
+
 ## Wallet UI
 
 A default wallet UI can be added by using `EmbeddedWalletUI()`. This includes a react app that handles logged in state and transaction confirmations etc.
 
 ```ts
+import { DefaultEthereumNetworks, DefaultSubstrateNetworks } from '@apillon/wallet-sdk';
 import { EmbeddedWalletUI } from '@apillon/wallet-ui';
 
 EmbeddedWalletUI('#wallet', {
   clientId: 'YOUR INTEGRATION UUID HERE',
   defaultNetworkId: 1287,
-  networks: [
-    {
-      name: 'Moonbase Testnet',
-      id: 1287,
-      rpcUrl: 'https://rpc.testnet.moonbeam.network',
-      explorerUrl: 'https://moonbase.moonscan.io',
-    },
-    {
-      name: 'Celo Alfajores Testnet',
-      id: 44787,
-      rpcUrl: 'https://alfajores-forno.celo-testnet.org',
-      explorerUrl: 'https://explorer.celo.org/alfajores',
-    },
-  ],
+  networks: DefaultEthereumNetworks,
+  networksSubstrate: DefaultSubstrateNetworks,
 });
 ```

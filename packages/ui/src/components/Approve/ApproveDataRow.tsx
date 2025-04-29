@@ -66,7 +66,7 @@ export default ({
     );
   }
 
-  if (copyable && typeof data === 'string') {
+  if (copyable && (typeof data === 'string' || typeof data === 'number')) {
     return (
       <a
         href="#"
@@ -78,7 +78,10 @@ export default ({
       >
         <div className="font-bold shrink-0">{label}</div>
 
-        <div className="font-normal min-w-0 truncate" title={typeof data === 'string' ? data : ''}>
+        <div
+          className="font-normal min-w-0 truncate"
+          title={typeof data === 'string' || typeof data === 'number' ? `${data}` : ''}
+        >
           {data}
         </div>
 

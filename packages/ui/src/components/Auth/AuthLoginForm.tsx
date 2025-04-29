@@ -3,6 +3,7 @@ import { useWalletContext } from '../../contexts/wallet.context';
 import Btn from '../ui/Btn';
 import Input from '../ui/Input';
 import AuthTitle from './AuthTitle';
+import AuthEnvironmentPicker from './AuthEnvironmentPicker';
 
 export default () => {
   const {
@@ -20,6 +21,8 @@ export default () => {
       <AuthTitle title="Sign in or sign up" description="Enter your email to set up your passkey" />
 
       <form onSubmit={ev => onAuth(false, ev)}>
+        <AuthEnvironmentPicker className="mb-2" />
+
         <Input
           type="email"
           placeholder={appProps.authFormPlaceholder}

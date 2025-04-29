@@ -15,6 +15,7 @@ export default () => {
     activeWallet,
     setScreen,
     setStateValue: setForWallet,
+    isSubstrate,
   } = useWalletContext();
 
   const { nativeToken, currentExchangeRate } = useTokensContext();
@@ -25,11 +26,15 @@ export default () => {
       content: <TokensList asButtons onItemClick={() => setScreen('tokenDetail')} />,
       disabled: false,
     },
-    {
-      title: 'NFTs',
-      content: <TokensNftList />,
-      disabled: false,
-    },
+    ...(isSubstrate()
+      ? []
+      : [
+          {
+            title: 'NFTs',
+            content: <TokensNftList />,
+            disabled: false,
+          },
+        ]),
     {
       title: 'Transactions',
       content: <WalletTransactions />,

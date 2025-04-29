@@ -9,7 +9,7 @@ import TokensInput from '../Tokens/TokensInput';
 import TokensItem from './TokensItem';
 
 export default () => {
-  const { state, goScreenBack, wallet, handleError, setScreen } = useWalletContext();
+  const { state, goScreenBack, wallet, handleError, setScreen, isSubstrate } = useWalletContext();
   const { selectedToken } = useTokensContext();
 
   const [receiverAddress, setReceiverAddress] = useState('');
@@ -33,31 +33,78 @@ export default () => {
       setLoading(true);
       handleError();
 
-      if (!selectedToken.address) {
+      if (!selectedToken.address && !selectedToken.assetId) {
         const label = 'Transfer native token';
-        // Native token
-        const res = await wallet.signPlainTransaction({
-          mustConfirm: true,
-          strategy: 'passkey',
-          tx: {
-            to: receiverAddress,
-            data: '0x',
-            gasLimit: 1_000_000,
-            value: ethers.parseEther(amount),
-          },
-          label,
-        });
 
-        if (!state.appProps.broadcastAfterSign && res) {
-          return await wallet.broadcastTransaction(res.signedTxData, res.chainId, label);
-        } else {
+        if (isSubstrate()) {
+          /**
+           * Substrate native token
+           */
+          const api = await wallet.ss.getApiForNetworkId();
+          const decimals = api!.registry.chainDecimals[0];
+
+          const res = await wallet.ss.signTransaction({
+            mustConfirm: true,
+            strategy: 'passkey',
+            tx: api!.tx.balances.transferAllowDeath(
+              receiverAddress,
+              +amount * Math.pow(10, decimals)
+            ),
+            label,
+          });
+
           return res;
+          /**
+           * Tx is broadcast in txApprove event handler (approve.context.ts)
+           */
+          // if (res) {
+          //   return await wallet.ss.broadcastTransaction(
+          //     res.signedTxData,
+          //     res.chainId as string | undefined,
+          //     label,
+          //     undefined,
+          //     JSON.stringify({
+          //       decimals,
+          //     })
+          //   );
+          // }
+        } else {
+          /**
+           * EVM Native token
+           */
+          const res = await wallet.evm.signPlainTransaction({
+            mustConfirm: true,
+            strategy: 'passkey',
+            tx: {
+              to: receiverAddress,
+              data: '0x',
+              gasLimit: 1_000_000,
+              value: ethers.parseEther(amount),
+            },
+            label,
+          });
+
+          return res;
+          /**
+           * Tx is broadcast in txApprove event handler (approve.context.ts)
+           */
+          // if (!state.appProps.broadcastAfterSign && res) {
+          //   return await wallet.evm.broadcastTransaction(
+          //     res.signedTxData,
+          //     res.chainId as number,
+          //     label
+          //   );
+          // } else {
+          //   return res;
+          // }
         }
-      } else {
+      } else if (selectedToken.address) {
+        /**
+         * EVM ERC20 Token
+         */
         const label = 'Transfer ERC20 token';
 
-        // Other ERC20 Token
-        const res = await wallet.signContractWrite({
+        const res = await wallet.evm.signContractWrite({
           mustConfirm: true,
           contractAbi: ERC20Abi,
           contractAddress: selectedToken.address,
@@ -70,10 +117,30 @@ export default () => {
         });
 
         if (!state.appProps.broadcastAfterSign && res) {
-          return await wallet.broadcastTransaction(res.signedTxData, res.chainId, label);
+          return await wallet.evm.broadcastTransaction(res.signedTxData, res.chainId, label);
         } else {
           return res;
         }
+      } else if (selectedToken.assetId) {
+        /**
+         * Substrate custom token/asset
+         */
+        const label = 'Transfer polkadot asset';
+
+        const api = await wallet.ss.getApiForNetworkId();
+
+        const res = await wallet.ss.signTransaction({
+          mustConfirm: true,
+          strategy: 'passkey',
+          tx: api!.tx.assets.transfer(
+            selectedToken.assetId,
+            receiverAddress,
+            +amount * Math.pow(10, selectedToken.decimals)
+          ),
+          label,
+        });
+
+        return res;
       }
     } catch (e) {
       handleError(e, 'onTokensTransfer');

@@ -21,7 +21,7 @@ export default function Demo() {
     'bg-lightdark text-dark border-b-lightdark border-t-lightdark';
 
   return (
-    <div className="text-offwhite  px-4 py-4 max-w-lg w-[767px] mt-10">
+    <div className="text-offwhite px-4 py-4 max-w-lg w-[767px] mt-10">
       <p className="flex gap-4 flex-col">
         <input
           type="text"
@@ -52,7 +52,7 @@ export default function Demo() {
           ev.preventDefault();
           const wallet = getEmbeddedWallet();
 
-          await wallet?.signContractWrite({
+          await wallet?.evm.signContractWrite({
             mustConfirm: true,
             strategy: 'passkey',
             contractAbi: ERC20Abi,
@@ -82,7 +82,7 @@ export default function Demo() {
           className={btnClass}
           onClick={async () => {
             const wallet = getEmbeddedWallet();
-            await wallet?.signPlainTransaction({
+            await wallet?.evm.signPlainTransaction({
               mustConfirm: true,
               strategy: 'passkey',
               tx: {
@@ -103,7 +103,7 @@ export default function Demo() {
           className={btnClass}
           onClick={async () => {
             const wallet = getEmbeddedWallet();
-            await wallet?.signPlainTransaction({
+            await wallet?.evm.signPlainTransaction({
               mustConfirm: true,
               strategy: 'passkey',
               tx: {

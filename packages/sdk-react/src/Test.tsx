@@ -1,8 +1,8 @@
-import { networks } from '@apillon/wallet-networks';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { EmbeddedWallet } from '../lib/EmbeddedWallet';
 import { useAccount } from '../lib/main';
+import { DefaultEthereumNetworks, DefaultSubstrateNetworks } from '@apillon/wallet-sdk';
 
 export function Test() {
   const { info } = useAccount();
@@ -13,7 +13,8 @@ export function Test() {
         <EmbeddedWallet
           clientId="YOUR INTEGRATION UUID HERE"
           defaultNetworkId={1287}
-          networks={networks}
+          networks={DefaultEthereumNetworks}
+          networksSubstrate={DefaultSubstrateNetworks}
         />
 
         <p>username: {info.username}</p>

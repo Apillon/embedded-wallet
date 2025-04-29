@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useReducer } from 'react';
-import { AuthStrategyName } from '@apillon/wallet-sdk';
+import { AccountWalletTypes, AuthStrategyName, WalletType } from '@apillon/wallet-sdk';
 import { useGlobalContext } from './global.context';
 import { WebStorageKeys } from '../helpers';
 
@@ -24,6 +24,24 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         setStateValue('screen', 'confirmCode');
       }
     }
+
+    /**
+     * Load wallet type selected in dapp
+     */
+    const walletType = +(
+      sessionStorage.getItem(WebStorageKeys.WALLET_TYPE) || WalletType.EVM
+    ) as AccountWalletTypes;
+    setStateValue('walletType', walletType);
+
+    /**
+     * Set which environments are available according to dapp
+     */
+    const supportedEnvs =
+      sessionStorage.getItem(WebStorageKeys.SUPPORTED_ENVS) || `${WalletType.EVM}`;
+    setStateValue(
+      'supportedWalletTypes',
+      supportedEnvs.split(',').map(s => +(s || 0) as AccountWalletTypes)
+    );
   }, []);
 
   function setStateValue<T extends keyof ReturnType<typeof initialState>>(
@@ -61,7 +79,10 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         /**
          * Login
          */
-        const address = await wallet?.authenticate('passkey', { username: state.username });
+        const address = await wallet?.authenticate('passkey', {
+          username: state.username,
+          walletType: state.walletType,
+        });
 
         if (address) {
           setupUserInfo({
@@ -145,6 +166,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         {
           username: state.username,
           privateKey,
+          walletType: state.walletType,
         },
         state.hashedUsername,
         false,
@@ -228,6 +250,8 @@ const initialState = () => ({
   lastCodeExpiretime: 0, // get from /otp/generate and check before /otp/validate
   captcha: '',
   privateKey: '',
+  walletType: WalletType.EVM as AccountWalletTypes,
+  supportedWalletTypes: [] as AccountWalletTypes[],
 });
 
 type ContextState = ReturnType<typeof initialState>;

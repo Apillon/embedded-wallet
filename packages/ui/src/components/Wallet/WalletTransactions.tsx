@@ -8,6 +8,7 @@ import IconCopy from '../ui/Icon/IconCopy';
 import IconCheckSmall from '../ui/Icon/IconCheckSmall';
 import dayjs from 'dayjs';
 import Pill from '../ui/Pill';
+import { useMemo } from 'react';
 
 export default function WalletTransactions({ className }: { className?: string }) {
   const { activeWallet } = useWalletContext();
@@ -33,6 +34,17 @@ export default function WalletTransactions({ className }: { className?: string }
 
 function Transaction({ tx }: { tx: TransactionItem }) {
   const { text: copyText, onCopy } = useCopyToClipboard('', '+');
+  const {
+    state: { monitoredSubstrateTxs },
+  } = useTransactionsContext();
+
+  const showStatusForSs = useMemo(() => {
+    return (
+      tx.status === 'confirmed' ||
+      tx.status === 'failed' ||
+      monitoredSubstrateTxs.some(x => x.hash === tx.hash)
+    );
+  }, [tx.status, monitoredSubstrateTxs]);
 
   return (
     <div className="rounded-lg bg-primarylight px-4 py-2">
@@ -48,16 +60,18 @@ function Transaction({ tx }: { tx: TransactionItem }) {
           </a>
         </span>
 
-        <Pill
-          text={tx.status}
-          bg={''}
-          color={''}
-          className={clsx({
-            'text-pink': tx.status === 'failed',
-            'text-green': tx.status === 'confirmed',
-            'text-orange': tx.status === 'pending',
-          })}
-        />
+        {(typeof tx.chainId === 'number' || showStatusForSs) && (
+          <Pill
+            text={tx.status}
+            bg={''}
+            color={''}
+            className={clsx({
+              'text-pink': tx.status === 'failed',
+              'text-green': tx.status === 'confirmed',
+              'text-orange': tx.status === 'pending',
+            })}
+          />
+        )}
       </div>
 
       <div className="flex justify-between items-end">
