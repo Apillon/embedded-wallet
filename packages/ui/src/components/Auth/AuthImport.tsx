@@ -63,6 +63,7 @@ export default function AuthImport() {
     }
 
     setForAuth('loading', true);
+    setForAuth('privateKey', pk);
     handleError('');
 
     try {
