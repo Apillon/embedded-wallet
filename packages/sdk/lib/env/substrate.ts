@@ -1,5 +1,5 @@
 import { AnyTuple, SignerPayloadJSON } from '@polkadot/types/types';
-import { ApiPromise, Keyring, WsProvider } from '@polkadot/api';
+import { ApiPromise, WsProvider } from '@polkadot/api';
 import { hexToU8a } from '@polkadot/util';
 import { decodeAddress, encodeAddress } from '@polkadot/util-crypto';
 import {
@@ -106,22 +106,14 @@ class SubstrateEnvironment {
       data: { free },
     } = await api.query.system.account(address);
 
-    if (free.toString() === '0') {
-      // try with generic SS58
-      const a2 = getSS58Address(address);
-      if (address !== a2) {
-        const r = await api.query.system.account(a2);
-        free = r.data.free;
-      }
-    }
-
-    // // import from @polkadot/util
-    // // But displays wrong value sometimes...
-    // const f = formatBalance(free, {
-    //   decimals: api.registry.chainDecimals[0],
-    //   withSi: false,
-    //   withZero: false,
-    // });
+    // if (free.toString() === '0') {
+    //   // try with generic SS58
+    //   const a2 = getSS58Address(address);
+    //   if (address !== a2) {
+    //     const r = await api.query.system.account(a2);
+    //     free = r.data.free;
+    //   }
+    // }
 
     const f = ethers.formatUnits(free.toString(), api.registry.chainDecimals[0]);
 
@@ -370,24 +362,3 @@ class SubstrateEnvironment {
 
 export { SubstrateEnvironment };
 export default SubstrateEnvironment;
-
-function getSS58Address(pk: string, prefix?: number, isPublicKey = false) {
-  if (!pk || isPublicKey) {
-    return pk;
-  }
-
-  try {
-    const keyring = new Keyring({ type: 'sr25519' });
-    const pair = keyring.createFromUri(pk);
-
-    if (typeof prefix !== 'undefined') {
-      keyring.setSS58Format(prefix);
-    }
-
-    return pair.address;
-  } catch (_e) {
-    // console.error(e);
-  }
-
-  return pk;
-}

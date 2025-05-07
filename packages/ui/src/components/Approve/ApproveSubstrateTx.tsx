@@ -67,6 +67,7 @@ export default function ApproveSubstrateTx() {
 
             if (appProps.broadcastAfterSign && res) {
               const { signedTxData, chainId } = res;
+
               await wallet?.ss.broadcastTransaction(
                 signedTxData,
                 chainId as string,
