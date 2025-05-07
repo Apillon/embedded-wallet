@@ -12,7 +12,7 @@
     "@apillon/wallet-react": "*",
     "react": "^18",
     "react-dom": "^18",
-    "next": "14.2.24"
+    "next": "14.2.26"
   },
   "devDependencies": {
     "@apillon/wallet-networks": "*",
