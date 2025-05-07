@@ -46,7 +46,7 @@ export default () => {
           const res = await wallet.ss.signTransaction({
             mustConfirm: true,
             strategy: 'passkey',
-            tx: api!.tx.balances.transferAllowDeath(
+            tx: api!.tx.balances.transferKeepAlive(
               receiverAddress,
               +amount * Math.pow(10, decimals)
             ),

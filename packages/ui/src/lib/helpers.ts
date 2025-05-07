@@ -1,6 +1,6 @@
 import { formatUnits } from 'viem';
 import { WebStorageKeys } from './constants';
-import { Keyring } from '@polkadot/keyring';
+import { encodeAddress } from '@polkadot/util-crypto';
 
 export function sleep(ms = 1000) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -80,14 +80,15 @@ export function getSS58Address(pk: string, prefix?: number, isPublicKey = false)
   }
 
   try {
-    const keyring = new Keyring({ type: 'sr25519' });
-    const pair = keyring.createFromUri(pk);
+    return encodeAddress(pk, prefix);
+    // const keyring = new Keyring({ type: 'sr25519' });
+    // const pair = keyring.createFromUri(pk);
 
-    if (typeof prefix !== 'undefined') {
-      keyring.setSS58Format(prefix);
-    }
+    // if (typeof prefix !== 'undefined') {
+    //   keyring.setSS58Format(prefix);
+    // }
 
-    return pair.address;
+    // return pair.address;
   } catch (e) {
     console.error(e);
   }

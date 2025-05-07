@@ -447,6 +447,8 @@ function TransactionsProvider({ children }: { children: React.ReactNode }) {
                     type: 'setTxStatus',
                     payload: { tx: monitoredTx, status: 'confirmed' },
                   });
+
+                  reloadAccountBalances();
                 } else {
                   dispatch({
                     type: 'setTxStatus',
