@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { EmbeddedWallet, useAccount } from '@apillon/wallet-vue';
-import { DefaultEthereumNetworks, DefaultSubstrateNetworks } from '@apillon/wallet-sdk';
+import { DefaultEthereumNetworks, DefaultSubstrateNetworks, WalletType } from '@apillon/wallet-sdk';
 import './public/style.css';
 
 const { info } = useAccount();
@@ -30,7 +30,9 @@ const { info } = useAccount();
 
     <TestSdk />
 
-    <template v-if="info?.activeWallet?.address">
+    <template
+      v-if="info?.activeWallet?.address && info?.activeWallet?.walletType === WalletType.EVM"
+    >
       <br />
 
       <TestViem />
