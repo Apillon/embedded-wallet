@@ -48,7 +48,7 @@ const Btn = forwardRef<HTMLAnchorElement, Props>(
         'transition-transform hover:border-b-blue/50 hover:translate-y-[-2px] focus:translate-y-px focus:border-b-yellow/50':
           !loading && !disabled && ['primary', 'secondary'].includes(variant),
 
-        'bg-transparent text-yellow border-t-transparent border-b-transparent shadow-[0_0_0_1px_#313442]':
+        'bg-transparent text-offwhite border-t-transparent border-b-transparent shadow-[0_0_0_1px_#313442]':
           variant === 'ghost',
         'transition-transform hover:border-b-brightdark hover:translate-y-[-2px] focus:translate-y-px':
           !loading && !disabled && variant === 'ghost',

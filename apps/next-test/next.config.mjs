@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
+const nextConfig = {
+  // transpilePackages: ['@apillon/wallet-react'],
+};
 
 export default nextConfig;
