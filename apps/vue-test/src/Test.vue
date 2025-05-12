@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { EmbeddedWallet, useAccount } from '@apillon/wallet-vue';
-import { DefaultEthereumNetworks, DefaultSubstrateNetworks } from '@apillon/wallet-sdk';
+import { DefaultEthereumNetworks, DefaultSubstrateNetworks, WalletType } from '@apillon/wallet-sdk';
 import TestEthers5 from './TestEthers5.vue';
 import TestEthers6 from './TestEthers6.vue';
 import TestSdk from './TestSdk.vue';
@@ -35,7 +35,9 @@ const clientId = import.meta.env.VITE_CLIENT_ID ?? 'YOUR INTEGRATION UUID HERE';
 
     <TestSdk />
 
-    <template v-if="info?.activeWallet?.address">
+    <template
+      v-if="info?.activeWallet?.address && info?.activeWallet?.walletType === WalletType.EVM"
+    >
       <br />
 
       <TestViem />

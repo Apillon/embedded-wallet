@@ -5,7 +5,7 @@ import Btn from '../ui/Btn';
 import { useWalletContext } from '../../contexts/wallet.context';
 import Input from '../ui/Input';
 import ethIcon from '../../assets/eth_logo.svg';
-import polkadotIcon from '../../assets/polkadot-logo.png';
+import polkadotIcon from '../../assets/polkadot-logo.svg';
 import Pill from '../ui/Pill';
 
 const walletTypeOptions = [
