@@ -43,7 +43,13 @@ export default function AuthImport() {
   }, [walletType]);
 
   async function onSubmit() {
-    if (loading || !username || (!privateKey && !mnemonic) || !captcha) {
+    if (
+      loading ||
+      !username ||
+      (type === 'pk' && !privateKey) ||
+      (type === 'mnemonic' && !mnemonic) ||
+      !captcha
+    ) {
       return;
     }
 
@@ -152,7 +158,12 @@ export default function AuthImport() {
           </Btn>
 
           <Btn
-            disabled={!username || !privateKey || !captcha}
+            disabled={
+              !username ||
+              !captcha ||
+              (type === 'pk' && !privateKey) ||
+              (type === 'mnemonic' && !mnemonic)
+            }
             type="submit"
             variant="primary"
             loading={loading}
