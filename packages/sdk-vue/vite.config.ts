@@ -59,6 +59,7 @@ export default defineConfig({
         'react-qr-code',
         'secp256r1',
         'viem',
+        '@polkadot/api',
       ],
     },
   },

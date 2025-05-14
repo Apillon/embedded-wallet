@@ -33,7 +33,6 @@
     "@noble/curves": "^1.4.0",
     "@oasisprotocol/sapphire-ethers-v6": "^6.0.1",
     "@oasisprotocol/sapphire-paratime": "^2.0.1",
-    "@polkadot/api": "^15.8.1",
     "@polkadot/extension-dapp": "^0.58.7",
     "@polkadot/extension-inject": "^0.58.5",
     "asn1js": "^3.0.5",
@@ -52,7 +51,8 @@
   "global": {
     "dependencies": [
       "ethers6",
-      "viem"
+      "viem",
+      "@polkadot/api"
     ]
   }
 }
