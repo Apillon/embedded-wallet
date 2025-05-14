@@ -25,6 +25,7 @@ export default defineConfig({
     },
     rollupOptions: {
       external: [
+        '@polkadot/api',
         ...Object.keys(pkg.dependencies),
         // ...Object.keys(pkg.dependencies).filter(x => x !== 'ethers6'), // don't bundle dependencies
         // ...Object.keys(pkg.dependencies).filter(

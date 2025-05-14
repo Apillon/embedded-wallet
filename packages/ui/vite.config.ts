@@ -30,7 +30,9 @@ export default defineConfig({
       external: [
         'react',
         'react-dom',
+        'react-dom/client',
         'react/jsx-runtime',
+        // 'react-qr-code',
         // '@headlessui/react',
         '@noble/curves',
         // '@oasisprotocol/sapphire-paratime',
@@ -45,6 +47,7 @@ export default defineConfig({
         // 'react-qr-code',
         // 'secp256r1',
         'viem',
+        '@polkadot/api',
       ],
     },
   },
