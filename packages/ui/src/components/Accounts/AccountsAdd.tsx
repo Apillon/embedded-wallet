@@ -12,7 +12,7 @@ const walletTypeOptions = [
   {
     type: WalletType.EVM,
     title: 'EVM',
-    description: 'Ethereum, Arbitrum, Moonbeam etc',
+    description: 'Ethereum, L2s, Sidechains',
     icon: ethIcon,
     disabled: false,
   },
