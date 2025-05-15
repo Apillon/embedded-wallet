@@ -1,17 +1,17 @@
+import { WalletType } from '@apillon/wallet-sdk';
+import { u8aToHex } from '@polkadot/util';
+import { mnemonicToMiniSecret } from '@polkadot/util-crypto';
+import { ethers } from 'ethers6';
+import { useEffect, useState } from 'react';
 import { useAuthContext } from '../../contexts/auth.context';
 import { useWalletContext } from '../../contexts/wallet.context';
+import { WebStorageKeys } from '../../lib/constants';
 import Btn from '../ui/Btn';
 import Input from '../ui/Input';
-import AuthTitle from './AuthTitle';
-import { WebStorageKeys } from '../../lib/constants';
-import AuthCaptchaInput from './AuthCaptchaInput';
-import { ethers } from 'ethers6';
-import AuthEnvironmentPicker from './AuthEnvironmentPicker';
-import { useEffect, useState } from 'react';
-import { WalletType } from '@apillon/wallet-sdk';
 import Select from '../ui/Select';
-import { mnemonicToMiniSecret } from '@polkadot/util-crypto';
-import { u8aToHex } from '@polkadot/util';
+import AuthCaptchaInput from './AuthCaptchaInput';
+import AuthEnvironmentPicker from './AuthEnvironmentPicker';
+import AuthTitle from './AuthTitle';
 
 /**
  * Make a new wallet by providing a private key
@@ -55,16 +55,19 @@ export default function AuthImport() {
 
     let pk = '';
 
-    if (type === 'mnemonic') {
-      pk = u8aToHex(mnemonicToMiniSecret(mnemonic));
-    } else {
-      pk = !privateKey.startsWith('0x') ? `0x${privateKey}` : privateKey;
-    }
-
     try {
+      if (type === 'mnemonic') {
+        pk = u8aToHex(mnemonicToMiniSecret(mnemonic));
+      } else {
+        pk = !privateKey.startsWith('0x') ? `0x${privateKey}` : privateKey;
+      }
+
       new ethers.Wallet(pk);
     } catch (e) {
-      handleError('Incorrect EVM private key', 'AuthImport');
+      handleError(
+        `Incorrect ${walletType === WalletType.SUBSTRATE ? 'Substrate' : 'EVM'} ${type === 'mnemonic' ? 'mnemonic' : 'private key'}`,
+        'AuthImport',
+      );
       return;
     }
 
