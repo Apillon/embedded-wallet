@@ -300,7 +300,10 @@ class EmbeddedWallet {
     }
 
     const AC = new ethers.Interface(getAbiForType(params.authData.walletType));
-    const data = AC.encodeFunctionData('exportPrivateKey', [params.walletIndex]);
+    const data = AC.encodeFunctionData('exportPrivateKey', [
+      params.walletIndex,
+      Math.floor(Date.now() / 1e3) + 300,
+    ]);
 
     /**
      * Authenticate user and sign message
