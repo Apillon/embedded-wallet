@@ -345,7 +345,7 @@ class EthereumEnvironment {
     ).populateTransaction({
       from: this.userWallets[walletIndex].address,
       to: params.contractAddress,
-      value: 0,
+      value: params.contractTransactionValue || 0,
       data: contractData,
     });
 
