@@ -242,6 +242,102 @@
             Sign tx via injected
           </button>
         </div>
+
+        <h2>Misc</h2>
+        
+        <div class="row">
+          <button
+            @click="() => {
+              const w = window?.embeddedWallet;
+              if (w) {
+                w.setDefaultNetworkId(1287)
+              }
+            }"
+          >
+            Set network to moonbase
+          </button>
+
+          <button
+            @click="async () => {
+              const w = window?.embeddedWallet;
+
+              try {
+                const signedTx = await w?.evm.signContractWrite({
+                  strategy: 'passkey',
+                  contractAbi: [
+                    'function claim() public',
+                    'function balanceOf(address) view returns (uint256)',
+                    'function transfer(address to, uint256 amount) public returns (bool)',
+                  ],
+                  contractAddress: '0x67b9DA16d0Adf2dF05F0564c081379479d0448f8',
+                  contractFunctionName: 'claim',
+                  chainId: 1287,
+                  label: 'Token claim',
+                });
+
+                console.log(signedTx);
+                const txh = await w?.evm.broadcastTransaction(signedTx.signedTxData, 1287);
+                console.log(txh);
+              } catch (e) {
+                console.error(e);
+              }
+            }"
+          >
+            Contract: Token claim
+          </button>
+
+          <button @click="async () => {
+            const w = window?.embeddedWallet;
+
+            try {
+              const signedTx = await w?.evm.signContractWrite({
+                strategy: 'passkey',
+                contractAbi: [
+                  'function claim() public',
+                  'function balanceOf(address) view returns (uint256)',
+                  'function transfer(address to, uint256 amount) public returns (bool)',
+                ],
+                contractAddress: '0x67b9DA16d0Adf2dF05F0564c081379479d0448f8',
+                contractFunctionName: 'transfer',
+                contractFunctionValues: ['0x700cebAA997ecAd7B0797f8f359C621604Cce6Bf', '10000000'],
+                chainId: 1287,
+                label: 'Token transfer',
+              });
+
+              console.log(signedTx);
+              const txh = await w?.evm.broadcastTransaction(signedTx.signedTxData, 1287);
+              console.log(txh);
+            } catch (e) {
+              console.error(e);
+            }
+          }">
+            Contract: Token transfer
+          </button>
+
+          <button @click="async () => {
+            const w = window?.embeddedWallet;
+
+            try {
+              console.log(
+                await w?.evm.contractRead({
+                  contractAbi: [
+                  'function claim() public',
+                  'function balanceOf(address) view returns (uint256)',
+                  'function transfer(address to, uint256 amount) public returns (bool)',
+                  ],
+                  contractAddress: '0x67b9DA16d0Adf2dF05F0564c081379479d0448f8',
+                  contractFunctionName: 'balanceOf',
+                  contractFunctionValues: [w.getAddress()],
+                  chainId: 1287,
+                })
+              );
+            } catch (e) {
+              console.error(e);
+            }
+          }">
+            Contract read: Balance of
+          </button>
+        </div>
       </div>
     </div>
 

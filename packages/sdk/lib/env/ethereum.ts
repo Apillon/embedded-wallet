@@ -373,11 +373,8 @@ class EthereumEnvironment {
     /**
      * Encode tx data and authenticate it with selected auth strategy through sapphire "Account Manager"
      */
-    /**
-     * @TODO Use prepareUnsignedPayload for SS instead of sign EIP155?
-     */
     const AC = new ethers.Interface(EVMAccountAbi);
-    const data = AC.encodeFunctionData('signEIP155', [params.walletIndex, tx]);
+    const data = AC.encodeFunctionData('signEIP155', [walletIndex, tx]);
     const res = await this.wallet.getProxyForStrategy(params.strategy, data, params.authData!);
 
     if (res) {
