@@ -182,6 +182,7 @@ export type ContractReadParams = {
 };
 
 export type ContractWriteParams = {
+  contractTransactionValue?: ethers.BigNumberish;
   strategy?: AuthStrategyName;
   authData?: AuthData;
   walletIndex?: number;
