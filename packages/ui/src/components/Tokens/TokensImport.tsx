@@ -8,11 +8,13 @@ import TokensItem from './TokensItem';
 
 export default function TokensImport() {
   const {
-    state: { networkId, contractAddress },
+    state: { networkId },
     handleError,
     handleSuccess,
     goScreenBack,
     activeWallet,
+    getContractAddress,
+    isSubstrate,
   } = useWalletContext();
   const { dispatch, getTokenDetails } = useTokensContext();
 
@@ -52,11 +54,13 @@ export default function TokensImport() {
     handleError();
 
     try {
-      const res = await getTokenDetails(address);
+      const res = await getTokenDetails(isSubstrate() ? +address : address);
 
       if (!res) {
         throw new Error(`Token does not exist on chain (ID: ${networkId})`);
       }
+
+      const contractAddress = await getContractAddress();
 
       if (!contractAddress) {
         throw new Error('Could not get user wallet address');
@@ -112,8 +116,8 @@ export default function TokensImport() {
         }}
       >
         <Input
-          label="Token contract address"
-          placeholder="Paste contract address here"
+          label={isSubstrate() ? 'Asset ID' : 'Token contract address'}
+          placeholder={isSubstrate() ? 'Paste asset ID here' : 'Paste contract address here'}
           value={address}
           className="w-full mb-6"
           onChange={ev => setAddress(ev.target.value)}

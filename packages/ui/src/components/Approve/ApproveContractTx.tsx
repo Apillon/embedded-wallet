@@ -87,14 +87,14 @@ export default () => {
         className="mt-6"
         onApprove={async () => {
           if (approveParams?.contractWrite) {
-            const res = await wallet?.signContractWrite({
+            const res = await wallet?.evm.signContractWrite({
               ...approveParams.contractWrite,
               authData: { username },
             });
 
             if (appProps.broadcastAfterSign && res) {
               const { signedTxData, chainId } = res;
-              await wallet?.broadcastTransaction(
+              await wallet?.evm.broadcastTransaction(
                 signedTxData,
                 chainId,
                 approveParams.contractWrite.label || 'Transaction'

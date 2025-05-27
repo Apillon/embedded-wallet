@@ -25,7 +25,7 @@ export default function TokensList({
     return Array.isArray(tokens.list[activeWallet?.address || '']?.[state.networkId])
       ? [nativeToken, ...tokens.list[activeWallet?.address || ''][state.networkId]]
       : [nativeToken];
-  }, [tokens.list, state.networkId, state.contractAddress, nativeToken, activeWallet]);
+  }, [tokens.list, state.networkId, state.walletType, nativeToken, activeWallet]);
 
   return (
     <div className={clsx('flex flex-col', className)}>
@@ -38,7 +38,7 @@ export default function TokensList({
 
         {tokenList.map(token => (
           <TokensItem
-            key={token.address}
+            key={token.address || token.assetId || 'native'}
             token={token}
             asButton={asButtons}
             disabled={highlightActiveToken && token.address === tokens.selectedToken}
@@ -70,7 +70,7 @@ export default function TokensList({
                 : () => {
                     dispatch({
                       type: 'setValue',
-                      payload: { key: 'selectedToken', value: token.address },
+                      payload: { key: 'selectedToken', value: token.address || token.assetId },
                     });
                     onItemClick?.(token);
                   }

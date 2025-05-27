@@ -18,14 +18,14 @@ class EmbeddedViemAdapter {
 
   getAccount(): LocalAccount {
     return toAccount({
-      address: this.wallet.lastAccount.wallets[this.wallet.lastAccount.walletIndex].address,
+      address: this.wallet.evm.userWallets?.[this.wallet.user.walletIndex]?.address || '',
 
       signMessage: async ({ message }, mustConfirm = true) => {
         const res = await this.wallet.signMessage({
           message: message as any,
-          strategy: this.wallet.lastAccount.authStrategy,
+          strategy: this.wallet.user.authStrategy,
           authData: {
-            username: this.wallet.lastAccount.username,
+            username: this.wallet.user.username,
           },
           mustConfirm,
         });
@@ -38,10 +38,10 @@ class EmbeddedViemAdapter {
       },
 
       signTransaction: async (transaction, _serializer, mustConfirm = true) => {
-        const res = await this.wallet.signPlainTransaction({
-          strategy: this.wallet.lastAccount.authStrategy,
+        const res = await this.wallet.evm.signPlainTransaction({
+          strategy: this.wallet.user.authStrategy,
           authData: {
-            username: this.wallet.lastAccount.username,
+            username: this.wallet.user.username,
           },
           mustConfirm,
           tx: transaction as any,

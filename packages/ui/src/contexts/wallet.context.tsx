@@ -17,11 +17,14 @@ import {
   Network,
   SapphireTestnet,
   AccountWallet,
+  WalletType,
+  AccountWalletTypes,
 } from '@apillon/wallet-sdk';
 import { AppProps } from '../main';
 import { WebStorageKeys } from '../lib/constants';
-import { logToStorage } from '../lib/helpers';
+import { logToStorage, sleep } from '../lib/helpers';
 import oasisLogo from '../assets/oasis.svg';
+import { cryptoWaitReady } from '@polkadot/util-crypto';
 
 export type WalletScreens =
   | 'main'
@@ -45,19 +48,19 @@ export type WalletScreens =
   | 'nftDetail'
   | 'tokenDetail';
 
-type AccountWalletEx = AccountWallet & { balance: string; title: string };
+export type AccountWalletEx = AccountWallet & { balance: string; title: string };
 
-const initialState = (defaultNetworkId = 0, appProps: AppProps) => ({
+const defaultState = {
   username: '',
   walletIndex: 0,
+  walletType: WalletType.EVM as AccountWalletTypes,
   accountWallets: [] as AccountWalletEx[],
   stagedWalletsCount: 0, // how many new wallets have been addedd, but are not in `accountWallets` yet
   walletsCountBeforeStaging: 0,
   isAccountWalletsStale: false,
-  contractAddress: '',
   privateKeys: {} as { [walletAddress: string]: string },
   authStrategy: 'passkey' as AuthStrategyName,
-  networkId: defaultNetworkId,
+  networkId: 0 as string | number,
   walletScreen: 'main' as WalletScreens,
   walletScreenHistory: [] as WalletScreens[],
   lastIndexTabIndex: 0, // index of last tab opened on <WalletIndex />
@@ -65,8 +68,15 @@ const initialState = (defaultNetworkId = 0, appProps: AppProps) => ({
   displayedError: '',
   displayedSuccess: '',
   displayedInfo: '',
-  appProps,
+  appProps: {} as AppProps,
   loadingWallets: false,
+  isPolkadotCryptoReady: false,
+  loadingBalances: false,
+};
+
+const initialState = (initialValues: Partial<typeof defaultState>) => ({
+  ...defaultState,
+  ...initialValues,
 });
 
 type ContextState = ReturnType<typeof initialState>;
@@ -152,7 +162,11 @@ function reducer(state: ContextState, action: ContextActions) {
       };
     }
     case 'reset':
-      return initialState(state.networkId, state.appProps);
+      return initialState({
+        networkId: state.networkId,
+        appProps: state.appProps,
+        isPolkadotCryptoReady: state.isPolkadotCryptoReady,
+      });
     default:
       throw new Error('Unhandled action type.' + JSON.stringify(action));
   }
@@ -163,16 +177,18 @@ const WalletContext = createContext<
       state: ContextState;
       dispatch: (action: ContextActions) => void;
       networks: Network[];
-      networksById: { [networkId: number]: Network };
-      defaultNetworkId: number;
+      networksSubstrate: Network[];
+      networksById: { [networkId: number | string]: Network };
+      defaultNetworkId: number | string;
       activeWallet?: AccountWalletEx;
       wallet?: EmbeddedWallet;
       setWallet: (wallet: EmbeddedWallet) => void;
+      isSubstrate: () => boolean;
       initialized: boolean;
       initUserData: (params: {
         username: string;
         authStrategy: AuthStrategyName;
-        address0: string;
+        address0?: string;
       }) => Promise<void>;
       loadAccountWallets: (
         strategy?: AuthStrategyName,
@@ -187,6 +203,7 @@ const WalletContext = createContext<
         accountWallets?: AccountWalletEx[]
       ) => Promise<boolean | undefined>;
       saveAccountTitle: (title: string, index?: number, accountAddress?: string) => Promise<void>;
+      getContractAddress: () => Promise<string | undefined>;
       setScreen: (screen: WalletScreens) => void;
       goScreenBack: () => void;
       handleSuccess: (msg: string, timeout?: number) => void;
@@ -203,11 +220,11 @@ const WalletContext = createContext<
 function WalletProvider({
   children,
   networks = [],
+  networksSubstrate = [],
   defaultNetworkId = 0,
   ...restOfParams
 }: {
   children: ReactNode;
-  networks?: Network[];
 } & AppProps) {
   // If not already set, add sapphire network
   if (!networks.some(n => n.id === SapphireTestnet || n.id === SapphireMainnet)) {
@@ -235,7 +252,15 @@ function WalletProvider({
 
   const [state, dispatch] = useReducer(
     reducer,
-    initialState(defaultNetworkId || networks[0].id, { ...restOfParams, defaultNetworkId })
+    initialState({
+      networkId: defaultNetworkId || networks[0].id,
+      appProps: {
+        ...restOfParams,
+        defaultNetworkId,
+        networks,
+        networksSubstrate,
+      },
+    })
   );
   const initializingWallet = useRef(false);
   const [initialized, setInitialized] = useState(false);
@@ -243,12 +268,12 @@ function WalletProvider({
   const successTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
   const infoTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  const networksById = networks.reduce(
+  const networksById = [...networks, ...networksSubstrate].reduce(
     (acc, x) => {
       acc[x.id] = x;
       return acc;
     },
-    {} as { [networkId: number]: Network }
+    {} as { [networkId: number | string]: Network }
   );
 
   const activeWallet = useMemo(() => {
@@ -309,10 +334,11 @@ function WalletProvider({
   async function initWallet() {
     let w = undefined as EmbeddedWallet | undefined;
 
-    if (networks && networks.length) {
+    if (networks?.length || networksSubstrate?.length) {
       w = EmbeddedWalletSDK({
         ...restOfParams,
         networks,
+        networksSubstrate,
         defaultNetworkId,
       });
     } else {
@@ -345,12 +371,14 @@ function WalletProvider({
         username: mergedState.username,
         strategy: mergedState.authStrategy,
         walletIndex: mergedState.walletIndex,
-        contractAddress: mergedState.contractAddress,
+        walletType: mergedState.walletType,
       });
 
       w.setWallets(mergedState.accountWallets);
 
-      await new Promise(resolve => setTimeout(resolve, 10));
+      initPolkadotCrypto();
+
+      await sleep(10);
 
       initializingWallet.current = false;
       setInitialized(true);
@@ -368,49 +396,64 @@ function WalletProvider({
     username,
     authStrategy,
     address0,
+    walletType,
   }: {
     username: string;
     authStrategy: AuthStrategyName;
-    address0: string;
+    address0?: string;
+    walletType?: AccountWalletTypes;
   }) {
     wallet?.setAccount({
       username,
       strategy: authStrategy,
     });
 
+    if (!walletType) {
+      walletType = state.walletType;
+    }
+
     dispatch({
       type: 'setState',
       payload: {
-        walletIndex: 0,
+        // walletIndex: 0,
         username,
         authStrategy,
         // networkId: defaultNetworkId || undefined,
+        walletType,
       },
     });
 
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await sleep(50);
+
+    let accountWalletsRes =
+      walletType === WalletType.SUBSTRATE ? wallet?.ss.userWallets : wallet?.evm.userWallets;
 
     /**
      * First wallet has been retrieved from contract event, dont need to load wallets again
      */
-    let accountWalletsRes = undefined as AccountWallet[] | undefined;
     if (address0) {
-      accountWalletsRes = wallet?.initAccountWallets([address0]);
-
-      if (Array.isArray(accountWalletsRes) && accountWalletsRes.length) {
-        wallet?.events.emit('accountsChanged', [accountWalletsRes[0].address]);
-      }
+      accountWalletsRes = wallet?.initAccountWallets([address0], walletType);
     }
 
-    if (!accountWalletsRes) {
-      await loadAccountWallets(authStrategy, username);
+    if (Array.isArray(accountWalletsRes) && accountWalletsRes.length) {
+      wallet?.events.emit('accountsChanged', [accountWalletsRes[0].address]);
+      parseAccountWallets(accountWalletsRes, username);
+    } else {
+      accountWalletsRes = await loadAccountWallets(authStrategy, username);
 
-      await new Promise(resolve => setTimeout(resolve, 50));
-
-      parseAccountWallets(accountWalletsRes || [], username);
+      await sleep(50);
     }
 
-    await wallet?.initContractAddress({ username });
+    // await wallet?.initContractAddress({ username });
+  }
+
+  async function initPolkadotCrypto() {
+    try {
+      await cryptoWaitReady();
+      setStateValue('isPolkadotCryptoReady', true);
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   /**
@@ -469,12 +512,12 @@ function WalletProvider({
    * Add info from global storage, initialize some info, set state.
    */
   async function parseAccountWallets(wallets: AccountWallet[], username?: string) {
-    // Get account names from global storage
-    const { all: accountNamesStorage, current: accountNames } = await getAccountTitles();
-    const accountNamesUpdates = {} as { [accountAddress: string]: string };
+    username = username || state.username || wallet?.user.username || '-';
+    const contractAddress = (await getContractAddress(username)) || '-';
 
-    username = username || state.username || wallet?.lastAccount.username || '-';
-    const contractAddress = state.contractAddress || wallet?.lastAccount?.contractAddress || '-';
+    // Get account names from global storage
+    const { all: accountNamesStorage, current: accountNames } = await getAccountTitles(username);
+    const accountNamesUpdates = {} as { [accountAddress: string]: string };
 
     const newWallets = [] as AccountWalletEx[];
 
@@ -514,7 +557,7 @@ function WalletProvider({
     addresses?: string[],
     accountWallets: AccountWalletEx[] = state.accountWallets
   ) {
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await sleep(50);
 
     if (!addresses) {
       if (!activeWallet?.address) {
@@ -523,6 +566,8 @@ function WalletProvider({
 
       addresses = [activeWallet.address];
     }
+
+    setStateValue('loadingBalances', true);
 
     try {
       const balances = await Promise.all(
@@ -547,11 +592,14 @@ function WalletProvider({
       });
 
       dispatch({ type: 'updateAccounts', payload: updatedWallets });
+      setStateValue('loadingBalances', false);
 
       return true;
     } catch (e) {
       console.error('Reloading balance', e);
     }
+
+    setStateValue('loadingBalances', false);
   }
 
   /**
@@ -565,12 +613,14 @@ function WalletProvider({
 
     const { all, current } = await getAccountTitles();
 
+    const contractAddress = (await getContractAddress()) || '-';
+
     // When address not available, use index instead to save the username (use e.g. when address is not available yet after creating account)
     wallet?.xdomain?.storageSet(
       WebStorageKeys.WALLET_NAMES,
       JSON.stringify({
         ...all,
-        [state.contractAddress]: {
+        [contractAddress]: {
           ...current,
           [accountAddress ||
           (index > state.accountWallets.length - 1
@@ -605,9 +655,9 @@ function WalletProvider({
    * },
    * ```
    */
-  async function getAccountTitles() {
+  async function getAccountTitles(username?: string) {
     const stored = await wallet?.xdomain?.storageGet(WebStorageKeys.WALLET_NAMES);
-    const contractAddress = state.contractAddress || wallet?.lastAccount?.contractAddress || '-';
+    const contractAddress = (await getContractAddress(username)) || '-';
 
     let all = {} as { [contractAddress: string]: { [accountAddress: string]: string } };
     let current = {} as { [accountAddress: string]: string };
@@ -622,6 +672,21 @@ function WalletProvider({
     }
 
     return { all, current };
+  }
+
+  /**
+   * Get account contract address for current environment (evm/substrate)
+   */
+  async function getContractAddress(username?: string) {
+    if (!wallet?.evm.userContractAddress && !wallet?.ss.userContractAddress) {
+      await wallet?.initContractAddress({ username: username || state.username });
+    }
+
+    if (state.walletType === WalletType.SUBSTRATE) {
+      return wallet?.ss.userContractAddress;
+    }
+
+    return wallet?.evm.userContractAddress;
   }
 
   function handleError(e?: any, src?: string) {
@@ -714,17 +779,20 @@ function WalletProvider({
         state,
         dispatch,
         networks,
+        networksSubstrate,
         networksById,
         defaultNetworkId: defaultNetworkId || 0,
         activeWallet,
         wallet,
         setWallet,
+        isSubstrate: () => state.walletType === WalletType.SUBSTRATE,
         initialized,
         initUserData,
         loadAccountWallets,
         parseAccountWallets,
         reloadAccountBalances,
         saveAccountTitle,
+        getContractAddress,
         handleError,
         handleSuccess,
         handleInfo,

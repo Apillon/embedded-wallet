@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { networks } from '@apillon/wallet-networks';
 import EmbeddedWallet from '../lib/EmbeddedWallet.vue';
 import { useAccount } from '../lib/main';
+import { DefaultEthereumNetworks, DefaultSubstrateNetworks } from '@apillon/wallet-sdk';
 
 const { info } = useAccount();
 </script>
@@ -11,7 +11,8 @@ const { info } = useAccount();
     <EmbeddedWallet
       clientId="YOUR INTEGRATION UUID HERE"
       :defaultNetworkId="1287"
-      :networks="networks"
+      :networks="DefaultEthereumNetworks"
+      :networks-substrate="DefaultSubstrateNetworks"
     />
 
     <p>username: {{ info.username }}</p>

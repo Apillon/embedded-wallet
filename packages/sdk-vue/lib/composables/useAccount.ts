@@ -1,6 +1,12 @@
 import { reactive, readonly, watch } from 'vue';
 import useWallet from './useWallet';
-import { AccountWallet, AuthStrategyName, Events } from '@apillon/wallet-sdk';
+import {
+  AccountWallet,
+  AccountWalletTypes,
+  AuthStrategyName,
+  Events,
+  WalletType,
+} from '@apillon/wallet-sdk';
 
 export function useAccount() {
   const { wallet } = useWallet();
@@ -9,15 +15,16 @@ export function useAccount() {
     username: '',
     activeWallet: undefined as AccountWallet | undefined,
     authStrategy: 'passkey' as AuthStrategyName,
+    walletType: WalletType.EVM as AccountWalletTypes,
   });
 
   watch(
     wallet,
     (val, old) => {
       if (!!val && !old) {
-        info.username = val.lastAccount.username;
-        info.activeWallet = val.lastAccount.wallets[val.lastAccount.walletIndex];
-        info.authStrategy = val.lastAccount.authStrategy;
+        info.username = val.user.username;
+        info.activeWallet = val.getCurrentWallet();
+        info.authStrategy = val.user.authStrategy;
 
         val.events.on('dataUpdated', onDataUpdated);
       }
@@ -29,15 +36,15 @@ export function useAccount() {
     if (name === 'username') {
       info.username = newValue;
     } else if (name === 'walletIndex') {
-      info.activeWallet = wallet.value?.lastAccount.wallets[newValue];
-    } else if (name === 'wallets' && newValue.length) {
-      info.activeWallet = newValue[wallet.value?.lastAccount?.walletIndex || 0];
+      info.activeWallet = wallet.value?.getCurrentWallet();
+    } else if ((name === 'walletsSS' || name === 'walletsEVM') && newValue.length) {
+      info.activeWallet = wallet.value?.getCurrentWallet();
     } else if (name === 'authStrategy') {
       info.authStrategy = newValue;
     }
   }
 
-  async function getBalance(networkId = undefined) {
+  async function getBalance(networkId?: string | number) {
     if (!info.activeWallet) {
       return '0';
     }

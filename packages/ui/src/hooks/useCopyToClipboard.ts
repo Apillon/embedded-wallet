@@ -4,8 +4,8 @@ export default function useCopyToClipboard(activatorText = 'Copy', copiedText = 
   const [text, setText] = useState(activatorText);
   let copiedTimeout = null as ReturnType<typeof setTimeout> | null;
 
-  function onCopy(content: string) {
-    navigator.clipboard.writeText(content);
+  function onCopy(content: string | number) {
+    navigator.clipboard.writeText(`${content}`);
 
     if (copiedTimeout) {
       clearTimeout(copiedTimeout);

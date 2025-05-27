@@ -10,9 +10,7 @@
   "dependencies": {
     "@apillon/wallet-ui": "*"
   },
-  "devDependencies": {
-    "@apillon/wallet-networks": "*"
-  },
+  "devDependencies": {},
   "global": {
     "dependencies": [
       "ethers6",

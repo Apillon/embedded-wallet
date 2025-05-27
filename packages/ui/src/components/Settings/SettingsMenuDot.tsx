@@ -4,6 +4,7 @@ import IconProfile from '../ui/Icon/IconProfile';
 import { useWalletContext } from '../../contexts/wallet.context';
 import Btn from '../ui/Btn';
 import SettingsMenuItem from './SettingsMenuItem';
+import { sleep } from '../../lib/helpers';
 
 export default () => {
   const {
@@ -29,10 +30,10 @@ export default () => {
     },
     {
       title: 'View on Explorer',
-      description: network.explorerUrl ? new URL(network.explorerUrl).hostname : undefined,
+      description: network?.explorerUrl ? new URL(network.explorerUrl).hostname : undefined,
       icon: <IconLinkOut />,
       link:
-        network.explorerUrl && activeWallet?.address
+        network?.explorerUrl && activeWallet?.address
           ? `${network?.explorerUrl}/address/${activeWallet?.address}`
           : undefined,
       className: 'mt-3',
@@ -50,8 +51,10 @@ export default () => {
       <Btn
         variant="ghost"
         className="w-full"
-        onClick={() => {
+        onClick={async () => {
           dispatch({ type: 'reset' });
+
+          await sleep(50);
 
           wallet?.setAccount({
             username: '',

@@ -1,4 +1,6 @@
+import { formatUnits } from 'viem';
 import { WebStorageKeys } from './constants';
+import { encodeAddress } from '@polkadot/util-crypto';
 
 export function sleep(ms = 1000) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -43,6 +45,10 @@ export function formatBalance(balance: string | number, unit = 'ETH', maxDecimal
   return `${parsed}${!!unit ? ` ${unit}` : ''}`;
 }
 
+export function formatSubstrateBalance(balance = '0', decimals = 12) {
+  return formatUnits(BigInt(balance.replace(/,/g, '')), decimals);
+}
+
 /**
  * Format object/array data for display on approve screens
  */
@@ -51,8 +57,9 @@ export function formatTxObjectData(data: Object) {
     return data.join(`\n`);
   }
 
-  return Object.values(data).reduce((acc, [key, value]) => {
-    acc += `${key}: ${value}`;
+  return Object.entries(data).reduce((acc, [key, value]) => {
+    acc += `${key}: ${typeof value === 'object' ? `\n${formatTxObjectData(value)}` : value}\n`;
+    return acc;
   }, '');
 }
 
@@ -62,4 +69,29 @@ export function isLowerCaseEqual(s1?: string, s2?: string) {
   }
 
   return s1.toLowerCase() === s2.toLowerCase();
+}
+
+/**
+ * Must wait for polkadot utils to get ready -> check for `isPolkadotCryptoReady` from wallet.context
+ */
+export function getSS58Address(pk: string, prefix?: number, isPublicKey = false) {
+  if (!pk || isPublicKey) {
+    return pk;
+  }
+
+  try {
+    return encodeAddress(pk, prefix);
+    // const keyring = new Keyring({ type: 'sr25519' });
+    // const pair = keyring.createFromUri(pk);
+
+    // if (typeof prefix !== 'undefined') {
+    //   keyring.setSS58Format(prefix);
+    // }
+
+    // return pair.address;
+  } catch (e) {
+    console.error(e);
+  }
+
+  return pk;
 }

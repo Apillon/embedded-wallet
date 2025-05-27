@@ -1,26 +1,38 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Select from '../ui/Select';
 import Input from '../ui/Input';
 import Btn from '../ui/Btn';
 import { useWalletContext } from '../../contexts/wallet.context';
+import { WalletType } from '@apillon/wallet-sdk';
+import { mnemonicToMiniSecret } from '@polkadot/util-crypto';
+import { u8aToHex } from '@polkadot/util';
 
 export default function AccountsImport() {
   const {
-    state: { accountWallets, stagedWalletsCount },
+    state: { accountWallets, stagedWalletsCount, username, walletType },
     wallet,
     goScreenBack,
     handleError,
     handleSuccess,
     setStateValue: setForWallet,
   } = useWalletContext();
-  const [type, setType] = useState('pk'); // used in <Select />
+  const [type, setType] = useState<'' | 'pk' | 'mnemonic'>(''); // used in <Select />
   const [title, setTitle] = useState('');
   const [privateKey, setPrivateKey] = useState('');
+  const [mnemonic, setMnemonic] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  useEffect(() => {
+    if (walletType === WalletType.SUBSTRATE) {
+      setType('mnemonic');
+    } else {
+      setType('pk');
+    }
+  }, [walletType]);
+
   async function importAccount() {
-    if (loading || !privateKey || !title) {
+    if (loading || !title || (!privateKey && !mnemonic)) {
       return;
     }
 
@@ -31,16 +43,25 @@ export default function AccountsImport() {
       const predictedIndex =
         accountWallets[accountWallets.length - 1].index + 1 + stagedWalletsCount;
 
+      let pk = '';
+
+      if (type === 'mnemonic') {
+        pk = u8aToHex(mnemonicToMiniSecret(mnemonic));
+      } else {
+        pk = !privateKey.startsWith('0x') ? `0x${privateKey}` : privateKey;
+      }
+
       // Save wallet name to tx metadata
       // When updating also check <AccountsAdd />
       await wallet?.addAccountWallet({
-        privateKey: !privateKey.startsWith('0x') ? `0x${privateKey}` : privateKey,
+        privateKey: pk,
+        authData: { username, walletType },
         internalLabel: 'accountsImport',
         internalData: JSON.stringify({
           index: predictedIndex,
           title,
+          walletType,
         }),
-        // walletType??
       });
 
       // saveAccountTitle(title, predictedIndex);
@@ -76,20 +97,35 @@ export default function AccountsImport() {
           options={[
             { label: 'Select type', value: '' },
             { label: 'Private Key', value: 'pk' },
-            // { label: 'JSON File', value: 'json' },
+            ...(walletType === WalletType.SUBSTRATE
+              ? [{ label: 'Mnemonic', value: 'mnemonic' }]
+              : []),
           ]}
           className="w-full mb-6"
-          onChange={ev => setType(ev.target.value)}
+          onChange={ev => setType(ev.target.value as any)}
         />
 
-        <Input
-          autoFocus
-          value={privateKey}
-          placeholder="Enter your private key string here"
-          type="password"
-          className="mb-6"
-          onChange={ev => setPrivateKey(ev.target.value)}
-        />
+        {type === 'pk' && (
+          <Input
+            autoFocus
+            value={privateKey}
+            placeholder="Enter your private key string here"
+            type="password"
+            className="mb-6"
+            onChange={ev => setPrivateKey(ev.target.value)}
+          />
+        )}
+
+        {type === 'mnemonic' && (
+          <Input
+            autoFocus
+            value={mnemonic}
+            placeholder="Enter your seed phrase"
+            type="text"
+            className="mb-6"
+            onChange={ev => setMnemonic(ev.target.value)}
+          />
+        )}
 
         <Input
           value={title}

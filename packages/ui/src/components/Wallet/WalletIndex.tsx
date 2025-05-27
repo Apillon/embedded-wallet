@@ -11,10 +11,11 @@ import TokensNftList from '../Tokens/TokensNftList';
 
 export default () => {
   const {
-    state: { isAccountWalletsStale, lastIndexTabIndex },
+    state: { isAccountWalletsStale, lastIndexTabIndex, loadingBalances },
     activeWallet,
     setScreen,
     setStateValue: setForWallet,
+    isSubstrate,
   } = useWalletContext();
 
   const { nativeToken, currentExchangeRate } = useTokensContext();
@@ -25,11 +26,15 @@ export default () => {
       content: <TokensList asButtons onItemClick={() => setScreen('tokenDetail')} />,
       disabled: false,
     },
-    {
-      title: 'NFTs',
-      content: <TokensNftList />,
-      disabled: false,
-    },
+    ...(isSubstrate()
+      ? []
+      : [
+          {
+            title: 'NFTs',
+            content: <TokensNftList />,
+            disabled: false,
+          },
+        ]),
     {
       title: 'Transactions',
       content: <WalletTransactions />,
@@ -46,7 +51,9 @@ export default () => {
         <div className="text-center mb-4">
           <p className="flex items-center justify-center gap-2">
             <span className="font-bold text-3xl" title={activeWallet?.balance || '0'}>
-              {formatBalance(activeWallet?.balance || '0', nativeToken.symbol)}
+              {loadingBalances
+                ? '-'
+                : formatBalance(activeWallet?.balance || '0', nativeToken.symbol)}
             </span>
 
             {!!currentExchangeRate && (

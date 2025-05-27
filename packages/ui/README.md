@@ -26,26 +26,15 @@ authFormPlaceholder?: string;
 ```
 
 ```js
+import { DefaultEthereumNetworks, DefaultSubstrateNetworks } from '@apillon/wallet-sdk';
 import { EmbeddedWalletUI } from '@apillon/wallet-ui';
 
 EmbeddedWalletUI('#open-wallet-button-selector', {
   clientId: 'YOUR INTEGRATION UUID HERE',
   broadcastAfterSign: false,
   disableDefaultActivatorStyle: false,
-  networks: [
-    {
-      name: 'Moonbase Testnet',
-      id: 1287,
-      rpcUrl: 'https://rpc.testnet.moonbeam.network',
-      explorerUrl: 'https://moonbase.moonscan.io',
-    },
-    {
-      name: 'Amoy',
-      id: 80002,
-      rpcUrl: 'https://rpc-amoy.polygon.technology',
-      explorerUrl: 'https://www.oklink.com/amoy',
-    },
-  ],
+  networks: DefaultEthereumNetworks,
+  networksSubstrate: DefaultSubstrateNetworks,
   // ...
 });
 ```

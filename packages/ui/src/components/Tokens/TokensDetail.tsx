@@ -42,7 +42,19 @@ export default function TokensDetail() {
           />
         )}
 
-        {!selectedToken.address && <ApproveDataRow label="Native token" data="" className="mb-3" />}
+        {!!selectedToken.assetId && (
+          <ApproveDataRow
+            label="Asset ID"
+            noLabelFormatting
+            data={selectedToken.assetId}
+            copyable
+            className="mb-3"
+          />
+        )}
+
+        {!selectedToken.address && !selectedToken.assetId && (
+          <ApproveDataRow label="Native token" data="" className="mb-3" />
+        )}
 
         <ApproveDataRow label="Symbol" data={selectedToken.symbol} className="mb-3" />
 
@@ -61,7 +73,7 @@ export default function TokensDetail() {
         Send
       </Btn>
 
-      {!!selectedToken.address && (
+      {(!!selectedToken.address || !!selectedToken.assetId) && (
         <Btn
           variant="ghost"
           className="w-full mb-3 !text-red"

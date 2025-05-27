@@ -1,25 +1,27 @@
 {
   "private": true,
   "scripts": {
-    "build": "turbo build",
+    "build": "turbo build --filter=!next-test",
     "build:packages": "turbo build --filter=\"./packages/*\"",
+    "build:ui": "turbo build --filter=@apillon/wallet-ui --filter=@apillon/wallet-sdk",
     "dev": "turbo dev",
     "dev:react": "turbo run dev --filter=@apillon/wallet-react",
     "lint": "turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
   "dependencies": {
-    "@headlessui/react": "^2.2.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "ethers6": "npm:ethers@^6.13.5",
+    "@headlessui/react": "^2.2.3",
+    "@polkadot/api": "^15.8.1",
     "ethers5": "npm:ethers@^5.7.2",
+    "ethers6": "npm:ethers@^6.13.5",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
     "viem": "^2.23.2",
     "vue": "^3.5.13"
   },
   "devDependencies": {
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
+    "@types/react": "^19.1.4",
+    "@types/react-dom": "^19.1.5",
     "@vitejs/plugin-react-swc": "^3.8.0",
     "@vitejs/plugin-vue": "^5.2.1",
     "autoprefixer": "^10.4.20",
@@ -32,7 +34,7 @@
     "typescript": "^5.7.3",
     "vite": "^6.1.0",
     "vite-plugin-dts": "^4.5.0",
-    "vite-plugin-mkcert": "^1.17.6",
+    "vite-plugin-mkcert": "^1.17.8",
     "vite-plugin-node-polyfills": "^0.23.0",
     "vue-tsc": "^2.2.2"
   },

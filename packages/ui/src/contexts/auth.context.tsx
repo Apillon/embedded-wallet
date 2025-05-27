@@ -1,7 +1,8 @@
 import { createContext, useContext, useReducer } from 'react';
 import { useWalletContext } from './wallet.context';
-import { abort, getHashedUsername } from '@apillon/wallet-sdk';
+import { abort, getHashedUsername, WalletType } from '@apillon/wallet-sdk';
 import { WebStorageKeys } from '../lib/constants';
+import { sleep } from '../lib/helpers';
 
 export type AuthScreens =
   | 'loginForm'
@@ -17,7 +18,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   const {
     wallet,
     handleError,
-    state: { appProps, username: loggedInUsername },
+    state: { appProps, username: loggedInUsername, networkId, walletType },
     initUserData,
     setStateValue: setForWallet,
   } = useWalletContext();
@@ -45,6 +46,30 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     handleError();
 
     try {
+      // Change wallet type if no networks are configured for that type
+      if (walletType === WalletType.SUBSTRATE && !appProps?.networks?.length) {
+        wallet?.setAccount({ walletType: WalletType.EVM });
+      } else if (walletType === WalletType.EVM && !appProps?.networks?.length) {
+        wallet?.setAccount({ walletType: WalletType.SUBSTRATE });
+      }
+
+      await sleep(50);
+
+      // Update default network for selected wallet type
+      if (
+        walletType === WalletType.SUBSTRATE &&
+        typeof networkId !== 'string' &&
+        appProps?.networksSubstrate?.[0]?.id
+      ) {
+        wallet?.setDefaultNetworkId(appProps.networksSubstrate[0].id);
+      } else if (
+        walletType === WalletType.EVM &&
+        typeof networkId !== 'number' &&
+        appProps?.networks?.[0]?.id
+      ) {
+        wallet?.setDefaultNetworkId(appProps.networks[0].id);
+      }
+
       if (await wallet?.userExists(state.username)) {
         /**
          * Login
@@ -55,7 +80,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
           initUserData({
             username: state.username,
             authStrategy: 'passkey',
-            address0: address,
           });
 
           setTimeout(() => {
@@ -135,6 +159,19 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
       wallet?.xdomain?.storageSet(WebStorageKeys.REGISTER_PK, '', true);
       setStateValue('privateKey', '');
     }
+
+    wallet?.xdomain?.storageSet(WebStorageKeys.WALLET_TYPE, `${walletType}`, true);
+
+    const se = [] as number[];
+    if (appProps?.networks?.length) {
+      se.push(WalletType.EVM);
+    }
+
+    if (appProps?.networksSubstrate?.length) {
+      se.push(WalletType.SUBSTRATE);
+    }
+
+    wallet?.xdomain?.storageSet(WebStorageKeys.SUPPORTED_ENVS, se.join(','), true);
 
     if (appProps.passkeyAuthMode === 'tab_form') {
       if (!wallet?.xdomain) {

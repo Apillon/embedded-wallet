@@ -18,4 +18,6 @@ export const WebStorageKeys = {
   ERROR_LOG: 'oaw_err',
   OTP_EXPIRATION: 'oaw_otp_expire_time',
   REGISTER_PK: 'oaw_reg_pk',
+  WALLET_TYPE: 'oaw_wallet_t',
+  SUPPORTED_ENVS: 'oaw_supp_env',
 };

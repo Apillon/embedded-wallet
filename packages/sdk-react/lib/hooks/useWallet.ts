@@ -4,6 +4,7 @@ import {
   EmbeddedWallet,
   PlainTransactionParams,
   SignMessageParams,
+  WalletType,
   WindowId,
 } from '@apillon/wallet-sdk';
 
@@ -35,12 +36,20 @@ export function useWallet() {
         ...options,
       }),
 
+    /**
+     * EVM transaction
+     */
     sendTransaction: async (
       tx: PlainTransactionParams['tx'],
       options?: PlainTransactionParams,
       internalLabel?: string
     ) => {
-      const res = await wallet!.signPlainTransaction({
+      if (wallet?.user.walletType !== WalletType.EVM) {
+        abort('WRONG_WALLET_ENVIRONMENT');
+        return;
+      }
+
+      const res = await wallet!.evm.signPlainTransaction({
         tx,
         mustConfirm: true,
         ...options,
@@ -50,7 +59,11 @@ export function useWallet() {
         return abort('CANT_GET_SIGNED_TX');
       }
 
-      return await wallet!.broadcastTransaction(res.signedTxData, res.chainId, internalLabel);
+      return await wallet!.evm.broadcastTransaction(
+        res.signedTxData,
+        res.chainId as number,
+        internalLabel
+      );
     },
   };
 }

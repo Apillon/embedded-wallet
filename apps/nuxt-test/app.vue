@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { networks } from '@apillon/wallet-networks';
 import { EmbeddedWallet, useAccount } from '@apillon/wallet-vue';
+import { DefaultEthereumNetworks, DefaultSubstrateNetworks, WalletType } from '@apillon/wallet-sdk';
 import './public/style.css';
 
 const { info } = useAccount();
@@ -11,7 +11,8 @@ const { info } = useAccount();
     <EmbeddedWallet
       :clientId="$config.public.CLIENT_ID"
       :defaultNetworkId="1287"
-      :networks="networks"
+      :networks="DefaultEthereumNetworks"
+      :networksSubstrate="DefaultSubstrateNetworks"
     />
 
     <div
@@ -29,7 +30,9 @@ const { info } = useAccount();
 
     <TestSdk />
 
-    <template v-if="info?.activeWallet?.address">
+    <template
+      v-if="info?.activeWallet?.address && info?.activeWallet?.walletType === WalletType.EVM"
+    >
       <br />
 
       <TestViem />

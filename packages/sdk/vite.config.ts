@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { resolve } from 'path';
-import pkg from './package.json' assert { type: 'json' };
+import pkg from './package.json' with { type: 'json' };
 import dts from 'vite-plugin-dts';
 import mkcert from 'vite-plugin-mkcert';
 
@@ -25,6 +25,7 @@ export default defineConfig({
     },
     rollupOptions: {
       external: [
+        '@polkadot/api',
         ...Object.keys(pkg.dependencies),
         // ...Object.keys(pkg.dependencies).filter(x => x !== 'ethers6'), // don't bundle dependencies
         // ...Object.keys(pkg.dependencies).filter(

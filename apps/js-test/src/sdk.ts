@@ -17,7 +17,7 @@ document.getElementById('sdk-native-balance')?.addEventListener('click', async (
   const w = getEmbeddedWallet();
 
   if (w) {
-    const address = await w.getAccountAddress();
+    const address = w.getAddress();
 
     if (address) {
       const result = await w.getAccountBalance(address);
@@ -30,7 +30,7 @@ document.getElementById('sdk-native-transfer')?.addEventListener('click', async 
   const w = getEmbeddedWallet();
 
   if (w) {
-    const result = await w.signPlainTransaction({
+    const result = await w.evm.signPlainTransaction({
       tx: {
         to: '0x700cebAA997ecAd7B0797f8f359C621604Cce6Bf',
         value: '10000000',
@@ -41,7 +41,7 @@ document.getElementById('sdk-native-transfer')?.addEventListener('click', async 
     console.log(result);
 
     if (result) {
-      console.log(await w.broadcastTransaction(result.signedTxData, result.chainId));
+      console.log(await w.evm.broadcastTransaction(result.signedTxData, result.chainId as number));
     }
   }
 });
@@ -50,10 +50,10 @@ document.getElementById('sdk-contract-read')?.addEventListener('click', async ()
   const w = getEmbeddedWallet();
 
   if (w) {
-    const address = await w.getAccountAddress();
+    const address = w.getAddress();
 
     if (address) {
-      const result = await w.contractRead({
+      const result = await w.evm.contractRead({
         contractAbi: [
           'function claim() public',
           'function balanceOf(address) view returns (uint256)',
@@ -74,7 +74,7 @@ document.getElementById('sdk-contract-claim')?.addEventListener('click', async (
   const w = getEmbeddedWallet();
 
   if (w) {
-    const result = await w.signContractWrite({
+    const result = await w.evm.signContractWrite({
       contractAbi: [
         'function claim() public',
         'function balanceOf(address) view returns (uint256)',
@@ -89,7 +89,9 @@ document.getElementById('sdk-contract-claim')?.addEventListener('click', async (
     console.log(result);
 
     if (result) {
-      console.log(await w.broadcastTransaction(result.signedTxData, result.chainId, 'JS claim'));
+      console.log(
+        await w.evm.broadcastTransaction(result.signedTxData, result.chainId, 'JS claim')
+      );
     }
   }
 });
@@ -98,7 +100,7 @@ document.getElementById('sdk-contract-transfer')?.addEventListener('click', asyn
   const w = getEmbeddedWallet();
 
   if (w) {
-    const result = await w.signContractWrite({
+    const result = await w.evm.signContractWrite({
       contractAbi: [
         'function claim() public',
         'function balanceOf(address) view returns (uint256)',
@@ -114,7 +116,9 @@ document.getElementById('sdk-contract-transfer')?.addEventListener('click', asyn
     console.log(result);
 
     if (result) {
-      console.log(await w.broadcastTransaction(result.signedTxData, result.chainId, 'JS transfer'));
+      console.log(
+        await w.evm.broadcastTransaction(result.signedTxData, result.chainId, 'JS transfer')
+      );
     }
   }
 });

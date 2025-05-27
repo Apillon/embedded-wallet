@@ -4,14 +4,24 @@ import IconChevron from '../ui/Icon/IconChevron';
 import IconCopy from '../ui/Icon/IconCopy';
 import IconCheckSmall from '../ui/Icon/IconCheckSmall';
 import clsx from 'clsx';
+import { getSS58Address } from '../../lib/helpers';
+import { useMemo } from 'react';
+import { WalletType } from '@apillon/wallet-sdk';
 
 export default ({ noChevron = false, className }: { noChevron?: boolean; className?: string }) => {
   const {
-    state: { username },
+    state: { username, walletType, isPolkadotCryptoReady },
     activeWallet,
     setScreen,
   } = useWalletContext();
   const { text: copyText, onCopy } = useCopyToClipboard('', '+');
+
+  const address = useMemo(() => {
+    if (walletType === WalletType.SUBSTRATE && isPolkadotCryptoReady) {
+      return getSS58Address(activeWallet?.address || '', 0); // prefix 0 = unified ss address
+    }
+    return activeWallet?.address || '';
+  }, [activeWallet, walletType, isPolkadotCryptoReady]);
 
   return (
     <div className={clsx('text-center', className)}>
@@ -25,13 +35,13 @@ export default ({ noChevron = false, className }: { noChevron?: boolean; classNa
         {!noChevron && <IconChevron />}
       </button>
 
-      {!!activeWallet && (
+      {!!address && (
         <button
-          title={activeWallet.address}
+          title={address}
           className="oaw-button-plain !pl-2 !pr-0.5 flex items-center min-w-0 !text-lightgrey mx-auto"
-          onClick={() => onCopy(activeWallet.address)}
+          onClick={() => onCopy(address)}
         >
-          <span className="truncate text-lightgrey text-xs w-[70px]">{activeWallet.address}</span>
+          <span className="truncate text-lightgrey text-xs w-[70px]">{address}</span>
 
           <span className={clsx(['shrink-0 pl-0.5', { 'text-green': copyText === '+' }])}>
             {copyText === '+' ? <IconCheckSmall /> : <IconCopy className="text-lightgrey" />}

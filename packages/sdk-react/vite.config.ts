@@ -43,6 +43,7 @@ export default defineConfig({
       external: [
         'react',
         'react-dom',
+        'react-dom/client',
         'react/jsx-runtime',
         // '@headlessui/react',
         '@noble/curves',
@@ -58,6 +59,7 @@ export default defineConfig({
         // 'react-qr-code',
         // 'secp256r1',
         'viem',
+        '@polkadot/api',
       ],
     },
     target: 'esnext',

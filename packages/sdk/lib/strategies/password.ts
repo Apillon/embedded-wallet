@@ -42,7 +42,7 @@ class PasswordStrategy implements AuthStrategy {
       },
       optionalPassword: ethers.encodeBytes32String(authData.password!),
       wallet: {
-        walletType: WalletType.EVM,
+        walletType: authData.walletType || WalletType.EVM,
         keypairSecret: authData.privateKey || ethers.ZeroHash,
       },
     };
@@ -73,7 +73,7 @@ class PasswordStrategy implements AuthStrategy {
 
     return await this.wallet.accountManagerContract.proxyViewPassword(
       hashedUsername as any,
-      BigInt(WalletType.EVM),
+      BigInt(authData.walletType || WalletType.EVM),
       digest,
       data
     );
@@ -108,7 +108,7 @@ class PasswordStrategy implements AuthStrategy {
       [ethers.encodeBytes32String(authData.password!), data]
     );
 
-    const res = await this.wallet.signContractWrite({
+    const res = await this.wallet.evm.signContractWrite({
       authData,
       strategy: 'password',
       label: txLabel,
@@ -128,19 +128,21 @@ class PasswordStrategy implements AuthStrategy {
     });
 
     if (res) {
-      const { txHash } = await this.wallet.broadcastTransaction(
+      const tx = await this.wallet.evm.broadcastTransaction(
         res?.signedTxData,
         res?.chainId,
         txLabel,
         `proxyWrite_${functionName}`
       );
 
-      if (dontWait) {
-        return txHash;
-      }
+      if (tx) {
+        if (dontWait) {
+          return tx.txHash;
+        }
 
-      if (await this.wallet.waitForTxReceipt(txHash)) {
-        return txHash;
+        if (await this.wallet.evm.waitForTxReceipt(tx.txHash)) {
+          return tx.txHash;
+        }
       }
     }
   }

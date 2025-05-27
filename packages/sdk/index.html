@@ -4,9 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Embedded Wallet</title>
-    <script src="//unpkg.com/alpinejs" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
     <style>
+      * {
+        box-sizing: border-box;
+      }
+
       body {
         background: #313442;
       }
@@ -68,22 +72,51 @@
         font-size: 1.5rem;
         font-weight: 400;
         color: #78dce8;
-        margin-bottom: 0.25em;
-        margin-top: 0;
+        margin: 2rem 0 1rem;
         font-family: sans-serif;
       }
 
       .row {
         display: flex;
-        margin: 1rem 0 2rem;
+        margin: 1rem 0;
         gap: 0.5rem;
         flex-wrap: wrap;
+      }
+
+      code {
+        display: block;
+        background: gray;
+        color: #f0f2da;
+        padding: 1rem;
+      }
+
+      code p {
+        cursor: pointer;
       }
     </style>
   </head>
 
   <body style="padding: 2rem;">
-    <div x-data="{ username: '' }" id="root" style="max-width: 1280px; margin: 0 auto;">
+    <div x-data="{ username: 'simon.senk+p01@kalmia.si', walletIndex: 0, loggedIn: false }" id="root" style="max-width: 1280px; margin: 0 auto;">
+      <div x-data="{ result: '' }" style="margin-bottom: 2rem;">
+        <code style="margin-bottom: 0.5rem;">
+          <p @click="result = window?.embeddedWallet.user">embeddedWallet.user</p>
+          <p @click="result = window?.embeddedWallet.defaultNetworkId">embeddedWallet.defaultNetworkId</p>
+          <p @click="result = window?.embeddedWallet.evm.userWallets">embeddedWallet.evm.userWallets</p>
+          <p @click="result = window?.embeddedWallet.ss.userWallets">embeddedWallet.ss.userWallets</p>
+        </code>
+        
+        <code>
+          <pre
+            x-html="JSON.stringify(
+              result,
+              (_, value) => (typeof value === 'bigint' ? value.toString() : value),
+              2
+            )"
+          ></pre>
+        </code>
+      </div>
+
       <h2>Setup account</h2>
 
       <div class="row">
@@ -92,35 +125,222 @@
         <button
           @click="async () => {
             const w = window?.embeddedWallet;
-            console.log(await w?.authenticate('passkey', { username }));
+            if (await w?.authenticate('passkey', { username })) {
+              loggedIn = true;
+            }
           }"
         >
           Login
         </button>
+
+        <button @click="async () => {
+          const w = window?.embeddedWallet;
+          if (await w?.authenticate('passkey', { username, walletType: 1 })) {
+            loggedIn = true;
+          }
+        }">
+          Polka Login 
+        </button>
       </div>
 
-      <h2>Sign message</h2>
+      <div x-show="!!loggedIn">
+        <div class="row">
+          <input type="text" x-model.number="walletIndex" placeholder="Account index" />
+        </div>
+        
+        <h2>Misc polkadot</h2>
+        
+        <div class="row">
+          <button @click="() => {
+              const w = window?.embeddedWallet;
+              if (w) {
+                w.setDefaultNetworkId('westend')
+              }
+            }">
+            Set network to Westend
+          </button>
+        
+          <button @click="async () => {
+            const w = window?.embeddedWallet;
+            console.log(await w?.addAccountWallet());
+          }">
+            Add new account
+          </button>
+        
+          <button @click="async () => {
+            const w = window?.embeddedWallet;
+            w?.setAccount({ walletIndex });
+            const api = await w?.ss.getApiForNetworkId();
+            const res = await api.query.system.account(w?.getAddress())
+            console.log(res?.toHuman());
+            console.log(api.registry.chainDecimals);
+            /**
+             * @url https://github.com/polkadot-js/common/blob/master/packages/util/src/format/formatBalance.ts
+             * import { formatBalance } from '@polkadot/util';
+             */
+            // console.log('balance', w.ss.formatBalance(
+            //   res.data.free,
+            //   {
+            //     decimals: api.registry.chainDecimals[0],
+            //     withSi: false,
+            //     withZero: false,
+            //   },
+            // ));
+          }">
+            Query SS account
+          </button>
 
-      <div x-data="{ message: 'Test message 1234' }" class="row">
-        <input type="text" x-model="message" />
+          <button @click="async () => {
+            const w = window?.embeddedWallet;
+            const api = await w?.ss.getApiForNetworkId();
 
-        <button
-          @click="async () => {
+            const txh = await w?.ss.signTransaction({
+              tx: api.tx.balances.transferAllowDeath(
+                '0xe88fbf66e26df57ebabba1cced7d404a864ca2c48420ea982dd2c69f86045924',
+                0.01 * 1e12 // chainDecimals
+              )
+            });
+
+            console.log(txh);
+          }">
+            Try transfer
+          </button>
+        </div>
+        
+        <h2>Sign message</h2>
+        
+        <div x-data="{ message: 'Test message 1234' }" class="row">
+          <input type="text" x-model="message" />
+        
+          <button @click="async () => {
             const w = window?.embeddedWallet;
 
             const msg = await w?.signMessage({
               strategy: 'passkey',
               message,
+              walletIndex,
             });
 
             console.log(msg);
-          }"
-        >
-          Sign message
-        </button>
+          }">
+            Sign message
+          </button>
+        </div>
+
+        <h2>Polkadot inject</h2>
+
+        <div class="row">
+          <button id="pdInjectedList">
+            List injected wallets and accounts
+          </button>
+
+          <button id="pdInjectedSign">
+            Sign message via injected
+          </button>
+
+          <button id="pdInjectedTransfer">
+            Sign tx via injected
+          </button>
+        </div>
+
+        <h2>Misc</h2>
+        
+        <div class="row">
+          <button
+            @click="() => {
+              const w = window?.embeddedWallet;
+              if (w) {
+                w.setDefaultNetworkId(1287)
+              }
+            }"
+          >
+            Set network to moonbase
+          </button>
+
+          <button
+            @click="async () => {
+              const w = window?.embeddedWallet;
+
+              try {
+                const signedTx = await w?.evm.signContractWrite({
+                  strategy: 'passkey',
+                  contractAbi: [
+                    'function claim() public',
+                    'function balanceOf(address) view returns (uint256)',
+                    'function transfer(address to, uint256 amount) public returns (bool)',
+                  ],
+                  contractAddress: '0x67b9DA16d0Adf2dF05F0564c081379479d0448f8',
+                  contractFunctionName: 'claim',
+                  chainId: 1287,
+                  label: 'Token claim',
+                });
+
+                console.log(signedTx);
+                const txh = await w?.evm.broadcastTransaction(signedTx.signedTxData, 1287);
+                console.log(txh);
+              } catch (e) {
+                console.error(e);
+              }
+            }"
+          >
+            Contract: Token claim
+          </button>
+
+          <button @click="async () => {
+            const w = window?.embeddedWallet;
+
+            try {
+              const signedTx = await w?.evm.signContractWrite({
+                strategy: 'passkey',
+                contractAbi: [
+                  'function claim() public',
+                  'function balanceOf(address) view returns (uint256)',
+                  'function transfer(address to, uint256 amount) public returns (bool)',
+                ],
+                contractAddress: '0x67b9DA16d0Adf2dF05F0564c081379479d0448f8',
+                contractFunctionName: 'transfer',
+                contractFunctionValues: ['0x700cebAA997ecAd7B0797f8f359C621604Cce6Bf', '10000000'],
+                chainId: 1287,
+                label: 'Token transfer',
+              });
+
+              console.log(signedTx);
+              const txh = await w?.evm.broadcastTransaction(signedTx.signedTxData, 1287);
+              console.log(txh);
+            } catch (e) {
+              console.error(e);
+            }
+          }">
+            Contract: Token transfer
+          </button>
+
+          <button @click="async () => {
+            const w = window?.embeddedWallet;
+
+            try {
+              console.log(
+                await w?.evm.contractRead({
+                  contractAbi: [
+                  'function claim() public',
+                  'function balanceOf(address) view returns (uint256)',
+                  'function transfer(address to, uint256 amount) public returns (bool)',
+                  ],
+                  contractAddress: '0x67b9DA16d0Adf2dF05F0564c081379479d0448f8',
+                  contractFunctionName: 'balanceOf',
+                  contractFunctionValues: [w.getAddress()],
+                  chainId: 1287,
+                })
+              );
+            } catch (e) {
+              console.error(e);
+            }
+          }">
+            Contract read: Balance of
+          </button>
+        </div>
       </div>
     </div>
 
-    <script type="module" src="/src//test.ts"></script>
+    <script type="module" src="/src/test.ts"></script>
   </body>
 </html>

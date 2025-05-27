@@ -1,11 +1,17 @@
+import { WalletType } from '@apillon/wallet-sdk';
+import { u8aToHex } from '@polkadot/util';
+import { mnemonicToMiniSecret } from '@polkadot/util-crypto';
+import { ethers } from 'ethers6';
+import { useEffect, useState } from 'react';
 import { useAuthContext } from '../../contexts/auth.context';
 import { useWalletContext } from '../../contexts/wallet.context';
+import { WebStorageKeys } from '../../lib/constants';
 import Btn from '../ui/Btn';
 import Input from '../ui/Input';
-import AuthTitle from './AuthTitle';
-import { WebStorageKeys } from '../../lib/constants';
+import Select from '../ui/Select';
 import AuthCaptchaInput from './AuthCaptchaInput';
-import { ethers } from 'ethers6';
+import AuthEnvironmentPicker from './AuthEnvironmentPicker';
+import AuthTitle from './AuthTitle';
 
 /**
  * Make a new wallet by providing a private key
@@ -13,30 +19,60 @@ import { ethers } from 'ethers6';
 export default function AuthImport() {
   const {
     wallet,
-    state: { appProps },
+    state: { appProps, walletType },
     handleError,
   } = useWalletContext();
 
   const {
-    state: { username, privateKey, loading, captcha },
+    state: { username, loading, captcha },
     setStateValue: setForAuth,
     sendConfirmationEmail,
     onRegister,
   } = useAuthContext();
 
+  const [type, setType] = useState<'' | 'pk' | 'mnemonic'>(''); // used in <Select />
+  const [privateKey, setPrivateKey] = useState('');
+  const [mnemonic, setMnemonic] = useState('');
+
+  useEffect(() => {
+    if (walletType === WalletType.SUBSTRATE) {
+      setType('mnemonic');
+    } else {
+      setType('pk');
+    }
+  }, [walletType]);
+
   async function onSubmit() {
-    if (loading || !username || !privateKey || !captcha) {
+    if (
+      loading ||
+      !username ||
+      (type === 'pk' && !privateKey) ||
+      (type === 'mnemonic' && !mnemonic) ||
+      !captcha
+    ) {
       return;
     }
 
+    let pk = '';
+
     try {
-      new ethers.Wallet(privateKey);
+      if (type === 'mnemonic') {
+        pk = u8aToHex(mnemonicToMiniSecret(mnemonic));
+      } else {
+        pk = !privateKey.startsWith('0x') ? `0x${privateKey}` : privateKey;
+      }
+
+      new ethers.Wallet(pk);
     } catch (e) {
-      handleError('Incorrect EVM private key', 'AuthImport');
+      handleError(
+        `Incorrect ${walletType === WalletType.SUBSTRATE ? 'Substrate' : 'EVM'} ${type === 'mnemonic' ? 'mnemonic' : 'private key'}`,
+        'AuthImport',
+      );
       return;
     }
 
     setForAuth('loading', true);
+    setForAuth('privateKey', pk);
     handleError('');
 
     try {
@@ -45,7 +81,7 @@ export default function AuthImport() {
       }
 
       if (await sendConfirmationEmail()) {
-        wallet?.xdomain?.storageSet(WebStorageKeys.REGISTER_PK, privateKey, true);
+        wallet?.xdomain?.storageSet(WebStorageKeys.REGISTER_PK, pk, true);
         await onRegister(true);
       }
 
@@ -70,13 +106,42 @@ export default function AuthImport() {
           onSubmit();
         }}
       >
-        <Input
-          value={privateKey}
-          placeholder="Enter your private key string here"
-          type="password"
-          className="mb-6"
-          onChange={ev => setForAuth('privateKey', ev.target.value)}
+        <AuthEnvironmentPicker className="mb-6" />
+
+        <Select
+          value={type}
+          options={[
+            { label: 'Select type', value: '' },
+            { label: 'Private Key', value: 'pk' },
+            ...(walletType === WalletType.SUBSTRATE
+              ? [{ label: 'Mnemonic', value: 'mnemonic' }]
+              : []),
+          ]}
+          className="w-full mb-6"
+          onChange={ev => setType(ev.target.value as any)}
         />
+
+        {type === 'pk' && (
+          <Input
+            autoFocus
+            value={privateKey}
+            placeholder="Enter your private key string here"
+            type="password"
+            className="mb-6"
+            onChange={ev => setPrivateKey(ev.target.value)}
+          />
+        )}
+
+        {type === 'mnemonic' && (
+          <Input
+            autoFocus
+            value={mnemonic}
+            placeholder="Enter your seed phrase"
+            type="text"
+            className="mb-6"
+            onChange={ev => setMnemonic(ev.target.value)}
+          />
+        )}
 
         <Input
           type="email"
@@ -96,7 +161,12 @@ export default function AuthImport() {
           </Btn>
 
           <Btn
-            disabled={!username || !privateKey || !captcha}
+            disabled={
+              !username ||
+              !captcha ||
+              (type === 'pk' && !privateKey) ||
+              (type === 'mnemonic' && !mnemonic)
+            }
             type="submit"
             variant="primary"
             loading={loading}

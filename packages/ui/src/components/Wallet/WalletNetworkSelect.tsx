@@ -2,16 +2,19 @@ import { useState } from 'react';
 import { useWalletContext } from '../../contexts/wallet.context';
 import InputSearch from '../ui/InputSearch';
 import clsx from 'clsx';
+import { WalletType } from '@apillon/wallet-sdk';
 
 export default function WalletNetworkSelect() {
-  const { state, dispatch, networks, wallet, setScreen } = useWalletContext();
+  const { state, dispatch, networks, networksSubstrate, wallet, setScreen } = useWalletContext();
   const [search, setSearch] = useState('');
 
-  if (!Array.isArray(networks) || !networks.length) {
+  const currentNetworks = state.walletType === WalletType.SUBSTRATE ? networksSubstrate : networks;
+
+  if (!currentNetworks?.length) {
     return <></>;
   }
 
-  function selectNetwork(networkId: number) {
+  function selectNetwork(networkId: number | string) {
     if (networkId === state.networkId) {
       return;
     }
@@ -26,7 +29,7 @@ export default function WalletNetworkSelect() {
       <InputSearch value={search} onChange={ev => setSearch(ev)} className="my-6" />
 
       <div className="flex flex-col gap-3">
-        {networks
+        {currentNetworks
           .filter(network => network.name.toLowerCase().includes(search.toLowerCase()))
           .map(network => (
             <button

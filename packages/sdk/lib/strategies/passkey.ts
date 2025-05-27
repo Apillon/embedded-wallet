@@ -31,7 +31,7 @@ class PasskeyStrategy implements AuthStrategy {
     }
 
     const newWallet = {
-      walletType: WalletType.EVM,
+      walletType: authData.walletType || WalletType.EVM,
       keypairSecret: authData.privateKey || ethers.ZeroHash,
     };
 
@@ -102,7 +102,7 @@ class PasskeyStrategy implements AuthStrategy {
       cred.credentialIdHashed,
       // @ts-expect-error AbiTypes
       cred.resp,
-      BigInt(WalletType.EVM),
+      BigInt(authData.walletType || WalletType.EVM),
       data
     );
   }
@@ -137,7 +137,7 @@ class PasskeyStrategy implements AuthStrategy {
       return;
     }
 
-    const res = await this.wallet.signContractWrite({
+    const res = await this.wallet.evm.signContractWrite({
       authData,
       strategy: 'passkey',
       label: txLabel,
@@ -157,19 +157,21 @@ class PasskeyStrategy implements AuthStrategy {
     });
 
     if (res) {
-      const { txHash } = await this.wallet.broadcastTransaction(
+      const tx = await this.wallet.evm.broadcastTransaction(
         res?.signedTxData,
         res?.chainId,
         txLabel,
         `proxyWrite_${functionName}`
       );
 
-      if (dontWait) {
-        return txHash;
-      }
+      if (tx) {
+        if (dontWait) {
+          return tx.txHash;
+        }
 
-      if (await this.wallet.waitForTxReceipt(txHash)) {
-        return txHash;
+        if (await this.wallet.evm.waitForTxReceipt(tx.txHash)) {
+          return tx.txHash;
+        }
       }
     }
   }

@@ -1,10 +1,14 @@
-import { getEmbeddedWallet } from '@apillon/wallet-sdk';
+import {
+  DefaultEthereumNetworks,
+  DefaultSubstrateNetworks,
+  getEmbeddedWallet,
+} from '@apillon/wallet-sdk';
 import EmbeddedWallet from '../src/components/EmbeddedWallet';
 import TestEIP1193 from './TestEIP1193';
 import TestSign from './TestSign';
 import TestTx from './TestTx';
 import TestTokenEvents from './TestTokenEvents';
-import { networks } from '@apillon/wallet-networks';
+import TestPolkadotInjected from './TestPolkadotInjected';
 
 export default function TestApp() {
   return (
@@ -14,10 +18,12 @@ export default function TestApp() {
       <EmbeddedWallet
         clientId={import.meta.env.VITE_CLIENT_ID ?? 'YOUR INTEGRATION UUID HERE'}
         broadcastAfterSign
-        passkeyAuthMode="redirect"
+        passkeyAuthMode="popup"
         // disableDefaultActivatorStyle
-        defaultNetworkId={1287}
-        networks={networks}
+        defaultNetworkId={'westend'}
+        networks={DefaultEthereumNetworks}
+        networksSubstrate={DefaultSubstrateNetworks}
+        injectPolkadot
       />
 
       <div className="row">
@@ -55,6 +61,10 @@ export default function TestApp() {
       <h2>Test addToken event</h2>
 
       <TestTokenEvents />
+
+      <h2>Test polkadot injected extension</h2>
+
+      <TestPolkadotInjected />
     </div>
   );
 }

@@ -10,6 +10,15 @@ export type DisplayedContractParams = Pick<
   'chainId' | 'contractAddress' | 'contractFunctionName' | 'contractFunctionValues'
 >;
 
+export type DisplayedContractParamsSubstrate = {
+  address: string;
+  amount: string;
+  assetId: string;
+  method: string;
+  section: string;
+  raw: any;
+};
+
 function ApproveProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState());
 
@@ -27,16 +36,82 @@ function ApproveProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const onTxApproveEvent = (params: Events['txApprove']) => {
       if (params.plain) {
+        /**
+         * Plain Ethereum tx
+         */
         setStateValue('txToConfirm', params.plain?.tx);
         setStateValue('approveParams', params);
         setForWallet('isOpen', true);
       } else if (params.contractWrite) {
+        /**
+         * Ethereum contract tx
+         */
         setStateValue('contractFunctionData', {
           chainId: params.contractWrite.chainId,
           contractAddress: params.contractWrite.contractAddress,
           contractFunctionName: params.contractWrite.contractFunctionName,
           contractFunctionValues: params.contractWrite.contractFunctionValues,
         });
+        setStateValue('approveParams', params);
+        setForWallet('isOpen', true);
+      } else if (params.polkadot) {
+        /**
+         * Substrate tx
+         */
+        let tx = undefined as any;
+        let method = undefined as any;
+
+        if (params.polkadot.tx) {
+          tx = params.polkadot.tx.toHuman() || undefined;
+          method = (tx as any)?.method;
+        } else if (params.polkadot.readableMethod) {
+          tx = params.polkadot.payload;
+          method = params.polkadot.readableMethod;
+        } else if (params.polkadot.payload) {
+          tx = params.polkadot.payload;
+          method = params.polkadot.payload.method;
+        }
+
+        const data = {
+          address: '',
+          amount: '',
+          assetId: '',
+          section: '',
+          method: '',
+          raw: tx,
+        };
+
+        if (method) {
+          if (method?.args?.dest?.Id) {
+            data.address = method.args.dest.Id;
+          }
+
+          if (!data.address && method?.args?.target?.Id) {
+            data.address = method.args.target.Id;
+          }
+
+          if (method?.args?.value) {
+            data.amount = method.args.value;
+          }
+
+          if (!data.amount && method?.args?.amount) {
+            data.amount = method?.args?.amount;
+          }
+
+          if (method?.args?.id) {
+            data.assetId = method.args.id.replace(/,/g, '');
+          }
+
+          if (method?.method) {
+            data.method = method.method;
+          }
+
+          if (method?.section) {
+            data.section = method.section;
+          }
+        }
+
+        setStateValue('substrateTxData', data);
         setStateValue('approveParams', params);
         setForWallet('isOpen', true);
       }
@@ -170,6 +245,7 @@ const ApproveContext = createContext<
 const initialState = () => ({
   txToConfirm: undefined as undefined | ethers.TransactionLike<ethers.AddressLike>,
   contractFunctionData: undefined as undefined | DisplayedContractParams,
+  substrateTxData: undefined as undefined | DisplayedContractParamsSubstrate,
   messageToSign: '',
   targetChain: undefined as undefined | Events['requestChainChange'],
   approveParams: undefined as

@@ -12,7 +12,7 @@ export default function TestTx() {
 
           try {
             const wallet = getEmbeddedWallet();
-            const msg = await wallet?.signPlainTransaction({
+            const msg = await wallet?.evm.signPlainTransaction({
               mustConfirm: true,
               strategy: 'passkey',
               tx: {
@@ -39,7 +39,7 @@ export default function TestTx() {
           try {
             const wallet = getEmbeddedWallet();
 
-            await wallet?.signContractWrite({
+            await wallet?.evm.signContractWrite({
               mustConfirm: true,
               strategy: 'passkey',
               contractAbi: [
@@ -69,7 +69,7 @@ export default function TestTx() {
           try {
             const wallet = getEmbeddedWallet();
 
-            await wallet?.signContractWrite({
+            await wallet?.evm.signContractWrite({
               mustConfirm: true,
               strategy: 'passkey',
               contractAbi: [
