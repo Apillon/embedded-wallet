@@ -1,4 +1,4 @@
-import { formatUnits } from 'viem';
+import { ethers } from 'ethers6';
 import { WebStorageKeys } from './constants';
 import { encodeAddress } from '@polkadot/util-crypto';
 
@@ -46,7 +46,7 @@ export function formatBalance(balance: string | number, unit = 'ETH', maxDecimal
 }
 
 export function formatSubstrateBalance(balance = '0', decimals = 12) {
-  return formatUnits(BigInt(balance.replace(/,/g, '')), decimals);
+  return ethers.formatUnits(BigInt(balance.replace(/,/g, '')), decimals);
 }
 
 /**
