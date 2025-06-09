@@ -18,7 +18,7 @@ export default function TestApp() {
       <EmbeddedWallet
         clientId={import.meta.env.VITE_CLIENT_ID ?? 'YOUR INTEGRATION UUID HERE'}
         broadcastAfterSign
-        passkeyAuthMode="popup"
+        passkeyAuthMode="redirect"
         // disableDefaultActivatorStyle
         defaultNetworkId={'westend'}
         networks={DefaultEthereumNetworks}

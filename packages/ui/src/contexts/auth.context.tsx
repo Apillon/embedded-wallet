@@ -186,7 +186,12 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         initUserData({ username: res.username, authStrategy: 'passkey', address0: res.address0 });
       }
     } else if (['redirect', 'tab_form'].includes(appProps.passkeyAuthMode || '')) {
-      redirectToGateway(state.username);
+      redirectToGateway({
+        username: state.username,
+        [WebStorageKeys.WALLET_TYPE]: walletType,
+        [WebStorageKeys.SUPPORTED_ENVS]: se.join(','),
+        [WebStorageKeys.OTP_EXPIRATION]: state.lastCodeExpiretime,
+      });
     } else {
       setStateValue('screen', 'confirmCode');
     }
@@ -242,14 +247,16 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     setStateValue('loading', false);
   }
 
-  function redirectToGateway(username?: string) {
+  function redirectToGateway(params?: { [key: string]: any }) {
     const gatewayUrl = import.meta.env.VITE_XDOMAIN_PASSKEY_SRC ?? 'https://passkey.apillon.io';
 
     if (!loggedInUsername && gatewayUrl) {
       window.location.href = `${gatewayUrl}?${[
         `ref=${encodeURIComponent(window.location.origin + window.location.pathname)}`,
         `clientId=${appProps.clientId || wallet?.apillonClientId || ''}`,
-        `username=${encodeURIComponent(username || '')}`,
+        ...(params
+          ? Object.entries(params).map(([k, v]) => `${k}=${encodeURIComponent(v || '')}`)
+          : []),
       ].join('&')}`;
 
       return true;

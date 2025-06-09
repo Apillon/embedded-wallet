@@ -11,11 +11,13 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   const { wallet, handleError, redirectBack, referrer } = useGlobalContext();
 
   useEffect(() => {
+    let urlParams = new URLSearchParams();
+
     /**
      * The confirmation email has already been sent if username query is set
      */
     if (window.location.search) {
-      const urlParams = new URLSearchParams(window.location.search);
+      urlParams = new URLSearchParams(window.location.search);
 
       const u = urlParams.get('username') || '';
 
@@ -29,7 +31,9 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
      * Load wallet type selected in dapp
      */
     const walletType = +(
-      sessionStorage.getItem(WebStorageKeys.WALLET_TYPE) || WalletType.EVM
+      sessionStorage.getItem(WebStorageKeys.WALLET_TYPE) ||
+      urlParams.get(WebStorageKeys.WALLET_TYPE) ||
+      WalletType.EVM
     ) as AccountWalletTypes;
     setStateValue('walletType', walletType);
 
@@ -37,10 +41,24 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
      * Set which environments are available according to dapp
      */
     const supportedEnvs =
-      sessionStorage.getItem(WebStorageKeys.SUPPORTED_ENVS) || `${WalletType.EVM}`;
+      sessionStorage.getItem(WebStorageKeys.SUPPORTED_ENVS) ||
+      urlParams.get(WebStorageKeys.WALLET_TYPE) ||
+      `${WalletType.EVM}`;
     setStateValue(
       'supportedWalletTypes',
       supportedEnvs.split(',').map(s => +(s || 0) as AccountWalletTypes)
+    );
+
+    /**
+     * Set OTP code expire time (frontend validation)
+     */
+    setStateValue(
+      'lastCodeExpiretime',
+      +(
+        sessionStorage.getItem(WebStorageKeys.OTP_EXPIRATION) ||
+        urlParams.get(WebStorageKeys.OTP_EXPIRATION) ||
+        0
+      )
     );
   }, []);
 
