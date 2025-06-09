@@ -29,7 +29,7 @@
 }
 
 #oaw-wallet-widget {
-  @apply text-offwhite;
+  @apply text-offwhite font-sans;
 
   h2 {
     @apply font-medium text-[1.75rem] text-offwhite text-center leading-tight;
@@ -150,6 +150,7 @@
 
 .animation-loader > svg path {
   transition: all 0.3s;
+  -webkit-transition: all 0.3s;
 }
 
 .animation-loader > svg path.dot-left {
